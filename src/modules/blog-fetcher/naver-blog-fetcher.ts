@@ -42,6 +42,8 @@ type PostApiItem = {
 
 const pageSize = 30
 const postListConcurrency = 3
+const defaultRetryDelays = [0, 1_000, 2_000, 4_000]
+const defaultRequestTimeoutMs = 5_000
 
 const browserHeaders = ({
   blogId,
@@ -72,16 +74,24 @@ const detectEditorVersion = (value: number | null): EditorVersion | null => {
 export class NaverBlogFetcher {
   readonly blogId: string
   readonly onLog: ((message: string) => void) | null
+  readonly requestTimeoutMs: number
+  readonly retryDelays: number[]
 
   constructor({
     blogId,
     onLog,
+    requestTimeoutMs,
+    retryDelays,
   }: {
     blogId: string
     onLog?: (message: string) => void
+    requestTimeoutMs?: number
+    retryDelays?: number[]
   }) {
     this.blogId = blogId
     this.onLog = onLog ?? null
+    this.requestTimeoutMs = requestTimeoutMs ?? defaultRequestTimeoutMs
+    this.retryDelays = retryDelays ?? defaultRetryDelays
   }
 
   async getPostCount() {
@@ -240,17 +250,29 @@ export class NaverBlogFetcher {
   }: {
     url: string
   }): Promise<Result> {
-    const retryDelays = [0, 1_000, 2_000, 4_000]
     let lastError: Error | null = null
 
-    for (const retryDelay of retryDelays) {
+    for (const retryDelay of this.retryDelays) {
       if (retryDelay > 0) {
         await delay(retryDelay)
       }
 
-      const response = await fetch(url, {
-        headers: browserHeaders({ blogId: this.blogId }),
-      })
+      let response: Response
+
+      try {
+        response = await this.fetchWithTimeout({
+          url,
+          headers: browserHeaders({ blogId: this.blogId }),
+        })
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error))
+
+        if (this.shouldRetryRequestError(error)) {
+          continue
+        }
+
+        throw lastError
+      }
 
       if (!response.ok) {
         lastError = new Error(`API 요청 실패: ${response.status} ${response.statusText}`)
@@ -276,6 +298,36 @@ export class NaverBlogFetcher {
     }
 
     throw lastError ?? new Error("API 요청에 실패했습니다.")
+  }
+
+  private async fetchWithTimeout({
+    url,
+    headers,
+  }: {
+    url: string
+    headers: Record<string, string>
+  }) {
+    const controller = new AbortController()
+    const timeoutHandle = setTimeout(() => {
+      controller.abort()
+    }, this.requestTimeoutMs)
+
+    try {
+      return await fetch(url, {
+        headers,
+        signal: controller.signal,
+      })
+    } finally {
+      clearTimeout(timeoutHandle)
+    }
+  }
+
+  private shouldRetryRequestError(error: unknown) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      return true
+    }
+
+    return error instanceof TypeError
   }
 
   private log(message: string) {
