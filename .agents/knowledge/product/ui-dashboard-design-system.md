@@ -36,6 +36,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - preview, options, status는 각각 독립 board지만 spacing, border, shadow rhythm을 공유한다.
 - layout은 desktop에서 `sidebar + fluid main`, mobile에서는 single-column stack으로 접힌다.
 - 최상위 shell은 viewport에 바로 붙는다. 바깥 프레임용 여백이나 화면 바깥으로 밀리는 horizontal overflow를 두지 않는다.
+- export가 `queued` 또는 `running`이면 category, options, preview board와 해당 navigation item을 숨기고 status board에 집중시킨다.
 
 ## Tokens
 - Background: `#F4F7FB`
@@ -56,12 +57,16 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - `CardHeader/CardDescription/CardContent`를 기본 계층으로 사용한다. 큰 feature도 임의 wrapper 대신 card composition으로 쪼갠다.
 - 헤더 카피는 짧게 유지하고, `Stage`, `Command Rail` 같은 장식성 라벨은 두지 않는다.
 - 텍스트 입력은 `Input`, 상태 pill과 count는 `Badge`, 오류/가이드 배너는 `Alert`, 탭 그룹은 `Tabs`, modal은 `Dialog`를 우선한다.
+- 사용자 피드백 토스트는 `sonner` 기반 `Toaster`/`toast()`로 통일한다.
 - 앱 표는 `src/ui/components/ui/table.tsx` 공용 컴포넌트를 사용하고, header/cell padding은 compact 기본값을 유지한다.
 - feature 전용 화면 스타일은 별도 CSS 파일 대신 각 컴포넌트의 Tailwind utility class로 유지한다.
 - `globals.css`는 토큰, base element reset, native `select` 기본 스타일만 담당한다.
 - 바깥 frame spacing은 CSS 파일이 아니라 `App.tsx` 셸 utility에서만 제어한다.
 - category/search/output/preview/status의 DOM hook은 유지한다.
   `#blogIdOrUrl`, `#scan-button`, `#preview-button`, `#export-button`, `#job-file-tree`, `#markdown-modal`, `[data-preview-mode]`, `[data-job-filter]`, `#summary`, `#status-text`, `#logs`
+- scan 후 summary와 category panel의 count는 현재 선택 범위 기준 대상 글 수를 즉시 반영해야 한다.
+- category 선택은 tree semantics를 따른다. 부모 선택은 하위 전체를 함께 토글하고, 일부 자식만 선택되면 부모는 partial state로 보여야 한다.
+- category table은 parent-before-children 순서를 유지하고 depth 기반 indent로 위계를 바로 읽을 수 있어야 한다.
 - option panel은 `Tabs`로 `범위 / 구조 / Frontmatter / Markdown / Assets`를 구분한다.
 - 설정 탭 5개는 상단 전체 폭을 쓰는 segmented control로 유지한다.
 - 탭 active 상태는 떠 보이는 흰 pill 하나만 남기고, underline이나 과한 shadow를 겹치지 않는다.
@@ -71,6 +76,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - preview는 `source`와 `rendered` 단일 모드에서 항상 1열 full-width pane을 쓰고, `split`에서만 2열로 나눈다.
 - preview source `pre`와 rendered article은 같은 내부 padding rhythm을 유지한다.
 - 결과 modal과 preview renderer는 모두 `react-markdown + remark-gfm + remark-math + rehype-katex + rehype-sanitize` 경로를 사용한다.
+- 결과 modal은 shadcn `DialogContent` 기본 `sm:max-w-lg`에 의존하지 않고, viewport 기반 `!w-*`와 `!max-w-*` override로 큰 preview shell을 강제한다.
 
 ## Icon Rules
 - 프로젝트 아이콘은 Remix icon만 사용한다.

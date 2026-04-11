@@ -216,7 +216,9 @@ export const createHttpServer = () => {
         const fetcher = new NaverBlogFetcher({
           blogId,
         })
-        const scanResult = await fetcher.scanBlog()
+        const scanResult = await fetcher.scanBlog({
+          includePosts: true,
+        })
 
         sendJson({
           response,

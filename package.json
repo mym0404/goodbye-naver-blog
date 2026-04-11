@@ -42,6 +42,7 @@
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "turndown": "^7.2.0",
     "turndown-plugin-gfm": "^1.0.2",

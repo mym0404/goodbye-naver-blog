@@ -2,6 +2,7 @@ import path from "node:path"
 import { writeFile } from "node:fs/promises"
 
 import { cloneExportOptions } from "../../shared/export-options.js"
+import { filterPostsByScope } from "../../shared/export-scope.js"
 import type {
   CategoryInfo,
   ExportManifest,
@@ -22,7 +23,6 @@ import { renderMarkdownPost } from "../converter/markdown-renderer.js"
 import { parsePostHtml } from "../parser/post-parser.js"
 import { reviewParsedPost } from "../reviewer/post-reviewer.js"
 import { AssetStore } from "./asset-store.js"
-import { filterPostsByScope } from "./export-scope.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "./export-paths.js"
 
 export class NaverBlogExporter {

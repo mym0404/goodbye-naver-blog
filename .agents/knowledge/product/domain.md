@@ -21,6 +21,7 @@
 ## Core Entities
 - `blogIdOrUrl`: scan과 export의 시작점
 - `CategoryInfo`: 카테고리 계층, path, post count를 포함하는 선택 단위
+- `ScanResult`: 전체 공개 글 수, 카테고리 목록, UI 즉시 집계를 위한 post summary snapshot
 - `ExportOptions`: scope, structure, frontmatter, markdown, assets 규칙
 - `ParsedPost`: 공용 AST 블록, 태그, 비디오, 경고를 가진 파싱 결과
 - `ExportManifest`: 전체 작업 결과와 post별 성공/실패를 기록하는 요약

@@ -1,3 +1,4 @@
+import { getCategoryCheckboxState, orderCategoriesHierarchically } from "./category-selection.js"
 import type { ScanResult } from "../../../shared/types.js"
 
 import { Badge } from "../../components/ui/badge.js"
@@ -27,6 +28,8 @@ export const CategoryPanel = ({
   categorySearch,
   categoryStatus,
   selectedCount,
+  selectedPostCount,
+  totalPostCount,
   onCategorySearchChange,
   onSelectAll,
   onClearAll,
@@ -37,14 +40,17 @@ export const CategoryPanel = ({
   categorySearch: string
   categoryStatus: string
   selectedCount: number
+  selectedPostCount: number
+  totalPostCount: number
   onCategorySearchChange: (value: string) => void
   onSelectAll: () => void
   onClearAll: () => void
   onCategoryToggle: (categoryId: number, checked: boolean) => void
 }) => {
   const categories = scanResult?.categories ?? []
+  const orderedCategories = orderCategoriesHierarchically(categories)
   const keyword = categorySearch.trim().toLowerCase()
-  const filteredCategories = categories.filter((category) => {
+  const filteredCategories = orderedCategories.filter((category) => {
     if (!keyword) {
       return true
     }
@@ -109,9 +115,14 @@ export const CategoryPanel = ({
         </div>
 
         <div className="selection-summary flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-          <span id="selected-category-count">
-            선택된 카테고리 {selectedCount}개 / {categories.length}개
-          </span>
+          <div className="grid gap-1">
+            <span id="selected-category-count">
+              선택된 카테고리 {selectedCount}개 / {categories.length}개
+            </span>
+            <span id="selected-post-count">
+              대상 글 {selectedPostCount}개 / 전체 {totalPostCount}개
+            </span>
+          </div>
           <Badge
             variant={selectedCount > 0 ? "secondary" : "outline"}
             className="w-fit rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
@@ -149,8 +160,14 @@ export const CategoryPanel = ({
                 </TableHeader>
                 <TableBody>
                   {filteredCategories.map((category) => {
-                    const checked = selectedCategoryIds.includes(category.id)
+                    const checked = getCategoryCheckboxState({
+                      categories,
+                      selectedIds: selectedCategoryIds,
+                      categoryId: category.id,
+                    })
                     const categoryPath = category.path.join(" / ")
+                    const hasParent = category.parentId !== null
+                    const indentWidth = `${Math.max(category.depth, 0) * 1.2}rem`
 
                     return (
                       <TableRow
@@ -166,7 +183,18 @@ export const CategoryPanel = ({
                           />
                         </TableCell>
                         <TableCell>
-                          <div className="grid gap-0.5">
+                          <div
+                            className="grid gap-0.5"
+                            style={{ paddingLeft: indentWidth }}
+                          >
+                            {hasParent ? (
+                              <span
+                                aria-hidden="true"
+                                className="mb-1 inline-flex items-center"
+                              >
+                                <span className="h-px w-4 bg-slate-300" />
+                              </span>
+                            ) : null}
                             <span className="font-semibold text-slate-900">{category.name}</span>
                             <span className="text-sm text-slate-500">{categoryPath}</span>
                           </div>

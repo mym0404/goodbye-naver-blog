@@ -146,16 +146,26 @@ export class NaverBlogFetcher {
       })) satisfies CategoryInfo[];
   }
 
-  async scanBlog() {
+  async scanBlog({
+    includePosts = false,
+  }: {
+    includePosts?: boolean
+  } = {}): Promise<ScanResult> {
     const [totalPostCount, categories] = await Promise.all([
       this.getPostCount(),
       this.getCategories(),
     ]);
+    const posts = includePosts
+      ? await this.getAllPosts({
+          expectedTotal: totalPostCount,
+        })
+      : undefined;
 
     return {
       blogId: this.blogId,
       totalPostCount,
       categories,
+      ...(posts ? { posts } : {}),
     } satisfies ScanResult;
   }
 

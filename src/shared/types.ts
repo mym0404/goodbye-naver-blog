@@ -300,6 +300,7 @@ export type ScanResult = {
   blogId: string
   totalPostCount: number
   categories: CategoryInfo[]
+  posts?: PostSummary[]
 }
 
 export type ExportJobState = {

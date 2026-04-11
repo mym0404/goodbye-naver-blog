@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { userEvent } from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -24,6 +24,18 @@ const buildJsonResponse = (body: unknown, status = 200) =>
     },
   })
 
+const buildPostSummary = (logNo: number, categoryId: number, categoryName: string) => ({
+  blogId: "mym0404",
+  logNo: String(logNo),
+  title: `${categoryName} 글 ${logNo}`,
+  publishedAt: `2026-04-${String((logNo % 28) + 1).padStart(2, "0")}T04:00:00.000Z`,
+  categoryId,
+  categoryName,
+  source: `https://blog.naver.com/mym0404/${logNo}`,
+  editorVersion: 4 as const,
+  thumbnailUrl: null,
+})
+
 const scanResult: ScanResult = {
   blogId: "mym0404",
   totalPostCount: 12,
@@ -38,10 +50,34 @@ const scanResult: ScanResult = {
       path: ["NestJS"],
       depth: 1,
     },
+    {
+      id: 202,
+      name: "React",
+      parentId: null,
+      postCount: 7,
+      isDivider: false,
+      isOpen: true,
+      path: ["React"],
+      depth: 1,
+    },
+  ],
+  posts: [
+    ...Array.from({ length: 5 }, (_, index) =>
+      buildPostSummary(index + 1, 101, "NestJS"),
+    ),
+    ...Array.from({ length: 7 }, (_, index) =>
+      buildPostSummary(index + 6, 202, "React"),
+    ),
   ],
 }
 
 const previewMarkdown = markdownShowcase
+const exportedOptions = (() => {
+  const options = defaultExportOptions()
+  options.scope.categoryIds = [101]
+  options.frontmatter.aliases.title = "postTitle"
+  return options
+})()
 
 const completedJob: ExportJobState = {
   id: "job-1",
@@ -49,7 +85,7 @@ const completedJob: ExportJobState = {
     blogIdOrUrl: "mym0404",
     outputDir: "./output",
     profile: "gfm",
-    options: defaultExportOptions(),
+    options: exportedOptions,
   },
   status: "completed",
   logs: [
@@ -92,7 +128,21 @@ const completedJob: ExportJobState = {
   error: null,
 }
 
+const runningJob: ExportJobState = {
+  ...completedJob,
+  status: "running",
+  finishedAt: null,
+  progress: {
+    total: 5,
+    completed: 2,
+    failed: 0,
+    warnings: 0,
+  },
+  items: [],
+}
+
 afterEach(() => {
+  cleanup()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
@@ -192,6 +242,11 @@ describe("App", () => {
 
     await user.click(screen.getByRole("button", { name: "전체 해제" }))
     fireEvent.click(screen.getByRole("checkbox", { name: /NestJS/ }))
+    await waitFor(() => {
+      expect(document.querySelector("#selected-post-count")?.textContent).toContain("대상 글 5개 / 전체 12개")
+      expect(document.querySelector("#summary")?.textContent).toContain("총 글5")
+      expect(document.querySelector("#summary")?.textContent).toContain("남음5")
+    })
 
     await user.click(screen.getByRole("button", { name: "예시 보기" }))
 
@@ -227,18 +282,92 @@ describe("App", () => {
       document.querySelector("#preview-panel")?.compareDocumentPosition(document.querySelector("#status-panel") ?? document.body) ?? 0
     expect((previewOrder & Node.DOCUMENT_POSITION_FOLLOWING) !== 0).toBe(true)
 
-    await user.click(screen.getByRole("button", { name: "에러" }))
-    expect(screen.getByRole("button", { name: "에러" })).toHaveClass("is-active")
+    const errorFilterButton = document.querySelector('[data-job-filter="errors"]') as HTMLButtonElement
+    expect(errorFilterButton).not.toBeNull()
+    await user.click(errorFilterButton)
+    expect(errorFilterButton).toHaveClass("is-active")
 
-    await user.click(screen.getByRole("button", { name: "전체" }))
-    const item = screen.getByRole("button", { name: /test\.md/ })
+    const allFilterButton = document.querySelector('[data-job-filter="all"]') as HTMLButtonElement
+    expect(allFilterButton).not.toBeNull()
+    await user.click(allFilterButton)
+    const item = document.querySelector('[data-job-item-id="posts/NestJS/test.md"]') as HTMLButtonElement
+    expect(item).not.toBeNull()
     await user.click(item)
     expect(document.querySelector("#job-file-tree table")).not.toBeNull()
     expect(document.querySelector("#category-list table")).not.toBeNull()
 
-    const modal = screen.getByRole("dialog", { name: "결과 미리보기" })
+    const reactCheckbox = document.querySelector('[data-category-id="202"] button[role="checkbox"]')
+    expect(reactCheckbox).not.toBeNull()
+    fireEvent.click(reactCheckbox as Element)
+    await waitFor(() => {
+      expect(document.querySelector("#summary")?.textContent).toContain("총 글12")
+      expect(document.querySelector("#summary")?.textContent).toContain("남음12")
+    })
+
+    const modal = document.querySelector('[role="dialog"]') as HTMLElement
+    expect(modal).not.toBeNull()
     expect(within(modal).getByText("결과 미리보기")).toBeInTheDocument()
+    expect(modal.className).toContain("!w-[calc(100vw-1.5rem)]")
+    expect(modal.className).toContain("!max-w-[96rem]")
     expect(document.querySelector("#markdown-modal-body")?.textContent).toContain("postTitle:")
     expect(document.querySelector("#markdown-modal-body")?.textContent).toContain("테스트 글")
+  })
+
+  it("hides setup panels while the export job is running", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-defaults")) {
+        return buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse(scanResult)
+      }
+
+      if (url.endsWith("/api/export")) {
+        return buildJsonResponse(
+          {
+            jobId: "job-1",
+          },
+          init?.method === "POST" ? 202 : 200,
+        )
+      }
+
+      if (url.endsWith("/api/export/job-1")) {
+        return buildJsonResponse(runningJob)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText("Blog ID 또는 URL"), "mym0404")
+    await user.click(screen.getByRole("button", { name: "카테고리 스캔" }))
+    await screen.findByText("mym0404 스캔 완료")
+
+    await user.click(screen.getByRole("button", { name: "내보내기" }))
+
+    await waitFor(() => {
+      expect(document.querySelector("#status-text")?.textContent).toContain("running")
+      expect(screen.getByLabelText("Blog ID 또는 URL")).toBeDisabled()
+      expect(screen.getByRole("button", { name: "카테고리 스캔" })).toBeDisabled()
+      expect(document.querySelector("#export-button")).toBeDisabled()
+      expect(document.querySelector("#category-panel")).toBeNull()
+      expect(document.querySelector("#export-panel")).toBeNull()
+      expect(document.querySelector("#preview-panel")).toBeNull()
+      expect(document.querySelector('[data-section-link="category-panel"]')).toBeNull()
+      expect(document.querySelector('[data-mobile-section-link="preview-panel"]')).toBeNull()
+    })
   })
 })
