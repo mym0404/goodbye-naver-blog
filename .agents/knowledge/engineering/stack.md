@@ -30,15 +30,15 @@
 
 ## Application Surfaces
 - `src/server.ts`, `src/server/http-server.ts`: 로컬 HTTP 서버와 API
-- `src/static/*`: scan, category select, export 옵션을 다루는 정적 웹 UI
+- `index.html`, `src/ui/*`: React + Vite 기반 로컬 웹 UI
 - `src/modules/exporter/*`: 전체 export 실행과 단건 export
 - `scripts/export-single-post.ts`: 단건 수동 검증 CLI
-- `scripts/harness/*`: docs, parser, samples, UI smoke, quality report 검증
+- `scripts/harness/*`: parser, samples, UI smoke, quality report 검증
 
 ## Repo Shape
 - `src/modules`: fetcher, parser, reviewer, converter, exporter
 - `src/server`: job store와 HTTP API
 - `src/shared`: 타입, 옵션, parser capability, sample corpus, 유틸
-- `src/static`: 브라우저 UI
+- `src/ui`: React 앱, feature 컴포넌트, hook, Markdown renderer
 - `tests`: unit, integration, smoke 보조 테스트
 - `docs`: 사용자 문서와 generated 보고서

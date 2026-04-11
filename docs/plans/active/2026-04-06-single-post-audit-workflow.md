@@ -870,19 +870,12 @@ pnpm exec tsx scripts/export-single-post.ts \
 UI smoke와 별개로 개별 글 검증이 필요하면 `scripts/export-single-post.ts` 로 같은 글의 Markdown과 diagnostics report를 생성해서 브라우저에서 본 구조와 비교한다.
 ```
 
-- [ ] **Step 3: Run docs validation after the new tracker and runbook are in place**
+- [ ] **Step 3: Review the new tracker and runbook links after the files are in place**
 
-Run:
+Check:
 
-```bash
-pnpm docs:check
-```
-
-Expected:
-
-```text
-docs:check passed
-```
+- `docs/runbooks/single-post-verification.md` and `docs/index.md` both point to the tracker and single-post flow correctly.
+- The command examples still reference the current `scripts/export-single-post.ts` entry point and valid output paths.
 
 ## Task 5: Verify the Whole Workflow End-to-End
 
@@ -950,19 +943,12 @@ Append one concrete checked row to `docs/naver-blog-300-audit-progress.md`:
 | 001 | reviewed | mym0404 | 223034929697 | https://blog.naver.com/mym0404/223034929697 | 4 | paragraph,divider,image,formula,code,linkCard | as-expected | none | baseline single-post workflow verified | none |
 ```
 
-- [ ] **Step 4: Re-run docs validation to make sure the seeded tracker still passes**
+- [ ] **Step 4: Re-read the seeded tracker and runbook after the sample row is added**
 
-Run:
+Check:
 
-```bash
-pnpm docs:check
-```
-
-Expected:
-
-```text
-docs:check passed
-```
+- The new row in `docs/naver-blog-300-audit-progress.md` is still consistent with the runbook field meanings.
+- `docs/index.md` and `docs/runbooks/single-post-verification.md` still route readers to the same workflow without stale command names.
 
 ## Follow-Up Planning Note
 

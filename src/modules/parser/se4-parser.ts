@@ -65,8 +65,10 @@ const parseImageLink = ($link: ReturnType<CheerioAPI>) => {
 
   return {
     sourceUrl: normalizeAssetUrl(sourceUrl),
+    originalSourceUrl: typeof linkData?.src === "string" ? normalizeAssetUrl(linkData.src) : null,
     alt: imageNode.attr("alt") ?? "",
     caption,
+    mediaKind: "image",
   } satisfies ImageData
 }
 
@@ -76,10 +78,9 @@ const buildNaverMapSearchUrl = (query: string) =>
 const parseStickerBlock = ($component: ReturnType<CheerioAPI>) => {
   const stickerLink = $component.find("a.__se_sticker_link").first()
   const linkData = parseJsonAttribute(stickerLink.attr("data-linkdata"))
-  const sourceUrl = [
-    $component.find("img.se-sticker-image").attr("src") ?? null,
-    typeof linkData?.src === "string" ? linkData.src : null,
-  ]
+  const previewSourceUrl = $component.find("img.se-sticker-image").attr("src")?.trim() ?? null
+  const originalSourceUrl = typeof linkData?.src === "string" ? linkData.src.trim() : null
+  const sourceUrl = [previewSourceUrl, originalSourceUrl]
     .find((candidate): candidate is string => Boolean(candidate?.trim()))
     ?.trim()
 
@@ -91,8 +92,10 @@ const parseStickerBlock = ($component: ReturnType<CheerioAPI>) => {
     type: "image",
     image: {
       sourceUrl: normalizeAssetUrl(sourceUrl),
+      originalSourceUrl: originalSourceUrl ? normalizeAssetUrl(originalSourceUrl) : null,
       alt: "",
       caption: null,
+      mediaKind: "sticker",
     },
   } satisfies AstBlock
 }
@@ -101,8 +104,8 @@ const parseImageStripBlock = ($component: ReturnType<CheerioAPI>) => {
   const images = $component
     .find("a.se-module-image-link")
     .toArray()
-    .map((node) => parseImageLink($component.find(node)))
-    .filter((image): image is ImageData => Boolean(image))
+    .map((node): ImageData | null => parseImageLink($component.find(node)))
+    .filter((image): image is ImageData => image !== null)
 
   if (images.length === 0) {
     return null
@@ -351,6 +354,9 @@ const parseFormulaBlock = ({
     html?: string
     latex?: string
     text?: string
+    display?: boolean
+    inline?: boolean
+    isInline?: boolean
   }
   const candidates: string[] = []
 
@@ -388,7 +394,12 @@ const parseFormulaBlock = ({
   return {
     type: "formula",
     formula,
-    display: true,
+    display:
+      !(data.display === false) &&
+      data.inline !== true &&
+      data.isInline !== true &&
+      !$component.hasClass("se-inline-math") &&
+      !$component.hasClass("se-math-inline"),
   } satisfies AstBlock
 }
 
@@ -651,8 +662,8 @@ const parseImageGroupBlock = ($component: ReturnType<CheerioAPI>) => {
   const images = $component
     .find("a.se-module-image-link")
     .toArray()
-    .map((node) => parseImageLink($component.find(node)))
-    .filter((image): image is ImageData => Boolean(image))
+    .map((node): ImageData | null => parseImageLink($component.find(node)))
+    .filter((image): image is ImageData => image !== null)
 
   if (images.length === 0) {
     return null

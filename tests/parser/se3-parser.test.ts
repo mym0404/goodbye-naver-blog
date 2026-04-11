@@ -101,8 +101,10 @@ console.log(legacy)
         type: "image",
         image: {
           sourceUrl: "https://example.com/se3-image.png",
+          originalSourceUrl: null,
           alt: "se3 image",
           caption: null,
+          mediaKind: "image",
         },
       },
     ])
@@ -122,13 +124,17 @@ console.log(legacy)
         images: [
           {
             sourceUrl: "https://example.com/one.png",
+            originalSourceUrl: null,
             alt: "one",
             caption: null,
+            mediaKind: "image",
           },
           {
             sourceUrl: "https://example.com/two.png",
+            originalSourceUrl: null,
             alt: "two",
             caption: null,
+            mediaKind: "image",
           },
         ],
       },

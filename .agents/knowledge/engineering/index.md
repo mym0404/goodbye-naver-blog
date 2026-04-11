@@ -8,12 +8,12 @@
 
 ## 관련 코드
 - [../../../package.json](../../../package.json)
-- [../../../scripts/harness/check-doc-graph.ts](../../../scripts/harness/check-doc-graph.ts)
 - [../../../scripts/harness/check-parser-capabilities.ts](../../../scripts/harness/check-parser-capabilities.ts)
+- [../../../scripts/harness/generate-quality-report.ts](../../../scripts/harness/generate-quality-report.ts)
 
 ## 검증 방법
-- `pnpm docs:check`
 - `pnpm check:quick`
+- 필요 시 `pnpm quality:report`
 
 ## Read This When
 - 어떤 스택과 런타임을 쓰는지 확인해야 할 때

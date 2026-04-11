@@ -1,0 +1,45 @@
+@import "tailwindcss";
+@import "./dashboard.css";
+@import "katex/dist/katex.min.css";
+
+@source "../**/*.{ts,tsx}";
+
+:root {
+  color-scheme: light;
+  --background: #f4f7fb;
+  --foreground: #162132;
+  --card: #ffffff;
+  --card-foreground: #162132;
+  --popover: #ffffff;
+  --popover-foreground: #162132;
+  --primary: #3366ff;
+  --primary-foreground: #f8fbff;
+  --secondary: #edf3ff;
+  --secondary-foreground: #29405e;
+  --muted: #edf2f8;
+  --muted-foreground: #52657d;
+  --accent: #eff4ff;
+  --accent-foreground: #1e3149;
+  --destructive: #d9485f;
+  --destructive-foreground: #fff7f8;
+  --border: #d7e0eb;
+  --input: #d7e0eb;
+  --ring: #3366ff;
+  --sidebar-background: #1f3045;
+  --sidebar-foreground: #f5f8fd;
+  --sidebar-muted-foreground: #a8bbd3;
+  --success: #198754;
+  --success-foreground: #f3fff8;
+  --warning: #b7791f;
+  --warning-foreground: #fffaf0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}

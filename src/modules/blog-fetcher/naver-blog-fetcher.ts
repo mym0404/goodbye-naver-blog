@@ -227,6 +227,18 @@ export class NaverBlogFetcher {
     sourceUrl: string
     destinationPath: string
   }) {
+    const binary = await this.fetchBinary({
+      sourceUrl,
+    })
+    await ensureDir(path.dirname(destinationPath))
+    await writeFile(destinationPath, binary.bytes)
+  }
+
+  async fetchBinary({
+    sourceUrl,
+  }: {
+    sourceUrl: string
+  }) {
     const normalizedSourceUrl = normalizeAssetUrl(sourceUrl)
     const response = await fetch(normalizedSourceUrl, {
       headers: {
@@ -241,8 +253,11 @@ export class NaverBlogFetcher {
     }
 
     const arrayBuffer = await response.arrayBuffer()
-    await ensureDir(path.dirname(destinationPath))
-    await writeFile(destinationPath, Buffer.from(arrayBuffer))
+
+    return {
+      bytes: Buffer.from(arrayBuffer),
+      contentType: response.headers.get("content-type"),
+    }
   }
 
   private async fetchJson<Result>({

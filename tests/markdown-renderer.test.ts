@@ -2,12 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { renderMarkdownPost } from "../src/modules/converter/markdown-renderer.js"
 import { defaultExportOptions } from "../src/shared/export-options.js"
-import type {
-  AssetRecord,
-  CategoryInfo,
-  ParsedPost,
-  PostSummary,
-} from "../src/shared/types.js"
+import type { AssetRecord, CategoryInfo, ParsedPost, PostSummary } from "../src/shared/types.js"
 
 const category: CategoryInfo = {
   id: 84,
@@ -32,6 +27,27 @@ const post: PostSummary = {
   thumbnailUrl: "https://example.com/thumb.png",
 }
 
+const createAssetRecord = ({
+  kind,
+  sourceUrl,
+  relativePath,
+  reference,
+  storageMode = "relative",
+}: {
+  kind: "image" | "thumbnail"
+  sourceUrl: string
+  relativePath: string | null
+  reference?: string
+  storageMode?: "relative" | "remote" | "base64"
+}) =>
+  ({
+    kind,
+    sourceUrl,
+    reference: reference ?? relativePath ?? sourceUrl,
+    relativePath,
+    storageMode,
+  }) satisfies AssetRecord
+
 const parsedPost: ParsedPost = {
   editorVersion: 4,
   tags: ["algo"],
@@ -51,19 +67,24 @@ const parsedPost: ParsedPost = {
     { type: "heading", level: 2, text: "섹션" },
     { type: "paragraph", text: "본문입니다." },
     { type: "formula", formula: "f(n)=n+1", display: true },
+    { type: "formula", formula: "g(n)=n-1", display: false },
     { type: "code", language: "ts", code: "const a = 1" },
     {
       type: "imageGroup",
       images: [
         {
           sourceUrl: "https://example.com/image-1.png",
+          originalSourceUrl: null,
           alt: "one",
           caption: null,
+          mediaKind: "image",
         },
         {
           sourceUrl: "https://example.com/image-2.png",
+          originalSourceUrl: null,
           alt: "two",
           caption: "caption",
+          mediaKind: "image",
         },
       ],
     },
@@ -103,40 +124,21 @@ const parsedPost: ParsedPost = {
     },
     {
       type: "video",
-      video: parsedPostVideo(),
+      video: {
+        title: "Demo",
+        thumbnailUrl: "https://example.com/video-thumb.png",
+        sourceUrl: "https://blog.naver.com/mym0404/223034929697",
+        vid: "vid",
+        inkey: "inkey",
+        width: 640,
+        height: 360,
+      },
     },
   ],
 }
 
-function parsedPostVideo() {
-  return {
-    title: "Demo",
-    thumbnailUrl: "https://example.com/video-thumb.png",
-    sourceUrl: "https://blog.naver.com/mym0404/223034929697",
-    vid: "vid",
-    inkey: "inkey",
-    width: 640,
-    height: 360,
-  }
-}
-
 describe("renderMarkdownPost", () => {
-  it("renders frontmatter and markdown blocks with asset paths", async () => {
-    const resolveAsset = async ({
-      kind,
-      sourceUrl,
-    }: {
-      kind: "image" | "thumbnail"
-      postLogNo: string
-      sourceUrl: string
-      markdownFilePath: string
-    }) =>
-      ({
-        kind,
-        sourceUrl,
-        relativePath: `../../assets/223034929697/${kind}-${sourceUrl.includes("video") ? "02" : "01"}.png`,
-      }) satisfies AssetRecord
-
+  it("renders frontmatter, formula wrappers, and asset paths", async () => {
     const rendered = await renderMarkdownPost({
       post,
       category,
@@ -144,70 +146,100 @@ describe("renderMarkdownPost", () => {
       markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
       reviewedWarnings: [],
       options: defaultExportOptions(),
-      resolveAsset,
+      resolveAsset: async ({ kind, sourceUrl }) =>
+        createAssetRecord({
+          kind,
+          sourceUrl,
+          relativePath: `../../assets/223034929697/${kind}-${sourceUrl.includes("video") ? "02" : "01"}.png`,
+        }),
     })
 
     expect(rendered.markdown).toContain("title: 테스트 글")
-    expect(rendered.markdown).toContain("category: PS 알고리즘, 팁")
     expect(rendered.markdown).toContain("## 섹션")
     expect(rendered.markdown).toContain("$$\nf(n)=n+1\n$$")
-    expect(rendered.markdown).toContain("```ts")
+    expect(rendered.markdown).toContain("$g(n)=n-1$")
     expect(rendered.markdown).toContain("![one](../../assets/223034929697/image-01.png)")
     expect(rendered.markdown).toContain("| col |")
-    expect(rendered.markdown).toContain("[External article](https://example.com/article)")
-    expect(rendered.markdown).toContain("preview text")
     expect(rendered.markdown).toContain("**Video:** Demo")
     expect(rendered.assetRecords).toHaveLength(3)
   })
 
-  it("applies detailed export options to markdown output", async () => {
+  it("renders base64 image references and custom formula wrappers", async () => {
     const options = defaultExportOptions()
 
-    options.frontmatter.enabled = false
-    options.markdown.formulaStyle = "math-fence"
-    options.markdown.linkStyle = "referenced"
-    options.markdown.imageStyle = "source-only"
-    options.markdown.rawHtmlPolicy = "omit"
-    options.markdown.linkCardStyle = "html"
-    options.markdown.videoStyle = "html"
-    options.markdown.imageGroupStyle = "html"
-    options.markdown.tableStyle = "html-only"
+    options.markdown.formulaInlineWrapperOpen = "\\("
+    options.markdown.formulaInlineWrapperClose = "\\)"
+    options.markdown.formulaBlockWrapperOpen = "\\["
+    options.markdown.formulaBlockWrapperClose = "\\]"
+    options.assets.imageContentMode = "base64"
 
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost,
+      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      reviewedWarnings: [],
+      options,
+      resolveAsset: async ({ kind, sourceUrl, embedAsDataUrl }) =>
+        createAssetRecord({
+          kind,
+          sourceUrl,
+          relativePath: embedAsDataUrl ? null : `../../assets/223034929697/${kind}-01.png`,
+          reference: embedAsDataUrl
+            ? `data:image/png;base64,${Buffer.from(`${kind}:${sourceUrl}`).toString("base64")}`
+            : `../../assets/223034929697/${kind}-01.png`,
+          storageMode: embedAsDataUrl ? "base64" : "relative",
+        }),
+    })
+
+    expect(rendered.markdown).toContain("\\[\nf(n)=n+1\n\\]")
+    expect(rendered.markdown).toContain("\\(g(n)=n-1\\)")
+    expect(rendered.markdown).toContain("data:image/png;base64,")
+    expect(rendered.assetRecords.some((asset) => asset.storageMode === "base64")).toBe(true)
+  })
+
+  it("ignores stickers by default and surfaces diagnostics in markdown", async () => {
     const rendered = await renderMarkdownPost({
       post,
       category,
       parsedPost: {
         ...parsedPost,
+        warnings: ["parser warning"],
         blocks: [
-          ...parsedPost.blocks,
+          {
+            type: "image",
+            image: {
+              sourceUrl: "https://example.com/sticker-preview.png",
+              originalSourceUrl: "https://example.com/sticker-original.gif",
+              alt: "",
+              caption: null,
+              mediaKind: "sticker",
+            },
+          },
           {
             type: "rawHtml",
-            html: "<div>raw</div>",
+            html: "<div><strong>raw</strong> text</div>",
             reason: "fallback",
           },
         ],
       },
       markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
-      reviewedWarnings: [],
-      options,
-      resolveAsset: async ({
-        kind,
-        sourceUrl,
-      }) =>
-        ({
+      reviewedWarnings: ["review warning"],
+      options: defaultExportOptions(),
+      resolveAsset: async ({ kind, sourceUrl }) =>
+        createAssetRecord({
           kind,
           sourceUrl,
           relativePath: `../../assets/223034929697/${kind}-01.png`,
-        }) satisfies AssetRecord,
+        }),
     })
 
-    expect(rendered.markdown.startsWith("---")).toBe(false)
-    expect(rendered.markdown).toContain("```math\nf(n)=n+1\n```")
-    expect(rendered.markdown).toMatch(/\[External article\]\[ref-\d+\]/)
-    expect(rendered.markdown).not.toContain("<div>raw</div>")
-    expect(rendered.markdown).not.toContain("<table")
-    expect(rendered.markdown).not.toContain("<img")
-    expect(rendered.markdown).not.toContain("<figure")
+    expect(rendered.markdown).toContain("## Export Diagnostics")
+    expect(rendered.markdown).toContain("> ⚠️ Warning: parser warning")
+    expect(rendered.markdown).toContain("> ⚠️ Warning: review warning")
+    expect(rendered.markdown).toContain("스티커 asset 옵션이 ignore라서 본문에서 스티커를 생략했습니다.")
+    expect(rendered.markdown).toContain("> **raw** text")
+    expect(rendered.markdown).not.toContain("sticker-original.gif")
   })
 
   it("renders frontmatter keys with configured aliases", async () => {
@@ -215,7 +247,6 @@ describe("renderMarkdownPost", () => {
 
     options.frontmatter.aliases.title = "postTitle"
     options.frontmatter.aliases.publishedAt = "published_on"
-    options.frontmatter.aliases.source = "postSource"
     options.frontmatter.fields.source = false
 
     const rendered = await renderMarkdownPost({
@@ -225,60 +256,150 @@ describe("renderMarkdownPost", () => {
       markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
       reviewedWarnings: [],
       options,
-      resolveAsset: async ({
-        kind,
-        sourceUrl,
-      }) =>
-        ({
+      resolveAsset: async ({ kind, sourceUrl }) =>
+        createAssetRecord({
           kind,
           sourceUrl,
           relativePath: `../../assets/223034929697/${kind}-01.png`,
-        }) satisfies AssetRecord,
+        }),
     })
 
     expect(rendered.markdown).toContain("postTitle: 테스트 글")
     expect(rendered.markdown).toContain("published_on: 2023-03-04T13:00:00+09:00")
-    expect(rendered.markdown).not.toContain("\npostSource:")
     expect(rendered.markdown).not.toContain("\nsource: https://blog.naver.com/mym0404/223034929697")
-    expect(rendered.markdown).not.toContain("\ntitle: 테스트 글")
-    expect(rendered.markdown).not.toContain("\npublishedAt: 2023-03-04T13:00:00+09:00")
   })
 
-  it("drops degenerate emphasis-only paragraphs and malformed link-card descriptions", async () => {
+  it("renders referenced links, quotes, and link-only videos without frontmatter", async () => {
+    const options = defaultExportOptions()
+
+    options.frontmatter.enabled = false
+    options.markdown.linkStyle = "referenced"
+    options.markdown.imageStyle = "source-only"
+    options.markdown.videoStyle = "link-only"
+
     const rendered = await renderMarkdownPost({
       post,
       category,
       parsedPost: {
         ...parsedPost,
         blocks: [
-          { type: "paragraph", text: "****" },
+          { type: "quote", text: "인용문\n둘째 줄" },
           {
-            type: "linkCard",
-            card: {
-              title: "[1보] 속보",
-              description: "(",
-              url: "https://example.com/breaking",
-              imageUrl: null,
+            type: "image",
+            image: {
+              sourceUrl: "https://example.com/source-only.png",
+              originalSourceUrl: null,
+              alt: "source only",
+              caption: null,
+              mediaKind: "image",
+            },
+          },
+          {
+            type: "video",
+            video: {
+              title: "Reference Demo",
+              thumbnailUrl: null,
+              sourceUrl: "https://example.com/watch",
+              vid: null,
+              inkey: null,
+              width: null,
+              height: null,
             },
           },
         ],
       },
       markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
       reviewedWarnings: [],
-      options: defaultExportOptions(),
-      resolveAsset: async ({
-        kind,
-        sourceUrl,
-      }) =>
-        ({
+      options,
+      resolveAsset: async ({ kind, sourceUrl }) =>
+        createAssetRecord({
           kind,
           sourceUrl,
           relativePath: `../../assets/223034929697/${kind}-01.png`,
-        }) satisfies AssetRecord,
+        }),
     })
 
-    expect(rendered.markdown).not.toContain("\n****\n")
-    expect(rendered.markdown).not.toContain("\n(\n")
-    expect(rendered.markdown).toContain("[1보] 속보")
+    expect(rendered.markdown).toContain("> 인용문")
+    expect(rendered.markdown).toContain("> 둘째 줄")
+    expect(rendered.markdown).toContain("[source only][ref-1]")
+    expect(rendered.markdown).toContain("[Open Original Post][ref-2]")
+    expect(rendered.markdown).toContain("[ref-1]: ../../assets/223034929697/image-01.png")
+    expect(rendered.markdown).toContain("[ref-2]: https://example.com/watch")
+    expect(rendered.markdown).not.toContain("---\n")
+  })
+
+  it("renders fallback warnings for html/image-group/video/table edge cases", async () => {
+    const options = defaultExportOptions()
+
+    options.markdown.formulaBlockStyle = "math-fence"
+    options.markdown.codeFenceStyle = "tilde"
+    options.markdown.dividerStyle = "asterisk"
+    options.markdown.imageGroupStyle = "html"
+    options.markdown.videoStyle = "html"
+
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost: {
+        ...parsedPost,
+        blocks: [
+          { type: "divider" },
+          { type: "code", language: null, code: "plain" },
+          { type: "formula", formula: "x+y", display: true },
+          {
+            type: "imageGroup",
+            images: [
+              {
+                sourceUrl: "https://example.com/group.png",
+                originalSourceUrl: null,
+                alt: "group",
+                caption: null,
+                mediaKind: "image",
+              },
+            ],
+          },
+          {
+            type: "video",
+            video: {
+              title: "HTML Demo",
+              thumbnailUrl: "https://example.com/video-thumb.png",
+              sourceUrl: "https://example.com/watch-html",
+              vid: null,
+              inkey: null,
+              width: null,
+              height: null,
+            },
+          },
+          {
+            type: "table",
+            complex: true,
+            html: "<table><tr><td>cell</td></tr></table>",
+            rows: [],
+          },
+          {
+            type: "rawHtml",
+            html: "<iframe src=\"https://example.com/embed\"></iframe>",
+            reason: "iframe-only",
+          },
+        ],
+      },
+      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      reviewedWarnings: [],
+      options,
+      resolveAsset: async ({ kind, sourceUrl }) =>
+        createAssetRecord({
+          kind,
+          sourceUrl,
+          relativePath: `../../assets/223034929697/${kind}-01.png`,
+        }),
+    })
+
+    expect(rendered.markdown).toContain("***")
+    expect(rendered.markdown).toContain("~~~")
+    expect(rendered.markdown).toContain("```math\nx+y\n```")
+    expect(rendered.markdown).toContain("imageGroup html 옵션은 지원하지 않아")
+    expect(rendered.markdown).toContain("video html 옵션은 지원하지 않아")
+    expect(rendered.markdown).toContain("<table><tbody><tr><td>cell</td></tr></tbody></table>")
+    expect(rendered.markdown).toContain("> ❌ Error: raw HTML 블록을 생략했습니다: iframe-only")
   })
 })

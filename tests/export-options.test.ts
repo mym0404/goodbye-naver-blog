@@ -4,6 +4,7 @@ import {
   cloneExportOptions,
   frontmatterFieldMeta,
   getFrontmatterExportKey,
+  optionDescriptions,
   validateFrontmatterAliases,
 } from "../src/shared/export-options.js"
 
@@ -20,6 +21,10 @@ describe("export options", () => {
     expect(options.frontmatter.aliases.title).toBe("postTitle")
     expect(options.frontmatter.aliases.source).toBe("")
     expect(options.frontmatter.fields.title).toBe(true)
+    expect(options.assets.stickerAssetMode).toBe("ignore")
+    expect(options.assets.imageContentMode).toBe("path")
+    expect(options.markdown.formulaInlineWrapperOpen).toBe("$")
+    expect(options.markdown.formulaBlockWrapperOpen).toBe("$$")
   })
 
   it("returns field name when alias is blank", () => {
@@ -82,5 +87,11 @@ describe("export options", () => {
       defaultAlias: "title",
     })
     expect(frontmatterFieldMeta.assetPaths.defaultAlias).toBe("assetPaths")
+  })
+
+  it("exposes option descriptions for newly added export controls", () => {
+    expect(optionDescriptions["assets-stickerAssetMode"]).toContain("네이버 스티커")
+    expect(optionDescriptions["assets-imageContentMode"]).toContain("base64")
+    expect(optionDescriptions["markdown-formulaBlockWrapperOpen"]).toContain("$$")
   })
 })

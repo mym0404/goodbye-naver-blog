@@ -15,8 +15,12 @@ The export result also becomes easier to inspect while a job is running. The das
 - [x] (2026-04-11 03:08Z) Repository structure, knowledge docs, current option model, renderer/exporter flow, job UI, test suite, README, and GitHub workflow were inspected.
 - [x] (2026-04-11 03:08Z) ExecPlans scaffolding was added to `AGENTS.md` and `.agents/PLANS.md`.
 - [x] (2026-04-11 03:08Z) Draft ExecPlan created in `docs/plans/active/` based on current code rather than guesswork.
-- [ ] Confirm the final acceptance checklist, especially whether fatal export failures should also emit a Markdown stub file or remain UI/manifest-only diagnostics.
-- [ ] Confirm the milestone boundaries and adjust this plan if the user wants a different handoff between option work, UI work, and coverage work.
+- [x] (2026-04-11 03:12Z) User confirmed fatal export failures should stay as `manifest + UI` diagnostics without Markdown stub files.
+- [x] (2026-04-11 03:12Z) User confirmed the milestone order should remain `옵션/모델 -> 렌더링/manifest -> Job UI -> coverage/docs/CI`.
+- [x] (2026-04-11 03:13Z) Sub-agent audit confirmed request items 1 through 9 are all covered by this plan and found no missing feature scope.
+- [x] (2026-04-11 03:42Z) Shared option model, parser provenance, renderer diagnostics, asset store base64 path, manifest/job item state, dashboard controls, completed-item tree, modal preview, docs, and CI updates were implemented.
+- [x] (2026-04-11 03:47Z) Coverage gate reached `93.82%` lines/statements, `97.24%` functions, and `81.54%` branches via `pnpm test:coverage`.
+- [x] (2026-04-11 03:47Z) End-to-end validation passed with `pnpm check:full`, including `samples:verify` and the updated `smoke:ui` flow.
 
 ## Surprises & Discoveries
 
@@ -28,6 +32,9 @@ The export result also becomes easier to inspect while a job is running. The das
 
 - Observation: coverage is not configured yet. The repository has no `vitest.config.ts`, so a 90% gate will need an explicit coverage provider and thresholds instead of relying on defaults.
   Evidence: repository search found no `vitest.config.*` file, and `package.json` only defines `vitest run --silent`.
+
+- Observation: the new modal shell can silently block the whole dashboard if hidden state is left to generic browser defaults alone.
+  Evidence: `pnpm smoke:ui` initially failed because `.markdown-modal-backdrop` intercepted clicks while `#markdown-modal` still had `hidden`, and adding `.markdown-modal[hidden] { display: none; }` fixed the scan-button deadlock.
 
 ## Decision Log
 
@@ -43,9 +50,17 @@ The export result also becomes easier to inspect while a job is running. The das
   Rationale: preview, export, CLI usage, manifest capture, and tests already rely on the shared option schema, so any partial wiring would create drift immediately.
   Date/Author: 2026-04-11 / Codex
 
+- Decision: Fatal post export failures will not generate Markdown stub files; they will remain visible through `manifest.json` and the dashboard file tree diagnostics only.
+  Rationale: the user explicitly chose the lighter failure path, and request item 8 only requires Markdown warning/error callouts where Markdown output actually exists.
+  Date/Author: 2026-04-11 / Codex
+
+- Decision: Keep the milestone order as `shared option model -> renderer/export pipeline -> running job UI -> coverage/docs/CI`.
+  Rationale: the user explicitly approved this boundary, and it keeps each milestone independently verifiable with minimal cross-milestone rollback risk.
+  Date/Author: 2026-04-11 / Codex
+
 ## Outcomes & Retrospective
 
-No implementation has started yet. The useful outcome of this revision is that the work is now anchored to the actual parser, renderer, static UI, manifest, and CI surfaces already present in the repository instead of a generic feature list. The main remaining gap is user confirmation on the exact acceptance behavior for fatal post failures versus recoverable Markdown callouts.
+Implementation finished across all four milestones. The shared option contract now carries sticker handling, base64 image embedding, and separate inline/block LaTeX wrapper controls with per-option descriptions exposed through `/api/export-defaults`. The parser and renderer preserve sticker provenance, render wrapper-configurable math, emit Markdown warning/error callouts with extracted fallback text, and keep fatal post failures in `manifest + UI` only. The export job state now streams completed/failed items into the dashboard file tree, supports warning/error filtering, and opens a modal Markdown preview. Validation was hardened with `vitest.config.ts`, a `pnpm test:coverage` command, Codecov upload in GitHub Actions, updated README/docs/knowledge files, and a final `pnpm check:full` plus `pnpm test:coverage` pass above the 90% coverage bar.
 
 ## Context and Orientation
 
@@ -90,11 +105,11 @@ For Milestone 3, add or update server and UI tests:
 
 The smoke flow should scan a blog, start export, observe completed-item entries, filter to warnings or errors, and open the modal preview for at least one exported Markdown file.
 
-For Milestone 4, introduce the coverage gate and documentation updates:
+For Milestone 4, introduce the coverage gate and documentation sync:
 
     pnpm test -- --coverage
     pnpm check:quick
-    pnpm docs:check
+    pnpm quality:report
 
 When the implementation is complete, the final full validation should be:
 
@@ -117,7 +132,7 @@ The job UI acceptance bar is that during or after export the dashboard shows a c
 
 The coverage/CI acceptance bar is that a local coverage command fails when the repository drops below 90%, `README.md` shows a Codecov badge, and `.github/workflows/required-checks.yml` both validates the repo and uploads coverage. The final implementation must keep overall coverage at or above 90% rather than adding a badge without enforcement.
 
-One product decision still needs explicit confirmation before this ExecPlan should be treated as final: whether a fully failed post export should also emit a stub Markdown file containing a `> ❌ Error:` note, or whether manifest + dashboard diagnostics are sufficient for fatal failures while Markdown callouts remain limited to successful or partially recovered exports.
+Fatal post failures are accepted only when they stay visible in the completed-item tree and `manifest.json` with explicit error diagnostics. Markdown warning/error callouts are required for successful or partially recovered outputs that still produce a Markdown file; they are not required to create stub files for fully failed posts.
 
 ## Idempotence and Recovery
 
@@ -158,4 +173,4 @@ Expected UI evidence:
 
 `README.md`, `.agents/knowledge/engineering/validation.md`, `.agents/knowledge/product/product-outline.md`, `.agents/knowledge/product/ui-dashboard-design-system.md`, and `docs/index.md` must be updated in the same change so documentation matches code. `.github/workflows/required-checks.yml` and the new coverage configuration must point at the same coverage command the repository expects contributors to run locally.
 
-Revision note: 2026-04-11. Created the initial ExecPlan after inspecting the current parser, renderer, static UI, docs, and CI surfaces so implementation can start from repository facts rather than assumptions.
+Revision note: 2026-04-11. Updated the initial ExecPlan with explicit user decisions: fatal failures remain `manifest + UI` diagnostics only, the milestone order stays `옵션/모델 -> 렌더링/manifest -> Job UI -> coverage/docs/CI`, and a sub-agent audit confirmed that request items 1 through 9 are all covered.

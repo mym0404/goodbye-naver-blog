@@ -1,92 +1,77 @@
 # UI Dashboard Design System
 
 ## 목적
-정적 UI를 `Admindek` 계열의 밝은 분석 대시보드로 유지하기 위한 기준 문서다.
+React 대시보드를 shadcn semantic token과 source-based component composition 중심으로 유지하기 위한 기준 문서다.
 
 ## Source Of Truth
-- 구조: `src/static/index.html`
-- 시각 토큰과 컴포넌트 규칙: `src/static/styles.css`
-- 상태 렌더링과 frontmatter 상호작용: `src/static/app.js`
-- 수동 검증 절차: `docs/runbooks/browser-verification.md`
+- 구조와 상태 흐름: `src/ui/App.tsx`
+- semantic token: `src/ui/styles/globals.css`
+- 앱 전용 layout/surface 보정: `src/ui/styles/dashboard.css`
+- Markdown renderer: `src/ui/lib/markdown.tsx`
+- 브라우저 검증: `scripts/harness/run-ui-smoke.ts`, `docs/runbooks/browser-verification.md`
 
 ## 관련 코드
-- [../../../src/static/index.html](../../../src/static/index.html)
-- [../../../src/static/styles.css](../../../src/static/styles.css)
-- [../../../src/static/app.js](../../../src/static/app.js)
-- [../../../docs/runbooks/browser-verification.md](../../../docs/runbooks/browser-verification.md)
+- [../../../src/ui/App.tsx](../../../src/ui/App.tsx)
+- [../../../src/ui/styles/globals.css](../../../src/ui/styles/globals.css)
+- [../../../src/ui/styles/dashboard.css](../../../src/ui/styles/dashboard.css)
+- [../../../src/ui/lib/markdown.tsx](../../../src/ui/lib/markdown.tsx)
+- [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
 
 ## 검증 방법
-- `pnpm check:quick`
+- `pnpm typecheck`
+- `pnpm test:coverage`
 - `pnpm smoke:ui`
 
 ## Style Direction
-- 메인 캔버스는 밝은 회백색, 좌측 사이드바는 진한 네이비 톤을 사용한다.
-- 상단은 얇은 utility bar와 scan workbench로 구성한다.
-- KPI strip은 컬러 카드 4장으로 고정한다.
-- 본문은 흰색 카드 기반의 분석 보드로 구성하고, status와 logs도 별도 rail이 아니라 같은 보드 안에 둔다.
-- export 전에는 현재 선택 범위의 대표 글을 기준으로 예시 Markdown preview를 먼저 확인한다.
+- 메인 캔버스는 밝은 blue-neutral surface, 좌측은 deep navy sidebar를 사용한다.
+- 상단 hero card, KPI strip, 3개 workbench board를 같은 shadcn card hierarchy 안에 둔다.
+- preview, options, status는 각각 독립 board지만 spacing, border, shadow rhythm을 공유한다.
+- layout은 desktop에서 `sidebar + fluid main`, mobile에서는 single-column stack으로 접힌다.
 
 ## Tokens
-- Page background: `#EEF3F9`, `#E5EDF6`
-- Sidebar: `#253447`, `#1D2938`
-- Surface: `#FFFFFF`, `#F7F9FC`, `#F2F6FB`
-- Border: `#DCE5F0`, `#C8D5E4`
-- Text: `#243244`, `#17212F`
-- Muted text: `#708299`
-- Primary: `#4D7AF7`
-- Accent cyan: `#1BC7DE`
-- Accent green: `#48B74D`
-- Warning: `#F2B544`
-- Danger: `#E95F76`
-
-## Typography
-- 기본 UI와 본문은 `Public Sans`
-- KPI 숫자, 상태 배지, 로그는 `IBM Plex Mono`
-- 본문 최소 크기는 16px, line-height는 1.6 이상 유지한다.
-- 숫자형 데이터는 mono 계열과 tabular한 인상을 우선한다.
-
-## Layout
-- 기본 구조는 `left sidebar + topbar/workbench + KPI strip + content board`다.
-- 데스크톱은 `272px sidebar + fluid main` 구조를 유지한다.
-- `1080px` 이하에서는 sidebar를 상단 블록으로 접는다.
-- `900px` 이하에서는 scan toolbar, control bar, status layout, frontmatter row를 1열로 접는다.
-- 모바일에서 가로 스크롤은 허용하지 않는다.
+- Background: `#F4F7FB`
+- Foreground: `#162132`
+- Card: `#FFFFFF`
+- Primary: `#3366FF`
+- Secondary: `#EDF3FF`
+- Muted background: `#EDF2F8`
+- Muted foreground: `#52657D`
+- Border/Input: `#D7E0EB`
+- Sidebar background: `#1F3045`
+- Sidebar foreground: `#F5F8FD`
+- Success: `#198754`
+- Warning: `#B7791F`
+- Destructive: `#D9485F`
 
 ## Component Rules
-- primary action은 파란 버튼 한 계층으로 둔다.
-- secondary action은 밝은 배경의 ghost button만 사용한다.
-- `scan-status`, `status-text`는 pill 형태를 유지하되 상태별 색만 달라진다.
-- category row는 `checkbox + subtle left guide + meta + count pill` 구조를 유지한다.
-- option group은 밝은 카드와 얇은 border를 공유한다.
-- preview panel은 candidate post 요약과 Markdown preformatted block을 함께 보여준다.
-- frontmatter row는 `toggle + description + alias input` 묶음으로 항상 노출한다.
-- frontmatter alias 오류는 상단 상태 배너와 행 border 강조를 동시에 사용한다.
-- logs panel은 진한 콘솔 배경을 사용하되 외곽 카드 시스템은 본문과 동일하게 맞춘다.
-- export 결과 본문에는 raw HTML을 남기지 않는다. HTML fallback은 생략 또는 best-effort Markdown 변환으로 처리한다.
+- `CardHeader/CardDescription/CardContent`를 기본 계층으로 사용한다. 큰 feature도 임의 wrapper 대신 card composition으로 쪼갠다.
+- 텍스트 입력은 `Input`, 상태 pill과 count는 `Badge`, 오류/가이드 배너는 `Alert`, 탭 그룹은 `Tabs`, modal은 `Dialog`를 우선한다.
+- custom CSS는 layout, responsive folding, markdown skin, feature surface 보정만 담당한다.
+- category/search/output/preview/status의 DOM hook은 유지한다.
+  `#blogIdOrUrl`, `#scan-button`, `#preview-button`, `#export-button`, `#job-file-tree`, `#markdown-modal`, `[data-preview-mode]`, `[data-job-filter]`, `#summary`, `#status-text`, `#logs`
+- option panel은 `Tabs`로 `범위 / 구조 / Markdown / Assets`를 구분한다.
+- preview는 floating segmented toggle로 `소스보기 / 같이보기 / 결과보기`를 유지한다.
+- 결과 modal과 preview renderer는 모두 `react-markdown + remark-gfm + remark-math + rehype-katex + rehype-sanitize` 경로를 사용한다.
+
+## Icon Rules
+- 프로젝트 아이콘은 Remix icon만 사용한다.
+- 허용 위치는 `네비게이션 보조 / 상태 / 파일 / 액션`이다.
+- 상단 브랜드 장식 아이콘은 금지한다.
+- 텍스트만으로 충분한 곳에는 아이콘을 억지로 추가하지 않는다.
 
 ## Accessibility
-- 텍스트 대비는 밝은 표면 기준 4.5:1 이상을 유지한다.
-- focus ring은 파란 계열 4px halo를 공통으로 사용한다.
-- 버튼과 주요 입력의 높이는 48px 이상 유지한다.
-- frontmatter, category, export 상태는 색만이 아니라 텍스트와 border 변화로도 구분한다.
-- `prefers-reduced-motion`에서는 transition과 animation을 제거한다.
+- normal text contrast는 밝은 surface 기준 최소 `4.5:1`을 유지한다.
+- `text-muted-foreground`와 커스텀 설명 텍스트는 모두 같은 contrast policy를 따라야 한다.
+- 버튼, filter chip, 상태 badge는 높이와 baseline이 흔들리지 않게 유지한다.
+- focus ring은 primary halo를 사용하고, 상태는 색뿐 아니라 텍스트와 border로도 구분한다.
 
-## Motion
-- 상호작용 transition은 `180ms` 또는 `260ms`만 사용한다.
-- hover는 이동보다 border와 shadow 변화를 우선한다.
-- expanded/collapsed chevron 회전만 허용하고 과한 enter animation은 넣지 않는다.
+## Validation Rules
+- `scripts/harness/run-ui-smoke.ts`의 contrast gate selector는 회귀 방지 대상이다.
+- 현재 contrast gate 대상에는 category status, preview status, panel description, field help, frontmatter description, results description, file meta, modal meta, markdown frontmatter key가 포함된다.
+- smoke screenshot capture는 `docs/generated/ui-review/round-01`부터 `round-05`까지 동일 시나리오로 누적한다.
 
 ## Anti-Patterns
-- hero 중심의 큰 헤더 재도입 금지
-- 우측 sticky status rail 재도입 금지
-- dark glass panel을 본문 카드 기본값으로 사용하는 것 금지
-- frontmatter 설명을 숨기거나 접힘 안으로 넣는 것 금지
-- status/logs를 본문과 다른 시각 언어로 분리하는 것 금지
-
-## Screenshot Review Checklist
-- 좌측 사이드바, 상단 툴바, KPI strip의 정렬이 맞는지
-- KPI 카드의 숫자 가독성과 대비가 충분한지
-- category row와 frontmatter row가 과밀하지 않은지
-- disabled, focus, error, selected 상태가 바로 보이는지
-- 모바일 375px에서 한 컬럼으로 자연스럽게 접히는지
-- logs panel과 summary 카드가 같은 대시보드 계층 안에서 읽히는지
+- raw hex를 feature component 내부 className에 직접 넣는 것
+- `muted`를 설명문, disabled, meta, 상태 문구에 구분 없이 재사용하는 것
+- sidebar brand에 장식 아이콘을 다시 넣는 것
+- preview/status/logs를 서로 다른 시각 언어로 따로 노는 패널로 분리하는 것

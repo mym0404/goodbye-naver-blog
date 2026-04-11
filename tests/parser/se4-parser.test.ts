@@ -106,6 +106,22 @@ describe("parseSe4Post", () => {
     ])
   })
 
+  it("marks inline formula components as display false", () => {
+    const parsed = parseSe4Fixture(`
+      <div class="se-component se-math se-inline-math">
+        ${createModuleScript({ type: "v2_formula", data: { latex: "$x+y$" } })}
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "formula",
+        formula: "x+y",
+        display: false,
+      },
+    ])
+  })
+
   it("parses code components with language metadata", () => {
     const parsed = parseSe4Fixture(`
       <div class="se-component se-code">
@@ -318,8 +334,10 @@ console.log(value)
         type: "image",
         image: {
           sourceUrl: "https://example.com/image.png",
+          originalSourceUrl: "https://example.com/image.png",
           alt: "diagram",
           caption: "image caption",
+          mediaKind: "image",
         },
       },
     ])
@@ -347,13 +365,17 @@ console.log(value)
         images: [
           {
             sourceUrl: "https://example.com/strip-1.png",
+            originalSourceUrl: "https://example.com/strip-1.png",
             alt: "",
             caption: null,
+            mediaKind: "image",
           },
           {
             sourceUrl: "https://example.com/strip-2.png",
+            originalSourceUrl: "https://example.com/strip-2.png",
             alt: "",
             caption: null,
+            mediaKind: "image",
           },
         ],
       },
@@ -376,8 +398,10 @@ console.log(value)
         type: "image",
         image: {
           sourceUrl: "https://example.com/sticker.png?type=p100_100",
+          originalSourceUrl: "https://example.com/sticker.png",
           alt: "",
           caption: null,
+          mediaKind: "sticker",
         },
       },
     ])
@@ -454,13 +478,17 @@ console.log(value)
         images: [
           {
             sourceUrl: "https://example.com/one.png",
+            originalSourceUrl: "https://example.com/one.png",
             alt: "one",
             caption: "shared caption",
+            mediaKind: "image",
           },
           {
             sourceUrl: "https://example.com/two.png",
+            originalSourceUrl: "https://example.com/two.png",
             alt: "two",
             caption: "shared caption",
+            mediaKind: "image",
           },
         ],
       },

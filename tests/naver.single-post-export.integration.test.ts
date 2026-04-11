@@ -37,8 +37,7 @@ describe("naver single post export integration", () => {
       expect(Array.isArray(diagnostics.parserWarnings)).toBe(true)
       expect(Array.isArray(diagnostics.reviewerWarnings)).toBe(true)
       expect(Array.isArray(diagnostics.renderWarnings)).toBe(true)
-      expect(diagnostics.assetPaths.length).toBeGreaterThan(0)
-      expect(diagnostics.assetPaths.every((value) => value.startsWith("https://"))).toBe(true)
+      expect(diagnostics.assetPaths).toEqual([])
       expect(diagnostics.markdown.startsWith("---\n")).toBe(true)
       expect(diagnostics.markdown).toContain("title:")
       expect(diagnostics.markdown).toContain("blogId: mym0404")
@@ -46,6 +45,7 @@ describe("naver single post export integration", () => {
       expect(diagnostics.markdown).toContain("editorVersion: 4")
       expect(diagnostics.markdown).toContain("```")
       expect(diagnostics.markdown).toContain("$$")
+      expect(diagnostics.markdown).toContain("https://")
 
       const writtenMarkdown = await readFile(diagnostics.markdownFilePath, "utf8")
       expect(writtenMarkdown).toBe(diagnostics.markdown)

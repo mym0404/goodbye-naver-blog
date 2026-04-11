@@ -3,11 +3,19 @@ import path from "node:path"
 import type { AssetRecord, ExportOptions } from "../../shared/types.js"
 import { normalizeAssetUrl, relativePathFrom } from "../../shared/utils.js"
 
+type AssetBinary = {
+  bytes: Buffer
+  contentType: string | null
+}
+
 type AssetDownloader = {
   downloadBinary: (input: {
     sourceUrl: string
     destinationPath: string
   }) => Promise<void>
+  fetchBinary?: (input: {
+    sourceUrl: string
+  }) => Promise<AssetBinary>
 }
 
 const extensionFromUrl = (value: string) => {
@@ -21,11 +29,34 @@ const extensionFromUrl = (value: string) => {
   }
 }
 
+const inferMimeType = (value: string) => {
+  const extension = extensionFromUrl(value).toLowerCase()
+
+  if (extension === ".png") {
+    return "image/png"
+  }
+
+  if (extension === ".gif") {
+    return "image/gif"
+  }
+
+  if (extension === ".webp") {
+    return "image/webp"
+  }
+
+  if (extension === ".svg") {
+    return "image/svg+xml"
+  }
+
+  return "image/jpeg"
+}
+
 export class AssetStore {
   readonly outputDir: string
   readonly downloader: AssetDownloader
   readonly options: Pick<ExportOptions, "assets" | "structure">
   readonly cache = new Map<string, string>()
+  readonly dataUrlCache = new Map<string, string>()
   readonly counters = new Map<string, number>()
 
   constructor({
@@ -47,13 +78,51 @@ export class AssetStore {
     postLogNo,
     sourceUrl,
     markdownFilePath,
+    embedAsDataUrl,
   }: {
     kind: "image" | "thumbnail"
     postLogNo: string
     sourceUrl: string
     markdownFilePath: string
+    embedAsDataUrl?: boolean
   }) {
     const normalizedSourceUrl = normalizeAssetUrl(sourceUrl)
+
+    if (embedAsDataUrl) {
+      const cacheKey = `${postLogNo}:${kind}:base64:${normalizedSourceUrl}`
+      const cachedDataUrl = this.dataUrlCache.get(cacheKey)
+
+      if (cachedDataUrl) {
+        return {
+          kind,
+          sourceUrl: normalizedSourceUrl,
+          reference: cachedDataUrl,
+          relativePath: null,
+          storageMode: "base64",
+        } satisfies AssetRecord
+      }
+
+      if (!this.downloader.fetchBinary) {
+        throw new Error("base64 임베딩을 지원하는 fetchBinary downloader가 필요합니다.")
+      }
+
+      const binary = await this.downloader.fetchBinary({
+        sourceUrl: normalizedSourceUrl,
+      })
+      const mimeType = binary.contentType || inferMimeType(normalizedSourceUrl)
+      const dataUrl = `data:${mimeType};base64,${binary.bytes.toString("base64")}`
+
+      this.dataUrlCache.set(cacheKey, dataUrl)
+
+      return {
+        kind,
+        sourceUrl: normalizedSourceUrl,
+        reference: dataUrl,
+        relativePath: null,
+        storageMode: "base64",
+      } satisfies AssetRecord
+    }
+
     const shouldDownload =
       this.options.assets.assetPathMode === "relative" &&
       ((kind === "image" && this.options.assets.downloadImages) ||
@@ -63,7 +132,9 @@ export class AssetStore {
       return {
         kind,
         sourceUrl: normalizedSourceUrl,
-        relativePath: normalizedSourceUrl,
+        reference: normalizedSourceUrl,
+        relativePath: null,
+        storageMode: "remote",
       } satisfies AssetRecord
     }
 
@@ -71,13 +142,17 @@ export class AssetStore {
     const cachedAbsolutePath = this.cache.get(cacheKey)
 
     if (cachedAbsolutePath) {
+      const relativePath = relativePathFrom({
+        from: markdownFilePath,
+        to: cachedAbsolutePath,
+      })
+
       return {
         kind,
         sourceUrl: normalizedSourceUrl,
-        relativePath: relativePathFrom({
-          from: markdownFilePath,
-          to: cachedAbsolutePath,
-        }),
+        reference: relativePath,
+        relativePath,
+        storageMode: "relative",
       } satisfies AssetRecord
     }
 
@@ -102,10 +177,15 @@ export class AssetStore {
     return {
       kind,
       sourceUrl: normalizedSourceUrl,
+      reference: relativePathFrom({
+        from: markdownFilePath,
+        to: absolutePath,
+      }),
       relativePath: relativePathFrom({
         from: markdownFilePath,
         to: absolutePath,
       }),
+      storageMode: "relative",
     } satisfies AssetRecord
   }
 }

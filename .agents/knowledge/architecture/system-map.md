@@ -4,7 +4,7 @@
 모듈별 책임, 의존 방향, 코드 기준점을 빠르게 찾도록 돕는다.
 
 ## Source Of Truth
-- 실제 경계는 `src/modules`, `src/server`, `src/shared`, `src/static` 코드가 기준이다.
+- 실제 경계는 `src/modules`, `src/server`, `src/shared`, `src/ui` 코드가 기준이다.
 
 ## 관련 코드
 - [../../../src/modules/blog-fetcher/naver-blog-fetcher.ts](../../../src/modules/blog-fetcher/naver-blog-fetcher.ts)
@@ -13,7 +13,7 @@
 
 ## 검증 방법
 - `pnpm typecheck`
-- `pnpm docs:check`
+- 변경 범위에 맞는 focused test 또는 `pnpm check:quick`
 
 ## Module Boundaries
 - `blog-fetcher`: 네이버 모바일 API, 글 HTML fetch, 자산 다운로드
@@ -23,14 +23,14 @@
 - `exporter`: fetch -> parse -> review -> render -> write -> manifest 실행을 묶음
 - `server`: 로컬 웹 UI와 export job API 제공
 - `shared`: export 옵션, 타입, 유틸, capability, sample corpus
-- `static`: scan -> category select -> export 대시보드 UI
+- `ui`: scan -> category select -> export 대시보드 UI
 
 ## Dependency Direction
 - `server` -> `modules/*`, `shared/*`
 - `exporter` -> `blog-fetcher`, `parser`, `reviewer`, `converter`, `shared/*`
 - `parser` -> `converter/html-fragment-converter`, `shared/*`
 - `converter` -> `shared/*`
-- `static` -> HTTP API only
+- `ui` -> HTTP API only
 
 ## Code Anchors
 - parser capability: `src/shared/parser-capabilities.ts`
@@ -38,4 +38,4 @@
 - Markdown renderer: `src/modules/converter/markdown-renderer.ts`
 - exporter flow: `src/modules/exporter/naver-blog-exporter.ts`
 - HTTP API: `src/server/http-server.ts`
-- UI shell: `src/static/index.html`, `src/static/app.js`, `src/static/styles.css`
+- UI shell: `index.html`, `src/ui/App.tsx`, `src/ui/styles/dashboard.css`

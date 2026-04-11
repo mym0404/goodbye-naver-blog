@@ -5,6 +5,7 @@ import { cloneExportOptions } from "../../shared/export-options.js"
 import type {
   CategoryInfo,
   ExportManifest,
+  ExportJobItem,
   ExportOptions,
   ExportRequest,
   PostManifestEntry,
@@ -33,11 +34,13 @@ export class NaverBlogExporter {
     failed: number
     warnings: number
   }) => void
+  readonly onItem: ((item: ExportJobItem) => void) | null
 
   constructor({
     request,
     onLog,
     onProgress,
+    onItem,
   }: {
     request: ExportRequest
     onLog: (message: string) => void
@@ -47,10 +50,12 @@ export class NaverBlogExporter {
       failed: number
       warnings: number
     }) => void
+    onItem?: (item: ExportJobItem) => void
   }) {
     this.request = request
     this.onLog = onLog
     this.onProgress = onProgress
+    this.onItem = onItem ?? null
   }
 
   async run() {
@@ -148,9 +153,14 @@ export class NaverBlogExporter {
         await writeFile(markdownFilePath, rendered.markdown, "utf8")
         completed += 1
         warningCount += rendered.warnings.length
+        const assetPaths = rendered.assetRecords
+          .map((asset) => asset.relativePath)
+          .filter((assetPath): assetPath is string => Boolean(assetPath))
+        const warningCountForPost = rendered.warnings.length
+
         manifest.successCount = completed
         manifest.warningCount = warningCount
-        manifest.posts.push({
+        const manifestEntry = {
           logNo: post.logNo,
           title: post.title,
           source: post.source,
@@ -162,10 +172,28 @@ export class NaverBlogExporter {
           editorVersion: parsedPost.editorVersion,
           status: "success",
           outputPath: path.relative(outputDir, markdownFilePath).split(path.sep).join("/"),
-          assetPaths: rendered.assetRecords.map((asset) => asset.relativePath),
+          assetPaths,
           warnings: rendered.warnings,
+          warningCount: warningCountForPost,
           error: null,
-        } satisfies PostManifestEntry)
+        } satisfies PostManifestEntry
+
+        manifest.posts.push(manifestEntry)
+        this.onItem?.({
+          id: manifestEntry.outputPath ?? `failed:${post.logNo}`,
+          logNo: post.logNo,
+          title: post.title,
+          source: post.source,
+          category: manifestEntry.category,
+          status: "success",
+          outputPath: manifestEntry.outputPath,
+          assetPaths,
+          warnings: rendered.warnings,
+          warningCount: warningCountForPost,
+          error: null,
+          markdown: rendered.markdown,
+          updatedAt: new Date().toISOString(),
+        })
         this.onProgress({
           total: filteredPosts.length,
           completed,
@@ -175,7 +203,7 @@ export class NaverBlogExporter {
       } catch (error) {
         failed += 1
         manifest.failureCount = failed
-        manifest.posts.push({
+        const manifestEntry = {
           logNo: post.logNo,
           title: post.title,
           source: post.source,
@@ -189,8 +217,25 @@ export class NaverBlogExporter {
           outputPath: null,
           assetPaths: [],
           warnings: [],
+          warningCount: 0,
           error: toErrorMessage(error),
-        } satisfies PostManifestEntry)
+        } satisfies PostManifestEntry
+        manifest.posts.push(manifestEntry)
+        this.onItem?.({
+          id: `failed:${post.logNo}`,
+          logNo: post.logNo,
+          title: post.title,
+          source: post.source,
+          category: manifestEntry.category,
+          status: "failed",
+          outputPath: null,
+          assetPaths: [],
+          warnings: [],
+          warningCount: 0,
+          error: manifestEntry.error,
+          markdown: null,
+          updatedAt: new Date().toISOString(),
+        })
         this.onLog(`글 export 실패: ${post.logNo} (${toErrorMessage(error)})`)
         this.onProgress({
           total: filteredPosts.length,

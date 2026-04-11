@@ -26,6 +26,12 @@ export type SinglePostFetcher = {
     sourceUrl: string
     destinationPath: string
   }) => Promise<void>
+  fetchBinary?: (input: {
+    sourceUrl: string
+  }) => Promise<{
+    bytes: Buffer
+    contentType: string | null
+  }>
 }
 
 export type ExportSinglePostDiagnostics = {
@@ -133,6 +139,8 @@ export const exportSinglePost = async ({
     parserWarnings: parsedPost.warnings,
     reviewerWarnings: review.warnings,
     renderWarnings,
-    assetPaths: rendered.assetRecords.map((asset) => asset.relativePath),
+    assetPaths: rendered.assetRecords
+      .map((asset) => asset.relativePath)
+      .filter((assetPath): assetPath is string => Boolean(assetPath)),
   }
 }

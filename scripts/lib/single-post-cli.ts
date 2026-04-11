@@ -36,6 +36,11 @@ const allowedMarkdownKeys = [
   "linkStyle",
   "linkCardStyle",
   "formulaStyle",
+  "formulaInlineWrapperOpen",
+  "formulaInlineWrapperClose",
+  "formulaBlockStyle",
+  "formulaBlockWrapperOpen",
+  "formulaBlockWrapperClose",
   "tableStyle",
   "videoStyle",
   "imageStyle",
@@ -47,6 +52,8 @@ const allowedMarkdownKeys = [
 ] as const
 const allowedAssetsKeys = [
   "assetPathMode",
+  "imageContentMode",
+  "stickerAssetMode",
   "downloadImages",
   "downloadThumbnails",
   "includeImageCaptions",
@@ -59,6 +66,7 @@ const slugStyles = ["kebab", "keep-title"] as const
 const linkStyles = ["inlined", "referenced"] as const
 const linkCardStyles = ["inline", "quote", "html"] as const
 const formulaStyles = ["double-dollar", "math-fence"] as const
+const formulaBlockStyles = ["wrapper", "math-fence"] as const
 const tableStyles = ["gfm-or-html", "html-only"] as const
 const videoStyles = ["thumbnail-link", "link-only", "html"] as const
 const imageStyles = ["markdown-image", "linked-image", "source-only"] as const
@@ -67,6 +75,8 @@ const rawHtmlPolicies = ["keep", "omit"] as const
 const dividerStyles = ["dash", "asterisk"] as const
 const codeFenceStyles = ["backtick", "tilde"] as const
 const assetPathModes = ["relative", "remote"] as const
+const imageContentModes = ["path", "base64"] as const
+const stickerAssetModes = ["ignore", "download-original"] as const
 const thumbnailSources = ["post-list-first", "first-body-image", "none"] as const
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
@@ -320,7 +330,35 @@ const validateMarkdownOptions = (value: unknown, optionsPath: string) => {
   if ("formulaStyle" in value) {
     const formulaStyle = value.formulaStyle
     assertEnum(formulaStyle, formulaStyles, "markdown.formulaStyle", optionsPath)
-    markdown.formulaStyle = formulaStyle
+    markdown.formulaBlockStyle = formulaStyle === "math-fence" ? "math-fence" : "wrapper"
+    markdown.formulaBlockWrapperOpen = "$$"
+    markdown.formulaBlockWrapperClose = "$$"
+  }
+
+  if ("formulaInlineWrapperOpen" in value) {
+    assertString(value.formulaInlineWrapperOpen, "markdown.formulaInlineWrapperOpen", optionsPath)
+    markdown.formulaInlineWrapperOpen = value.formulaInlineWrapperOpen
+  }
+
+  if ("formulaInlineWrapperClose" in value) {
+    assertString(value.formulaInlineWrapperClose, "markdown.formulaInlineWrapperClose", optionsPath)
+    markdown.formulaInlineWrapperClose = value.formulaInlineWrapperClose
+  }
+
+  if ("formulaBlockStyle" in value) {
+    const formulaBlockStyle = value.formulaBlockStyle
+    assertEnum(formulaBlockStyle, formulaBlockStyles, "markdown.formulaBlockStyle", optionsPath)
+    markdown.formulaBlockStyle = formulaBlockStyle
+  }
+
+  if ("formulaBlockWrapperOpen" in value) {
+    assertString(value.formulaBlockWrapperOpen, "markdown.formulaBlockWrapperOpen", optionsPath)
+    markdown.formulaBlockWrapperOpen = value.formulaBlockWrapperOpen
+  }
+
+  if ("formulaBlockWrapperClose" in value) {
+    assertString(value.formulaBlockWrapperClose, "markdown.formulaBlockWrapperClose", optionsPath)
+    markdown.formulaBlockWrapperClose = value.formulaBlockWrapperClose
   }
 
   if ("tableStyle" in value) {
@@ -384,6 +422,18 @@ const validateAssetsOptions = (value: unknown, optionsPath: string) => {
     const assetPathMode = value.assetPathMode
     assertEnum(assetPathMode, assetPathModes, "assets.assetPathMode", optionsPath)
     assets.assetPathMode = assetPathMode
+  }
+
+  if ("imageContentMode" in value) {
+    const imageContentMode = value.imageContentMode
+    assertEnum(imageContentMode, imageContentModes, "assets.imageContentMode", optionsPath)
+    assets.imageContentMode = imageContentMode
+  }
+
+  if ("stickerAssetMode" in value) {
+    const stickerAssetMode = value.stickerAssetMode
+    assertEnum(stickerAssetMode, stickerAssetModes, "assets.stickerAssetMode", optionsPath)
+    assets.stickerAssetMode = stickerAssetMode
   }
 
   if ("downloadImages" in value) {

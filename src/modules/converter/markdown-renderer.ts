@@ -1,3 +1,4 @@
+import { load } from "cheerio"
 import YAML from "yaml"
 
 import { convertHtmlToMarkdown } from "./html-fragment-converter.js"
@@ -8,11 +9,12 @@ import type {
   CategoryInfo,
   ExportOptions,
   FrontmatterFieldName,
+  ImageData,
   ParsedPost,
   PostSummary,
 } from "../../shared/types.js"
 import { getFrontmatterExportKey } from "../../shared/export-options.js"
-import { unique } from "../../shared/utils.js"
+import { compactText, unique } from "../../shared/utils.js"
 
 const escapeTableCell = (value: string) =>
   value.replace(/\|/g, "\\|").replace(/\n+/g, "<br>").trim() || " "
@@ -100,18 +102,113 @@ const renderCodeBlock = ({
   return `${fence}${language ?? ""}\n${code}\n${fence}`
 }
 
-const renderFormulaBlock = ({
+const renderWrappedFormula = ({
   formula,
-  style,
+  open,
+  close,
+  display,
 }: {
   formula: string
-  style: ExportOptions["markdown"]["formulaStyle"]
+  open: string
+  close: string
+  display: boolean
 }) => {
-  if (style === "math-fence") {
+  if (display) {
+    return `${open}\n${formula}\n${close}`
+  }
+
+  return `${open}${formula}${close}`
+}
+
+const renderFormula = ({
+  formula,
+  display,
+  options,
+}: {
+  formula: string
+  display: boolean
+  options: Pick<ExportOptions, "markdown">
+}) => {
+  if (!display) {
+    return renderWrappedFormula({
+      formula,
+      open: options.markdown.formulaInlineWrapperOpen,
+      close: options.markdown.formulaInlineWrapperClose,
+      display: false,
+    })
+  }
+
+  if (options.markdown.formulaBlockStyle === "math-fence") {
     return `\`\`\`math\n${formula}\n\`\`\``
   }
 
-  return `$$\n${formula}\n$$`
+  return renderWrappedFormula({
+    formula,
+    open: options.markdown.formulaBlockWrapperOpen,
+    close: options.markdown.formulaBlockWrapperClose,
+    display: true,
+  })
+}
+
+type RenderDiagnostic = {
+  level: "warning" | "error"
+  message: string
+  detail?: string
+}
+
+const renderDiagnosticCallout = ({
+  level,
+  message,
+  detail,
+}: RenderDiagnostic) => {
+  const label = level === "error" ? "Error" : "Warning"
+  const icon = level === "error" ? "❌" : "⚠️"
+  const lines = [`> ${icon} ${label}: ${message}`]
+
+  if (detail?.trim()) {
+    lines.push(
+      ...detail
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => `> ${line}`),
+    )
+  }
+
+  return lines.join("\n")
+}
+
+const buildDiagnosticsSection = (diagnostics: RenderDiagnostic[]) => {
+  const uniqueDiagnostics = unique(
+    diagnostics.map((diagnostic) => JSON.stringify(diagnostic)),
+  ).map((diagnostic) => JSON.parse(diagnostic) as RenderDiagnostic)
+
+  if (uniqueDiagnostics.length === 0) {
+    return ""
+  }
+
+  return ["## Export Diagnostics", uniqueDiagnostics.map(renderDiagnosticCallout).join("\n\n")]
+    .filter(Boolean)
+    .join("\n\n")
+}
+
+const extractFallbackText = ({
+  html,
+  options,
+}: {
+  html: string
+  options: Pick<ExportOptions, "markdown">
+}) => {
+  const convertedMarkdown = convertHtmlToMarkdown({
+    html,
+    options,
+  }).trim()
+
+  if (convertedMarkdown) {
+    return convertedMarkdown
+  }
+
+  return compactText(load(html).text())
 }
 
 const renderLinkCardBlock = ({
@@ -243,9 +340,15 @@ export const renderMarkdownPost = async ({
     postLogNo: string
     sourceUrl: string
     markdownFilePath: string
+    embedAsDataUrl?: boolean
   }) => Promise<AssetRecord>
 }) => {
-  const warnings: string[] = [...reviewedWarnings]
+  const initialWarnings = unique([...parsedPost.warnings, ...reviewedWarnings])
+  const warnings: string[] = [...initialWarnings]
+  const diagnostics: RenderDiagnostic[] = initialWarnings.map((warning) => ({
+    level: "warning",
+    message: warning,
+  }))
   const assetRecords: AssetRecord[] = []
   const sections: string[] = []
   const linkFormatter = createLinkFormatter({
@@ -262,9 +365,11 @@ export const renderMarkdownPost = async ({
   const resolveAssetPath = async ({
     kind,
     sourceUrl,
+    embedAsDataUrl,
   }: {
     kind: "image" | "thumbnail"
     sourceUrl: string
+    embedAsDataUrl?: boolean
   }) => {
     try {
       const assetRecord = await resolveAsset({
@@ -272,16 +377,29 @@ export const renderMarkdownPost = async ({
         postLogNo: post.logNo,
         sourceUrl,
         markdownFilePath,
+        embedAsDataUrl,
       })
 
-      if (!assetRecords.some((existing) => existing.relativePath === assetRecord.relativePath)) {
+      if (
+        !assetRecords.some(
+          (existing) =>
+            existing.reference === assetRecord.reference &&
+            existing.storageMode === assetRecord.storageMode,
+        )
+      ) {
         assetRecords.push(assetRecord)
       }
 
-      return assetRecord.relativePath
+      return assetRecord.reference
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      warnings.push(`자산 다운로드 실패: ${sourceUrl} (${message})`)
+      const warning = `자산 다운로드 실패: ${sourceUrl} (${message})`
+
+      warnings.push(warning)
+      diagnostics.push({
+        level: "warning",
+        message: warning,
+      })
       return sourceUrl
     }
   }
@@ -299,23 +417,42 @@ export const renderMarkdownPost = async ({
     }
   }
 
-  const renderImageBlock = async ({
-    sourceUrl,
-    alt,
-    caption,
-  }: {
-    sourceUrl: string
-    alt: string
-    caption: string | null
-  }) => {
+  const getRenderableImageSource = (image: ImageData) => {
+    if (image.mediaKind === "sticker") {
+      if (options.assets.stickerAssetMode === "ignore") {
+        const message = "스티커 asset 옵션이 ignore라서 본문에서 스티커를 생략했습니다."
+
+        warnings.push(message)
+        diagnostics.push({
+          level: "warning",
+          message,
+        })
+
+        return null
+      }
+
+      return image.originalSourceUrl || image.sourceUrl
+    }
+
+    return image.sourceUrl
+  }
+
+  const renderImageBlock = async ({ image }: { image: ImageData }) => {
+    const renderableSourceUrl = getRenderableImageSource(image)
+
+    if (!renderableSourceUrl) {
+      return ""
+    }
+
     const assetPath = await resolveAssetPath({
       kind: "image",
-      sourceUrl,
+      sourceUrl: renderableSourceUrl,
+      embedAsDataUrl: options.assets.imageContentMode === "base64",
     })
 
     maybeRecordBodyThumbnail(assetPath)
 
-    const safeLabel = alt || caption || "Image"
+    const safeLabel = image.alt || image.caption || "Image"
     const lines: string[] = []
 
     if (options.markdown.imageStyle === "source-only") {
@@ -326,20 +463,20 @@ export const renderMarkdownPost = async ({
         }),
       )
     } else {
-      const imageMarkdown = `![${alt}](${assetPath})`
+      const imageMarkdown = `![${image.alt}](${assetPath})`
       const content =
         options.markdown.imageStyle === "linked-image"
           ? linkFormatter.formatLink({
               label: imageMarkdown,
-              url: sourceUrl,
+              url: renderableSourceUrl,
             })
           : imageMarkdown
 
       lines.push(content)
     }
 
-    if (options.assets.includeImageCaptions && caption) {
-      lines.push(`_${caption}_`)
+    if (options.assets.includeImageCaptions && image.caption) {
+      lines.push(`_${image.caption}_`)
     }
 
     return lines.join("\n\n")
@@ -350,6 +487,7 @@ export const renderMarkdownPost = async ({
       ? await resolveAssetPath({
           kind: "thumbnail",
           sourceUrl: block.video.thumbnailUrl,
+          embedAsDataUrl: options.assets.imageContentMode === "base64",
         })
       : null
 
@@ -361,7 +499,13 @@ export const renderMarkdownPost = async ({
     })
 
     if (options.markdown.videoStyle === "html") {
-      warnings.push("video html 옵션은 지원하지 않아 Markdown 링크 형식으로 변환했습니다.")
+      const message = "video html 옵션은 지원하지 않아 Markdown 링크 형식으로 변환했습니다."
+
+      warnings.push(message)
+      diagnostics.push({
+        level: "warning",
+        message,
+      })
     }
 
     if (options.markdown.videoStyle === "link-only") {
@@ -441,40 +585,35 @@ export const renderMarkdownPost = async ({
 
     if (block.type === "formula") {
       sections.push(
-        renderFormulaBlock({
+        renderFormula({
           formula: block.formula,
-          style: options.markdown.formulaStyle,
+          display: block.display,
+          options,
         }),
       )
       continue
     }
 
     if (block.type === "image") {
-      sections.push(
-        await renderImageBlock({
-          sourceUrl: block.image.sourceUrl,
-          alt: block.image.alt,
-          caption: block.image.caption,
-        }),
-      )
+      sections.push(await renderImageBlock({ image: block.image }))
       continue
     }
 
     if (block.type === "imageGroup") {
       if (options.markdown.imageGroupStyle === "html") {
-        warnings.push("imageGroup html 옵션은 지원하지 않아 개별 이미지 Markdown으로 변환했습니다.")
+        const message = "imageGroup html 옵션은 지원하지 않아 개별 이미지 Markdown으로 변환했습니다."
+
+        warnings.push(message)
+        diagnostics.push({
+          level: "warning",
+          message,
+        })
       }
 
       const groupSections: string[] = []
 
       for (const image of block.images) {
-        groupSections.push(
-          await renderImageBlock({
-            sourceUrl: image.sourceUrl,
-            alt: image.alt,
-            caption: image.caption,
-          }),
-        )
+        groupSections.push(await renderImageBlock({ image }))
       }
 
       sections.push(groupSections.join("\n\n"))
@@ -503,23 +642,43 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "rawHtml") {
-      if (options.markdown.rawHtmlPolicy === "omit") {
-        warnings.push(`raw HTML 블록을 생략했습니다: ${block.reason}`)
-        continue
-      }
-
-      const convertedMarkdown = convertHtmlToMarkdown({
+      const extractedText = extractFallbackText({
         html: block.html,
         options,
       })
 
-      if (!convertedMarkdown) {
-        warnings.push(`raw HTML 블록을 생략했습니다: ${block.reason}`)
+      if (options.markdown.rawHtmlPolicy === "omit") {
+        const message = `raw HTML 블록을 생략했습니다: ${block.reason}`
+
+        warnings.push(message)
+        diagnostics.push({
+          level: extractedText ? "warning" : "error",
+          message,
+          detail: extractedText || undefined,
+        })
         continue
       }
 
-      warnings.push(`raw HTML 블록을 Markdown으로 변환했습니다: ${block.reason}`)
-      sections.push(convertedMarkdown)
+      if (!extractedText) {
+        const message = `raw HTML 블록을 생략했습니다: ${block.reason}`
+
+        warnings.push(message)
+        diagnostics.push({
+          level: "error",
+          message,
+        })
+        continue
+      }
+
+      const message = `raw HTML 블록을 Markdown으로 변환했습니다: ${block.reason}`
+
+      warnings.push(message)
+      diagnostics.push({
+        level: "warning",
+        message,
+        detail: extractedText,
+      })
+      sections.push(extractedText)
     }
   }
 
@@ -545,7 +704,9 @@ export const renderMarkdownPost = async ({
     video: renderedVideos,
     warnings: unique(warnings),
     exportedAt: new Date().toISOString(),
-    assetPaths: assetRecords.map((asset) => asset.relativePath),
+    assetPaths: assetRecords
+      .map((asset) => asset.relativePath)
+      .filter((assetPath): assetPath is string => Boolean(assetPath)),
   }
 
   const frontmatter = options.frontmatter.enabled
@@ -557,8 +718,9 @@ export const renderMarkdownPost = async ({
     : null
 
   const bodySections = sections.filter(Boolean).join("\n\n").trim()
+  const diagnosticsSection = buildDiagnosticsSection(diagnostics)
   const referenceSection = linkFormatter.renderReferenceSection()
-  const body = [bodySections, referenceSection].filter(Boolean).join("\n\n")
+  const body = [diagnosticsSection, bodySections, referenceSection].filter(Boolean).join("\n\n")
 
   const markdown = frontmatter
     ? `---\n${YAML.stringify(frontmatter)}---\n\n${body}\n`

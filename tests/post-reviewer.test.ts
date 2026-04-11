@@ -1,0 +1,42 @@
+import { describe, expect, it } from "vitest"
+
+import { reviewParsedPost } from "../src/modules/reviewer/post-reviewer.js"
+import type { ParsedPost } from "../src/shared/types.js"
+
+const createParsedPost = (overrides?: Partial<ParsedPost>): ParsedPost => ({
+  editorVersion: 4,
+  tags: [],
+  videos: [],
+  warnings: [],
+  blocks: [{ type: "paragraph", text: "ok" }],
+  ...overrides,
+})
+
+describe("reviewParsedPost", () => {
+  it("keeps parser warnings and adds raw html fallback warnings", () => {
+    const reviewed = reviewParsedPost(
+      createParsedPost({
+        warnings: ["parser warning"],
+        blocks: [
+          { type: "rawHtml", html: "<div>raw</div>", reason: "fallback" },
+          { type: "paragraph", text: "body" },
+        ],
+      }),
+    )
+
+    expect(reviewed.warnings).toEqual([
+      "parser warning",
+      "raw HTML fallback 블록 1개가 포함됩니다.",
+    ])
+  })
+
+  it("warns when the parsed body is empty", () => {
+    const reviewed = reviewParsedPost(
+      createParsedPost({
+        blocks: [],
+      }),
+    )
+
+    expect(reviewed.warnings).toContain("본문 블록이 비어 있습니다.")
+  })
+})

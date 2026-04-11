@@ -35,7 +35,9 @@ export type MarkdownLinkStyle = "inlined" | "referenced"
 
 export type LinkCardStyle = "inline" | "quote" | "html"
 
-export type FormulaStyle = "double-dollar" | "math-fence"
+export type FormulaInlineStyle = "wrapper"
+
+export type FormulaBlockStyle = "wrapper" | "math-fence"
 
 export type TableStyle = "gfm-or-html" | "html-only"
 
@@ -54,6 +56,12 @@ export type CodeFenceStyle = "backtick" | "tilde"
 export type AssetPathMode = "relative" | "remote"
 
 export type ThumbnailSource = "post-list-first" | "first-body-image" | "none"
+
+export type ImageContentMode = "path" | "base64"
+
+export type StickerAssetMode = "ignore" | "download-original"
+
+export type OptionDescriptionMap = Record<string, string>
 
 export type ExportOptions = {
   scope: {
@@ -79,7 +87,12 @@ export type ExportOptions = {
   markdown: {
     linkStyle: MarkdownLinkStyle
     linkCardStyle: LinkCardStyle
-    formulaStyle: FormulaStyle
+    formulaInlineStyle: FormulaInlineStyle
+    formulaInlineWrapperOpen: string
+    formulaInlineWrapperClose: string
+    formulaBlockStyle: FormulaBlockStyle
+    formulaBlockWrapperOpen: string
+    formulaBlockWrapperClose: string
     tableStyle: TableStyle
     videoStyle: VideoStyle
     imageStyle: ImageStyle
@@ -91,6 +104,8 @@ export type ExportOptions = {
   }
   assets: {
     assetPathMode: AssetPathMode
+    imageContentMode: ImageContentMode
+    stickerAssetMode: StickerAssetMode
     downloadImages: boolean
     downloadThumbnails: boolean
     includeImageCaptions: boolean
@@ -162,10 +177,14 @@ export type TableCell = {
 
 export type TableRow = TableCell[]
 
+export type MediaKind = "image" | "sticker"
+
 export type ImageData = {
   sourceUrl: string
+  originalSourceUrl: string | null
   alt: string
   caption: string | null
+  mediaKind: MediaKind
 }
 
 export type AstBlock =
@@ -219,7 +238,9 @@ export type ParsedPost = {
 export type AssetRecord = {
   kind: "image" | "thumbnail"
   sourceUrl: string
-  relativePath: string
+  reference: string
+  relativePath: string | null
+  storageMode: "relative" | "remote" | "base64"
 }
 
 export type PostManifestEntry = {
@@ -236,7 +257,28 @@ export type PostManifestEntry = {
   outputPath: string | null
   assetPaths: string[]
   warnings: string[]
+  warningCount: number
   error: string | null
+}
+
+export type ExportJobItem = {
+  id: string
+  logNo: string
+  title: string
+  source: string
+  category: {
+    id: number
+    name: string
+    path: string[]
+  }
+  status: "success" | "failed"
+  outputPath: string | null
+  assetPaths: string[]
+  warnings: string[]
+  warningCount: number
+  error: string | null
+  markdown: string | null
+  updatedAt: string
 }
 
 export type ExportManifest = {
@@ -274,6 +316,7 @@ export type ExportJobState = {
     failed: number
     warnings: number
   }
+  items: ExportJobItem[]
   manifest: ExportManifest | null
   error: string | null
 }

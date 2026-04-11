@@ -20,7 +20,7 @@
 - 구조, 샘플, 검증 기준은 숨기지 말고 코드와 문서에 남긴다.
 - parser, renderer, exporter, UI/API를 바꾸면 관련 문서와 harness를 함께 본다.
 - generated 문서는 직접 고치지 않고 스크립트로 다시 만든다.
-- 이 저장소의 기본 작업 단위는 구현에서 끝나지 않고 `commit`과 `push`까지 포함한다.
+- commit, push, PR 생성은 명시적 요청이 있을 때만 수행한다.
 
 ## Change Discipline
 - parser 범위를 넓힐 때는 `src/shared/parser-capabilities.ts`, 샘플 corpus, 테스트를 함께 맞춘다.

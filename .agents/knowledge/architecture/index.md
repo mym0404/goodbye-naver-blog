@@ -4,7 +4,7 @@
 모듈 경계, 설계 원칙, parser 카탈로그처럼 구조 이해에 필요한 지식을 라우팅한다.
 
 ## Source Of Truth
-- 구조 지식은 이 디렉터리와 실제 `src/modules`, `src/server`, `src/shared`, `src/static` 구현이 기준이다.
+- 구조 지식은 이 디렉터리와 실제 `src/modules`, `src/server`, `src/shared`, `src/ui` 구현이 기준이다.
 
 ## 관련 코드
 - [../../../src/modules/exporter/naver-blog-exporter.ts](../../../src/modules/exporter/naver-blog-exporter.ts)
@@ -12,8 +12,8 @@
 - [../../../src/server/http-server.ts](../../../src/server/http-server.ts)
 
 ## 검증 방법
-- `pnpm docs:check`
 - `pnpm parser:check`
+- 필요 시 `pnpm check:quick`
 
 ## Read This When
 - 모듈 경계와 의존 방향을 빠르게 파악해야 할 때

@@ -89,8 +89,10 @@ console.log(oldSchool)
         type: "image",
         image: {
           sourceUrl: "https://example.com/se2-image.png",
+          originalSourceUrl: null,
           alt: "legacy image",
           caption: null,
+          mediaKind: "image",
         },
       },
     ])
@@ -110,13 +112,17 @@ console.log(oldSchool)
         images: [
           {
             sourceUrl: "https://example.com/one.png",
+            originalSourceUrl: null,
             alt: "one",
             caption: null,
+            mediaKind: "image",
           },
           {
             sourceUrl: "https://example.com/two.png",
+            originalSourceUrl: null,
             alt: "two",
             caption: null,
+            mediaKind: "image",
           },
         ],
       },

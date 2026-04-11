@@ -93,6 +93,10 @@ export const buildExportPreview = async ({
     outputDir: resolvedOutputDir,
     downloader: {
       downloadBinary: async () => {},
+      fetchBinary: async () => ({
+        bytes: Buffer.from(""),
+        contentType: "image/png",
+      }),
     },
     options: resolvedOptions,
   })
@@ -115,6 +119,8 @@ export const buildExportPreview = async ({
     parserWarnings: parsedPost.warnings,
     reviewerWarnings: review.warnings,
     renderWarnings: rendered.warnings.filter((warning) => !review.warnings.includes(warning)),
-    assetPaths: rendered.assetRecords.map((asset) => asset.relativePath),
+    assetPaths: rendered.assetRecords
+      .map((asset) => asset.relativePath)
+      .filter((assetPath): assetPath is string => Boolean(assetPath)),
   }
 }

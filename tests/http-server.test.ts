@@ -51,9 +51,13 @@ describe("http server", () => {
           }
         }
         markdown: {
-          rawHtmlPolicy: string
+          formulaBlockWrapperOpen: string
+        }
+        assets: {
+          stickerAssetMode: string
         }
       }
+      optionDescriptions: Record<string, string>
     }
 
     expect(response.ok).toBe(true)
@@ -63,6 +67,8 @@ describe("http server", () => {
       defaultAlias: "title",
     })
     expect(body.options.frontmatter.aliases.title).toBe("")
-    expect(body.options.markdown.rawHtmlPolicy).toBe("omit")
+    expect(body.options.markdown.formulaBlockWrapperOpen).toBe("$$")
+    expect(body.options.assets.stickerAssetMode).toBe("ignore")
+    expect(body.optionDescriptions["assets-imageContentMode"]).toContain("base64")
   })
 })

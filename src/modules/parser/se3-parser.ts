@@ -53,8 +53,10 @@ const getStandaloneImages = ({
 
       return {
         sourceUrl: normalizeAssetUrl(sourceUrl),
+        originalSourceUrl: null,
         alt: $image.attr("alt") ?? "",
         caption: null,
+        mediaKind: "image",
       } satisfies ImageData
     })
     .filter((image): image is ImageData => image !== null)

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 
 import type {
+  ExportJobItem,
   ExportJobState,
   ExportManifest,
   ExportRequest,
@@ -25,6 +26,7 @@ export class JobStore {
         failed: 0,
         warnings: 0,
       },
+      items: [],
       manifest: null,
       error: null,
     }
@@ -66,6 +68,18 @@ export class JobStore {
     job.progress = progress
   }
 
+  appendItem(id: string, item: ExportJobItem) {
+    const job = this.mustGet(id)
+    const existingItemIndex = job.items.findIndex((existing) => existing.id === item.id)
+
+    if (existingItemIndex >= 0) {
+      job.items[existingItemIndex] = item
+      return
+    }
+
+    job.items.push(item)
+  }
+
   complete(id: string, manifest: ExportManifest) {
     const job = this.mustGet(id)
     job.status = "completed"
@@ -77,6 +91,21 @@ export class JobStore {
       failed: manifest.failureCount,
       warnings: manifest.warningCount,
     }
+    job.items = job.items.length > 0 ? job.items : manifest.posts.map((post) => ({
+      id: post.outputPath ?? `failed:${post.logNo}`,
+      logNo: post.logNo,
+      title: post.title,
+      source: post.source,
+      category: post.category,
+      status: post.status,
+      outputPath: post.outputPath,
+      assetPaths: post.assetPaths,
+      warnings: post.warnings,
+      warningCount: post.warningCount,
+      error: post.error,
+      markdown: null,
+      updatedAt: new Date().toISOString(),
+    }))
   }
 
   fail(id: string, error: string) {

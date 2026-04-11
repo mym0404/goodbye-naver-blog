@@ -11,7 +11,7 @@
 - [../../.agents/knowledge/engineering/validation.md](../../.agents/knowledge/engineering/validation.md)
 
 ## 검증 방법
-- `pnpm docs:check`
+- 계획에서 참조한 파일과 명령이 현재 저장소와 맞는지 수동 확인
 
 ## Rules
 - 작은 변경은 별도 계획 문서 없이 진행할 수 있다.

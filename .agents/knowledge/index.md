@@ -14,8 +14,8 @@
 - [../../src/shared/sample-corpus.ts](../../src/shared/sample-corpus.ts)
 
 ## 검증 방법
-- `pnpm docs:check`
 - `pnpm quality:report`
+- 수정한 링크와 코드 기준점을 수동으로 spot-check
 
 ## Read First
 1. [engineering/index.md](./engineering/index.md)
@@ -32,3 +32,7 @@
 2. 실제 코드, 설정, 스크립트, 테스트
 3. 이 knowledge 문서
 4. `docs/` 아래 사용자 문서와 참고 자료
+
+## Maintenance Notes
+- knowledge는 고정 파일 목록이나 전용 validator 대신 짧은 router와 topic 문서 조합으로 유지한다.
+- generated 보고서가 바뀌는 축을 수정했을 때만 `pnpm quality:report`를 다시 실행한다.

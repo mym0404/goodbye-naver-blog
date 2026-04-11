@@ -3,9 +3,8 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from "node:http"
-import { readFile } from "node:fs/promises"
+import { access, readFile } from "node:fs/promises"
 import path from "node:path"
-import { fileURLToPath } from "node:url"
 
 import { NaverBlogFetcher } from "../modules/blog-fetcher/naver-blog-fetcher.js"
 import { buildExportPreview } from "../modules/exporter/export-preview.js"
@@ -15,18 +14,34 @@ import {
   defaultExportOptions,
   frontmatterFieldMeta,
   frontmatterFieldOrder,
+  optionDescriptions,
   type PartialExportOptions,
 } from "../shared/export-options.js"
 import type { ExportRequest } from "../shared/types.js"
 import { extractBlogId, toErrorMessage } from "../shared/utils.js"
 import { JobStore } from "./job-store.js"
 
-const staticRoot = fileURLToPath(new URL("../static/", import.meta.url))
+const builtClientRoot = path.resolve(process.cwd(), "dist/client")
 
 const contentTypes: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
+  ".ico": "image/x-icon",
   ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".svg": "image/svg+xml; charset=utf-8",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+}
+
+const fileExists = async (filePath: string) => {
+  try {
+    await access(filePath)
+    return true
+  } catch {
+    return false
+  }
 }
 
 const readBody = async (request: IncomingMessage) => {
@@ -54,6 +69,21 @@ const sendJson = ({
   response.end(JSON.stringify(body))
 }
 
+const sendText = ({
+  response,
+  statusCode,
+  body,
+}: {
+  response: ServerResponse
+  statusCode: number
+  body: string
+}) => {
+  response.writeHead(statusCode, {
+    "content-type": "text/plain; charset=utf-8",
+  })
+  response.end(body)
+}
+
 const sendFile = async ({
   response,
   filePath,
@@ -73,6 +103,44 @@ const sendFile = async ({
 export const createHttpServer = () => {
   const jobStore = new JobStore()
 
+  const sendBrowserApp = async ({
+    response,
+    pathname,
+  }: {
+    response: ServerResponse
+    pathname: string
+  }) => {
+    const builtIndexPath = path.join(builtClientRoot, "index.html")
+
+    if (!(await fileExists(builtIndexPath))) {
+      sendText({
+        response,
+        statusCode: 503,
+        body: "React client build is missing. Run `pnpm build:ui` before starting the server.",
+      })
+      return
+    }
+
+    const requestedPath = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "")
+    const builtFilePath = path.join(builtClientRoot, requestedPath)
+
+    if (
+      (pathname === "/" || pathname.startsWith("/assets/") || path.extname(pathname)) &&
+      (await fileExists(builtFilePath))
+    ) {
+      await sendFile({
+        response,
+        filePath: builtFilePath,
+      })
+      return
+    }
+
+    await sendFile({
+      response,
+      filePath: builtIndexPath,
+    })
+  }
+
   const runExport = async ({
     jobId,
     request,
@@ -87,6 +155,7 @@ export const createHttpServer = () => {
         request,
         onLog: (message) => jobStore.appendLog(jobId, message),
         onProgress: (progress) => jobStore.updateProgress(jobId, progress),
+        onItem: (item) => jobStore.appendItem(jobId, item),
       })
       const manifest = await exporter.run()
 
@@ -103,18 +172,10 @@ export const createHttpServer = () => {
     const url = new URL(request.url ?? "/", "http://localhost")
 
     try {
-      if (method === "GET" && url.pathname === "/") {
-        await sendFile({
+      if (method === "GET" && !url.pathname.startsWith("/api/")) {
+        await sendBrowserApp({
           response,
-          filePath: path.join(staticRoot, "index.html"),
-        })
-        return
-      }
-
-      if (method === "GET" && (url.pathname === "/app.js" || url.pathname === "/styles.css")) {
-        await sendFile({
-          response,
-          filePath: path.join(staticRoot, url.pathname.slice(1)),
+          pathname: url.pathname,
         })
         return
       }
@@ -128,6 +189,7 @@ export const createHttpServer = () => {
             options: defaultExportOptions(),
             frontmatterFieldOrder,
             frontmatterFieldMeta,
+            optionDescriptions,
           },
         })
         return
