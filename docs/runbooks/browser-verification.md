@@ -57,12 +57,16 @@
 - KPI 카드 숫자와 상태 배지 대비가 충분한지
 - 설명 텍스트, helper text, modal meta, 파일 subtitle이 거의 보이지 않는 상태가 아닌지
 - drawer의 브랜드, 메뉴, 진행 카드, 내보내기 버튼 텍스트가 어둡게 가라앉지 않는지
+- 설정 탭 4개가 한 줄 segmented control로 보이고 active tab이 과하게 떠 있거나 깨져 보이지 않는지
+- frontmatter 필드가 데스크톱에서 다열 grid로 정리되어 세로 길이가 과도하게 늘어나지 않는지
 - focus, disabled, loading 상태가 구분되는지
 - 상태 패널과 작업 패널이 같은 메인 보드 안에서 자연스럽게 읽히는지
 - 로그, 요약, 카테고리 패널이 같은 시각 언어를 유지하는지
 - preview 후보 글 정보와 Markdown 예시가 현재 선택 범위와 맞는지
 - preview와 export 결과 모두 HTML 태그를 본문에 남기지 않는지
 - preview mode toggle이 source/split/rendered 상태를 올바르게 전환하는지
+- preview source/rendered 단일 모드가 반폭으로 줄지 않고 full width를 쓰는지
+- preview source `pre`와 rendered pane의 내부 padding이 mode에 따라 달라지지 않는지
 - preview의 frontmatter/value block이 모바일에서 세로로 찌그러지지 않는지
 - frontmatter alias 충돌 시 오류가 즉시 보이고 export가 막히는지
 - 완료 파일 트리에서 경고/에러 아이콘과 필터가 일관되게 동작하는지

@@ -174,4 +174,23 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.assets.includeImageCaptions).toBe(false)
     expect(latestOptions.assets.thumbnailSource).toBe("none")
   })
+
+  it("uses segmented tabs and a multi-column frontmatter grid", () => {
+    render(
+      <ExportOptionsPanel
+        outputDir="./output"
+        options={defaultExportOptions()}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    expect(query<HTMLElement>(".option-tabs-list").className).toContain("sm:grid-cols-4")
+    expect(query<HTMLElement>("#frontmatter-fields").className).toContain("md:grid-cols-2")
+    expect(query<HTMLElement>("#frontmatter-fields").className).toContain("2xl:grid-cols-3")
+  })
 })

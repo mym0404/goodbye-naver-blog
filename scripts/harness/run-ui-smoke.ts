@@ -537,6 +537,34 @@ const run = async () => {
       throw new Error("frontmatter description missing")
     }
 
+    const optionsLayoutOk = await page.evaluate(() => {
+      const tabsList = document.querySelector<HTMLElement>(".option-tabs-list")
+      const frontmatterGrid = document.querySelector<HTMLElement>("#frontmatter-fields")
+
+      if (!tabsList || !frontmatterGrid) {
+        return false
+      }
+
+      const tabColumns = window
+        .getComputedStyle(tabsList)
+        .gridTemplateColumns
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length
+      const frontmatterColumns = window
+        .getComputedStyle(frontmatterGrid)
+        .gridTemplateColumns
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length
+
+      return tabColumns === 4 && frontmatterColumns >= 2
+    })
+
+    if (!optionsLayoutOk) {
+      throw new Error("options tabs or frontmatter grid layout regressed")
+    }
+
     await assertNavActive({
       page,
       sectionId: "category-panel",
@@ -616,6 +644,40 @@ const run = async () => {
       throw new Error("preview markdown still contains html")
     }
 
+    const sourceModeLayoutOk = await page.evaluate(() => {
+      const grid = document.querySelector<HTMLElement>(".preview-content-grid")
+      const sourcePane = document.querySelector<HTMLElement>(".preview-markdown-shell")
+      const sourceContent = document.querySelector<HTMLElement>("#preview-markdown")
+      const renderedPane = document.querySelector<HTMLElement>("#preview-rendered")
+
+      if (!grid || !sourcePane || !sourceContent || renderedPane) {
+        return false
+      }
+
+      const gridColumns = window
+        .getComputedStyle(grid)
+        .gridTemplateColumns
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length
+      const gridRect = grid.getBoundingClientRect()
+      const paneRect = sourcePane.getBoundingClientRect()
+      const sourceStyle = window.getComputedStyle(sourceContent)
+
+      return (
+        gridColumns === 1 &&
+        Math.abs(gridRect.width - paneRect.width) <= 2 &&
+        sourceStyle.marginTop === "0px" &&
+        sourceStyle.marginRight === "0px" &&
+        sourceStyle.marginBottom === "0px" &&
+        sourceStyle.marginLeft === "0px"
+      )
+    })
+
+    if (!sourceModeLayoutOk) {
+      throw new Error("preview source mode layout regressed")
+    }
+
     await page.click('[data-preview-mode="rendered"]')
 
     const renderedModeState = await page.locator('[data-preview-mode="rendered"]').getAttribute("class")
@@ -632,6 +694,38 @@ const run = async () => {
 
     if (!previewRenderedText?.includes("postTitle:")) {
       throw new Error("preview rendered pane missing markdown result")
+    }
+
+    const renderedModeLayoutOk = await page.evaluate(() => {
+      const grid = document.querySelector<HTMLElement>(".preview-content-grid")
+      const sourcePane = document.querySelector<HTMLElement>(".preview-markdown-shell")
+      const renderedPane = document.querySelector<HTMLElement>("#preview-rendered")
+      const renderedContent = document.querySelector<HTMLElement>("#preview-rendered .preview-rendered-content")
+
+      if (!grid || sourcePane || !renderedPane || !renderedContent) {
+        return false
+      }
+
+      const gridColumns = window
+        .getComputedStyle(grid)
+        .gridTemplateColumns
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length
+      const gridRect = grid.getBoundingClientRect()
+      const paneRect = renderedPane.getBoundingClientRect()
+      const renderedStyle = window.getComputedStyle(renderedContent)
+
+      return (
+        gridColumns === 1 &&
+        Math.abs(gridRect.width - paneRect.width) <= 2 &&
+        renderedStyle.paddingTop === renderedStyle.paddingBottom &&
+        renderedStyle.paddingLeft === renderedStyle.paddingRight
+      )
+    })
+
+    if (!renderedModeLayoutOk) {
+      throw new Error("preview rendered mode layout regressed")
     }
 
     await page.click('[data-preview-mode="split"]')
@@ -657,6 +751,42 @@ const run = async () => {
 
     if (!previewLayoutOk) {
       throw new Error("preview section order or scrollable pane sizing was incorrect")
+    }
+
+    const splitModeLayoutOk = await page.evaluate(() => {
+      const grid = document.querySelector<HTMLElement>(".preview-content-grid")
+      const sourcePane = document.querySelector<HTMLElement>(".preview-markdown-shell")
+      const renderedPane = document.querySelector<HTMLElement>("#preview-rendered")
+      const sourceContent = document.querySelector<HTMLElement>("#preview-markdown")
+      const renderedContent = document.querySelector<HTMLElement>("#preview-rendered .preview-rendered-content")
+
+      if (!grid || !sourcePane || !renderedPane || !sourceContent || !renderedContent) {
+        return false
+      }
+
+      const gridColumns = window
+        .getComputedStyle(grid)
+        .gridTemplateColumns
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length
+      const sourceRect = sourcePane.getBoundingClientRect()
+      const renderedRect = renderedPane.getBoundingClientRect()
+      const sourceStyle = window.getComputedStyle(sourceContent)
+      const renderedStyle = window.getComputedStyle(renderedContent)
+
+      return (
+        gridColumns === 2 &&
+        Math.abs(sourceRect.width - renderedRect.width) <= 4 &&
+        sourceStyle.paddingTop === renderedStyle.paddingTop &&
+        sourceStyle.paddingRight === renderedStyle.paddingRight &&
+        sourceStyle.paddingBottom === renderedStyle.paddingBottom &&
+        sourceStyle.paddingLeft === renderedStyle.paddingLeft
+      )
+    })
+
+    if (!splitModeLayoutOk) {
+      throw new Error("preview split mode width or padding regressed")
     }
 
     const exportResponsePromise = page.waitForResponse(

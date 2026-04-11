@@ -37,6 +37,10 @@ export const PreviewPanel = ({
   const warningCount = preview
     ? preview.parserWarnings.length + preview.reviewerWarnings.length + preview.renderWarnings.length
     : 0
+  const splitMode = previewMode === "split"
+  const showSourcePane = previewMode !== "rendered"
+  const showRenderedPane = previewMode !== "source"
+  const previewGridClassName = `preview-content-grid grid gap-4 ${splitMode ? "xl:grid-cols-2" : "grid-cols-1"}`
 
   return (
     <Card
@@ -153,25 +157,27 @@ export const PreviewPanel = ({
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
-          <div className="preview-content-grid grid gap-4 xl:grid-cols-2">
-            <ScrollArea
-              className={`preview-scroll-area preview-markdown-shell overflow-hidden rounded-[1.5rem] border border-slate-800 bg-slate-950 h-[min(34rem,62vh)] ${previewMode === "rendered" ? "hidden" : ""}`}
-            >
-              <pre
-                id="preview-markdown"
-                className="preview-markdown min-h-full whitespace-pre-wrap break-words bg-slate-950 px-4 py-4 font-mono text-[0.88rem] leading-7 text-slate-100"
+          <div className={previewGridClassName}>
+            {showSourcePane ? (
+              <ScrollArea className="preview-scroll-area preview-markdown-shell h-[min(34rem,62vh)] overflow-hidden rounded-[1.5rem] border border-slate-800 bg-slate-950">
+                <pre
+                  id="preview-markdown"
+                  className="preview-markdown m-0 min-h-full w-full whitespace-pre-wrap break-words bg-slate-950 p-4 font-mono text-[0.88rem] leading-7 text-slate-100"
+                >
+                  {preview?.markdown ?? emptyPreviewText}
+                </pre>
+              </ScrollArea>
+            ) : null}
+            {showRenderedPane ? (
+              <ScrollArea
+                id="preview-rendered"
+                className="preview-scroll-area preview-rendered h-[min(34rem,62vh)] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white"
               >
-                {preview?.markdown ?? emptyPreviewText}
-              </pre>
-            </ScrollArea>
-            <ScrollArea
-              id="preview-rendered"
-              className={`preview-scroll-area preview-rendered overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white h-[min(34rem,62vh)] ${previewMode === "source" ? "hidden" : ""}`}
-            >
-              <article className="preview-rendered-content min-h-full px-4 py-4">
-                <MarkdownDocument markdown={preview?.markdown ?? emptyPreviewText} />
-              </article>
-            </ScrollArea>
+                <article className="preview-rendered-content min-h-full w-full p-4">
+                  <MarkdownDocument markdown={preview?.markdown ?? emptyPreviewText} />
+                </article>
+              </ScrollArea>
+            ) : null}
           </div>
         </div>
       </CardContent>

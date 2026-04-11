@@ -198,6 +198,8 @@ describe("App", () => {
       expect(document.querySelector("#preview-markdown")?.textContent).toContain("postTitle:")
       expect(document.querySelector("#preview-markdown")?.textContent).toContain("테스트 글")
     })
+    expect(document.querySelector(".preview-content-grid")?.className).not.toContain("xl:grid-cols-2")
+    expect(document.querySelector("#preview-markdown")?.className).toContain("m-0")
 
     await user.click(screen.getByTitle("결과보기"))
     await waitFor(() => {
@@ -205,7 +207,15 @@ describe("App", () => {
       expect(renderedPreview?.textContent).toContain("Frontmatter")
       expect(renderedPreview?.textContent).toContain("postTitle:")
     })
+    expect(document.querySelector(".preview-content-grid")?.className).not.toContain("xl:grid-cols-2")
     expect(document.querySelector("#preview-rendered .hljs-keyword")).not.toBeNull()
+
+    await user.click(screen.getByTitle("같이보기"))
+    await waitFor(() => {
+      expect(document.querySelector(".preview-content-grid")?.className).toContain("xl:grid-cols-2")
+      expect(document.querySelector("#preview-markdown")).not.toBeNull()
+      expect(document.querySelector("#preview-rendered")).not.toBeNull()
+    })
 
     await user.click(screen.getByRole("button", { name: "내보내기" }))
     await waitFor(() => {

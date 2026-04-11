@@ -47,6 +47,7 @@ const CheckField = ({
   description,
   checked,
   onChange,
+  compact = false,
 }: {
   inputId: string
   optionKey: string
@@ -54,12 +55,13 @@ const CheckField = ({
   description?: string
   checked: boolean
   onChange: (checked: boolean) => void
+  compact?: boolean
 }) => (
   <label
-    className="check flex min-h-[7.75rem] flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]"
+    className={`check flex flex-col rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] ${compact ? "min-h-0 gap-2" : "min-h-[7.75rem] gap-3"}`}
     data-option-key={optionKey}
   >
-    <span className="check-head flex items-start gap-3">
+    <span className={`check-head flex gap-3 ${compact ? "items-center" : "items-start"}`}>
       <input
         id={inputId}
         className="mt-0.5 size-[1.1rem] shrink-0 accent-primary"
@@ -143,21 +145,17 @@ export const ExportOptionsPanel = ({
           </div>
 
           <Tabs className="option-tabs grid gap-4" defaultValue="structure">
-            <TabsList className="option-tabs-list flex h-auto w-full flex-wrap justify-start gap-2 rounded-2xl bg-slate-100/90 p-2.5">
-              <TabsTrigger value="scope" className="min-h-12 rounded-xl px-4 py-3 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <i className="ri-focus-3-line" aria-hidden="true" />
+            <TabsList className="option-tabs-list grid h-auto w-full grid-cols-2 gap-2 rounded-2xl bg-slate-100/90 p-1.5 sm:grid-cols-4">
+              <TabsTrigger value="scope" className="min-h-12 rounded-xl px-4 py-3 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 범위
               </TabsTrigger>
-              <TabsTrigger value="structure" className="min-h-12 rounded-xl px-4 py-3 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <i className="ri-layout-grid-line" aria-hidden="true" />
+              <TabsTrigger value="structure" className="min-h-12 rounded-xl px-4 py-3 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 구조
               </TabsTrigger>
-              <TabsTrigger value="markdown" className="min-h-12 rounded-xl px-4 py-3 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <i className="ri-markdown-line" aria-hidden="true" />
+              <TabsTrigger value="markdown" className="min-h-12 rounded-xl px-4 py-3 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 Markdown
               </TabsTrigger>
-              <TabsTrigger value="assets" className="min-h-12 rounded-xl px-4 py-3 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <i className="ri-image-2-line" aria-hidden="true" />
+              <TabsTrigger value="assets" className="min-h-12 rounded-xl px-4 py-3 text-sm font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 Assets
               </TabsTrigger>
             </TabsList>
@@ -361,13 +359,14 @@ export const ExportOptionsPanel = ({
                 </OptionSection>
 
                 <OptionSection title="Frontmatter" note="Metadata envelope">
-                  <div className="frontmatter-toolbar">
+                  <div className="frontmatter-toolbar grid gap-3 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
                     <CheckField
                       inputId="frontmatter-enabled"
                       optionKey="frontmatter-enabled"
                       label="Frontmatter 사용"
                       description={description("frontmatter-enabled")}
                       checked={options.frontmatter.enabled}
+                      compact
                       onChange={(checked) =>
                         onOptionsChange((current) => ({
                           ...current,
@@ -379,7 +378,7 @@ export const ExportOptionsPanel = ({
                       }
                     />
                     <div
-                      className={`frontmatter-state-card flex min-h-[7.75rem] flex-col justify-between gap-3 rounded-2xl border bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] sm:flex-row sm:items-start ${frontmatterValidationErrors.length > 0 ? "border-rose-200" : "border-slate-200"}`}
+                      className={`frontmatter-state-card flex min-h-0 flex-col justify-between gap-3 rounded-2xl border bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] sm:flex-row sm:items-start ${frontmatterValidationErrors.length > 0 ? "border-rose-200" : "border-slate-200"}`}
                       data-state={frontmatterValidationErrors.length > 0 ? "error" : "default"}
                     >
                       <div className="frontmatter-state-copy grid min-w-0 gap-2">
@@ -413,7 +412,7 @@ export const ExportOptionsPanel = ({
                     </AlertDescription>
                   </Alert>
 
-                  <div id="frontmatter-fields" className="frontmatter-grid grid gap-3">
+                  <div id="frontmatter-fields" className="frontmatter-grid grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
                     {frontmatterFieldOrder.map((fieldName) => {
                       const fieldMeta = frontmatterFieldMeta[fieldName]
                       const fieldEnabled = options.frontmatter.fields[fieldName]
@@ -422,15 +421,15 @@ export const ExportOptionsPanel = ({
                       return (
                         <div
                           key={fieldName}
-                          className={`frontmatter-row grid gap-4 rounded-2xl border bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] xl:grid-cols-[minmax(0,1.1fr)_minmax(16rem,0.9fr)] ${hasError ? "border-rose-200 ring-1 ring-rose-100" : "border-slate-200"}`}
+                          className={`frontmatter-row grid content-start gap-4 rounded-2xl border bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)] ${hasError ? "border-rose-200 ring-1 ring-rose-100" : "border-slate-200"}`}
                           data-frontmatter-field={fieldName}
                           data-state={hasError ? "error" : "default"}
                         >
                           <div className="frontmatter-main grid gap-3">
-                            <label className="frontmatter-toggle inline-flex items-center gap-3">
+                            <label className="frontmatter-toggle inline-flex items-start gap-3">
                               <input
                                 id={`frontmatter-field-${fieldName}`}
-                                className="size-[1.1rem] shrink-0 accent-primary"
+                                className="mt-0.5 size-[1.1rem] shrink-0 accent-primary"
                                 type="checkbox"
                                 value={fieldName}
                                 checked={fieldEnabled}
@@ -447,7 +446,12 @@ export const ExportOptionsPanel = ({
                                   }))
                                 }
                               />
-                              <span className="frontmatter-toggle-copy text-sm font-semibold text-slate-900">{fieldMeta.label}</span>
+                              <span className="frontmatter-toggle-copy grid gap-1">
+                                <span className="text-sm font-semibold text-slate-900">{fieldMeta.label}</span>
+                                <span className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">
+                                  {fieldName}
+                                </span>
+                              </span>
                             </label>
                             <p className="frontmatter-description text-sm leading-6 text-slate-500">{fieldMeta.description}</p>
                           </div>

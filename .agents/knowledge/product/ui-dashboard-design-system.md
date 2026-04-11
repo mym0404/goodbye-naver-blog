@@ -58,8 +58,12 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - category/search/output/preview/status의 DOM hook은 유지한다.
   `#blogIdOrUrl`, `#scan-button`, `#preview-button`, `#export-button`, `#job-file-tree`, `#markdown-modal`, `[data-preview-mode]`, `[data-job-filter]`, `#summary`, `#status-text`, `#logs`
 - option panel은 `Tabs`로 `범위 / 구조 / Markdown / Assets`를 구분한다.
-- 설정 탭 4개는 시각적으로 작아 보이지 않게 충분한 높이와 padding을 유지한다.
+- 설정 탭 4개는 상단 전체 폭을 쓰는 segmented control로 유지한다.
+- 탭 active 상태는 떠 보이는 흰 pill 하나만 남기고, underline이나 과한 shadow를 겹치지 않는다.
+- frontmatter 필드 목록은 데스크톱에서 2~3열 grid로 보여 주고, 각 필드 안에서 토글/설명/alias 입력을 함께 묶는다.
 - preview는 floating segmented toggle로 `소스보기 / 같이보기 / 결과보기`를 유지한다.
+- preview는 `source`와 `rendered` 단일 모드에서 항상 1열 full-width pane을 쓰고, `split`에서만 2열로 나눈다.
+- preview source `pre`와 rendered article은 같은 내부 padding rhythm을 유지한다.
 - 결과 modal과 preview renderer는 모두 `react-markdown + remark-gfm + remark-math + rehype-katex + rehype-sanitize` 경로를 사용한다.
 
 ## Icon Rules
@@ -80,6 +84,8 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - 현재 contrast gate 대상에는 category status, preview status, panel description, field help, frontmatter description, results description, file meta, modal meta, markdown frontmatter key, sidebar brand/nav/summary/action text가 포함된다.
 - smoke screenshot capture는 `docs/generated/ui-review/round-01`부터 `round-05`까지 동일 시나리오로 누적한다.
 - smoke는 desktop/mobile 모두 viewport horizontal overflow와 flush shell 정렬도 같이 검사한다.
+- smoke는 desktop options 탭이 4열 grid인지, frontmatter 필드가 다열 grid로 접히는지도 같이 검사한다.
+- smoke는 preview `source / rendered / split` 세 모드의 width와 내부 padding 일관성도 같이 검사한다.
 - contrast gate는 translucent sidebar card까지 ancestor background를 합성해서 계산한다.
 
 ## Anti-Patterns
