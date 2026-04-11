@@ -1,12 +1,12 @@
-import path from "node:path"
-import { writeFile } from "node:fs/promises"
+import path from 'node:path';
+import { writeFile } from 'node:fs/promises';
 
 import {
   type CategoryInfo,
   type EditorVersion,
   type PostSummary,
   type ScanResult,
-} from "../../shared/types.js"
+} from '../../shared/types.js';
 import {
   delay,
   ensureDir,
@@ -15,67 +15,67 @@ import {
   normalizeAssetUrl,
   sanitizeCategoryName,
   toKstDateTime,
-} from "../../shared/utils.js"
+} from '../../shared/utils.js';
 
 type CategoryApiItem = {
-  categoryName: string
-  categoryNo: number
-  parentCategoryNo: number | null
-  postCnt: number
-  divisionLine: boolean
-  openYN: boolean
-}
+  categoryName: string;
+  categoryNo: number;
+  parentCategoryNo: number | null;
+  postCnt: number;
+  divisionLine: boolean;
+  openYN: boolean;
+};
 
 type PostApiItem = {
-  logNo: number
-  titleWithInspectMessage: string
-  addDate: number
-  categoryNo: number
-  categoryName: string
-  smartEditorVersion: number | null
-  thumbnailUrl: string | null
-  notOpen: boolean
-  postBlocked: boolean
-  buddyOpen: boolean
-  bothBuddyOpen: boolean
-}
+  logNo: number;
+  titleWithInspectMessage: string;
+  addDate: number;
+  categoryNo: number;
+  categoryName: string;
+  smartEditorVersion: number | null;
+  thumbnailUrl: string | null;
+  notOpen: boolean;
+  postBlocked: boolean;
+  buddyOpen: boolean;
+  bothBuddyOpen: boolean;
+};
 
-const pageSize = 30
-const postListConcurrency = 3
-const defaultRetryDelays = [0, 1_000, 2_000, 4_000]
-const defaultRequestTimeoutMs = 5_000
+const pageSize = 30;
+const postListConcurrency = 3;
+const defaultRetryDelays = [0, 1_000, 2_000, 4_000];
+const defaultRequestTimeoutMs = 5_000;
 
 const browserHeaders = ({
   blogId,
   refererPath = `/PostList.naver?blogId=${blogId}&categoryNo=0&listStyle=style1`,
 }: {
-  blogId: string
-  refererPath?: string
+  blogId: string;
+  refererPath?: string;
 }) => ({
-  accept: "application/json, text/plain, */*",
-  origin: "https://m.blog.naver.com",
+  accept: 'application/json, text/plain, */*',
+  origin: 'https://m.blog.naver.com',
   referer: `https://m.blog.naver.com${refererPath}`,
-  "user-agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-  "x-requested-with": "XMLHttpRequest",
-  "sec-fetch-site": "same-origin",
-  "sec-fetch-mode": "cors",
-  "sec-fetch-dest": "empty",
-})
+  'user-agent':
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+  'x-requested-with': 'XMLHttpRequest',
+  'sec-fetch-site': 'same-origin',
+  'sec-fetch-mode': 'cors',
+  'sec-fetch-dest': 'empty',
+});
 
 const detectEditorVersion = (value: number | null): EditorVersion | null => {
   if (value === 2 || value === 3 || value === 4) {
-    return value
+    return value;
   }
 
-  return null
-}
+  return null;
+};
 
 export class NaverBlogFetcher {
-  readonly blogId: string
-  readonly onLog: ((message: string) => void) | null
-  readonly requestTimeoutMs: number
-  readonly retryDelays: number[]
+  readonly blogId: string;
+  readonly onLog: ((message: string) => void) | null;
+  readonly requestTimeoutMs: number;
+  readonly retryDelays: number[];
 
   constructor({
     blogId,
@@ -83,31 +83,31 @@ export class NaverBlogFetcher {
     requestTimeoutMs,
     retryDelays,
   }: {
-    blogId: string
-    onLog?: (message: string) => void
-    requestTimeoutMs?: number
-    retryDelays?: number[]
+    blogId: string;
+    onLog?: (message: string) => void;
+    requestTimeoutMs?: number;
+    retryDelays?: number[];
   }) {
-    this.blogId = blogId
-    this.onLog = onLog ?? null
-    this.requestTimeoutMs = requestTimeoutMs ?? defaultRequestTimeoutMs
-    this.retryDelays = retryDelays ?? defaultRetryDelays
+    this.blogId = blogId;
+    this.onLog = onLog ?? null;
+    this.requestTimeoutMs = requestTimeoutMs ?? defaultRequestTimeoutMs;
+    this.retryDelays = retryDelays ?? defaultRetryDelays;
   }
 
   async getPostCount() {
     const result = await this.fetchJson<{ postCount: number }>({
       url: `https://m.blog.naver.com/api/blogs/${this.blogId}/contents-count`,
-    })
+    });
 
-    return result.postCount
+    return result.postCount;
   }
 
   async getCategories() {
     const result = await this.fetchJson<{
-      mylogCategoryList: CategoryApiItem[]
+      mylogCategoryList: CategoryApiItem[];
     }>({
       url: `https://m.blog.naver.com/api/blogs/${this.blogId}/category-list`,
-    })
+    });
 
     const categories = result.mylogCategoryList.map((category) => ({
       id: category.categoryNo,
@@ -117,21 +117,25 @@ export class NaverBlogFetcher {
       isDivider: category.divisionLine,
       isOpen: category.openYN,
       path: [] as string[],
-    }))
+    }));
 
-    const categoryMap = new Map(categories.map((category) => [category.id, category]))
+    const categoryMap = new Map(
+      categories.map((category) => [category.id, category]),
+    );
 
     const resolvePath = (categoryId: number): string[] => {
-      const category = categoryMap.get(categoryId)
+      const category = categoryMap.get(categoryId);
 
       if (!category || category.isDivider) {
-        return []
+        return [];
       }
 
-      const parentPath = category.parentId ? resolvePath(category.parentId) : []
+      const parentPath = category.parentId
+        ? resolvePath(category.parentId)
+        : [];
 
-      return [...parentPath, category.name]
-    }
+      return [...parentPath, category.name];
+    };
 
     return categories
       .filter((category) => !category.isDivider && category.isOpen)
@@ -139,41 +143,50 @@ export class NaverBlogFetcher {
         ...category,
         path: resolvePath(category.id),
         depth: Math.max(resolvePath(category.id).length - 1, 0),
-      })) satisfies CategoryInfo[]
+      })) satisfies CategoryInfo[];
   }
 
   async scanBlog() {
     const [totalPostCount, categories] = await Promise.all([
       this.getPostCount(),
       this.getCategories(),
-    ])
+    ]);
 
     return {
       blogId: this.blogId,
       totalPostCount,
       categories,
-    } satisfies ScanResult
+    } satisfies ScanResult;
   }
 
   async getAllPosts({
     expectedTotal,
   }: {
-    expectedTotal?: number
+    expectedTotal?: number;
   } = {}) {
-    const resolvedExpectedTotal = expectedTotal ?? (await this.getPostCount())
-    const totalPages = Math.max(1, Math.ceil(resolvedExpectedTotal / pageSize))
-    const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1)
+    const resolvedExpectedTotal = expectedTotal ?? (await this.getPostCount());
+    const totalPages = Math.max(1, Math.ceil(resolvedExpectedTotal / pageSize));
+    const pageNumbers = Array.from(
+      { length: totalPages },
+      (_, index) => index + 1,
+    );
     const pageResults = await mapConcurrent({
       items: pageNumbers,
       concurrency: postListConcurrency,
       mapper: async (page) => {
         const result = await this.fetchJson<{
-          items: PostApiItem[]
+          items: PostApiItem[];
         }>({
           url: `https://m.blog.naver.com/api/blogs/${this.blogId}/post-list?page=${page}&itemCount=${pageSize}&categoryNo=0`,
-        })
+        });
         const pageItems = result.items
-          .filter((item) => !item.notOpen && !item.postBlocked && !item.buddyOpen && !item.bothBuddyOpen)
+          .filter(
+            (item) =>
+              !item.notOpen &&
+              !item.postBlocked &&
+              !item.buddyOpen &&
+              !item.bothBuddyOpen,
+          )
           .map((item) => ({
             blogId: this.blogId,
             logNo: String(item.logNo),
@@ -181,23 +194,28 @@ export class NaverBlogFetcher {
             publishedAt: toKstDateTime(item.addDate),
             categoryId: item.categoryNo,
             categoryName: sanitizeCategoryName(item.categoryName),
-            source: getSourceUrl({ blogId: this.blogId, logNo: String(item.logNo) }),
+            source: getSourceUrl({
+              blogId: this.blogId,
+              logNo: String(item.logNo),
+            }),
             editorVersion: detectEditorVersion(item.smartEditorVersion),
-            thumbnailUrl: item.thumbnailUrl ? normalizeAssetUrl(item.thumbnailUrl) : null,
-          }))
+            thumbnailUrl: item.thumbnailUrl
+              ? normalizeAssetUrl(item.thumbnailUrl)
+              : null,
+          }));
 
-        this.log(`목록 수집 ${page}페이지 완료`)
+        this.log(`목록 수집 ${page}페이지 완료`);
 
         return {
           page,
           items: pageItems,
-        }
+        };
       },
-    })
+    });
 
     return pageResults
       .sort((left, right) => left.page - right.page)
-      .flatMap((pageResult) => pageResult.items)
+      .flatMap((pageResult) => pageResult.items);
   }
 
   async fetchPostHtml(logNo: string) {
@@ -205,147 +223,146 @@ export class NaverBlogFetcher {
       `https://m.blog.naver.com/PostView.naver?blogId=${this.blogId}&logNo=${logNo}`,
       {
         headers: {
-          accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          accept:
+            'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           referer: `https://m.blog.naver.com/PostList.naver?blogId=${this.blogId}&categoryNo=0&listStyle=style1`,
-          "user-agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+          'user-agent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
         },
       },
-    )
+    );
 
     if (!response.ok) {
-      throw new Error(`글 HTML 요청 실패: ${response.status} ${response.statusText}`)
+      throw new Error(
+        `글 HTML 요청 실패: ${response.status} ${response.statusText}`,
+      );
     }
 
-    return response.text()
+    return response.text();
   }
 
   async downloadBinary({
     sourceUrl,
     destinationPath,
   }: {
-    sourceUrl: string
-    destinationPath: string
+    sourceUrl: string;
+    destinationPath: string;
   }) {
     const binary = await this.fetchBinary({
       sourceUrl,
-    })
-    await ensureDir(path.dirname(destinationPath))
-    await writeFile(destinationPath, binary.bytes)
+    });
+    await ensureDir(path.dirname(destinationPath));
+    await writeFile(destinationPath, binary.bytes);
   }
 
-  async fetchBinary({
-    sourceUrl,
-  }: {
-    sourceUrl: string
-  }) {
-    const normalizedSourceUrl = normalizeAssetUrl(sourceUrl)
+  async fetchBinary({ sourceUrl }: { sourceUrl: string }) {
+    const normalizedSourceUrl = normalizeAssetUrl(sourceUrl);
     const response = await fetch(normalizedSourceUrl, {
       headers: {
-        referer: "https://blog.naver.com/",
-        "user-agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+        referer: 'https://blog.naver.com/',
+        'user-agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
       },
-    })
+    });
 
     if (!response.ok) {
-      throw new Error(`자산 다운로드 실패: ${response.status} ${response.statusText}`)
+      throw new Error(
+        `자산 다운로드 실패: ${response.status} ${response.statusText}`,
+      );
     }
 
-    const arrayBuffer = await response.arrayBuffer()
+    const arrayBuffer = await response.arrayBuffer();
 
     return {
       bytes: Buffer.from(arrayBuffer),
-      contentType: response.headers.get("content-type"),
-    }
+      contentType: response.headers.get('content-type'),
+    };
   }
 
-  private async fetchJson<Result>({
-    url,
-  }: {
-    url: string
-  }): Promise<Result> {
-    let lastError: Error | null = null
+  private async fetchJson<Result>({ url }: { url: string }): Promise<Result> {
+    let lastError: Error | null = null;
 
     for (const retryDelay of this.retryDelays) {
       if (retryDelay > 0) {
-        await delay(retryDelay)
+        await delay(retryDelay);
       }
 
-      let response: Response
+      let response: Response;
 
       try {
         response = await this.fetchWithTimeout({
           url,
           headers: browserHeaders({ blogId: this.blogId }),
-        })
+        });
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error))
+        lastError = error instanceof Error ? error : new Error(String(error));
 
         if (this.shouldRetryRequestError(error)) {
-          continue
+          continue;
         }
 
-        throw lastError
+        throw lastError;
       }
 
       if (!response.ok) {
-        lastError = new Error(`API 요청 실패: ${response.status} ${response.statusText}`)
+        lastError = new Error(
+          `API 요청 실패: ${response.status} ${response.statusText}`,
+        );
 
         if (response.status === 429 || response.status >= 500) {
-          continue
+          continue;
         }
 
-        throw lastError
+        throw lastError;
       }
 
       const payload = (await response.json()) as {
-        isSuccess?: boolean
-        result?: Result
-      }
+        isSuccess?: boolean;
+        result?: Result;
+      };
 
       if (!payload.result) {
-        lastError = new Error("API 응답에 result가 없습니다.")
-        continue
+        lastError = new Error('API 응답에 result가 없습니다.');
+        continue;
       }
 
-      return payload.result
+      return payload.result;
     }
 
-    throw lastError ?? new Error("API 요청에 실패했습니다.")
+    throw lastError ?? new Error('API 요청에 실패했습니다.');
   }
 
   private async fetchWithTimeout({
     url,
     headers,
   }: {
-    url: string
-    headers: Record<string, string>
+    url: string;
+    headers: Record<string, string>;
   }) {
-    const controller = new AbortController()
+    const controller = new AbortController();
     const timeoutHandle = setTimeout(() => {
-      controller.abort()
-    }, this.requestTimeoutMs)
+      controller.abort();
+    }, this.requestTimeoutMs);
 
     try {
       return await fetch(url, {
         headers,
         signal: controller.signal,
-      })
+      });
     } finally {
-      clearTimeout(timeoutHandle)
+      clearTimeout(timeoutHandle);
     }
   }
 
   private shouldRetryRequestError(error: unknown) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      return true
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      return true;
     }
 
-    return error instanceof TypeError
+    return error instanceof TypeError;
   }
 
   private log(message: string) {
-    this.onLog?.(message)
+    this.onLog?.(message);
   }
 }
