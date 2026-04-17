@@ -218,6 +218,43 @@ const parseBookWidgetBlocks = ({
   return blocks.length > 0 ? blocks : null
 }
 
+const parseColorScripterCodeBlock = ({
+  $,
+  element,
+}: {
+  $: CheerioAPI
+  element: ReturnType<CheerioAPI>
+}) => {
+  if (!element.hasClass("colorscripter-code-table")) {
+    return null
+  }
+
+  const codeCell = element.find("tr").first().children("td").eq(1)
+
+  if (codeCell.length === 0) {
+    return null
+  }
+
+  const lineNodes = codeCell
+    .find('div[style*="white-space:pre"], div[_foo*="white-space:pre"], pre')
+    .toArray()
+  const code = lineNodes
+    .map((node) => $(node).text().replaceAll("\u00a0", " ").replaceAll("\u200b", ""))
+    .map((line) => (line.trim() === "" ? "" : line))
+    .join("\n")
+    .trimEnd()
+
+  if (!code) {
+    return null
+  }
+
+  return {
+    type: "code",
+    language: null,
+    code,
+  } satisfies AstBlock
+}
+
 export const parseSe2Post = ({
   $,
   tags,
@@ -262,6 +299,20 @@ export const parseSe2Post = ({
     const standaloneImages = getStandaloneImages({ $, element })
 
     if (tagName === "table") {
+      const colorScripterCodeBlock = parseColorScripterCodeBlock({
+        $,
+        element,
+      })
+
+      if (colorScripterCodeBlock) {
+        blocks.push(colorScripterCodeBlock)
+        return
+      }
+
+      if (element.hasClass("colorscripter-code-table") && compactText(element.text()) === "") {
+        return
+      }
+
       const parsedTable = parseHtmlTable({ $, table: element })
 
       const flattenedTable = parseSingleColumnTableAsParagraphs({
@@ -285,6 +336,10 @@ export const parseSe2Post = ({
 
     if (tagName === "hr") {
       blocks.push({ type: "divider" })
+      return
+    }
+
+    if (tagName === "br") {
       return
     }
 

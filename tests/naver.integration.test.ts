@@ -69,6 +69,30 @@ describe("naver blog integration", () => {
     expect(parsed.blocks.some((block) => block.type === "paragraph")).toBe(true)
   }, 30_000)
 
+  it("parses Color Scripter blocks from SE2 posts as code blocks", async () => {
+    const fetcher = new NaverBlogFetcher({
+      blogId: "mym0404",
+    })
+    const html = await fetcher.fetchPostHtml("221008605391")
+    const parsed = parsePostHtml({
+      html,
+      sourceUrl: "https://blog.naver.com/mym0404/221008605391",
+      options: parserOptions,
+    })
+    const codeBlocks = parsed.blocks.filter(
+      (block): block is Extract<typeof parsed.blocks[number], { type: "code" }> =>
+        block.type === "code",
+    )
+
+    expect(parsed.editorVersion).toBe(2)
+    expect(codeBlocks.some((block) => block.code.includes("void ListInit(List * plist);"))).toBe(
+      true,
+    )
+    expect(codeBlocks.some((block) => block.code.includes("typedef struct _node"))).toBe(true)
+    expect(parsed.blocks.some((block) => block.type === "table")).toBe(false)
+    expect(parsed.warnings).not.toContain("SE2 블록을 해석하지 못해 raw HTML로 남겼습니다: <br>")
+  }, 30_000)
+
   it("parses SE3 post without blog chrome", async () => {
     const fetcher = new NaverBlogFetcher({
       blogId: "mym0404",

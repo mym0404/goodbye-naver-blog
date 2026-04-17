@@ -51,10 +51,127 @@ console.log(oldSchool)
     ])
   })
 
+  it("parses Color Scripter tables into code blocks", () => {
+    const parsed = parseSe2Fixture(`
+      <div class="colorscripter-code" style="overflow:auto">
+        <table class="colorscripter-code-table" style="margin:0; padding:0; border:none;" cellspacing="0" cellpadding="0">
+          <tbody>
+            <tr>
+              <td style="padding:6px; border-right:2px solid #4f4f4f">
+                <div><div>1</div><div>2</div><div>3</div><div>4</div></div>
+              </td>
+              <td style="padding:6px 0">
+                <div>
+                  <div style="padding:0 6px; white-space:pre">(리스트&nbsp;생성)</div>
+                  <div style="padding:0 6px; white-space:pre"><span style="color:#ff3399">void</span>&nbsp;ListInit(List&nbsp;<span style="color:#ff3399">*</span>&nbsp;plist);</div>
+                  <div style="padding:0 6px; white-space:pre">&nbsp;</div>
+                  <div style="padding:0 6px; white-space:pre"><span style="color:#4be6fa">int</span>&nbsp;LCount(List&nbsp;<span style="color:#ff3399">*</span>plist);</div>
+                </div>
+              </td>
+              <td style="vertical-align:bottom; padding:0 2px 4px 0">
+                <a href="http://colorscripter.com/info#e" target="_blank" class="con_link">
+                  <span style="font-size:9px;">cs</span>
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "code",
+        language: null,
+        code: ["(리스트 생성)", "void ListInit(List * plist);", "", "int LCount(List *plist);"].join(
+          "\n",
+        ),
+      },
+    ])
+    expect(parsed.warnings).toEqual([])
+  })
+
+  it("ignores Color Scripter footer markup when extracting code blocks", () => {
+    const parsed = parseSe2Fixture(`
+      <table class="colorscripter-code-table" style="margin:0; padding:0; border:none;" cellspacing="0" cellpadding="0">
+        <tbody>
+          <tr>
+            <td style="padding:6px; border-right:2px solid #e5e5e5">
+              <div><div>1</div><div>2</div></div>
+            </td>
+            <td style="padding:6px 0">
+              <div>
+                <div style="padding:0 6px; white-space:pre"><span style="color:#ff3399">typedef</span>&nbsp;<span style="color:#ff3399">struct</span>&nbsp;_node</div>
+                <div style="padding:0 6px; white-space:pre">{</div>
+              </div>
+              <div style="text-align:right; margin-top:-13px; margin-right:5px; font-size:9px; font-style:italic">
+                <a href="http://colorscripter.com/info#e" target="_blank" class="con_link">Colored by Color Scripter</a>
+              </div>
+            </td>
+            <td style="vertical-align:bottom; padding:0 2px 4px 0">
+              <p>
+                <span style="font-size:9px;">
+                  <a href="http://colorscripter.com/info#e" target="_blank" class="con_link"><br /></a>
+                </span>
+              </p>
+              <p>
+                <span style="font-size:9px;">
+                  <a href="http://colorscripter.com/info#e" target="_blank" class="con_link">cs</a>
+                </span>
+              </p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "code",
+        language: null,
+        code: ["typedef struct _node", "{"].join("\n"),
+      },
+    ])
+    expect(parsed.warnings).toEqual([])
+  })
+
+  it("parses mobile Color Scripter markup that stores styles in _foo", () => {
+    const parsed = parseSe2Fixture(`
+      <table class="colorscripter-code-table" cellspacing="0" cellpadding="0">
+        <tr>
+          <td><div><div>1</div><div>2</div></div></td>
+          <td>
+            <div _foo="margin: 0px; padding: 0px;">
+              <div style="" _foo="padding:0 6px; white-space:pre"><span _foo="color:#ff3399">void</span>&nbsp;ListInit(List&nbsp;* plist);</div>
+              <div style="" _foo="padding:0 6px; white-space:pre"><span _foo="color:#4be6fa">int</span>&nbsp;LCount(List&nbsp;*plist);</div>
+            </div>
+          </td>
+          <td><a href="http://colorscripter.com/info#e" class="con_link">cs</a></td>
+        </tr>
+      </table>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "code",
+        language: null,
+        code: ["void ListInit(List * plist);", "int LCount(List *plist);"].join("\n"),
+      },
+    ])
+    expect(parsed.warnings).toEqual([])
+  })
+
   it("parses hr tags into divider blocks", () => {
     const parsed = parseSe2Fixture("<hr />")
 
     expect(parsed.blocks).toEqual([{ type: "divider" }])
+  })
+
+  it("skips standalone br tags instead of keeping rawHtml", () => {
+    const parsed = parseSe2Fixture("<br /><br />")
+
+    expect(parsed.blocks).toEqual([])
+    expect(parsed.warnings).toEqual([])
   })
 
   it("parses table tags into table blocks", () => {

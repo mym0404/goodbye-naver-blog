@@ -40,3 +40,4 @@
 - `formula`, `video`는 unsupported 시 skip 가능성이 있어 샘플 검증이 특히 중요하다.
 - SE4 `image`는 `se-module-image-link`와 `__se_image_link` 두 앵커 변형을 모두 실샘플로 검증한다.
 - SE2 책 위젯(`s_subtype="book"`)은 일반 paragraph fallback으로 두지 않고 image + hard-break paragraph 조합으로 풀어 Markdown 줄바꿈을 보존한다.
+- SE2 Color Scripter(`table.colorscripter-code-table`)는 일반 table로 두지 않고 code 블록으로 먼저 승격한다.
