@@ -14,15 +14,15 @@
 - [../../../src/modules/parser/se4-parser.ts](../../../src/modules/parser/se4-parser.ts)
 
 ## 검증 방법
-- `pnpm parser:check`
-- `pnpm test`
-- `pnpm samples:verify`
+- `pnpm parser:check`: blockType, fallbackPolicy, sample id 연결이 코드와 테스트에 맞는지 확인할 때 실행한다.
+- `pnpm test`: parser 구현 변경 뒤 fixture/unit/integration 테스트를 다시 확인할 때 실행한다.
+- `pnpm samples:verify`: 실샘플 export 결과까지 바뀔 수 있는 parser 변경 뒤 실행한다.
 
 ## Block Table
 | blockType | supportedEditors | fallbackPolicy | sampleIds |
 | --- | --- | --- | --- |
 | `paragraph` | `2, 3, 4` | `best-effort` | `se2-legacy`, `se3-legacy`, `se4-formula-code-linkcard` |
-| `heading` | `2, 4` | `markdown-paragraph` | - |
+| `heading` | `2, 4` | `markdown-paragraph` | `se4-heading-itinerary` |
 | `quote` | `2, 3, 4` | `markdown-paragraph` | `se4-quote-formula-code` |
 | `divider` | `2, 4` | `structured` | `se4-formula-code-linkcard`, `se4-image-group` |
 | `code` | `2, 3, 4` | `markdown-paragraph` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
@@ -36,7 +36,7 @@
 
 ## Notes
 - `rawHtml`은 fallback 블록이라 실샘플보다 fixture와 parser 테스트로 고정하는 비중이 높다.
-- `heading`도 현재 실샘플 대표값이 없어 fixture/test coverage를 우선 사용한다.
+- `heading`은 `se4-heading-itinerary`로 SE4 `sectionTitle` 실샘플을 검증한다.
 - `formula`, `video`는 unsupported 시 skip 가능성이 있어 샘플 검증이 특히 중요하다.
 - SE4 `image`는 `se-module-image-link`와 `__se_image_link` 두 앵커 변형을 모두 실샘플로 검증한다.
 - SE2 책 위젯(`s_subtype="book"`)은 일반 paragraph fallback으로 두지 않고 image + hard-break paragraph 조합으로 풀어 Markdown 줄바꿈을 보존한다.

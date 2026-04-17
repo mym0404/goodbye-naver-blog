@@ -29,6 +29,15 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     notes: ["기본 정책은 이미지 그룹을 개별 이미지 나열로 렌더링한다."],
   },
   {
+    id: "se4-heading-itinerary",
+    blogId: "goyamee",
+    logNo: "223511986798",
+    editorVersion: 4,
+    expectedBlockTypes: ["paragraph", "image", "heading", "divider", "imageGroup", "linkCard", "table"],
+    description: "SE4 sectionTitle heading이 반복되는 여행 일정 글을 검증한다.",
+    notes: ["sectionTitle heading, 링크 카드, 이미지 묶음, 표가 함께 나오는 대표 샘플이다."],
+  },
+  {
     id: "se4-image-legacy-link",
     blogId: "mym0404",
     logNo: "221589718939",

@@ -12,8 +12,8 @@
 - [../../../scripts/harness/generate-quality-report.ts](../../../scripts/harness/generate-quality-report.ts)
 
 ## 검증 방법
-- `pnpm check:quick`
-- 필요 시 `pnpm quality:report`
+- `pnpm check:quick`: 작은 코드 수정 뒤 타입, 오프라인 테스트, parser 계약 기준선을 다시 확인할 때 실행한다.
+- `pnpm quality:report`: parser coverage나 sample 품질 지표가 달라질 수 있는 변경 뒤 generated 보고서를 갱신할 때 실행한다.
 
 ## Read This When
 - 어떤 스택과 런타임을 쓰는지 확인해야 할 때

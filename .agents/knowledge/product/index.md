@@ -12,8 +12,8 @@
 - [../../../src/ui/App.tsx](../../../src/ui/App.tsx)
 
 ## 검증 방법
-- `pnpm smoke:ui`
-- 필요 시 `pnpm quality:report`
+- `pnpm smoke:ui`: scan, category 선택, export, upload 결과 화면까지 사용자 흐름을 다시 확인할 때 실행한다.
+- `pnpm quality:report`: sample coverage나 generated 품질 보고서가 제품 문맥에 영향을 줄 수 있을 때 실행한다.
 
 ## Read This When
 - 네이버 블로그 export가 어떤 문제를 푸는지 이해해야 할 때

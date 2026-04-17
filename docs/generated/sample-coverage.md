@@ -21,7 +21,7 @@
 | blockType | sampleIds |
 | --- | --- |
 | `paragraph` | `se2-legacy`, `se3-legacy`, `se4-formula-code-linkcard` |
-| `heading` | - |
+| `heading` | `se4-heading-itinerary` |
 | `quote` | `se4-quote-formula-code` |
 | `divider` | `se4-formula-code-linkcard`, `se4-image-group` |
 | `code` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
@@ -39,6 +39,7 @@
 | `se4-video-table` | `4` | `image`, `video`, `table` |
 | `se4-formula-code-linkcard` | `4` | `linkCard`, `image`, `divider`, `paragraph`, `formula`, `code` |
 | `se4-image-group` | `4` | `paragraph`, `divider`, `imageGroup` |
+| `se4-heading-itinerary` | `4` | `paragraph`, `image`, `heading`, `divider`, `imageGroup`, `linkCard`, `table` |
 | `se4-image-legacy-link` | `4` | `paragraph`, `image` |
 | `se4-quote-formula-code` | `4` | `linkCard`, `image`, `divider`, `paragraph`, `quote`, `formula`, `code` |
 | `se2-legacy` | `2` | `paragraph` |
@@ -46,5 +47,4 @@
 | `se3-legacy` | `3` | `paragraph` |
 
 ## Sample Gaps
-- `heading`
 - `rawHtml`

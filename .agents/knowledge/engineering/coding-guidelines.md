@@ -12,8 +12,8 @@
 - [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
 
 ## 검증 방법
-- `pnpm check:quick`
-- 필요 시 변경 영역에 맞는 focused command
+- `pnpm check:quick`: parser, renderer, exporter, server, UI 중 수정한 코드가 기본 타입·오프라인 회귀를 깨지 않았는지 확인할 때 실행한다.
+- 변경 영역 focused command: 한 seam만 바꿨을 때 관련 harness나 테스트만 다시 확인할 때 실행한다.
 
 ## Repo-Specific Priorities
 - repo 바깥 지식보다 저장소 안의 코드, 설정, 테스트를 우선한다.

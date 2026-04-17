@@ -21,10 +21,9 @@
 | --- | --- |
 | parser fixture coverage | 12/12 (100%) |
 | parser test coverage | 12/12 (100%) |
-| parser sample coverage | 10/12 (83%) |
-| sample corpus size | 8 |
+| parser sample coverage | 11/12 (92%) |
+| sample corpus size | 9 |
 | covered editor versions | 3/3 (100%) |
 
 ## Open Risks
-- 실샘플이 없는 blockType: heading
 - 실샘플이 없는 blockType: rawHtml

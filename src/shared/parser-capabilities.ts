@@ -11,7 +11,7 @@ export const parserCapabilities: ParserCapability[] = [
     blockType: "heading",
     supportedEditors: [2, 4],
     fallbackPolicy: "markdown-paragraph",
-    sampleIds: [],
+    sampleIds: ["se4-heading-itinerary"],
   },
   {
     blockType: "quote",

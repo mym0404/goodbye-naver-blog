@@ -12,8 +12,8 @@
 - [../../../scripts/export-single-post.ts](../../../scripts/export-single-post.ts)
 
 ## 검증 방법
-- `pnpm typecheck`
-- `pnpm check:quick`
+- `pnpm typecheck`: 런타임 엔트리, shared 타입, import 구조를 빠르게 다시 확인할 때 실행한다.
+- `pnpm check:quick`: 작은 코드 수정 뒤 저장소 기본 개발 루프가 그대로 도는지 확인할 때 실행한다.
 
 ## Runtime
 - Node.js 기반 ESM 저장소다.

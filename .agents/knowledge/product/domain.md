@@ -12,8 +12,8 @@
 - [../../../src/server/http-server.ts](../../../src/server/http-server.ts)
 
 ## 검증 방법
-- `pnpm test`
-- `pnpm smoke:ui`
+- `pnpm check:local`: shared 타입, export 옵션, 서버 계약 같은 도메인 규칙을 바꾼 뒤 기본 회귀를 확인할 때 실행한다.
+- `pnpm smoke:ui`: scan/export/upload 상태 전이와 사용자 흐름까지 바뀌었는지 확인할 때 실행한다.
 
 ## Problem Space
 이 저장소는 공개 네이버 블로그 글을 다른 환경으로 옮기기 쉬운 Markdown 세트로 export하는 도구다. 대상은 블로그 전체 또는 선택 카테고리이며, 결과물에는 본문 Markdown, YAML frontmatter, 자산 파일, `manifest.json`이 포함된다.

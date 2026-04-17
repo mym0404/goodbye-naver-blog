@@ -12,8 +12,8 @@
 - [../../../src/server/http-server.ts](../../../src/server/http-server.ts)
 
 ## 검증 방법
-- `pnpm parser:check`
-- 필요 시 `pnpm check:quick`
+- `pnpm parser:check`: parser capability와 구조 계약이 sample/fixture/test와 여전히 맞는지 확인할 때 실행한다.
+- `pnpm check:quick`: 작은 구조 수정 뒤 타입, 오프라인 테스트, parser 계약 기준선을 다시 확인할 때 실행한다.
 
 ## Read This When
 - 모듈 경계와 의존 방향을 빠르게 파악해야 할 때

@@ -20,9 +20,9 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
 
 ## 검증 방법
-- `pnpm typecheck`
-- `pnpm test:coverage`
-- `pnpm smoke:ui`
+- `pnpm typecheck`: UI 컴포넌트 조합, shared 타입, hook 시그니처가 깨지지 않았는지 빠르게 확인할 때 실행한다.
+- `pnpm test:coverage`: UI 회귀가 테스트 커버리지 게이트를 해치지 않았는지 확인할 때 실행한다.
+- `pnpm smoke:ui`: 실제 브라우저에서 레이아웃, contrast, export/upload 흐름을 다시 확인할 때 실행한다.
 
 ## Style Direction
 - 메인 캔버스는 밝은 blue-neutral surface, 좌측은 deep navy sidebar를 사용한다.
