@@ -156,6 +156,7 @@ beforeEach(() => {
       disconnect() {}
     },
   )
+  vi.spyOn(HTMLElement.prototype, "scrollHeight", "get").mockReturnValue(240)
 })
 
 describe("App", () => {
@@ -278,6 +279,11 @@ describe("App", () => {
       expect(document.querySelector("#status-text")?.textContent).toContain("completed")
       expect(document.querySelector("#summary")?.textContent).toContain("1")
     })
+    expect(document.querySelector('[data-job-log-timestamp]')?.textContent).toBe("2026-04-11T04:00:00.000Z")
+    expect(document.querySelector('[data-job-log-timestamp]')?.className).toContain("text-[11px]")
+    expect(document.querySelector('[data-job-log-message]')?.textContent).toContain("작업을 큐에 등록했습니다.")
+    expect(document.querySelector('[data-job-log-message]')?.className).toContain("whitespace-pre-wrap")
+    expect((document.querySelector('#logs [data-slot="scroll-area-viewport"]') as HTMLElement | null)?.scrollTop).toBe(240)
     const previewOrder =
       document.querySelector("#preview-panel")?.compareDocumentPosition(document.querySelector("#status-panel") ?? document.body) ?? 0
     expect((previewOrder & Node.DOCUMENT_POSITION_FOLLOWING) !== 0).toBe(true)
@@ -292,6 +298,7 @@ describe("App", () => {
     await user.click(allFilterButton)
     const item = document.querySelector('[data-job-item-id="posts/NestJS/test.md"]') as HTMLButtonElement
     expect(item).not.toBeNull()
+    expect(item.className).toContain("whitespace-normal")
     await user.click(item)
     expect(document.querySelector("#job-file-tree table")).not.toBeNull()
     expect(document.querySelector("#category-list table")).not.toBeNull()

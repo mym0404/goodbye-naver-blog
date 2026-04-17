@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+
 import type { ExportJobItem, ExportJobState } from '../../../shared/types.js';
 
 import { Badge } from '../../components/ui/badge.js';
@@ -32,6 +34,8 @@ import { cn } from '../../lib/cn.js';
 
 type JobFilter = 'all' | 'warnings' | 'errors';
 
+const INDEX_MARKDOWN_FILE = 'index.md';
+
 const buildJobItemSeverity = (item: ExportJobItem) => {
   if (item.status === 'failed' || item.error) {
     return 'error';
@@ -50,6 +54,37 @@ const getJobItems = (job: ExportJobState | null) => {
   }
 
   return job.items;
+};
+
+const splitOutputPath = (outputPath: string | null) => {
+  if (!outputPath) {
+    return [];
+  }
+
+  return outputPath.split('/').filter(Boolean);
+};
+
+const buildJobItemPathMeta = (item: Pick<ExportJobItem, 'logNo' | 'outputPath'>) => {
+  const pathSegments = splitOutputPath(item.outputPath);
+
+  if (pathSegments.length === 0) {
+    return {
+      fileLabel: `${item.logNo}.diagnostics`,
+      directoryLabel: 'failed',
+      outputLabel: 'diagnostics only',
+    };
+  }
+
+  const fileName = pathSegments.at(-1) ?? `${item.logNo}.diagnostics`;
+  const isIndexMarkdown = fileName === INDEX_MARKDOWN_FILE;
+  const postFolderName = isIndexMarkdown ? pathSegments.at(-2) : null;
+  const directorySegments = pathSegments.slice(0, isIndexMarkdown ? -2 : -1);
+
+  return {
+    fileLabel: postFolderName || fileName,
+    directoryLabel: directorySegments.length > 0 ? directorySegments.join(' / ') : 'root',
+    outputLabel: item.outputPath ?? 'diagnostics only',
+  };
 };
 
 const buildModalMarkdown = (item: ExportJobItem) => {
@@ -115,6 +150,7 @@ export const JobResultsPanel = ({
   onItemSelect: (item: ExportJobItem) => void;
   onModalClose: () => void;
 }) => {
+  const logsScrollAreaRef = useRef<HTMLDivElement | null>(null)
   const jobItems = getJobItems(job).filter((item) => {
     const severity = buildJobItemSeverity(item);
 
@@ -128,6 +164,23 @@ export const JobResultsPanel = ({
 
     return true;
   });
+  const latestLogSignature = (() => {
+    const lastEntry = job?.logs.at(-1)
+
+    if (!lastEntry) {
+      return 'empty'
+    }
+
+    return `${job?.logs.length ?? 0}:${lastEntry.timestamp}:${lastEntry.message}`
+  })()
+
+  useEffect(() => {
+    const viewport = logsScrollAreaRef.current?.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]')
+
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight
+    }
+  }, [latestLogSignature])
 
   return (
     <>
@@ -199,26 +252,19 @@ export const JobResultsPanel = ({
                   id="job-file-tree"
                   className="job-file-tree job-file-tree-scroll h-[min(32rem,62vh)] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white"
                 >
-                  <Table className="min-w-[58rem]">
+                  <Table className="w-full table-fixed">
                     <TableHeader className="sticky top-0 z-10">
                       <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[26rem]">파일</TableHead>
-                        <TableHead>경로</TableHead>
-                        <TableHead className="w-28">상태</TableHead>
-                        <TableHead className="w-20">경고</TableHead>
+                        <TableHead className="w-[36%]">파일</TableHead>
+                        <TableHead className="w-[36%]">경로</TableHead>
+                        <TableHead className="w-24">상태</TableHead>
+                        <TableHead className="w-16">경고</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {jobItems.map((item) => {
                         const severity = buildJobItemSeverity(item);
-                        const fileLabel =
-                          item.outputPath?.split('/').pop() ??
-                          `${item.logNo}.diagnostics`;
-                        const groupKey =
-                          item.outputPath
-                            ?.split('/')
-                            .slice(0, -1)
-                            .join(' / ') || 'failed';
+                        const pathMeta = buildJobItemPathMeta(item);
                         const meta = severityMeta[severity];
 
                         return (
@@ -234,35 +280,36 @@ export const JobResultsPanel = ({
                             )}
                             data-severity={severity}
                           >
-                            <TableCell className="min-w-0">
+                            <TableCell className="min-w-0 align-top">
                               <Button
                                 type="button"
                                 variant="ghost"
-                                size="sm"
-                                className="job-results-row inline-flex h-auto min-h-0 w-full items-start justify-start rounded-xl px-2 py-1.5 text-left hover:bg-slate-100"
+                                className="job-results-row grid h-auto min-h-0 w-full min-w-0 justify-start rounded-xl px-2 py-1.5 text-left whitespace-normal hover:bg-slate-100"
                                 data-job-item-id={item.id}
                                 data-severity={severity}
                                 onClick={() => onItemSelect(item)}
                               >
                                 <span className="grid min-w-0 gap-0.5">
-                                  <strong className="truncate text-sm font-semibold text-slate-900">
-                                    {fileLabel}
+                                  <strong className="break-all text-sm font-semibold text-slate-900">
+                                    {pathMeta.fileLabel}
                                   </strong>
-                                  <span className="truncate text-xs text-slate-500">
+                                  <span className="whitespace-normal break-words text-xs leading-5 text-slate-500">
                                     {item.title}
                                   </span>
                                 </span>
                               </Button>
                             </TableCell>
-                            <TableCell className="text-xs text-slate-600">
+                            <TableCell className="align-top text-xs text-slate-600">
                               <div className="grid gap-0.5">
-                                <span className="truncate">{groupKey}</span>
-                                <span className="truncate text-slate-400">
-                                  {item.outputPath ?? 'diagnostics only'}
+                                <span className="whitespace-normal break-all leading-5">
+                                  {pathMeta.directoryLabel}
+                                </span>
+                                <span className="whitespace-normal break-all text-slate-400">
+                                  {pathMeta.outputLabel}
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="align-top">
                               <Badge
                                 className="min-w-16 justify-center rounded-full px-2.5 py-0.5"
                                 variant={
@@ -274,7 +321,7 @@ export const JobResultsPanel = ({
                                 {meta.label}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-sm font-medium text-slate-700">
+                            <TableCell className="align-top text-sm font-medium text-slate-700">
                               {item.warningCount > 0 ? item.warningCount : '0'}
                             </TableCell>
                           </TableRow>
@@ -297,14 +344,32 @@ export const JobResultsPanel = ({
               <Separator />
               <ScrollArea
                 id="logs"
+                ref={logsScrollAreaRef}
                 className="logs-scroll h-[min(28rem,56vh)] overflow-hidden rounded-[1.5rem] border border-slate-800 bg-slate-950"
                 aria-live="polite"
               >
-                <pre className="logs min-h-full bg-slate-950 px-4 py-4 font-mono text-[0.88rem] leading-7 text-slate-100">
-                  {job?.logs
-                    .map((entry) => `[${entry.timestamp}] ${entry.message}`)
-                    .join('\n') ?? ''}
-                </pre>
+                <div className="logs grid min-h-full gap-1.5 bg-slate-950 px-4 py-4 font-mono text-[0.88rem] text-slate-100">
+                  {(job?.logs ?? []).map((entry, index) => (
+                    <div
+                      key={`${entry.timestamp}-${index}`}
+                      className="grid gap-0.5 border-b border-slate-800/80 pb-1.5 last:border-b-0 last:pb-0"
+                      data-job-log-entry
+                    >
+                      <span
+                        className="text-[11px] leading-5 text-slate-500"
+                        data-job-log-timestamp
+                      >
+                        {entry.timestamp}
+                      </span>
+                      <span
+                        className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-100"
+                        data-job-log-message
+                      >
+                        {entry.message}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </ScrollArea>
             </section>
           </div>
