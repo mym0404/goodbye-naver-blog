@@ -1,10 +1,12 @@
 import {
   createServer,
   type IncomingMessage,
+  type Server as HttpServer,
   type ServerResponse,
 } from "node:http"
 import { access, readFile } from "node:fs/promises"
 import path from "node:path"
+import type { ViteDevServer } from "vite"
 
 import { NaverBlogFetcher } from "../modules/blog-fetcher/naver-blog-fetcher.js"
 import { NaverBlogExporter } from "../modules/exporter/naver-blog-exporter.js"
@@ -23,6 +25,7 @@ import { extractBlogId, toErrorMessage } from "../shared/utils.js"
 import { JobStore } from "./job-store.js"
 
 const builtClientRoot = path.resolve(process.cwd(), "dist/client")
+const devIndexPath = path.resolve(process.cwd(), "index.html")
 
 const contentTypes: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
@@ -183,14 +186,74 @@ export const createHttpServer = ({
   uploadPhaseRunner?: typeof runPicGoUploadPhase
   uploadRewriter?: typeof rewriteUploadedAssets
 } = {}) => {
+  const isDevelopment = process.env.NODE_ENV === "development"
+  let httpServer: HttpServer
+  let viteDevServerPromise: Promise<ViteDevServer> | null = null
+
+  const ensureViteDevServer = () => {
+    if (!viteDevServerPromise) {
+      viteDevServerPromise = import("vite").then(({ createServer: createViteServer }) =>
+        createViteServer({
+          appType: "custom",
+          server: {
+            middlewareMode: true,
+            hmr: {
+              server: httpServer,
+            },
+          },
+        }),
+      )
+    }
+
+    return viteDevServerPromise
+  }
 
   const sendBrowserApp = async ({
+    request,
     response,
     pathname,
   }: {
+    request: IncomingMessage
     response: ServerResponse
     pathname: string
   }) => {
+    if (isDevelopment) {
+      const viteDevServer = await ensureViteDevServer()
+
+      await new Promise<void>((resolve, reject) => {
+        viteDevServer.middlewares(request, response, (error?: Error) => {
+          if (error) {
+            reject(error)
+            return
+          }
+
+          resolve()
+        })
+      })
+
+      if (response.writableEnded) {
+        return
+      }
+
+      if (path.extname(pathname)) {
+        sendText({
+          response,
+          statusCode: 404,
+          body: `Not found: ${pathname}`,
+        })
+        return
+      }
+
+      const template = await readFile(devIndexPath, "utf8")
+      const transformedIndex = await viteDevServer.transformIndexHtml(pathname, template)
+
+      response.writeHead(200, {
+        "content-type": "text/html; charset=utf-8",
+      })
+      response.end(transformedIndex)
+      return
+    }
+
     const builtIndexPath = path.join(builtClientRoot, "index.html")
 
     if (!(await fileExists(builtIndexPath))) {
@@ -300,13 +363,14 @@ export const createHttpServer = ({
     }
   }
 
-  return createServer(async (request, response) => {
+  httpServer = createServer(async (request, response) => {
     const method = request.method ?? "GET"
     const url = new URL(request.url ?? "/", "http://localhost")
 
     try {
       if (method === "GET" && !url.pathname.startsWith("/api/")) {
         await sendBrowserApp({
+          request,
           response,
           pathname: url.pathname,
         })
@@ -582,4 +646,16 @@ export const createHttpServer = ({
       })
     }
   })
+
+  httpServer.once("close", () => {
+    if (!viteDevServerPromise) {
+      return
+    }
+
+    void viteDevServerPromise
+      .then((viteDevServer) => viteDevServer.close())
+      .catch(() => undefined)
+  })
+
+  return httpServer
 }

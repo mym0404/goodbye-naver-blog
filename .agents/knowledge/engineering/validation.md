@@ -25,8 +25,8 @@
 - `pnpm check`: `check:full`을 그대로 부를 때 실행한다.
 
 ## Focused Commands
-- `pnpm dev`: `pnpm start`를 짧게 부를 때 실행한다.
-- `pnpm start`: 로컬 UI를 실제 서버와 함께 띄워 수동 확인할 때 실행한다.
+- `pnpm dev`: `tsx watch`와 Vite HMR이 붙은 개발 서버를 `http://localhost:4173`에 띄울 때 실행한다.
+- `pnpm start`: `pnpm build:ui` 뒤 `dist/client` 산출물을 같은 서버에서 확인할 때 실행한다.
 - `pnpm typecheck`: TypeScript 오류만 빠르게 다시 확인할 때 실행한다.
 - `pnpm test:offline`: 네트워크 없는 로컬 테스트만 다시 확인할 때 실행한다.
 - `pnpm test:coverage`: V8 coverage 리포트와 90% threshold를 다시 확인할 때 실행한다.

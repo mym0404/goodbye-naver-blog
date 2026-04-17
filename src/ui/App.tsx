@@ -769,21 +769,21 @@ export const App = () => {
 
             <div
               id="summary"
-              className="wizard-summary-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+              className="wizard-summary-stats flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-200/70 pt-3"
               aria-live="polite"
             >
               {summaryCards.map((card) => (
-                <article
+                <div
                   key={card.label}
-                  className="wizard-summary-metric rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4"
+                  className="wizard-summary-stat flex min-w-0 items-baseline gap-1.5 text-xs leading-none"
                 >
-                  <span className="text-xs font-medium text-slate-500">
+                  <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">
                     {card.label}
                   </span>
-                  <strong className="mt-2 block break-all text-lg font-semibold tracking-[-0.03em] text-slate-900">
+                  <strong className="min-w-0 break-all text-sm font-semibold tracking-[-0.02em] text-slate-700">
                     {card.value}
                   </strong>
-                </article>
+                </div>
               ))}
             </div>
 
@@ -792,8 +792,7 @@ export const App = () => {
                 {setupStepIndex > 0 ? (
                   <Button
                     type="button"
-                    variant="outline"
-                    className="rounded-xl px-4"
+                    className="rounded-xl px-5"
                     onClick={goToPreviousStep}
                   >
                     이전

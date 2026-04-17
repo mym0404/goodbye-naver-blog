@@ -19,6 +19,8 @@
 - Node.js 기반 ESM 저장소다.
 - 패키지 매니저는 `pnpm`이다.
 - 실행 엔트리는 `tsx`를 사용한다.
+- `pnpm dev`는 `tsx watch`와 Vite middleware를 함께 써서 `http://localhost:4173`에서 HMR 개발 서버를 띄운다.
+- `pnpm start`는 `pnpm build:ui` 뒤 `dist/client` 빌드 산출물을 서빙한다.
 
 ## Core Libraries
 - `react`, `react-dom`, `vite`, `tailwindcss`: 로컬 대시보드 런타임과 빌드

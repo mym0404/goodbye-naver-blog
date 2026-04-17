@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "prepare": "lefthook install",
-    "dev": "pnpm start",
+    "dev": "NODE_ENV=development tsx watch src/server.ts",
     "start": "pnpm build:ui && tsx src/server.ts",
     "build:ui": "vite build",
     "build:server": "tsc -p tsconfig.json",

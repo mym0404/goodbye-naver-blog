@@ -65,10 +65,16 @@ pnpm install
 ### 실행
 
 ```bash
+pnpm dev
+```
+
+개발 중에는 위 명령으로 HMR 개발 서버를 띄웁니다.
+
+```bash
 pnpm start
 ```
 
-또는 같은 동작으로 `pnpm dev`를 사용할 수 있습니다.
+빌드 결과를 기준으로 실행할 때는 `pnpm start`를 사용합니다.
 
 브라우저에서 `http://localhost:4173`을 열면 로컬 UI가 뜹니다.
 
