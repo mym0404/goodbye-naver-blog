@@ -1,0 +1,26 @@
+## T9 Final Verification
+
+1. Focused regression
+- Command: `pnpm exec vitest run tests/export-options.test.ts tests/http-server.test.ts tests/asset-store.test.ts tests/export-preview.test.ts tests/export-single-post.test.ts tests/markdown-renderer.test.ts tests/naver-blog-exporter.test.ts tests/ui/export-options-panel.test.tsx tests/ui/use-export-job.test.tsx tests/ui/app.test.tsx --silent`
+- Result: passed (`10` files, `49` tests)
+
+2. Coverage wave
+- Command: `pnpm test:coverage`
+- Result: passed (`25` files, `132` tests)
+- Coverage summary: statements `92.34%`, branches `84.62%`, functions `90.83%`, lines `92.34%`
+
+3. Browser smoke
+- Command: `pnpm smoke:ui`
+- Result: passed
+- Confirmed flow: mocked `upload-ready -> uploading -> upload-completed`, upload form submission with placeholder config only, per-post `.../index.md` output path, and mobile upload-table overflow guard
+
+4. Full repo-native verification
+- Command: `pnpm check:full`
+- Result: passed
+- Includes: `pnpm quality:report`, `pnpm check:local`, `pnpm test:network`, `pnpm samples:verify`, `pnpm smoke:ui`
+
+## Final-Wave Repair Note
+
+- The first `check:full` run exposed stale option-contract references in `scripts/lib/single-post-cli.ts` and one implicit `any` in `tests/http-server.test.ts`.
+- Fixed by aligning the CLI validator with the new structure/assets option names, mapping legacy `folderStrategy` / `includeDateInFilename` / `includeLogNoInFilename` / `assetPathMode` inputs to the new fields where possible, and typing the upload runner candidate list explicitly.
+- After that repair, `pnpm typecheck` and the full `pnpm check:full` wave both passed.

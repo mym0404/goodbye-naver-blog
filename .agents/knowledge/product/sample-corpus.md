@@ -24,6 +24,7 @@
 | `se4-image-legacy-link` | `mym0404` | `221589718939` | `4` | `paragraph`, `image` | `__se_image_link` 기반 본문 이미지 대표 샘플 |
 | `se4-quote-formula-code` | `mym0404` | `222619228134` | `4` | `linkCard`, `image`, `divider`, `paragraph`, `quote`, `formula`, `code` | quote 포함 SE4 대표 샘플 |
 | `se2-legacy` | `mym0404` | `220496669802` | `2` | `paragraph` | SE2 legacy 대표 샘플 |
+| `se2-thumburl-image-group` | `mym0404` | `221425068566` | `2` | `imageGroup`, `paragraph` | `thumburl` 기반 SE2 본문 이미지 묶음 대표 샘플 |
 | `se3-legacy` | `mym0404` | `221236891086` | `3` | `paragraph` | SE3 legacy 대표 샘플 |
 
 ## Selection Rules

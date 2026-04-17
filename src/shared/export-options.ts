@@ -120,11 +120,9 @@ export const optionDescriptions: OptionDescriptionMap = {
   "scope-dateFrom": "이 날짜 이후에 발행한 글만 범위에 포함합니다.",
   "scope-dateTo": "이 날짜 이전에 발행한 글까지만 범위에 포함합니다.",
   "structure-cleanOutputDir": "export 전에 출력 폴더를 비우고 이번 결과만 다시 생성합니다.",
-  "structure-postDirectoryName": "Markdown 글 파일을 저장할 루트 폴더 이름입니다.",
-  "structure-assetDirectoryName": "다운로드한 자산 파일을 저장할 루트 폴더 이름입니다.",
-  "structure-folderStrategy": "카테고리 경로를 폴더 구조에 유지할지 한 폴더로 평탄화할지 정합니다.",
-  "structure-includeDateInFilename": "파일명 앞부분에 발행 날짜를 붙입니다.",
-  "structure-includeLogNoInFilename": "파일명에 네이버 logNo를 함께 넣습니다.",
+  "structure-groupByCategory": "카테고리 경로를 출력 폴더 구조에 유지할지 정합니다.",
+  "structure-includeDateInPostFolderName": "글 폴더 이름 앞부분에 발행 날짜를 붙입니다.",
+  "structure-includeLogNoInPostFolderName": "글 폴더 이름에 네이버 logNo를 함께 넣습니다.",
   "structure-slugStyle": "제목을 안전한 slug로 바꿀지 원문 제목을 최대한 유지할지 정합니다.",
   "frontmatter-enabled": "YAML frontmatter 블록 자체를 Markdown 파일 상단에 넣을지 정합니다.",
   "markdown-linkStyle": "일반 링크를 inline 형식으로 쓸지 reference 형식으로 분리할지 정합니다.",
@@ -139,7 +137,8 @@ export const optionDescriptions: OptionDescriptionMap = {
   "markdown-dividerStyle": "구분선을 `---` 또는 `***` 중 어떤 문자로 출력할지 정합니다.",
   "markdown-codeFenceStyle": "코드 블록 fence 문자를 backtick 또는 tilde로 정합니다.",
   "markdown-headingLevelOffset": "제목 레벨을 전체적으로 올리거나 내려서 다른 문서 구조에 맞춥니다.",
-  "assets-assetPathMode": "이미지 참조를 로컬 상대경로로 쓸지 원격 URL을 유지할지 정합니다.",
+  "assets-imageHandlingMode": "이미지를 로컬로 유지할지, 원본 URL을 유지할지, export 뒤 업로드까지 이어갈지 정합니다.",
+  "assets-compressionEnabled": "다운로드한 로컬 이미지 파일에 안전한 압축을 적용할지 정합니다.",
   "assets-imageContentMode": "본문에 들어가는 이미지를 파일 경로로 참조할지 base64 data URL로 직접 임베딩할지 정합니다.",
   "assets-stickerAssetMode": "네이버 스티커를 기본적으로 무시할지, 원본 자산 URL로 내려받아 본문에 포함할지 정합니다.",
   "assets-downloadImages": "본문 이미지 파일을 실제로 다운로드할지 정합니다.",
@@ -208,11 +207,9 @@ export const defaultExportOptions = (): ExportOptions => ({
   },
   structure: {
     cleanOutputDir: true,
-    postDirectoryName: "posts",
-    assetDirectoryName: "assets",
-    folderStrategy: "category-path",
-    includeDateInFilename: true,
-    includeLogNoInFilename: false,
+    groupByCategory: true,
+    includeDateInPostFolderName: true,
+    includeLogNoInPostFolderName: false,
     slugStyle: "kebab",
   },
   frontmatter: {
@@ -269,7 +266,8 @@ export const defaultExportOptions = (): ExportOptions => ({
     headingLevelOffset: 0,
   },
   assets: {
-    assetPathMode: "relative",
+    imageHandlingMode: "download",
+    compressionEnabled: false,
     imageContentMode: "path",
     stickerAssetMode: "ignore",
     downloadImages: true,
@@ -278,6 +276,26 @@ export const defaultExportOptions = (): ExportOptions => ({
     thumbnailSource: "post-list-first",
   },
 })
+
+const coerceAssetOptions = (options: ExportOptions["assets"]) => {
+  if (options.imageContentMode === "base64") {
+    return {
+      ...options,
+      imageHandlingMode: "download",
+      downloadImages: true,
+    } satisfies ExportOptions["assets"]
+  }
+
+  if (options.imageHandlingMode === "download-and-upload") {
+    return {
+      ...options,
+      downloadImages: true,
+      downloadThumbnails: true,
+    } satisfies ExportOptions["assets"]
+  }
+
+  return options
+}
 
 export const cloneExportOptions = (options?: PartialExportOptions) => {
   const defaults = defaultExportOptions()
@@ -325,7 +343,10 @@ export const cloneExportOptions = (options?: PartialExportOptions) => {
         options?.markdown?.headingLevelOffset ?? defaults.markdown.headingLevelOffset,
     },
     assets: {
-      assetPathMode: options?.assets?.assetPathMode ?? defaults.assets.assetPathMode,
+      imageHandlingMode:
+        options?.assets?.imageHandlingMode ?? defaults.assets.imageHandlingMode,
+      compressionEnabled:
+        options?.assets?.compressionEnabled ?? defaults.assets.compressionEnabled,
       imageContentMode: options?.assets?.imageContentMode ?? defaults.assets.imageContentMode,
       stickerAssetMode: options?.assets?.stickerAssetMode ?? defaults.assets.stickerAssetMode,
       downloadImages: options?.assets?.downloadImages ?? defaults.assets.downloadImages,
@@ -336,6 +357,8 @@ export const cloneExportOptions = (options?: PartialExportOptions) => {
       thumbnailSource: options?.assets?.thumbnailSource ?? defaults.assets.thumbnailSource,
     },
   } satisfies ExportOptions
+
+  clonedOptions.assets = coerceAssetOptions(clonedOptions.assets)
 
   const frontmatterErrors = validateFrontmatterAliases(clonedOptions.frontmatter)
 

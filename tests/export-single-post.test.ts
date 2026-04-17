@@ -133,10 +133,10 @@ describe("exportSinglePost", () => {
 
       const expectedMarkdownFilePath = path.join(
         outputDir,
-        "posts",
         "Tech",
         "JavaScript",
-        "2024-01-02-223034929697-single-post.md",
+        "2024-01-02-223034929697-single-post",
+        "index.md",
       )
 
       const expectedAssetFilePath = path.resolve(
@@ -152,7 +152,7 @@ describe("exportSinglePost", () => {
       expect(diagnostics.reviewerWarnings).toEqual([])
       expect(diagnostics.renderWarnings).toEqual([])
       expect(diagnostics.assetPaths).toHaveLength(1)
-      expect(diagnostics.assetPaths[0]).toMatch(/assets\/223034929697\/image-01\.png$/)
+      expect(diagnostics.assetPaths[0]).toBe("image-01.png")
       expect(diagnostics.markdown).toContain("title: Single post")
       expect(diagnostics.markdown).toContain("category: JavaScript")
       expect(diagnostics.markdown).toContain("Hello **world**")

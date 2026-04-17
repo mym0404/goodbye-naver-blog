@@ -1,0 +1,14 @@
+CP1 verification
+Timestamp: 2026-04-17 04:13:16Z
+
+Commands
+- pnpm exec vitest run tests/export-options.test.ts tests/export-preview.test.ts tests/export-single-post.test.ts tests/asset-store.test.ts tests/naver-blog-exporter.test.ts tests/markdown-renderer.test.ts --silent
+- rg -n "assetPathMode|postDirectoryName|assetDirectoryName|folderStrategy|includeDateInFilename|includeLogNoInFilename" src/shared/types.ts src/shared/export-options.ts src/modules/exporter/export-paths.ts src/modules/exporter/asset-store.ts src/modules/exporter/naver-blog-exporter.ts src/modules/exporter/export-preview.ts src/modules/exporter/single-post-export.ts tests/export-options.test.ts tests/export-preview.test.ts tests/export-single-post.test.ts tests/asset-store.test.ts tests/naver-blog-exporter.test.ts tests/markdown-renderer.test.ts
+
+Result
+- PASS (31 tests across 6 files)
+
+Inspection
+- No stale production usage of the old shared/exporter option names remained in the checkpoint file surface.
+- The only old names left in the grep output are negative assertions in `tests/export-options.test.ts`, which explicitly prove the legacy keys are absent.
+- Export paths, asset records, and manifest/job upload summaries are coherent enough for server/UI work to consume next.

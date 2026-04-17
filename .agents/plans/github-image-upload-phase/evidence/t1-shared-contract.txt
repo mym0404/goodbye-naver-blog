@@ -1,0 +1,23 @@
+T1 verification
+Timestamp: 2026-04-17 04:05:46Z
+
+Changed files
+- package.json
+- pnpm-lock.yaml
+- src/shared/types.ts
+- src/shared/export-options.ts
+- tests/export-options.test.ts
+
+Command
+- pnpm exec vitest run tests/export-options.test.ts --silent
+
+Result
+- PASS (8 tests)
+
+Notes
+- Added runtime dependencies: picgo@^2.0.3, sharp@^0.34.5
+- Shared option contract now uses imageHandlingMode/groupByCategory/includeDateInPostFolderName/includeLogNoInPostFolderName/compressionEnabled.
+- Shared job contract now includes upload-ready/uploading/upload-completed/upload-failed statuses and upload summary types.
+- `cloneExportOptions` now coerces `download-and-upload` to keep local image/thumbnail downloads enabled.
+- `cloneExportOptions` now coerces `imageContentMode === "base64"` away from upload mode.
+- `pnpm add` reported ignored build scripts for sharp; no repair was required for this focused test.

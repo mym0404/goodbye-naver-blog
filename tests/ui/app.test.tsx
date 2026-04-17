@@ -103,6 +103,14 @@ const completedJob: ExportJobState = {
     failed: 0,
     warnings: 1,
   },
+  upload: {
+    status: "not-requested",
+    eligiblePostCount: 0,
+    candidateCount: 0,
+    uploadedCount: 0,
+    failedCount: 0,
+    terminalReason: null,
+  },
   items: [
     {
       id: "posts/NestJS/test.md",
@@ -117,6 +125,13 @@ const completedJob: ExportJobState = {
       status: "success",
       outputPath: "posts/NestJS/test.md",
       assetPaths: [],
+      upload: {
+        eligible: false,
+        candidateCount: 0,
+        uploadedCount: 0,
+        failedCount: 0,
+        candidates: [],
+      },
       warnings: ["parser note"],
       warningCount: 1,
       error: null,
@@ -139,6 +154,124 @@ const runningJob: ExportJobState = {
     warnings: 0,
   },
   items: [],
+}
+
+const uploadFlowOptions = (() => {
+  const options = defaultExportOptions()
+
+  options.scope.categoryIds = scanResult.categories.map((category) => category.id)
+
+  return options
+})()
+
+const uploadItem = {
+  ...completedJob.items[0]!,
+  id: "NestJS/2026-04-11-1/index.md",
+  outputPath: "NestJS/2026-04-11-1/index.md",
+  assetPaths: ["thumbnail-01.png", "image-01.png"],
+  upload: {
+    eligible: true,
+    candidateCount: 2,
+    uploadedCount: 0,
+    failedCount: 0,
+    candidates: [
+      {
+        kind: "thumbnail" as const,
+        sourceUrl: "https://example.com/thumb.png",
+        localPath: "NestJS/2026-04-11-1/thumbnail-01.png",
+        markdownReference: "thumbnail-01.png",
+      },
+      {
+        kind: "image" as const,
+        sourceUrl: "https://example.com/image.png",
+        localPath: "NestJS/2026-04-11-1/image-01.png",
+        markdownReference: "image-01.png",
+      },
+    ],
+  },
+}
+
+const uploadReadyJob: ExportJobState = {
+  ...completedJob,
+  id: "job-upload",
+  request: {
+    ...completedJob.request,
+    options: uploadFlowOptions,
+  },
+  status: "upload-ready",
+  finishedAt: null,
+  upload: {
+    status: "upload-ready",
+    eligiblePostCount: 1,
+    candidateCount: 2,
+    uploadedCount: 0,
+    failedCount: 0,
+    terminalReason: null,
+  },
+  items: [uploadItem],
+}
+
+const uploadingJob: ExportJobState = {
+  ...uploadReadyJob,
+  status: "uploading",
+  upload: {
+    ...uploadReadyJob.upload,
+    status: "uploading",
+    uploadedCount: 1,
+  },
+}
+
+const uploadCompletedJob: ExportJobState = {
+  ...uploadReadyJob,
+  status: "upload-completed",
+  finishedAt: "2026-04-11T04:00:03.000Z",
+  upload: {
+    ...uploadReadyJob.upload,
+    status: "upload-completed",
+    uploadedCount: 2,
+  },
+  items: [
+    {
+      ...uploadItem,
+      assetPaths: [
+        "https://cdn.example.com/thumbnail-01.png",
+        "https://cdn.example.com/image-01.png",
+      ],
+      markdown: previewMarkdown.replaceAll("test.md", "https://cdn.example.com/image-01.png"),
+      upload: {
+        ...uploadItem.upload,
+        uploadedCount: 2,
+      },
+    },
+  ],
+}
+
+const uploadFailedJob: ExportJobState = {
+  ...uploadReadyJob,
+  status: "upload-failed",
+  error: "PicGo upload failed.",
+  upload: {
+    ...uploadReadyJob.upload,
+    status: "upload-failed",
+    failedCount: 2,
+  },
+}
+
+const skippedUploadJob: ExportJobState = {
+  ...completedJob,
+  id: "job-skipped",
+  request: {
+    ...completedJob.request,
+    options: uploadFlowOptions,
+  },
+  upload: {
+    status: "skipped",
+    eligiblePostCount: 0,
+    candidateCount: 0,
+    uploadedCount: 0,
+    failedCount: 0,
+    terminalReason: null,
+  },
 }
 
 afterEach(() => {
@@ -376,5 +509,179 @@ describe("App", () => {
       expect(document.querySelector('[data-section-link="category-panel"]')).toBeNull()
       expect(document.querySelector('[data-mobile-section-link="preview-panel"]')).toBeNull()
     })
+  })
+
+  it("shows upload-ready targets, submits upload config from the results panel, and keeps polling until upload completes", async () => {
+    let uploadPollCount = 0
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-defaults")) {
+        return buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse(scanResult)
+      }
+
+      if (url.endsWith("/api/export")) {
+        return buildJsonResponse({ jobId: "job-upload" }, init?.method === "POST" ? 202 : 200)
+      }
+
+      if (url.endsWith("/api/export/job-upload/upload")) {
+        expect(init?.headers).toMatchObject({
+          "x-requested-with": "XMLHttpRequest",
+        })
+        return buildJsonResponse({ jobId: "job-upload", status: "uploading" }, 202)
+      }
+
+      if (url.endsWith("/api/export/job-upload")) {
+        uploadPollCount += 1
+
+        if (uploadPollCount === 1) {
+          return buildJsonResponse(uploadReadyJob)
+        }
+
+        if (uploadPollCount === 2) {
+          return buildJsonResponse(uploadingJob)
+        }
+
+        return buildJsonResponse(uploadCompletedJob)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText("Blog ID 또는 URL"), "mym0404")
+    await user.click(screen.getByRole("button", { name: "카테고리 스캔" }))
+    await screen.findByText("mym0404 스캔 완료")
+    await user.click(screen.getByRole("button", { name: "내보내기" }))
+
+    await waitFor(() => {
+      expect(document.querySelector("#upload-targets-table")).not.toBeNull()
+      expect(screen.getByLabelText("uploaderKey")).toBeInTheDocument()
+      expect(screen.getByLabelText("uploaderConfigJson")).toBeInTheDocument()
+      expect(document.querySelector('[data-job-item-id="NestJS/2026-04-11-1/index.md"]')?.textContent).toContain("2026-04-11-1")
+      expect(document.querySelector('[data-job-item-id="NestJS/2026-04-11-1/index.md"]')?.textContent).not.toContain("index.md")
+      expect(document.querySelector("#job-file-tree")?.textContent).toContain("NestJS/2026-04-11-1/index.md")
+    })
+
+    expect(document.querySelector("#upload-targets-table")?.className).not.toContain("min-w-[")
+
+    await user.type(screen.getByLabelText("uploaderKey"), "github")
+    fireEvent.change(screen.getByLabelText("uploaderConfigJson"), {
+      target: {
+        value: '{"repo":"owner/name"}',
+      },
+    })
+    await user.click(screen.getByRole("button", { name: "업로드 시작" }))
+
+    await waitFor(() => {
+      expect(document.querySelector("#status-text")?.textContent).toContain("upload-completed")
+      expect(document.querySelector("#upload-targets-table")?.textContent).toContain("완료")
+    })
+  })
+
+  it("renders failed upload state in the results panel", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-defaults")) {
+        return buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse(scanResult)
+      }
+
+      if (url.endsWith("/api/export")) {
+        return buildJsonResponse({ jobId: "job-failed" }, init?.method === "POST" ? 202 : 200)
+      }
+
+      if (url.endsWith("/api/export/job-failed")) {
+        return buildJsonResponse(uploadFailedJob)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText("Blog ID 또는 URL"), "mym0404")
+    await user.click(screen.getByRole("button", { name: "카테고리 스캔" }))
+    await screen.findByText("mym0404 스캔 완료")
+    await user.click(screen.getByRole("button", { name: "내보내기" }))
+
+    await waitFor(() => {
+      expect(document.querySelector("#status-text")?.textContent).toContain("upload-failed")
+      expect(screen.getByText("PicGo upload failed.")).toBeInTheDocument()
+    })
+  })
+
+  it("hides the upload form when the export completed with skipped-no-candidates", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-defaults")) {
+        return buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse(scanResult)
+      }
+
+      if (url.endsWith("/api/export")) {
+        return buildJsonResponse({ jobId: "job-skipped" }, init?.method === "POST" ? 202 : 200)
+      }
+
+      if (url.endsWith("/api/export/job-skipped")) {
+        return buildJsonResponse(skippedUploadJob)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText("Blog ID 또는 URL"), "mym0404")
+    await user.click(screen.getByRole("button", { name: "카테고리 스캔" }))
+    await screen.findByText("mym0404 스캔 완료")
+    await user.click(screen.getByRole("button", { name: "내보내기" }))
+
+    await waitFor(() => {
+      expect(document.querySelector("#status-text")?.textContent).toContain("completed")
+      expect(screen.getByText("업로드할 로컬 이미지가 없어 export만 완료되었습니다.")).toBeInTheDocument()
+    })
+    expect(screen.queryByLabelText("uploaderKey")).not.toBeInTheDocument()
+    expect(screen.queryByLabelText("uploaderConfigJson")).not.toBeInTheDocument()
   })
 })

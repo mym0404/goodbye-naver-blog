@@ -4,8 +4,6 @@ export type EditorVersion = 2 | 3 | 4
 
 export type CategorySelectionMode = "selected-and-descendants" | "exact-selected"
 
-export type FolderStrategy = "category-path" | "flat"
-
 export type SlugStyle = "kebab" | "keep-title"
 
 export type FrontmatterFieldName =
@@ -49,7 +47,7 @@ export type DividerStyle = "dash" | "asterisk"
 
 export type CodeFenceStyle = "backtick" | "tilde"
 
-export type AssetPathMode = "relative" | "remote"
+export type ImageHandlingMode = "download" | "remote" | "download-and-upload"
 
 export type ThumbnailSource = "post-list-first" | "first-body-image" | "none"
 
@@ -58,6 +56,38 @@ export type ImageContentMode = "path" | "base64"
 export type StickerAssetMode = "ignore" | "download-original"
 
 export type OptionDescriptionMap = Record<string, string>
+
+export type UploadTerminalReason = "skipped-no-candidates"
+
+export type UploadSummary = {
+  status:
+    | "not-requested"
+    | "upload-ready"
+    | "uploading"
+    | "upload-completed"
+    | "upload-failed"
+    | "skipped"
+  eligiblePostCount: number
+  candidateCount: number
+  uploadedCount: number
+  failedCount: number
+  terminalReason: UploadTerminalReason | null
+}
+
+export type UploadCandidate = {
+  kind: "image" | "thumbnail"
+  sourceUrl: string
+  localPath: string
+  markdownReference: string
+}
+
+export type PostUploadSummary = {
+  eligible: boolean
+  candidateCount: number
+  uploadedCount: number
+  failedCount: number
+  candidates: UploadCandidate[]
+}
 
 export type ExportOptions = {
   scope: {
@@ -68,11 +98,9 @@ export type ExportOptions = {
   }
   structure: {
     cleanOutputDir: boolean
-    postDirectoryName: string
-    assetDirectoryName: string
-    folderStrategy: FolderStrategy
-    includeDateInFilename: boolean
-    includeLogNoInFilename: boolean
+    groupByCategory: boolean
+    includeDateInPostFolderName: boolean
+    includeLogNoInPostFolderName: boolean
     slugStyle: SlugStyle
   }
   frontmatter: {
@@ -97,7 +125,8 @@ export type ExportOptions = {
     headingLevelOffset: number
   }
   assets: {
-    assetPathMode: AssetPathMode
+    imageHandlingMode: ImageHandlingMode
+    compressionEnabled: boolean
     imageContentMode: ImageContentMode
     stickerAssetMode: StickerAssetMode
     downloadImages: boolean
@@ -114,7 +143,15 @@ export type ExportRequest = {
   options: ExportOptions
 }
 
-export type JobStatus = "queued" | "running" | "completed" | "failed"
+export type JobStatus =
+  | "queued"
+  | "running"
+  | "upload-ready"
+  | "uploading"
+  | "upload-completed"
+  | "upload-failed"
+  | "completed"
+  | "failed"
 
 export type JobLog = {
   timestamp: string
@@ -235,6 +272,7 @@ export type AssetRecord = {
   reference: string
   relativePath: string | null
   storageMode: "relative" | "remote" | "base64"
+  uploadCandidate: UploadCandidate | null
 }
 
 export type PostManifestEntry = {
@@ -250,6 +288,7 @@ export type PostManifestEntry = {
   status: "success" | "failed"
   outputPath: string | null
   assetPaths: string[]
+  upload: PostUploadSummary
   warnings: string[]
   warningCount: number
   error: string | null
@@ -268,6 +307,7 @@ export type ExportJobItem = {
   status: "success" | "failed"
   outputPath: string | null
   assetPaths: string[]
+  upload: PostUploadSummary
   warnings: string[]
   warningCount: number
   error: string | null
@@ -286,6 +326,7 @@ export type ExportManifest = {
   successCount: number
   failureCount: number
   warningCount: number
+  upload: UploadSummary
   categories: CategoryInfo[]
   posts: PostManifestEntry[]
 }
@@ -311,6 +352,7 @@ export type ExportJobState = {
     failed: number
     warnings: number
   }
+  upload: UploadSummary
   items: ExportJobItem[]
   manifest: ExportManifest | null
   error: string | null

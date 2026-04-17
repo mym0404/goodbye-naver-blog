@@ -1,0 +1,23 @@
+T3 verification
+Timestamp: 2026-04-17 04:12:41Z
+
+Changed files
+- src/shared/types.ts
+- src/modules/exporter/asset-store.ts
+- src/modules/exporter/naver-blog-exporter.ts
+- tests/asset-store.test.ts
+- tests/naver-blog-exporter.test.ts
+- tests/markdown-renderer.test.ts
+
+Command
+- pnpm exec vitest run tests/asset-store.test.ts tests/naver-blog-exporter.test.ts tests/markdown-renderer.test.ts --silent
+
+Result
+- PASS (18 tests)
+
+Notes
+- `AssetStore` now treats `download` and `download-and-upload` identically during export, and keeps `remote` mode download-free.
+- Safe local raster formats can use a compression hook backed by `sharp`; unsupported formats fall back to original bytes.
+- Local asset records now carry upload-candidate metadata (`localPath`, `markdownReference`, kind, source URL).
+- Export manifest and job items now expose per-post upload summaries plus aggregate upload readiness so later server/UI layers do not need to infer candidate counts from Markdown.
+- `download-and-upload` exports become `upload-ready` only when at least one local candidate exists; non-upload modes remain `not-requested`.

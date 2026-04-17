@@ -1,0 +1,21 @@
+T2 verification
+Timestamp: 2026-04-17 04:08:16Z
+
+Changed files
+- src/modules/exporter/export-paths.ts
+- src/modules/exporter/asset-store.ts
+- tests/export-preview.test.ts
+- tests/export-single-post.test.ts
+
+Command
+- pnpm exec vitest run tests/export-preview.test.ts tests/export-single-post.test.ts --silent
+
+Result
+- PASS (5 tests)
+
+Notes
+- Markdown output now resolves to `.../{post-folder}/index.md`.
+- Category grouping stays above the post folder when enabled.
+- Single-post and preview diagnostics now reflect per-post folders directly.
+- Asset files now resolve beside `index.md` as sibling files, so diagnostic `assetPaths` no longer point at split `assets/` roots.
+- `src/modules/exporter/asset-store.ts` was updated earlier than the original bundle boundary because T1 removed the shared `assetDirectoryName/assetPathMode` fields, which made the declared T2 path-only slice insufficient. This scope drift was recorded in `notes.md`.

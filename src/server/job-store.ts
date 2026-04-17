@@ -26,6 +26,14 @@ export class JobStore {
         failed: 0,
         warnings: 0,
       },
+      upload: {
+        status: "not-requested",
+        eligiblePostCount: 0,
+        candidateCount: 0,
+        uploadedCount: 0,
+        failedCount: 0,
+        terminalReason: null,
+      },
       items: [],
       manifest: null,
       error: null,
@@ -80,10 +88,8 @@ export class JobStore {
     job.items.push(item)
   }
 
-  complete(id: string, manifest: ExportManifest) {
+  completeExport(id: string, manifest: ExportManifest) {
     const job = this.mustGet(id)
-    job.status = "completed"
-    job.finishedAt = new Date().toISOString()
     job.manifest = manifest
     job.progress = {
       total: manifest.totalPosts,
@@ -91,6 +97,7 @@ export class JobStore {
       failed: manifest.failureCount,
       warnings: manifest.warningCount,
     }
+    job.upload = manifest.upload
     job.items = job.items.length > 0 ? job.items : manifest.posts.map((post) => ({
       id: post.outputPath ?? `failed:${post.logNo}`,
       logNo: post.logNo,
@@ -100,12 +107,66 @@ export class JobStore {
       status: post.status,
       outputPath: post.outputPath,
       assetPaths: post.assetPaths,
+      upload: post.upload,
       warnings: post.warnings,
       warningCount: post.warningCount,
       error: post.error,
       markdown: null,
       updatedAt: new Date().toISOString(),
     }))
+
+    if (manifest.upload.status === "upload-ready") {
+      job.status = "upload-ready"
+      job.finishedAt = null
+      return
+    }
+
+    job.status = "completed"
+    job.finishedAt = new Date().toISOString()
+  }
+
+  startUpload(id: string) {
+    const job = this.mustGet(id)
+
+    job.status = "uploading"
+    job.error = null
+    job.upload = {
+      ...job.upload,
+      status: "uploading",
+      uploadedCount: 0,
+      failedCount: 0,
+      terminalReason: null,
+    }
+    job.finishedAt = null
+  }
+
+  updateUpload(id: string, upload: ExportJobState["upload"]) {
+    const job = this.mustGet(id)
+    job.upload = upload
+  }
+
+  completeUpload(id: string, input: { manifest: ExportManifest; items: ExportJobItem[] }) {
+    const job = this.mustGet(id)
+
+    job.status = "upload-completed"
+    job.finishedAt = new Date().toISOString()
+    job.manifest = input.manifest
+    job.items = input.items
+    job.upload = input.manifest.upload
+  }
+
+  failUpload(id: string, error: string) {
+    const job = this.mustGet(id)
+
+    job.status = "upload-failed"
+    job.finishedAt = new Date().toISOString()
+    job.error = error
+    job.upload = {
+      ...job.upload,
+      status: "upload-failed",
+      failedCount: job.upload.candidateCount - job.upload.uploadedCount,
+      terminalReason: null,
+    }
   }
 
   fail(id: string, error: string) {

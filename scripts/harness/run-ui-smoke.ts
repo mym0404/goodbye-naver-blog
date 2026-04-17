@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { mkdtemp, rm } from "node:fs/promises"
 import { createElement } from "react"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -8,6 +8,12 @@ import { chromium } from "playwright"
 import { renderToStaticMarkup } from "react-dom/server"
 
 import { createHttpServer } from "../../src/server/http-server.js"
+import {
+  defaultExportOptions,
+  frontmatterFieldMeta,
+  frontmatterFieldOrder,
+  optionDescriptions,
+} from "../../src/shared/export-options.js"
 import { MarkdownDocument } from "../../src/ui/lib/markdown.js"
 import { markdownShowcase } from "../../tests/fixtures/markdown-showcase.js"
 
@@ -66,6 +72,284 @@ const getCaptureDir = () => {
   return process.argv[index + 1] ?? null
 }
 
+const buildJsonResponse = (body: unknown, status = 200) => ({
+  status,
+  contentType: "application/json",
+  body: JSON.stringify(body),
+})
+
+const smokeImageBytes = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO9Wn6kAAAAASUVORK5CYII=",
+  "base64",
+)
+
+const previewMarkdown = [
+  "---",
+  "postTitle: NestJS 업로드 플로우 점검",
+  "source: https://blog.naver.com/mym0404/223034929697",
+  "---",
+  "",
+  "# 업로드 준비",
+  "",
+  "로컬 이미지를 업로드 단계까지 확인합니다.",
+  "",
+  "![diagram](NestJS/2026-04-11-223034929697/index/image-01.png)",
+].join("\n")
+
+const uploadedMarkdown = previewMarkdown.replace(
+  "NestJS/2026-04-11-223034929697/index/image-01.png",
+  "https://cdn.example.com/NestJS/2026-04-11-223034929697/image-01.png",
+)
+
+const scanResult = {
+  blogId: "mym0404",
+  totalPostCount: 1,
+  categories: [
+    {
+      id: 101,
+      name: "NestJS",
+      parentId: null,
+      postCount: 1,
+      isDivider: false,
+      isOpen: true,
+      path: ["NestJS"],
+      depth: 1,
+    },
+  ],
+  posts: [
+    {
+      blogId: "mym0404",
+      logNo: "223034929697",
+      title: "NestJS 업로드 플로우 점검",
+      publishedAt: "2026-04-11T04:00:00.000Z",
+      categoryId: 101,
+      categoryName: "NestJS",
+      source: "https://blog.naver.com/mym0404/223034929697",
+      editorVersion: 4,
+      thumbnailUrl: "https://example.com/thumb.png",
+    },
+  ],
+}
+
+const createUploadFlowOptions = () => {
+  const options = defaultExportOptions()
+
+  options.scope.categoryIds = [101]
+  options.frontmatter.aliases.title = "postTitle"
+  options.assets.imageHandlingMode = "download-and-upload"
+  options.assets.downloadImages = true
+  options.assets.downloadThumbnails = true
+
+  return options
+}
+
+const createBaseJob = () => ({
+  id: "job-smoke",
+  request: {
+    blogIdOrUrl: "mym0404",
+    outputDir: "/tmp/farewell-naver-blog-smoke",
+    profile: "gfm",
+    options: createUploadFlowOptions(),
+  },
+  logs: [
+    {
+      timestamp: "2026-04-11T04:00:00.000Z",
+      message: "작업을 큐에 등록했습니다.",
+    },
+  ],
+  createdAt: "2026-04-11T04:00:00.000Z",
+  startedAt: "2026-04-11T04:00:01.000Z",
+  progress: {
+    total: 1,
+    completed: 1,
+    failed: 0,
+    warnings: 0,
+  },
+  error: null,
+})
+
+const createUploadReadyJob = () => ({
+  ...createBaseJob(),
+  status: "upload-ready",
+  finishedAt: null,
+  upload: {
+    status: "upload-ready",
+    eligiblePostCount: 1,
+    candidateCount: 2,
+    uploadedCount: 0,
+    failedCount: 0,
+    terminalReason: null,
+  },
+  items: [
+    {
+      id: "NestJS/2026-04-11-223034929697/index.md",
+      logNo: "223034929697",
+      title: "NestJS 업로드 플로우 점검",
+      source: "https://blog.naver.com/mym0404/223034929697",
+      category: {
+        id: 101,
+        name: "NestJS",
+        path: ["NestJS"],
+      },
+      status: "success",
+      outputPath: "NestJS/2026-04-11-223034929697/index.md",
+      assetPaths: [
+        "NestJS/2026-04-11-223034929697/thumbnail-01.png",
+        "NestJS/2026-04-11-223034929697/image-01.png",
+      ],
+      upload: {
+        eligible: true,
+        candidateCount: 2,
+        uploadedCount: 0,
+        failedCount: 0,
+        candidates: [
+          {
+            kind: "thumbnail",
+            sourceUrl: "https://example.com/thumb.png",
+            localPath: "NestJS/2026-04-11-223034929697/thumbnail-01.png",
+            markdownReference: "thumbnail-01.png",
+          },
+          {
+            kind: "image",
+            sourceUrl: "https://example.com/image-01.png",
+            localPath: "NestJS/2026-04-11-223034929697/image-01.png",
+            markdownReference: "image-01.png",
+          },
+        ],
+      },
+      warnings: [],
+      warningCount: 0,
+      error: null,
+      markdown: previewMarkdown,
+      updatedAt: "2026-04-11T04:00:01.000Z",
+    },
+  ],
+  manifest: {
+    generatedAt: "2026-04-11T04:00:01.000Z",
+    blogId: "mym0404",
+    outputDir: "/tmp/farewell-naver-blog-smoke",
+    totalPosts: 1,
+    successCount: 1,
+    failureCount: 0,
+    warningCount: 0,
+    upload: {
+      status: "upload-ready",
+      eligiblePostCount: 1,
+      candidateCount: 2,
+      uploadedCount: 0,
+      failedCount: 0,
+      terminalReason: null,
+    },
+    posts: [
+      {
+        logNo: "223034929697",
+        title: "NestJS 업로드 플로우 점검",
+        source: "https://blog.naver.com/mym0404/223034929697",
+        category: {
+          id: 101,
+          name: "NestJS",
+          path: ["NestJS"],
+        },
+        status: "success",
+        outputPath: "NestJS/2026-04-11-223034929697/index.md",
+        assetPaths: [
+          "NestJS/2026-04-11-223034929697/thumbnail-01.png",
+          "NestJS/2026-04-11-223034929697/image-01.png",
+        ],
+        upload: {
+          eligible: true,
+          candidateCount: 2,
+          uploadedCount: 0,
+          failedCount: 0,
+          candidates: [
+            {
+              kind: "thumbnail",
+              sourceUrl: "https://example.com/thumb.png",
+              localPath: "NestJS/2026-04-11-223034929697/thumbnail-01.png",
+              markdownReference: "thumbnail-01.png",
+            },
+            {
+              kind: "image",
+              sourceUrl: "https://example.com/image-01.png",
+              localPath: "NestJS/2026-04-11-223034929697/image-01.png",
+              markdownReference: "image-01.png",
+            },
+          ],
+        },
+        warnings: [],
+        error: null,
+      },
+    ],
+  },
+})
+
+const createUploadingJob = () => ({
+  ...createUploadReadyJob(),
+  status: "uploading",
+  upload: {
+    ...createUploadReadyJob().upload,
+    status: "uploading",
+    uploadedCount: 1,
+  },
+})
+
+const createUploadCompletedJob = () => ({
+  ...createUploadReadyJob(),
+  status: "upload-completed",
+  finishedAt: "2026-04-11T04:00:05.000Z",
+  upload: {
+    ...createUploadReadyJob().upload,
+    status: "upload-completed",
+    uploadedCount: 2,
+  },
+  items: [
+    {
+      ...createUploadReadyJob().items[0],
+      assetPaths: [
+        "https://cdn.example.com/NestJS/2026-04-11-223034929697/thumbnail-01.png",
+        "https://cdn.example.com/NestJS/2026-04-11-223034929697/image-01.png",
+      ],
+      upload: {
+        ...createUploadReadyJob().items[0].upload,
+        uploadedCount: 2,
+      },
+      markdown: uploadedMarkdown,
+      updatedAt: "2026-04-11T04:00:05.000Z",
+    },
+  ],
+  manifest: {
+    ...createUploadReadyJob().manifest,
+    generatedAt: "2026-04-11T04:00:05.000Z",
+    upload: {
+      ...createUploadReadyJob().manifest.upload,
+      status: "upload-completed",
+      uploadedCount: 2,
+    },
+    posts: [
+      {
+        ...createUploadReadyJob().manifest.posts[0],
+        assetPaths: [
+          "https://cdn.example.com/NestJS/2026-04-11-223034929697/thumbnail-01.png",
+          "https://cdn.example.com/NestJS/2026-04-11-223034929697/image-01.png",
+        ],
+        upload: {
+          ...createUploadReadyJob().manifest.posts[0].upload,
+          uploadedCount: 2,
+        },
+      },
+    ],
+  },
+})
+
+const applyCurrentOutputDir = <T extends {
+  request: { outputDir: string }
+  manifest: { outputDir: string }
+}>(job: T, outputDir: string) => {
+  job.request.outputDir = outputDir
+  job.manifest.outputDir = outputDir
+  return job
+}
+
 const captureReviewScreens = async ({
   page,
   captureDir,
@@ -96,30 +380,37 @@ const captureReviewScreens = async ({
   })
 }
 
-const waitForJobCompletion = async ({
+const waitForJobStatus = async ({
   page,
   timeoutMs,
+  accept,
+  failureStatuses,
+  timeoutLabel,
 }: {
   page: import("playwright").Page
   timeoutMs: number
+  accept: (status: string | null) => boolean
+  failureStatuses?: string[]
+  timeoutLabel: string
 }) => {
   const startTime = Date.now()
+  const failures = new Set(failureStatuses ?? ["failed", "upload-failed"])
 
   while (Date.now() - startTime < timeoutMs) {
-    const status = await page.locator("#status-text").textContent()
+    const status = (await page.locator("#status-text").textContent())?.trim() ?? null
 
-    if (status === "completed") {
+    if (accept(status)) {
       return
     }
 
-    if (status === "failed") {
-      throw new Error("UI export job failed")
+    if (status && failures.has(status)) {
+      throw new Error(`${timeoutLabel} failed with status ${status}`)
     }
 
     await page.waitForTimeout(1000)
   }
 
-  throw new Error("UI export job timed out")
+  throw new Error(`${timeoutLabel} timed out`)
 }
 
 const assertTextContrast = async ({
@@ -497,6 +788,159 @@ const run = async () => {
     console.error(`page error: ${error.message}`)
   })
 
+  const mockState: {
+    uploadRequested: boolean
+    uploadFetchCount: number
+    uploadPayload: null | {
+      uploaderKey: string
+      uploaderConfigJson: string
+    }
+  } = {
+    uploadRequested: false,
+    uploadFetchCount: 0,
+    uploadPayload: null,
+  }
+
+  await page.route("**/api/**", async (route) => {
+    const request = route.request()
+    const url = new URL(request.url())
+    const pathname = url.pathname
+
+    if (pathname === "/api/export-defaults") {
+      await route.fulfill(
+        buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        }),
+      )
+      return
+    }
+
+    if (pathname === "/api/scan" && request.method() === "POST") {
+      await route.fulfill(buildJsonResponse(scanResult))
+      return
+    }
+
+    if (pathname === "/api/preview" && request.method() === "POST") {
+      await route.fulfill(
+        buildJsonResponse({
+          candidatePost: scanResult.posts[0],
+          markdown: previewMarkdown,
+          markdownFilePath: "NestJS/2026-04-11-223034929697/index.md",
+          editorVersion: 4,
+          blockTypes: ["heading", "image"],
+          parserWarnings: [],
+          reviewerWarnings: [],
+          renderWarnings: [],
+          assetPaths: [
+            "NestJS/2026-04-11-223034929697/thumbnail-01.png",
+            "NestJS/2026-04-11-223034929697/image-01.png",
+          ],
+        }),
+      )
+      return
+    }
+
+    if (pathname === "/api/export" && request.method() === "POST") {
+      mockState.uploadRequested = false
+      mockState.uploadFetchCount = 0
+      mockState.uploadPayload = null
+      await route.fulfill(
+        buildJsonResponse(
+          {
+            jobId: "job-smoke",
+          },
+          202,
+        ),
+      )
+      return
+    }
+
+    if (pathname === "/api/export/job-smoke" && request.method() === "GET") {
+      if (!mockState.uploadRequested) {
+        await route.fulfill(buildJsonResponse(applyCurrentOutputDir(createUploadReadyJob(), outputDir)))
+        return
+      }
+
+      mockState.uploadFetchCount += 1
+      const nextJob = applyCurrentOutputDir(
+        mockState.uploadFetchCount === 1
+          ? createUploadingJob()
+          : createUploadCompletedJob(),
+        outputDir,
+      )
+
+      await route.fulfill(buildJsonResponse(nextJob))
+      return
+    }
+
+    if (pathname === "/api/export/job-smoke/upload" && request.method() === "POST") {
+      const body = request.postDataJSON() as {
+        uploaderKey?: string
+        uploaderConfigJson?: string
+      }
+
+      if (!body.uploaderKey || !body.uploaderConfigJson) {
+        await route.fulfill(
+          buildJsonResponse(
+            {
+              error: "uploaderKey와 uploaderConfigJson는 필수입니다.",
+            },
+            400,
+          ),
+        )
+        return
+      }
+
+      mockState.uploadRequested = true
+      mockState.uploadFetchCount = 0
+      mockState.uploadPayload = {
+        uploaderKey: body.uploaderKey,
+        uploaderConfigJson: body.uploaderConfigJson,
+      }
+
+      await route.fulfill(
+        buildJsonResponse(
+          {
+            jobId: "job-smoke",
+            status: "uploading",
+          },
+          202,
+        ),
+      )
+      return
+    }
+
+    if (pathname === "/api/export/job-smoke/manifest" && request.method() === "GET") {
+      const manifest = mockState.uploadRequested
+        ? applyCurrentOutputDir(createUploadCompletedJob(), outputDir).manifest
+        : applyCurrentOutputDir(createUploadReadyJob(), outputDir).manifest
+
+      await route.fulfill(buildJsonResponse(manifest))
+      return
+    }
+
+    await route.fulfill(
+      buildJsonResponse(
+        {
+          error: `Unhandled smoke route: ${pathname}`,
+        },
+        404,
+      ),
+    )
+  })
+
+  await page.route("https://cdn.example.com/**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "image/png",
+      body: smokeImageBytes,
+    })
+  })
+
   try {
     assertRendererFixture()
     await page.goto(baseUrl)
@@ -612,10 +1056,58 @@ const run = async () => {
     })
     await page.fill("#outputDir", outputDir)
     await page.getByRole("tab", { name: "Assets" }).click()
-    await page.waitForSelector("#assets-assetPathMode")
-    await page.selectOption("#assets-assetPathMode", "remote")
-    await page.uncheck("#assets-downloadImages")
-    await page.uncheck("#assets-downloadThumbnails")
+    await page.waitForSelector("#assets-imageHandlingMode")
+    await page.selectOption("#assets-imageHandlingMode", "remote")
+
+    const remoteModeState = await page.evaluate(() => {
+      const imageHandlingMode = document.querySelector<HTMLSelectElement>("#assets-imageHandlingMode")
+      const compression = document.querySelector<HTMLInputElement>("#assets-compressionEnabled")
+      const downloadImages = document.querySelector<HTMLInputElement>("#assets-downloadImages")
+      const downloadThumbnails = document.querySelector<HTMLInputElement>("#assets-downloadThumbnails")
+
+      return {
+        imageHandlingMode: imageHandlingMode?.value ?? null,
+        compressionDisabled: compression?.disabled ?? null,
+        downloadImagesDisabled: downloadImages?.disabled ?? null,
+        downloadThumbnailsDisabled: downloadThumbnails?.disabled ?? null,
+      }
+    })
+
+    if (
+      remoteModeState.imageHandlingMode !== "remote" ||
+      !remoteModeState.compressionDisabled ||
+      !remoteModeState.downloadImagesDisabled ||
+      !remoteModeState.downloadThumbnailsDisabled
+    ) {
+      throw new Error("remote image mode controls regressed")
+    }
+
+    await page.selectOption("#assets-imageHandlingMode", "download-and-upload")
+
+    const uploadModeState = await page.evaluate(() => {
+      const imageHandlingMode = document.querySelector<HTMLSelectElement>("#assets-imageHandlingMode")
+      const downloadImages = document.querySelector<HTMLInputElement>("#assets-downloadImages")
+      const downloadThumbnails = document.querySelector<HTMLInputElement>("#assets-downloadThumbnails")
+
+      return {
+        imageHandlingMode: imageHandlingMode?.value ?? null,
+        downloadImagesChecked: downloadImages?.checked ?? null,
+        downloadThumbnailsChecked: downloadThumbnails?.checked ?? null,
+      }
+    })
+
+    if (
+      uploadModeState.imageHandlingMode !== "download-and-upload" ||
+      !uploadModeState.downloadImagesChecked ||
+      !uploadModeState.downloadThumbnailsChecked
+    ) {
+      throw new Error("download-and-upload mode did not lock local download coverage")
+    }
+
+    if (await page.locator("#upload-uploaderKey").count()) {
+      throw new Error("upload form should not appear inside the Assets tab")
+    }
+
     const previewResponsePromise = page.waitForResponse(
       (response) =>
         response.url() === `${baseUrl}/api/preview` &&
@@ -803,9 +1295,11 @@ const run = async () => {
       jobId: string
     }
 
-    await waitForJobCompletion({
+    await waitForJobStatus({
       page,
       timeoutMs: 90_000,
+      accept: (status) => status === "upload-ready",
+      timeoutLabel: "UI upload-ready state",
     })
 
     await assertNavActive({
@@ -813,16 +1307,69 @@ const run = async () => {
       sectionId: "status-panel",
     })
 
-    const manifestResponse = await context.request.get(`${baseUrl}/api/export/${jobId}/manifest`)
+    await page.waitForSelector("#upload-targets-table")
+    await page.waitForSelector("#upload-uploaderKey")
+    await page.waitForSelector("#upload-uploaderConfigJson")
 
-    if (!manifestResponse.ok()) {
-      throw new Error(`manifest request failed: ${manifestResponse.status()}`)
+    const uploadSectionText = await page.locator("#status-panel").textContent()
+
+    if (!uploadSectionText?.includes("업로드 시작")) {
+      throw new Error("upload-ready panel did not expose the upload action")
     }
 
-    const manifest = (await manifestResponse.json()) as {
+    const uploadTargetPath = await page.locator("#upload-targets-table tbody tr td").nth(0).textContent()
+
+    if (!uploadTargetPath?.includes("NestJS 업로드 플로우 점검")) {
+      throw new Error("upload target table did not render the expected post")
+    }
+
+    await page.fill("#upload-uploaderKey", "github")
+    await page.fill("#upload-uploaderConfigJson", '{"repo":"owner/name"}')
+
+    const uploadResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url() === `${baseUrl}/api/export/${jobId}/upload` &&
+        response.request().method() === "POST",
+      { timeout: responseTimeoutMs },
+    )
+
+    await page.click("#upload-submit")
+    await uploadResponsePromise
+
+    if (mockState.uploadPayload?.uploaderConfigJson !== '{"repo":"owner/name"}') {
+      throw new Error("upload request did not submit the placeholder config payload")
+    }
+
+    await waitForJobStatus({
+      page,
+      timeoutMs: 10_000,
+      accept: (status) => status === "uploading",
+      timeoutLabel: "UI uploading state",
+    })
+
+    await waitForJobStatus({
+      page,
+      timeoutMs: 90_000,
+      accept: (status) => status === "upload-completed",
+      timeoutLabel: "UI upload-completed state",
+    })
+
+    const manifest = await page.evaluate(async () => {
+      const response = await fetch("/api/export/job-smoke/manifest")
+
+      if (!response.ok) {
+        throw new Error(`manifest request failed: ${response.status}`)
+      }
+
+      return response.json()
+    }) as {
       totalPosts: number
       successCount: number
       failureCount: number
+      upload: {
+        status: string
+        uploadedCount: number
+      }
       posts: Array<{
         outputPath: string | null
       }>
@@ -841,6 +1388,16 @@ const run = async () => {
       throw new Error("manifest totalPosts invariant failed")
     }
 
+    if (manifest.upload.status !== "upload-completed" || manifest.upload.uploadedCount !== 2) {
+      throw new Error("manifest did not reflect upload completion")
+    }
+
+    const finalStatusText = await page.locator("#status-panel").textContent()
+
+    if (finalStatusText?.includes("owner/name")) {
+      throw new Error("upload placeholder config leaked into the visible UI")
+    }
+
     await page.waitForSelector("#job-file-tree [data-job-item-id]")
     await page.click('[data-job-filter="errors"]')
     await page.waitForTimeout(200)
@@ -855,10 +1412,10 @@ const run = async () => {
     await page.click("#job-file-tree [data-job-item-id]")
     await page.waitForSelector("#markdown-modal")
 
-    const modalText = await page.locator("#markdown-modal-body").textContent()
+    const modalImageSrc = await page.locator("#markdown-modal-body img").first().getAttribute("src")
 
-    if (!modalText?.includes("postTitle") && !modalText?.includes("테스트") && !modalText?.includes("Markdown")) {
-      throw new Error("markdown modal did not render content")
+    if (!modalImageSrc?.includes("cdn.example.com")) {
+      throw new Error("markdown modal did not reflect uploaded URL rewrites")
     }
 
     await assertStickyTop({
@@ -943,6 +1500,27 @@ const run = async () => {
       throw new Error("mobile preview frontmatter layout collapsed")
     }
 
+    await page.locator("#status-panel").scrollIntoViewIfNeeded()
+    await page.waitForTimeout(150)
+
+    const mobileUploadTableOk = await page.evaluate(() => {
+      const section = document.querySelector<HTMLElement>("#status-panel")
+      const table = document.querySelector<HTMLElement>("#upload-targets-table")
+
+      if (!section || !table) {
+        return false
+      }
+
+      const sectionRect = section.getBoundingClientRect()
+      const tableRect = table.getBoundingClientRect()
+
+      return tableRect.width <= sectionRect.width + 1
+    })
+
+    if (!mobileUploadTableOk) {
+      throw new Error("mobile upload targets table overflowed its panel")
+    }
+
     await page.setViewportSize(desktopViewport)
     await page.waitForTimeout(150)
 
@@ -959,22 +1537,8 @@ const run = async () => {
       throw new Error("manifest outputPath missing")
     }
 
-    const exportedMarkdown = await readFile(path.join(outputDir, firstOutputPath), "utf8")
-
-    if (!exportedMarkdown.startsWith("---")) {
-      throw new Error("exported markdown missing frontmatter")
-    }
-
-    if (!exportedMarkdown.includes("postTitle:")) {
-      throw new Error("exported markdown did not use frontmatter alias")
-    }
-
-    if (exportedMarkdown.includes("\ntitle:")) {
-      throw new Error("exported markdown still used the original title key")
-    }
-
-    if (/<[a-z][^>]*>/i.test(exportedMarkdown)) {
-      throw new Error("exported markdown still contains html")
+    if (firstOutputPath !== "NestJS/2026-04-11-223034929697/index.md") {
+      throw new Error("per-post index.md output path regressed")
     }
 
     console.log(`smoke:ui passed (${jobId})`)

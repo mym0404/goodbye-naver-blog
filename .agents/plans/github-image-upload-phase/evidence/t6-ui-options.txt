@@ -1,0 +1,21 @@
+T6 verification
+Timestamp: 2026-04-17 04:24:56Z
+
+Changed files
+- src/ui/features/options/export-options-panel.tsx
+- src/ui/App.tsx
+- src/ui/lib/api.ts
+- tests/ui/export-options-panel.test.tsx
+- tests/ui/app.test.tsx
+
+Command
+- pnpm exec vitest run tests/ui/export-options-panel.test.tsx tests/ui/app.test.tsx --silent
+
+Result
+- PASS (6 tests)
+
+Notes
+- Assets 탭은 이제 `imageHandlingMode`, `compressionEnabled`, `groupByCategory` 기반 vocabulary를 사용한다.
+- `base64`와 `remote` 조합에서는 로컬 전용 컨트롤이 비활성화되거나 값이 강제 정렬된다.
+- Assets 탭에는 `uploaderKey`, `uploaderConfigJson` 입력이 전혀 렌더링되지 않는다.
+- Upload action용 JSON helper는 추가됐지만 실제 credential form 렌더링은 결과 패널 단계(T7)로 남겨 두었다.

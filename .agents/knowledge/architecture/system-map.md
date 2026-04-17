@@ -20,10 +20,10 @@
 - `parser`: SE2, SE3, SE4 본문을 공용 AST로 변환
 - `reviewer`: 파싱 경고를 보정하고 정리
 - `converter`: AST를 Markdown과 frontmatter로 렌더링
-- `exporter`: fetch -> parse -> review -> render -> write -> manifest 실행을 묶음
-- `server`: 로컬 웹 UI와 export job API 제공
-- `shared`: export 옵션, 타입, 유틸, capability, sample corpus
-- `ui`: scan -> category select -> export 대시보드 UI
+- `exporter`: fetch -> parse -> review -> render -> write -> manifest 실행과 PicGo upload/rewrite 단계를 묶음
+- `server`: 로컬 웹 UI, export job API, 같은 job의 upload trigger/polling lifecycle 제공
+- `shared`: export 옵션, 타입, lifecycle contract, capability, sample corpus
+- `ui`: scan -> category select -> preview -> export -> upload results 대시보드 UI
 
 ## Dependency Direction
 - `server` -> `modules/*`, `shared/*`
@@ -37,5 +37,8 @@
 - sample corpus: `src/shared/sample-corpus.ts`
 - Markdown renderer: `src/modules/converter/markdown-renderer.ts`
 - exporter flow: `src/modules/exporter/naver-blog-exporter.ts`
+- upload runner: `src/modules/exporter/picgo-upload-phase.ts`
+- output rewrite after upload: `src/modules/exporter/picgo-upload-rewriter.ts`
 - HTTP API: `src/server/http-server.ts`
 - UI shell: `index.html`, `src/ui/App.tsx`, `src/ui/styles/globals.css`, `src/ui/features/*`
+- results/upload surface: `src/ui/features/job-results/job-results-panel.tsx`

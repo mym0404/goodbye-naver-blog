@@ -1,0 +1,14 @@
+## T8 Knowledge Sync
+
+- Updated `.agents/knowledge/product/domain.md` to describe the three image handling modes, per-post `index.md` output shape, same-job upload lifecycle, and `skipped-no-candidates`.
+- Updated `.agents/knowledge/architecture/system-map.md` to include PicGo upload runner/rewrite responsibilities and the results-panel upload surface.
+- Updated `.agents/knowledge/product/ui-dashboard-design-system.md` so the `Assets` tab, status panel, upload table, and smoke contract all match the live UI.
+- Updated `docs/runbooks/browser-verification.md` so manual verification now includes `upload-ready`, upload submission, `uploading -> upload-completed`, zero-candidate behavior, and `index.md` path checks.
+
+## T8 Smoke
+
+- Command: `pnpm smoke:ui`
+- Result: passed
+- Scenario now uses deterministic mocked `/api/*` responses inside `scripts/harness/run-ui-smoke.ts` instead of a live export provider.
+- The smoke path covers `upload-ready -> uploading -> upload-completed`, verifies the results-panel upload form submission, confirms the per-post `.../index.md` output path, and checks mobile upload-table overflow.
+- Placeholder values only: the upload form submits `uploaderKey=github` and `uploaderConfigJson={"repo":"owner/name"}` for smoke; no raw secret value is written to knowledge docs, screenshots, or evidence.

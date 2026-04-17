@@ -15,23 +15,29 @@ export 결과를 `글 폴더 + index.md + 같은 폴더의 자산` 구조로 바
 - 추가 탐색에서 PicGo-Core 공식 문서는 Node 앱에서 `new PicGo()`와 `picgo.upload([...])` 형태의 programmatic API를 제공하고, uploader 설정이 `picBed.current`와 `picBed.<uploaderKey>`에 저장되는 규약을 가진다는 점을 확인했다. 이 bundle은 GitHub 전용 SDK 대신 PicGo-Core를 공통 업로드 엔진으로 사용한다.
 - 현재 repo facts:
   - `src/modules/exporter/naver-blog-exporter.ts`가 `fetch -> parse -> review -> render -> write -> manifest` 단일 흐름을 묶는다.
-  - `src/modules/exporter/export-paths.ts`는 `posts/`와 `assets/`를 분리한 현재 경로 구조를 만든다.
-  - `src/modules/exporter/asset-store.ts`는 `relative | remote | base64` 저장 모드만 다루며 업로드/압축 단계가 없다.
+  - `src/modules/exporter/export-paths.ts`와 관련 preview/single-post surface는 이미 per-post folder와 `index.md` 구조로 이동했고, 이번 재계획은 그 위에 올라간 upload follow-up만 다시 연다.
+  - `src/modules/exporter/asset-store.ts`와 exporter surface는 compression과 upload-candidate metadata를 이미 생산하지만, rewrite/finalization consistency는 아직 다시 조여야 한다.
   - `src/modules/converter/markdown-renderer.ts`는 `AssetRecord.reference`와 `assetPaths`로 최종 Markdown/frontmatter를 만든다.
   - `src/server/job-store.ts`와 `src/server/http-server.ts`는 export request를 job에 그대로 저장하고 `/api/export/:id` polling으로 노출하므로 비밀 credential을 export request에 넣을 수 없다.
-  - `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx`, `src/ui/hooks/use-export-job.ts`, `src/ui/App.tsx`가 옵션 입력, job polling, status panel을 구성한다.
+  - `src/server/http-server.ts`는 이미 same-job upload endpoint를 갖고 있지만, 현재 payload contract와 origin/failure handling은 raw JSON·weak guard 전제에 묶여 있다.
+  - `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx`, `src/ui/hooks/use-export-job.ts`, `src/ui/App.tsx`는 이미 upload-ready table과 post-export form을 가지지만, 현재 form은 raw JSON 입력과 no-retry/no-upload-only-mode 전제에 묶여 있다.
   - `src/shared/utils.ts`의 날짜 slug는 이미 `YYYY-MM-DD`만 사용하므로 “시간까지 나오지 않게” 요구는 현재 구현이 만족한다.
-  - `package.json`에는 아직 `picgo`와 `sharp`가 없다.
-- 추가 user-visible choice는 Phase 2 승인 후 planner default로 닫았다.
-  - 첫 UI는 provider별 bespoke form을 미리 만들지 않고 `uploaderKey + uploaderConfigJson` 입력으로 시작한다. 이 방식은 PicGo 내장 uploader와 plugin uploader를 모두 수용한다.
+  - `package.json`에는 이미 `picgo`와 `sharp`가 들어와 있고, 이번 재계획의 핵심은 의존성 추가가 아니라 reopened lifecycle/UI/verification follow-up이다.
+- 추가 user-visible choice는 Phase 2 승인 뒤 review 재진입으로 다시 열렸고, 이번 재계획에서 사용자 확인으로 다시 닫았다.
+  - PicGo-Core는 계속 공통 업로드 엔진으로 유지한다.
+  - post-export upload form은 raw `uploaderConfigJson` textarea를 없애고, provider 선택과 provider별 구조화 필드를 받는다.
+  - 서버는 구조화된 provider 필드를 PicGo config object로 접어 `picBed.current`와 `picBed.<uploaderKey>`에 매핑한다.
   - compression은 다운로드 직후 저장 파일에만 적용하고, 업로드 직전 재가공은 첫 범위에서 제외한다.
   - 카테고리 그룹핑을 끄면 글 폴더는 output 루트 바로 아래에 평탄화한다.
-- Phase 2에서는 최신 `draft.md`를 보여준 뒤 사용자가 “응 좋아 고고”로 방향을 승인했다.
+- Phase 2에서는 최신 `draft.md`를 보여준 뒤 사용자가 먼저 범위 확장을 승인했고, 이어서 provider UX를 “GitHub 쉬운 입력”이 아니라 “PicGo 고정 + provider별 구조화 필드 + no raw JSON”으로 바로잡았다.
 - Phase 4 deterministic validation 목표는 필수 headings, task schema, artifact graph alignment, checkpoint diff surface, browser verification shape, evidence-path formatting, verification ordering을 확인하는 것이다.
 - Phase 5 review pass에서는 최소 `Execution - Hidden Decision & Contradiction`, `Verification - Scenario Completeness`를 돌리고, 이 bundle은 secrets/UI/stateful phase 전이를 포함하므로 `Security`와 `Frontend` specialist를 추가한다.
 - Phase 4 deterministic validation pass에서는 required headings, task schema, status-board consistency, artifact graph alignment, checkpoint diff surface, browser verification shape, evidence-path formatting을 다시 점검했고 blocker 없이 통과시켰다.
 - Phase 5 initial review는 네 가지 hard gap을 드러냈다: credential form 위치 충돌, zero-candidate lifecycle 공백, request-origin/redaction/URL-validation 보안 누락, rewrite 원자성 부재. rev2에서는 credential form을 결과 화면 전용으로 고정하고, zero-candidate를 `completed + skipped-no-candidates`로 정의하고, upload endpoint guard/redaction rules를 넣고, temp-file swap 절차를 명시해 blocker를 닫았다.
-- Phase 5 rerun 결과는 `Verification - Scenario Completeness: PASS`, `Execution - Hidden Decision & Contradiction: no findings`, `Security: no findings`, `Frontend: no findings`이다.
+- 이후 exec review와 Phase 1 재탐색에서는 다섯 가지 재오픈 축이 살아 있음을 확인했다: upload failure/retry dead-end, rewrite 이후 uploaded count 일관성, secret-bearing returned URL 경계, `Origin` 없는 upload POST guard, upload phase 전용 UI 모드 부재.
+- provider UX 축도 review feedback으로 다시 열렸다. 현재 code/tests/smoke/docs는 `uploaderKey + uploaderConfigJson` raw JSON 계약에 묶여 있지만, 이번 재계획에서는 PicGo 경로를 유지한 채 provider별 구조화 필드로 바꾸는 방향으로 bundle을 다시 연다.
+- 이번 재오픈 draft 이후에는 planner-level deterministic validation을 다시 돌려 `plan.md` 필수 heading, `tasks.md` task schema와 status board, stale raw-JSON/GitHub-easy-path 서술 잔존 여부를 점검했고 blocker 없이 통과시켰다.
+- 같은 시점의 semantic review rerun에서는 reopened task set, final-wave smoke scenario, current repo facts 사이의 모순을 다시 읽었고, stale repo-fact와 completion-only smoke wording을 provider-structured retry scenario로 보정한 뒤 남은 planner blocker가 없음을 확인했다.
 
 ## Goal
 
@@ -55,9 +61,9 @@ export 결과를 `글 폴더 + index.md + 같은 폴더의 자산` 구조로 바
 - output Markdown 파일명은 항상 `index.md`다.
 - 글 폴더 이름에는 현재 slug 규칙을 재사용하되 시간 정보는 들어가지 않는다.
 - 카테고리 그룹핑 옵션 default는 `true`다.
-- 첫 upload UI는 provider-specific field set이 아니라 `uploaderKey` 문자열과 `uploaderConfigJson` 입력만 제공한다.
+- upload form은 post-export result flow에만 두고, raw JSON textarea 대신 provider 선택과 provider별 구조화 필드를 제공한다.
 - `POST /api/export/:id/upload`는 blind cross-site POST를 막기 위한 명시적 요청 출처 검증을 포함해야 한다.
-- `uploaderConfigJson`과 그 파생 비밀값은 logs, test fixtures, smoke evidence, screenshots, error payload에 raw 형태로 남기지 않는다.
+- provider 구조화 필드와 그 파생 비밀값은 logs, test fixtures, smoke evidence, screenshots, error payload, polling payload에 raw 형태로 남기지 않는다.
 - `imageContentMode === base64` 기존 동작은 유지하되, 이 경우 PicGo upload phase는 비활성화한다.
 - `download-and-upload` 모드에서는 body image와 thumbnail download를 강제해 업로드 후보가 로컬 파일로 남아야 한다.
 - PicGo가 반환한 URL은 rewrite 전에 절대 URL이며 `http` 또는 `https` 스킴인지 검증해야 한다.
@@ -112,7 +118,7 @@ export 결과를 `글 폴더 + index.md + 같은 폴더의 자산` 구조로 바
 - 타입/옵션 계약은 shared focused tests로 먼저 잠근다.
 - output 구조와 upload candidate data는 exporter focused tests로 잠근다.
 - same-job upload phase와 secret boundary는 HTTP focused tests로 잠근다.
-- 옵션 form, upload-ready panel, 진행률 표시, completed 상태는 UI focused tests와 smoke로 잠근다.
+- 옵션 form, provider structured upload form, upload-ready panel, retry path, 진행률 표시, completed 상태는 UI focused tests와 smoke로 잠근다.
 - broad verification은 `pnpm test:coverage`와 `pnpm smoke:ui`로 수행하고, 최종 wave에서 `pnpm check:full`까지 올린다.
 - upload provider 실동작은 live remote provider dependency를 넣지 않는다. 대신 PicGo service는 test double 또는 mocked upload result로 deterministic하게 검증한다.
 
@@ -122,12 +128,13 @@ export 결과를 `글 폴더 + index.md + 같은 폴더의 자산` 구조로 바
 - `네이버 원본 URL 유지`는 export 후 로컬 이미지 파일 없이 원본 URL을 유지한다.
 - `다운로드 유지`와 `다운로드 후 PicGo 업로드`는 export 완료 전까지 동일한 로컬 다운로드 결과를 만든다.
 - output은 `outputDir/(optional category path)/{post-folder}/index.md` 구조를 사용하고, 같은 `{post-folder}` 안에 관련 자산 파일이 함께 저장된다.
-- `download-and-upload`로 export한 job은 로컬 upload candidate가 하나 이상 있을 때만 export 완료 뒤 `upload-ready` 상태가 되고, status panel에 업로드 대상 글 테이블과 실행 UI가 나타난다.
+- `download-and-upload`로 export한 job은 로컬 upload candidate가 하나 이상 있을 때만 export 완료 뒤 `upload-ready` 상태가 되고, status panel에 업로드 대상 글 테이블과 provider별 구조화 입력 UI가 나타난다.
 - `download-and-upload`인데 upload candidate가 0개면 job은 `completed`로 끝나고 upload UI는 나타나지 않으며, summary에는 `skipped-no-candidates`가 기록된다.
-- 사용자가 status panel의 post-export form에 `uploaderKey`와 `uploaderConfigJson`을 입력해 업로드를 실행하면 job status가 `uploading`을 거쳐 `upload-completed`로 바뀐다.
+- 사용자는 status panel의 post-export form에서 PicGo provider를 고르고 필요한 필드를 입력해 업로드를 실행할 수 있으며, 서버는 그 값을 PicGo config object로 매핑한 뒤 job status를 `uploading`을 거쳐 `upload-completed` 또는 `upload-failed`로 전이시킨다.
 - 업로드 성공 후 각 글의 Markdown 본문 이미지, frontmatter `thumbnail`, manifest/job item의 `assetPaths`가 PicGo가 반환한 URL로 갱신된다.
+- rewrite가 끝나기 전에는 uploaded count가 최종 성공처럼 굳지 않고, rewrite 실패 시 성공처럼 보이는 partial summary를 남기지 않는다.
 - provider credential은 export request, job polling payload, manifest 파일에 남지 않는다.
-- upload action은 출처 검증을 통과한 same-origin 요청만 허용되고, evidence/log/error surface에도 raw credential이 남지 않는다.
+- upload action은 출처 검증을 통과한 same-origin 요청만 허용되고, `Origin`이 비어 있는 요청 정책도 테스트와 문서로 고정되며, evidence/log/error surface에도 raw credential이 남지 않는다.
 - 관련 focused tests, `pnpm test:coverage`, `pnpm smoke:ui`, `pnpm check:full`이 통과한다.
 
 ## Open Questions
@@ -149,8 +156,8 @@ export 결과를 `글 폴더 + index.md + 같은 폴더의 자산` 구조로 바
 ## Verification Strategy
 
 - focused-first 원칙을 쓴다. shared/exporter/server/UI 변경은 각 slice 전용 vitest 명령으로 먼저 잠그고, broad suite는 checkpoint와 final wave에서만 사용한다.
-- PicGo upload behavior는 network-less deterministic tests로 검증한다. 성공 시 URL mapping이 재기록되는 path와, upload failure 시 job이 `upload-failed`로 남고 기존 export 산출물이 보존되는 path를 모두 포함한다.
-- browser-facing verification은 `pnpm smoke:ui`가 로컬 서버를 띄우고 `http://127.0.0.1:4173`를 데스크톱/모바일 viewport에서 검증하도록 유지한다. ordered scenario에는 `download-and-upload` 옵션 진입, export 완료 상태의 upload-ready panel 확인, status panel에서 placeholder `uploaderKey/configJson`을 입력해 upload action을 제출하는 단계, `uploading` 중간 상태 확인, upload completed 상태의 결과 패널 확인이 포함되어야 한다.
+- PicGo upload behavior는 network-less deterministic tests로 검증한다. 성공 시 URL mapping이 재기록되는 path와, upload failure/rewrite failure 시 job summary가 모순 없이 `upload-failed`로 남고 기존 export 산출물이 보존되는 path를 모두 포함한다.
+- browser-facing verification은 `pnpm smoke:ui`가 로컬 서버를 띄우고 `http://127.0.0.1:4173`를 데스크톱/모바일 viewport에서 검증하도록 유지한다. ordered scenario에는 `download-and-upload` 옵션 진입, export 완료 상태의 upload-ready panel 확인, provider structured fields를 채운 upload action 제출, `uploading` 중간 상태 확인, upload completed 상태의 결과 패널 확인, upload-only UI mode 확인이 포함되어야 한다.
 - if a command exits `0` but the expected state is not actually covered, 그 task는 완료가 아니다. 예를 들어 smoke가 통과해도 upload-ready panel selector가 시나리오에 포함되지 않았다면 bundle을 planner로 되돌려 same-turn repair를 해야 한다.
 - `pnpm check:full`은 마지막 wave 전용이다. earlier task들은 이 명령이 아직 불필요하게 깨지지 않도록 focused test와 smaller suite를 쓴다.
 
@@ -158,8 +165,8 @@ export 결과를 `글 폴더 + index.md + 같은 폴더의 자산` 구조로 바
 
 - 먼저 shared contract를 고정해 export option, job state, manifest shape를 바꿀 준비를 한다.
 - 그다음 output path refactor와 asset/compression/upload candidate data를 exporter에 먼저 넣는다. 이 단계가 끝나야 server/UI가 의존할 최종 데이터 shape가 생긴다.
-- 이후 PicGo upload phase service와 same-job HTTP lifecycle을 붙이고, output rewrite를 연결한다.
-- 마지막에 UI 옵션과 status panel을 새 job state에 맞게 갱신한다.
+- 이후 PicGo upload phase service와 same-job HTTP lifecycle을 붙이고, output rewrite 원자성을 다시 맞춘다.
+- 마지막에 UI 옵션과 status panel을 새 job state에 맞게 갱신하고, provider structured form과 upload-only mode를 고정한다.
 - knowledge와 smoke는 UI contract가 굳은 뒤에 반영하고, 마지막 verification wave에서 전체 suite를 올린다.
 - risky surface는 secret leakage, request-origin abuse, same-job status transition, output rewrite consistency다. 이 네 surface는 각 checkpoint에서 따로 다시 본다.
 
@@ -172,9 +179,9 @@ export 결과를 `글 폴더 + index.md + 같은 폴더의 자산` 구조로 바
 - Wave 3: `CP1`
   - shared/exporter 계약이 UI/API 구현을 받을 준비가 되었는지 검사한다.
 - Wave 4: `T4`, `T5`
-  - PicGo upload service와 output rewrite는 strongly coupled이고 같은 write surface를 공유하므로 serial로 간다.
+  - PicGo upload service와 output rewrite는 strongly coupled이고 같은 write surface를 공유하므로 serial로 간다. 이 wave에서 structured provider payload, failure/retry contract, rewrite-count consistency를 같이 잠근다.
 - Wave 5: `T6`, `T7`
-  - UI option form과 results panel/hook은 같은 React surface를 공유하므로 serial로 간다.
+  - UI option form과 results panel/hook은 같은 React surface를 공유하므로 serial로 간다. 이 wave에서 upload-only mode와 provider structured form을 함께 고정한다.
 - Wave 6: `CP2`
   - same-job lifecycle, secret boundary, user-visible flow를 다시 맞춘다.
 - Wave 7: `T8`, `T9`
@@ -206,12 +213,12 @@ export 결과를 `글 폴더 + index.md + 같은 폴더의 자산` 구조로 바
   - `requires`: `CP1`
   - `unlocks`: `T5`, `T6`, `T7`
   - `blocked_by`: `CP1`
-  - `ready_when`: upload-ready job state, zero-candidate terminal handling, request-origin guard, ephemeral credential boundary를 server/job layer에 추가할 수 있다.
+  - `ready_when`: upload-ready job state, zero-candidate terminal handling, strict request-origin guard, structured provider payload, ephemeral credential boundary를 server/job layer에 추가할 수 있다.
 - `T5`
   - `requires`: `T4`
   - `unlocks`: `T7`, `CP2`
   - `blocked_by`: `T4`
-  - `ready_when`: PicGo upload result를 output rewrite와 manifest/job item 치환에 연결할 수 있다.
+  - `ready_when`: PicGo upload result를 output rewrite와 manifest/job item 치환에 연결하고 rewrite 이전 성공 집계를 정리할 수 있다.
 - `T6`
   - `requires`: `T1`, `T4`
   - `unlocks`: `T7`, `CP2`
@@ -244,8 +251,8 @@ export 결과를 `글 폴더 + index.md + 같은 폴더의 자산` 구조로 바
   - 확인 대상: shared naming drift, path/output contract drift, asset candidate metadata completeness, focused exporter tests pass 여부
   - stop-and-return 조건: output path가 여전히 `posts/`/`assets/` split을 남기거나, upload candidate data가 manifest/job layer에 충분하지 않을 때
 - `CP2` after `T5`, `T6`, and `T7`
-  - 확인 대상: same-job status naming, zero-candidate behavior, upload-ready UX visibility, request-origin guard, secret leakage boundary, rewrite consistency
-  - stop-and-return 조건: provider config가 polling payload나 evidence로 새거나, cross-site style request가 upload endpoint를 통과하거나, upload completed 뒤 일부 표면만 URL이 바뀌는 경우
+  - 확인 대상: same-job status naming, zero-candidate behavior, upload-ready/retry UX visibility, request-origin guard, provider-field secret leakage boundary, rewrite consistency, upload-only UI mode
+  - stop-and-return 조건: provider field 값이 polling payload나 evidence로 새거나, `Origin` 없는 request 정책이 테스트에 고정되지 않거나, cross-site style request가 upload endpoint를 통과하거나, upload completed 뒤 일부 표면만 URL이 바뀌거나, setup panel이 upload phase에서 다시 보이는 경우
 
 ## Final Verification Wave
 
@@ -257,8 +264,8 @@ export 결과를 `글 폴더 + index.md + 같은 폴더의 자산` 구조로 바
   - setup command: `pnpm smoke:ui`
   - target URL: `http://127.0.0.1:4173`
   - viewport: smoke harness desktop/mobile pair
-  - ordered scenario: export options에서 `download-and-upload` 모드와 compression/groupByCategory 제약을 확인한다. mocked export completion payload를 `upload-ready`로 만들어 status panel의 업로드 대상 테이블과 post-export credential form을 확인한다. placeholder config 값을 입력하고 upload execute action을 눌러 `uploading` 중간 상태를 확인한다. 이어서 mocked upload completion payload를 넣어 URL 치환된 결과 행과 완료 상태를 확인한다. 모바일 viewport에서는 upload target table이 같은 status panel 안에서 가로 overflow 없이 유지되는지도 확인한다.
-  - success signal: command exit code `0`, harness가 upload-ready -> uploading -> upload-completed 시나리오를 실제로 수행한다, desktop/mobile evidence 경로가 생성된다, evidence에 raw credential이 남지 않는다.
+  - ordered scenario: export options에서 `download-and-upload` 모드와 compression/groupByCategory 제약을 확인한다. mocked export completion payload를 `upload-ready`로 만들어 status panel의 업로드 대상 테이블과 post-export provider form을 확인한다. 구조화된 provider 필드를 입력하고 upload execute action을 눌러 `uploading` 중간 상태를 확인한다. 이어서 mocked failure payload로 같은 job의 retry 가능 상태를 확인하고, 수정 후 다시 제출해 mocked upload completion payload와 URL 치환된 결과 행을 확인한다. upload phase 동안 setup panel이 다시 열리지 않는지도 확인한다. 모바일 viewport에서는 upload target table이 같은 status panel 안에서 가로 overflow 없이 유지되는지도 확인한다.
+  - success signal: command exit code `0`, harness가 upload-ready -> uploading -> upload-failed retry -> upload-completed 또는 동등한 mocked retry 시나리오를 실제로 수행한다, desktop/mobile evidence 경로가 생성된다, evidence에 raw credential이 남지 않는다.
 - run repo-native broad gate
   - `pnpm check:full`
 - final acceptance는 provider credential이 polling payload와 manifest에 남지 않고, new folder structure가 diagnostics/manifest/UI result table에 일관되게 반영되는 것이다.

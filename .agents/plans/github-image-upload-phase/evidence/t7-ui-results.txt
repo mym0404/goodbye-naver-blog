@@ -1,0 +1,20 @@
+T7 verification
+Timestamp: 2026-04-17 04:30:45Z
+
+Changed files
+- src/ui/hooks/use-export-job.ts
+- src/ui/features/job-results/job-results-panel.tsx
+- src/ui/App.tsx
+- tests/ui/use-export-job.test.tsx
+- tests/ui/app.test.tsx
+
+Command
+- pnpm exec vitest run tests/ui/use-export-job.test.tsx tests/ui/app.test.tsx --silent
+
+Result
+- PASS (7 tests)
+
+Notes
+- Polling now continues through `upload-ready` and `uploading` until `upload-completed` or `upload-failed`.
+- Results panel now shows a compact upload target table, inline `uploaderKey`/`uploaderConfigJson` form for `upload-ready`, progress counters, and terminal upload states without hiding export results.
+- UI tests cover happy path upload submission, failed upload rendering, and zero-candidate no-form behavior.

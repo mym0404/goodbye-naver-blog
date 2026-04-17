@@ -46,6 +46,15 @@ const createAssetRecord = ({
     reference: reference ?? relativePath ?? sourceUrl,
     relativePath,
     storageMode,
+    uploadCandidate:
+      storageMode === "relative" && relativePath
+        ? {
+            kind,
+            sourceUrl,
+            localPath: `Algorithm/test/${relativePath}`,
+            markdownReference: relativePath,
+          }
+        : null,
   }) satisfies AssetRecord
 
 const parsedPost: ParsedPost = {

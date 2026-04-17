@@ -22,7 +22,7 @@
 | parser fixture coverage | 12/12 (100%) |
 | parser test coverage | 12/12 (100%) |
 | parser sample coverage | 10/12 (83%) |
-| sample corpus size | 6 |
+| sample corpus size | 8 |
 | covered editor versions | 3/3 (100%) |
 
 ## Open Risks

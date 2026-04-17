@@ -75,19 +75,9 @@ describe("ExportOptionsPanel", () => {
 
     await user.click(screen.getByRole("tab", { name: "구조" }))
     await user.click(query<HTMLInputElement>("#structure-cleanOutputDir"))
-    fireEvent.change(query<HTMLInputElement>("#structure-postDirectoryName"), {
-      target: {
-        value: "notes",
-      },
-    })
-    fireEvent.change(query<HTMLInputElement>("#structure-assetDirectoryName"), {
-      target: {
-        value: "images",
-      },
-    })
-    await user.selectOptions(query<HTMLSelectElement>("#structure-folderStrategy"), "flat")
-    await user.click(query<HTMLInputElement>("#structure-includeDateInFilename"))
-    await user.click(query<HTMLInputElement>("#structure-includeLogNoInFilename"))
+    await user.click(query<HTMLInputElement>("#structure-groupByCategory"))
+    await user.click(query<HTMLInputElement>("#structure-includeDateInPostFolderName"))
+    await user.click(query<HTMLInputElement>("#structure-includeLogNoInPostFolderName"))
     await user.selectOptions(query<HTMLSelectElement>("#structure-slugStyle"), "keep-title")
 
     await user.click(screen.getByRole("tab", { name: "Frontmatter" }))
@@ -133,11 +123,12 @@ describe("ExportOptionsPanel", () => {
     })
 
     await user.click(screen.getByRole("tab", { name: "Assets" }))
-    await user.selectOptions(query<HTMLSelectElement>("#assets-assetPathMode"), "remote")
+    await user.selectOptions(query<HTMLSelectElement>("#assets-imageHandlingMode"), "download-and-upload")
+    await user.click(query<HTMLInputElement>("#assets-compressionEnabled"))
     await user.selectOptions(query<HTMLSelectElement>("#assets-imageContentMode"), "base64")
+    await user.selectOptions(query<HTMLSelectElement>("#assets-imageContentMode"), "path")
+    await user.selectOptions(query<HTMLSelectElement>("#assets-imageHandlingMode"), "remote")
     await user.selectOptions(query<HTMLSelectElement>("#assets-stickerAssetMode"), "download-original")
-    await user.click(query<HTMLInputElement>("#assets-downloadImages"))
-    await user.click(query<HTMLInputElement>("#assets-downloadThumbnails"))
     await user.click(query<HTMLInputElement>("#assets-includeImageCaptions"))
     await user.selectOptions(query<HTMLSelectElement>("#assets-thumbnailSource"), "none")
 
@@ -148,11 +139,9 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.scope.dateFrom).toBe("2024-01-01")
     expect(latestOptions.scope.dateTo).toBe("2024-12-31")
     expect(latestOptions.structure.cleanOutputDir).toBe(false)
-    expect(latestOptions.structure.postDirectoryName).toBe("notes")
-    expect(latestOptions.structure.assetDirectoryName).toBe("images")
-    expect(latestOptions.structure.folderStrategy).toBe("flat")
-    expect(latestOptions.structure.includeDateInFilename).toBe(false)
-    expect(latestOptions.structure.includeLogNoInFilename).toBe(false)
+    expect(latestOptions.structure.groupByCategory).toBe(false)
+    expect(latestOptions.structure.includeDateInPostFolderName).toBe(false)
+    expect(latestOptions.structure.includeLogNoInPostFolderName).toBe(false)
     expect(latestOptions.structure.slugStyle).toBe("keep-title")
     expect(latestOptions.frontmatter.enabled).toBe(false)
     expect(latestOptions.frontmatter.fields.title).toBe(false)
@@ -167,8 +156,9 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.markdown.dividerStyle).toBe("asterisk")
     expect(latestOptions.markdown.codeFenceStyle).toBe("tilde")
     expect(latestOptions.markdown.headingLevelOffset).toBe(2)
-    expect(latestOptions.assets.assetPathMode).toBe("remote")
-    expect(latestOptions.assets.imageContentMode).toBe("base64")
+    expect(latestOptions.assets.imageHandlingMode).toBe("remote")
+    expect(latestOptions.assets.compressionEnabled).toBe(false)
+    expect(latestOptions.assets.imageContentMode).toBe("path")
     expect(latestOptions.assets.stickerAssetMode).toBe("download-original")
     expect(latestOptions.assets.downloadImages).toBe(false)
     expect(latestOptions.assets.downloadThumbnails).toBe(false)
@@ -222,7 +212,7 @@ describe("ExportOptionsPanel", () => {
     expect(document.querySelector("#markdown-videoStyle")).toBeNull()
   })
 
-  it("disables path and download asset options in base64 embedding mode", async () => {
+  it("keeps upload credentials out of the assets tab and disables local-only controls in base64 mode", async () => {
     const user = userEvent.setup()
     const options = defaultExportOptions()
 
@@ -243,11 +233,14 @@ describe("ExportOptionsPanel", () => {
 
     await user.click(screen.getByRole("tab", { name: "Assets" }))
 
-    expect(query<HTMLSelectElement>("#assets-assetPathMode")).toBeDisabled()
+    expect(query<HTMLInputElement>("#assets-compressionEnabled")).toBeDisabled()
     expect(query<HTMLInputElement>("#assets-downloadImages")).toBeDisabled()
     expect(query<HTMLInputElement>("#assets-downloadThumbnails")).toBeDisabled()
+    expect(query<HTMLSelectElement>("#assets-imageHandlingMode").value).toBe("download")
     expect(query<HTMLSelectElement>("#assets-stickerAssetMode")).not.toBeDisabled()
     expect(query<HTMLInputElement>("#assets-includeImageCaptions")).not.toBeDisabled()
     expect(query<HTMLSelectElement>("#assets-thumbnailSource")).not.toBeDisabled()
+    expect(screen.queryByLabelText("uploaderKey")).not.toBeInTheDocument()
+    expect(screen.queryByLabelText("uploaderConfigJson")).not.toBeInTheDocument()
   })
 })

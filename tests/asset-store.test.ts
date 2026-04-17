@@ -7,7 +7,7 @@ describe("AssetStore", () => {
   it("returns remote references when downloads are disabled", async () => {
     const options = defaultExportOptions()
 
-    options.assets.assetPathMode = "remote"
+    options.assets.imageHandlingMode = "remote"
 
     const store = new AssetStore({
       outputDir: "/tmp/output",
@@ -21,12 +21,13 @@ describe("AssetStore", () => {
       kind: "image",
       postLogNo: "1",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/test.md",
+      markdownFilePath: "/tmp/output/posts/test/index.md",
     })
 
     expect(asset.reference).toBe("https://example.com/image.png")
     expect(asset.relativePath).toBeNull()
     expect(asset.storageMode).toBe("remote")
+    expect(asset.uploadCandidate).toBeNull()
   })
 
   it("caches downloaded relative assets", async () => {
@@ -43,19 +44,25 @@ describe("AssetStore", () => {
       kind: "image",
       postLogNo: "1",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/test.md",
+      markdownFilePath: "/tmp/output/posts/test/index.md",
     })
     const second = await store.saveAsset({
       kind: "image",
       postLogNo: "1",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/test.md",
+      markdownFilePath: "/tmp/output/posts/test/index.md",
     })
 
     expect(downloadBinary).toHaveBeenCalledTimes(1)
     expect(first.reference).toBe(second.reference)
-    expect(first.relativePath).toBe("../assets/1/image-01.png")
+    expect(first.relativePath).toBe("image-01.png")
     expect(first.storageMode).toBe("relative")
+    expect(first.uploadCandidate).toEqual({
+      kind: "image",
+      sourceUrl: "https://example.com/image.png",
+      localPath: "posts/test/image-01.png",
+      markdownReference: "image-01.png",
+    })
   })
 
   it("embeds data urls when base64 mode is requested", async () => {
@@ -76,7 +83,7 @@ describe("AssetStore", () => {
       kind: "image",
       postLogNo: "1",
       sourceUrl: "https://example.com/image.png",
-      markdownFilePath: "/tmp/output/posts/test.md",
+      markdownFilePath: "/tmp/output/posts/test/index.md",
       embedAsDataUrl: true,
     })
 
@@ -84,6 +91,7 @@ describe("AssetStore", () => {
     expect(asset.reference).toContain("data:image/png;base64,")
     expect(asset.relativePath).toBeNull()
     expect(asset.storageMode).toBe("base64")
+    expect(asset.uploadCandidate).toBeNull()
   })
 
   it("reuses cached data urls and infers mime type from the source url", async () => {
@@ -104,14 +112,14 @@ describe("AssetStore", () => {
       kind: "image",
       postLogNo: "1",
       sourceUrl: "https://example.com/sticker.gif",
-      markdownFilePath: "/tmp/output/posts/test.md",
+      markdownFilePath: "/tmp/output/posts/test/index.md",
       embedAsDataUrl: true,
     })
     const second = await store.saveAsset({
       kind: "image",
       postLogNo: "1",
       sourceUrl: "https://example.com/sticker.gif",
-      markdownFilePath: "/tmp/output/posts/test.md",
+      markdownFilePath: "/tmp/output/posts/test/index.md",
       embedAsDataUrl: true,
     })
 
@@ -134,9 +142,43 @@ describe("AssetStore", () => {
         kind: "image",
         postLogNo: "1",
         sourceUrl: "not-a-url",
-        markdownFilePath: "/tmp/output/posts/test.md",
+        markdownFilePath: "/tmp/output/posts/test/index.md",
         embedAsDataUrl: true,
       }),
     ).rejects.toThrow("base64 임베딩을 지원하는 fetchBinary downloader가 필요합니다.")
+  })
+
+  it("uses fetchBinary plus compression for safe local image formats", async () => {
+    const downloadBinary = vi.fn()
+    const fetchBinary = vi.fn(async () => ({
+      bytes: Buffer.from("raw-image"),
+      contentType: "image/png",
+    }))
+    const compressImage = vi.fn(async () => Buffer.from("compressed-image"))
+    const options = defaultExportOptions()
+
+    options.assets.compressionEnabled = true
+
+    const store = new AssetStore({
+      outputDir: "/tmp/output",
+      downloader: {
+        downloadBinary,
+        fetchBinary,
+      },
+      options,
+      compressImage,
+    })
+
+    const asset = await store.saveAsset({
+      kind: "image",
+      postLogNo: "1",
+      sourceUrl: "https://example.com/image.png",
+      markdownFilePath: "/tmp/output/posts/test/index.md",
+    })
+
+    expect(fetchBinary).toHaveBeenCalledTimes(1)
+    expect(downloadBinary).not.toHaveBeenCalled()
+    expect(compressImage).toHaveBeenCalledTimes(1)
+    expect(asset.uploadCandidate?.localPath).toBe("posts/test/image-01.png")
   })
 })

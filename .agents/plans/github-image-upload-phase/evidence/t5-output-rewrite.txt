@@ -1,0 +1,21 @@
+T5 verification
+Timestamp: 2026-04-17 04:22:34Z
+
+Changed files
+- src/modules/exporter/picgo-upload-rewriter.ts
+- src/modules/exporter/picgo-upload-phase.ts
+- src/modules/exporter/naver-blog-exporter.ts
+- tests/naver-blog-exporter.test.ts
+- tests/markdown-renderer.test.ts
+
+Command
+- pnpm exec vitest run tests/naver-blog-exporter.test.ts tests/markdown-renderer.test.ts --silent
+
+Result
+- PASS (15 tests)
+
+Notes
+- Successful rewrite now updates Markdown body image links, frontmatter `thumbnail`, manifest `assetPaths`, and in-memory job item `assetPaths/markdown` together.
+- Rewriter rejects non-http(s) PicGo URLs before swap.
+- Temp-file staging now restores originals when the final swap fails, so partial rewrite state is not left behind.
+- Upload-completed state is emitted only after rewrite succeeds.

@@ -1,0 +1,22 @@
+T4 verification
+Timestamp: 2026-04-17 04:19:45Z
+
+Changed files
+- src/modules/exporter/picgo-upload-phase.ts
+- src/modules/exporter/picgo-upload-rewriter.ts
+- src/server/job-store.ts
+- src/server/http-server.ts
+- tests/http-server.test.ts
+- tests/naver-blog-exporter.test.ts
+
+Command
+- pnpm exec vitest run tests/http-server.test.ts tests/naver-blog-exporter.test.ts --silent
+
+Result
+- PASS (8 tests)
+
+Notes
+- Added `POST /api/export/:id/upload` with JSON-only handling, same-origin Origin/Host validation when Origin is present, and `X-Requested-With: XMLHttpRequest` enforcement.
+- Upload credentials stay request-scoped; polling payloads do not store `uploaderConfigJson` or raw secret values.
+- Same job now transitions through `upload-ready`, `uploading`, `upload-completed`, and `upload-failed`, while zero-candidate `download-and-upload` exports terminate as `completed + skipped-no-candidates`.
+- `picgo-upload-rewriter.ts` landed during T4 because the server must not report `upload-completed` before rewrite finishes. This keeps the lifecycle contract correct for the upcoming rewrite-focused tests.

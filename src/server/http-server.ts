@@ -9,6 +9,8 @@ import path from "node:path"
 import { NaverBlogFetcher } from "../modules/blog-fetcher/naver-blog-fetcher.js"
 import { buildExportPreview } from "../modules/exporter/export-preview.js"
 import { NaverBlogExporter } from "../modules/exporter/naver-blog-exporter.js"
+import { rewriteUploadedAssets } from "../modules/exporter/picgo-upload-rewriter.js"
+import { runPicGoUploadPhase } from "../modules/exporter/picgo-upload-phase.js"
 import {
   cloneExportOptions,
   defaultExportOptions,
@@ -100,8 +102,41 @@ const sendFile = async ({
   response.end(content)
 }
 
-export const createHttpServer = () => {
-  const jobStore = new JobStore()
+const parseJsonBody = async <T>(request: IncomingMessage) => JSON.parse(await readBody(request)) as T
+
+const hasJsonContentType = (request: IncomingMessage) =>
+  request.headers["content-type"]?.toLowerCase().startsWith("application/json") ?? false
+
+const isSameOriginUploadRequest = (request: IncomingMessage) => {
+  if (request.headers["x-requested-with"] !== "XMLHttpRequest") {
+    return false
+  }
+
+  const originHeader = request.headers.origin
+  const hostHeader = request.headers.host
+
+  if (!originHeader || !hostHeader) {
+    return true
+  }
+
+  try {
+    return new URL(originHeader).host === hostHeader
+  } catch {
+    return false
+  }
+}
+
+const sanitizeUploadError = () => "PicGo upload failed."
+
+export const createHttpServer = ({
+  jobStore = new JobStore(),
+  uploadPhaseRunner = runPicGoUploadPhase,
+  uploadRewriter = rewriteUploadedAssets,
+}: {
+  jobStore?: JobStore
+  uploadPhaseRunner?: typeof runPicGoUploadPhase
+  uploadRewriter?: typeof rewriteUploadedAssets
+} = {}) => {
 
   const sendBrowserApp = async ({
     response,
@@ -159,11 +194,63 @@ export const createHttpServer = () => {
       })
       const manifest = await exporter.run()
 
-      jobStore.complete(jobId, manifest)
+      jobStore.completeExport(jobId, manifest)
     } catch (error) {
       const message = toErrorMessage(error)
       jobStore.appendLog(jobId, message)
       jobStore.fail(jobId, message)
+    }
+  }
+
+  const runUploadForJob = async ({
+    jobId,
+    uploaderKey,
+    uploaderConfig,
+  }: {
+    jobId: string
+    uploaderKey: string
+    uploaderConfig: Record<string, unknown>
+  }) => {
+    const job = jobStore.get(jobId)
+
+    if (!job?.manifest) {
+      return
+    }
+
+    const candidates = job.items.flatMap((item) => item.upload.candidates)
+
+    jobStore.startUpload(jobId)
+    jobStore.appendLog(jobId, "PicGo 업로드를 시작했습니다.")
+
+    try {
+      const uploadResults = await uploadPhaseRunner({
+        outputDir: job.request.outputDir,
+        candidates,
+        uploaderKey,
+        uploaderConfig,
+      })
+
+      jobStore.updateUpload(jobId, {
+        ...jobStore.get(jobId)!.upload,
+        status: "uploading",
+        uploadedCount: uploadResults.length,
+        failedCount: 0,
+      })
+
+      const rewritten = await uploadRewriter({
+        outputDir: job.request.outputDir,
+        manifest: job.manifest,
+        items: job.items,
+        uploadResults,
+      })
+
+      jobStore.completeUpload(jobId, rewritten)
+      jobStore.appendLog(jobId, "PicGo 업로드와 결과 치환이 완료되었습니다.")
+    } catch {
+      const message = sanitizeUploadError()
+
+      jobStore.appendLog(jobId, message)
+      jobStore.failUpload(jobId, message)
     }
   }
 
@@ -325,6 +412,123 @@ export const createHttpServer = () => {
             },
           })
         }
+        return
+      }
+
+      const uploadMatch = url.pathname.match(/^\/api\/export\/([^/]+)\/upload$/)
+
+      if (method === "POST" && uploadMatch?.[1]) {
+        if (!hasJsonContentType(request)) {
+          sendJson({
+            response,
+            statusCode: 415,
+            body: {
+              error: "application/json 요청만 허용합니다.",
+            },
+          })
+          return
+        }
+
+        if (!isSameOriginUploadRequest(request)) {
+          sendJson({
+            response,
+            statusCode: 403,
+            body: {
+              error: "same-origin XHR 요청만 허용합니다.",
+            },
+          })
+          return
+        }
+
+        const job = jobStore.get(uploadMatch[1])
+
+        if (!job?.manifest) {
+          sendJson({
+            response,
+            statusCode: 404,
+            body: {
+              error: "job not found",
+            },
+          })
+          return
+        }
+
+        if (job.status !== "upload-ready") {
+          sendJson({
+            response,
+            statusCode: 409,
+            body: {
+              error: "업로드 가능한 상태의 작업이 아닙니다.",
+            },
+          })
+          return
+        }
+
+        if (
+          job.request.options.assets.imageHandlingMode !== "download-and-upload" ||
+          job.upload.candidateCount === 0
+        ) {
+          sendJson({
+            response,
+            statusCode: 409,
+            body: {
+              error: "업로드 대상이 없는 작업입니다.",
+            },
+          })
+          return
+        }
+
+        const payload = await parseJsonBody<{
+          uploaderKey?: string
+          uploaderConfigJson?: string
+        }>(request)
+
+        if (!payload.uploaderKey?.trim() || !payload.uploaderConfigJson?.trim()) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: "uploaderKey와 uploaderConfigJson는 필수입니다.",
+            },
+          })
+          return
+        }
+
+        let uploaderConfig: Record<string, unknown>
+
+        try {
+          const parsed = JSON.parse(payload.uploaderConfigJson) as unknown
+
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+            throw new Error("uploaderConfigJson must be a JSON object.")
+          }
+
+          uploaderConfig = parsed as Record<string, unknown>
+        } catch {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: "uploaderConfigJson는 JSON object 문자열이어야 합니다.",
+            },
+          })
+          return
+        }
+
+        void runUploadForJob({
+          jobId: job.id,
+          uploaderKey: payload.uploaderKey.trim(),
+          uploaderConfig,
+        })
+
+        sendJson({
+          response,
+          statusCode: 202,
+          body: {
+            jobId: job.id,
+            status: "uploading",
+          },
+        })
         return
       }
 

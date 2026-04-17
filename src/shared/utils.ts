@@ -119,7 +119,10 @@ export const normalizeAssetUrl = (value: string) => {
   try {
     const url = new URL(trimmed)
 
-    if (url.hostname === "mblogthumb-phinf.pstatic.net" && !url.searchParams.has("type")) {
+    if (
+      url.hostname === "mblogthumb-phinf.pstatic.net" &&
+      (!url.searchParams.has("type") || url.searchParams.get("type") === "")
+    ) {
       url.searchParams.set("type", "w800")
     }
 

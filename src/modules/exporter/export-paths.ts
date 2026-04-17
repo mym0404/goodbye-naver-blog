@@ -48,9 +48,9 @@ export const buildMarkdownFilePath = ({
   category: CategoryInfo
   options: Pick<ExportOptions, "structure">
 }) => {
-  const segments = [outputDir, options.structure.postDirectoryName]
+  const segments = [outputDir]
 
-  if (options.structure.folderStrategy === "category-path") {
+  if (options.structure.groupByCategory) {
     const categorySegments = (category.path.length > 0 ? category.path : [category.name]).map(
       sanitizePathSegment,
     )
@@ -60,11 +60,11 @@ export const buildMarkdownFilePath = ({
 
   const nameParts: string[] = []
 
-  if (options.structure.includeDateInFilename) {
+  if (options.structure.includeDateInPostFolderName) {
     nameParts.push(getDateSlug(post.publishedAt))
   }
 
-  if (options.structure.includeLogNoInFilename) {
+  if (options.structure.includeLogNoInPostFolderName) {
     nameParts.push(post.logNo)
   }
 
@@ -74,7 +74,7 @@ export const buildMarkdownFilePath = ({
     nameParts.push(sanitizePathSegment(post.title))
   }
 
-  const fileName = `${nameParts.filter(Boolean).join("-") || post.logNo}.md`
+  const postFolderName = nameParts.filter(Boolean).join("-") || post.logNo
 
-  return path.join(...segments, fileName)
+  return path.join(...segments, postFolderName, "index.md")
 }

@@ -106,6 +106,14 @@ const createErrorJobState = (
       failed: 0,
       warnings: 0,
     },
+    upload: {
+      status: "not-requested",
+      eligiblePostCount: 0,
+      candidateCount: 0,
+      uploadedCount: 0,
+      failedCount: 0,
+      terminalReason: null,
+    },
     items: [],
     manifest: null,
     error,
@@ -144,12 +152,14 @@ const runningHiddenSectionIds = new Set<SectionId>([
 const statusPillClass = (status: string) =>
   cn(
     'rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]',
-    status === 'completed' || status === 'ready'
+    status === 'completed' || status === 'upload-completed' || status === 'ready'
       ? 'bg-emerald-100 text-emerald-800'
-      : status === 'running' || status === 'queued' || status === 'success'
+      : status === 'running' || status === 'queued' || status === 'success' || status === 'uploading'
         ? 'bg-amber-100 text-amber-800'
-        : status === 'failed'
+        : status === 'failed' || status === 'upload-failed'
           ? 'bg-rose-100 text-rose-800'
+          : status === 'upload-ready'
+            ? 'bg-sky-100 text-sky-800'
           : 'bg-slate-100 text-slate-600',
   );
 
@@ -183,7 +193,7 @@ export const App = () => {
   const [activeSectionId, setActiveSectionId] = useState<SectionId>(
     navigationItems[0].id,
   );
-  const { job, submitting, setJob, startJob } = useExportJob();
+  const { job, submitting, uploadSubmitting, setJob, startJob, startUpload } = useExportJob();
   const lastNotifiedJobKeyRef = useRef<string | null>(null);
 
   const frontmatterValidationErrors = useMemo(
@@ -207,7 +217,11 @@ export const App = () => {
   const exportDisabled = !scanResult || frontmatterValidationErrors.length > 0;
   const previewDisabled = exportDisabled;
   const isJobRunning =
-    submitting || job?.status === 'queued' || job?.status === 'running';
+    submitting ||
+    uploadSubmitting ||
+    job?.status === 'queued' ||
+    job?.status === 'running' ||
+    job?.status === 'uploading';
   const interactionsLocked = isJobRunning;
   const isCurrentJobRequest = useMemo(() => {
     if (!job || isJobRunning) {
@@ -307,9 +321,30 @@ export const App = () => {
 
     lastNotifiedJobKeyRef.current = notificationKey;
 
+    if (job.status === 'upload-ready') {
+      toast('내보내기가 끝났습니다. 이미지 업로드를 시작할 수 있습니다.', {
+        description: `업로드 대상 ${job.upload.candidateCount}개`,
+      });
+      return;
+    }
+
     if (job.status === 'completed') {
       toast.success('내보내기가 완료되었습니다.', {
         description: `완료 ${job.progress.completed}개, 실패 ${job.progress.failed}개`,
+      });
+      return;
+    }
+
+    if (job.status === 'upload-completed') {
+      toast.success('이미지 업로드까지 완료되었습니다.', {
+        description: `업로드 ${job.upload.uploadedCount}개`,
+      });
+      return;
+    }
+
+    if (job.status === 'upload-failed') {
+      toast.error('이미지 업로드에 실패했습니다.', {
+        description: job.error ?? '로그를 확인하세요.',
       });
       return;
     }
@@ -611,6 +646,29 @@ export const App = () => {
         }),
       );
       toast.error('내보내기 작업 등록에 실패했습니다.', {
+        description: message,
+      });
+    }
+  };
+
+  const handleUpload = async ({
+    uploaderKey,
+    uploaderConfigJson,
+  }: {
+    uploaderKey: string;
+    uploaderConfigJson: string;
+  }) => {
+    try {
+      await startUpload({
+        uploaderKey,
+        uploaderConfigJson,
+      });
+      toast('이미지 업로드를 시작했습니다.', {
+        description: '작업 상태 패널에서 진행률을 확인할 수 있습니다.',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error('이미지 업로드를 시작하지 못했습니다.', {
         description: message,
       });
     }
@@ -1062,8 +1120,10 @@ export const App = () => {
             job={job}
             selectedItem={selectedItem}
             activeJobFilter={activeJobFilter}
+            uploadSubmitting={uploadSubmitting}
             onFilterChange={setActiveJobFilter}
             onItemSelect={setSelectedItem}
+            onUploadStart={handleUpload}
             onModalClose={() => setSelectedItem(null)}
           />
         </div>

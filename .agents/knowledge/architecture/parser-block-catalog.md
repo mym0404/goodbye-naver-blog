@@ -28,7 +28,7 @@
 | `code` | `2, 3, 4` | `markdown-paragraph` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
 | `formula` | `4` | `skip` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
 | `image` | `2, 3, 4` | `markdown-paragraph` | `se4-video-table`, `se4-image-legacy-link`, `se4-quote-formula-code` |
-| `imageGroup` | `2, 3, 4` | `markdown-paragraph` | `se4-image-group` |
+| `imageGroup` | `2, 3, 4` | `markdown-paragraph` | `se4-image-group`, `se2-thumburl-image-group` |
 | `video` | `4` | `skip` | `se4-video-table` |
 | `linkCard` | `4` | `markdown-paragraph` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
 | `table` | `2, 3, 4` | `raw-html` | `se4-video-table` |

@@ -3,8 +3,24 @@ import type { CheerioAPI } from "cheerio"
 
 import { convertHtmlToMarkdown, sanitizeHtmlFragment } from "../converter/html-fragment-converter.js"
 import type { AstBlock, ExportOptions, ImageData, ParsedPost } from "../../shared/types.js"
-import { compactText, unique } from "../../shared/utils.js"
+import { compactText, normalizeAssetUrl, unique } from "../../shared/utils.js"
 import { parseHtmlTable } from "./table-parser.js"
+
+const standaloneImageSelector = "img, [thumburl]"
+const nestedBlockTags = new Set([
+  "p",
+  "div",
+  "table",
+  "blockquote",
+  "hr",
+  "pre",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+])
 
 const getStandaloneImages = ({
   $,
@@ -14,11 +30,11 @@ const getStandaloneImages = ({
   element: ReturnType<CheerioAPI>
 }) => {
   const images = $(element)
-    .find("img")
+    .find(standaloneImageSelector)
     .toArray()
     .map((imageNode): ImageData | null => {
       const $image = $(imageNode)
-      const sourceUrl = $image.attr("src") ?? ""
+      const sourceUrl = normalizeAssetUrl($image.attr("src") ?? $image.attr("thumburl") ?? "")
 
       if (!sourceUrl) {
         return null
@@ -37,13 +53,38 @@ const getStandaloneImages = ({
   const textWithoutImages = compactText(
     $(element)
       .clone()
-      .find("img")
+      .find(standaloneImageSelector)
       .remove()
       .end()
       .text(),
   )
 
   return textWithoutImages ? [] : images
+}
+
+const shouldTraverseNestedBlocks = ({
+  element,
+  tagName,
+}: {
+  element: ReturnType<CheerioAPI>
+  tagName: string
+}) => {
+  if (tagName !== "div") {
+    return false
+  }
+
+  const childNodes = element.contents().toArray()
+  const hasMeaningfulDirectText = childNodes.some(
+    (node) => node.type === "text" && compactText(node.data ?? "") !== "",
+  )
+
+  if (hasMeaningfulDirectText) {
+    return false
+  }
+
+  return childNodes.some(
+    (node) => node.type === "tag" && nestedBlockTags.has(node.tagName.toLowerCase()),
+  )
 }
 
 const isSpacerBlock = ({
@@ -66,25 +107,6 @@ const isSpacerBlock = ({
   }
 
   return compactText(clone.text()) === ""
-}
-
-const nestedBlockTags = new Set(["p", "div"])
-
-const shouldTraverseNestedBlocks = ({
-  element,
-  tagName,
-}: {
-  element: ReturnType<CheerioAPI>
-  tagName: string
-}) => {
-  if (tagName !== "div") {
-    return false
-  }
-
-  return element
-    .contents()
-    .toArray()
-    .some((node) => node.type === "tag" && nestedBlockTags.has(node.tagName.toLowerCase()))
 }
 
 const parseSingleColumnTableAsParagraphs = ({
@@ -144,7 +166,7 @@ const parseBookWidgetBlocks = ({
     blocks.push({
       type: "image",
       image: {
-        sourceUrl: imageSource,
+        sourceUrl: normalizeAssetUrl(imageSource),
         originalSourceUrl: null,
         alt: imageNode.attr("alt")?.trim() ?? "",
         caption: null,
@@ -153,14 +175,26 @@ const parseBookWidgetBlocks = ({
     })
   }
 
-  const title = compactText(bookWidget.find("strong.tit").first().text())
+  const title =
+    compactText(bookWidget.find("strong.tit").first().text()) ||
+    compactText(bookWidget.find("p a.con_link").first().text())
   const detailLines = bookWidget
     .find("dl")
     .first()
     .children()
     .toArray()
-    .map((node) => compactText(bookWidget.find(node).text()))
-    .filter(Boolean)
+    .map((node) => {
+      const child = bookWidget.find(node)
+      const tagName = node.tagName?.toLowerCase()
+      const text = compactText(child.text())
+
+      if (!text || (tagName !== "dt" && tagName !== "dd")) {
+        return null
+      }
+
+      return text
+    })
+    .filter((text): text is string => Boolean(text))
   const summaryLines = [title ? `**${title}**` : "", ...detailLines].filter(Boolean)
 
   if (summaryLines.length > 0) {
@@ -170,12 +204,14 @@ const parseBookWidgetBlocks = ({
     })
   }
 
-  const reviewUrl = bookWidget.find("a.link, a.con_link").last().attr("href")?.trim()
+  const reviewLink = bookWidget.find("a.link, a.con_link").last()
+  const reviewUrl = reviewLink.attr("href")?.trim() ?? ""
+  const reviewLabel = compactText(reviewLink.text()) || "리뷰보기"
 
   if (reviewUrl) {
     blocks.push({
       type: "paragraph",
-      text: `[리뷰보기](${reviewUrl})`,
+      text: `[${reviewLabel}](${reviewUrl})`,
     })
   }
 

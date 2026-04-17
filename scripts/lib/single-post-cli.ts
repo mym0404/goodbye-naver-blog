@@ -7,6 +7,9 @@ const allowedTopLevelOptionKeys = ["scope", "structure", "frontmatter", "markdow
 const allowedScopeKeys = ["categoryIds", "categoryMode", "dateFrom", "dateTo"] as const
 const allowedStructureKeys = [
   "cleanOutputDir",
+  "groupByCategory",
+  "includeDateInPostFolderName",
+  "includeLogNoInPostFolderName",
   "postDirectoryName",
   "assetDirectoryName",
   "folderStrategy",
@@ -49,6 +52,8 @@ const allowedMarkdownKeys = [
   "headingLevelOffset",
 ] as const
 const allowedAssetsKeys = [
+  "imageHandlingMode",
+  "compressionEnabled",
   "assetPathMode",
   "imageContentMode",
   "stickerAssetMode",
@@ -71,6 +76,7 @@ const rawHtmlPolicies = ["keep", "omit"] as const
 const dividerStyles = ["dash", "asterisk"] as const
 const codeFenceStyles = ["backtick", "tilde"] as const
 const assetPathModes = ["relative", "remote"] as const
+const imageHandlingModes = ["download", "remote", "download-and-upload"] as const
 const imageContentModes = ["path", "base64"] as const
 const stickerAssetModes = ["ignore", "download-original"] as const
 const thumbnailSources = ["post-list-first", "first-body-image", "none"] as const
@@ -215,34 +221,62 @@ const validateStructureOptions = (value: unknown, optionsPath: string) => {
     structure.cleanOutputDir = cleanOutputDir
   }
 
+  if ("groupByCategory" in value) {
+    const groupByCategory = value.groupByCategory
+    assertBoolean(groupByCategory, "structure.groupByCategory", optionsPath)
+    structure.groupByCategory = groupByCategory
+  }
+
+  if ("includeDateInPostFolderName" in value) {
+    const includeDateInPostFolderName = value.includeDateInPostFolderName
+    assertBoolean(
+      includeDateInPostFolderName,
+      "structure.includeDateInPostFolderName",
+      optionsPath,
+    )
+    structure.includeDateInPostFolderName = includeDateInPostFolderName
+  }
+
+  if ("includeLogNoInPostFolderName" in value) {
+    const includeLogNoInPostFolderName = value.includeLogNoInPostFolderName
+    assertBoolean(
+      includeLogNoInPostFolderName,
+      "structure.includeLogNoInPostFolderName",
+      optionsPath,
+    )
+    structure.includeLogNoInPostFolderName = includeLogNoInPostFolderName
+  }
+
   if ("postDirectoryName" in value) {
-    const postDirectoryName = value.postDirectoryName
-    assertString(postDirectoryName, "structure.postDirectoryName", optionsPath)
-    structure.postDirectoryName = postDirectoryName
+    failOptions(
+      optionsPath,
+      "structure.postDirectoryName is no longer supported; posts now export to per-post folders with index.md",
+    )
   }
 
   if ("assetDirectoryName" in value) {
-    const assetDirectoryName = value.assetDirectoryName
-    assertString(assetDirectoryName, "structure.assetDirectoryName", optionsPath)
-    structure.assetDirectoryName = assetDirectoryName
+    failOptions(
+      optionsPath,
+      "structure.assetDirectoryName is no longer supported; assets now live beside each post's index.md",
+    )
   }
 
   if ("folderStrategy" in value) {
     const folderStrategy = value.folderStrategy
     assertEnum(folderStrategy, folderStrategies, "structure.folderStrategy", optionsPath)
-    structure.folderStrategy = folderStrategy
+    structure.groupByCategory = folderStrategy === "category-path"
   }
 
   if ("includeDateInFilename" in value) {
     const includeDateInFilename = value.includeDateInFilename
     assertBoolean(includeDateInFilename, "structure.includeDateInFilename", optionsPath)
-    structure.includeDateInFilename = includeDateInFilename
+    structure.includeDateInPostFolderName = includeDateInFilename
   }
 
   if ("includeLogNoInFilename" in value) {
     const includeLogNoInFilename = value.includeLogNoInFilename
     assertBoolean(includeLogNoInFilename, "structure.includeLogNoInFilename", optionsPath)
-    structure.includeLogNoInFilename = includeLogNoInFilename
+    structure.includeLogNoInPostFolderName = includeLogNoInFilename
   }
 
   if ("slugStyle" in value) {
@@ -402,10 +436,22 @@ const validateAssetsOptions = (value: unknown, optionsPath: string) => {
 
   const assets = defaultExportOptions().assets
 
+  if ("imageHandlingMode" in value) {
+    const imageHandlingMode = value.imageHandlingMode
+    assertEnum(imageHandlingMode, imageHandlingModes, "assets.imageHandlingMode", optionsPath)
+    assets.imageHandlingMode = imageHandlingMode
+  }
+
+  if ("compressionEnabled" in value) {
+    const compressionEnabled = value.compressionEnabled
+    assertBoolean(compressionEnabled, "assets.compressionEnabled", optionsPath)
+    assets.compressionEnabled = compressionEnabled
+  }
+
   if ("assetPathMode" in value) {
     const assetPathMode = value.assetPathMode
     assertEnum(assetPathMode, assetPathModes, "assets.assetPathMode", optionsPath)
-    assets.assetPathMode = assetPathMode
+    assets.imageHandlingMode = assetPathMode === "remote" ? "remote" : "download"
   }
 
   if ("imageContentMode" in value) {

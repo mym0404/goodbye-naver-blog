@@ -129,6 +129,44 @@ console.log(oldSchool)
     ])
   })
 
+  it("parses legacy thumburl image groups inside nested wrappers", () => {
+    const parsed = parseSe2Fixture(`
+      <div style="font-size:12pt;">
+        <p>
+          <span class="_img _inl fx" thumburl="https://mblogthumb-phinf.pstatic.net/one.png?type="></span>
+          <br />
+          <br />
+          <span class="_img _inl fx" thumburl="https://mblogthumb-phinf.pstatic.net/two.png?type="></span>&nbsp;
+        </p>
+        <p><br /></p>
+        <p>블렌더 어렵다</p>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "imageGroup",
+        images: [
+          {
+            sourceUrl: "https://mblogthumb-phinf.pstatic.net/one.png?type=w800",
+            originalSourceUrl: null,
+            alt: "",
+            caption: null,
+            mediaKind: "image",
+          },
+          {
+            sourceUrl: "https://mblogthumb-phinf.pstatic.net/two.png?type=w800",
+            originalSourceUrl: null,
+            alt: "",
+            caption: null,
+            mediaKind: "image",
+          },
+        ],
+      },
+      { type: "paragraph", text: "블렌더 어렵다" },
+    ])
+  })
+
   it("parses wrapped legacy book widgets and following review paragraphs", () => {
     const parsed = parseSe2Fixture(`
       <div style="font-size:12pt;">

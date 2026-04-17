@@ -66,7 +66,7 @@ describe("buildExportPreview", () => {
     })
 
     expect(preview.candidatePost.title).toBe("첫 번째 글")
-    expect(preview.markdownFilePath).toBe("/tmp/output/posts/NestJS/2024-03-04-첫-번째-글.md")
+    expect(preview.markdownFilePath).toBe("/tmp/output/NestJS/2024-03-04-첫-번째-글/index.md")
     expect(preview.markdown).toContain("본문입니다.")
     expect(preview.markdown).toContain("External article")
     expect(preview.markdown).toContain("col")

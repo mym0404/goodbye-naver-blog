@@ -26,8 +26,8 @@
 | `divider` | `se4-formula-code-linkcard`, `se4-image-group` |
 | `code` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
 | `formula` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
-| `image` | `se4-video-table`, `se4-quote-formula-code` |
-| `imageGroup` | `se4-image-group` |
+| `image` | `se4-video-table`, `se4-image-legacy-link`, `se4-quote-formula-code` |
+| `imageGroup` | `se4-image-group`, `se2-thumburl-image-group` |
 | `video` | `se4-video-table` |
 | `linkCard` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
 | `table` | `se4-video-table` |
@@ -39,8 +39,10 @@
 | `se4-video-table` | `4` | `image`, `video`, `table` |
 | `se4-formula-code-linkcard` | `4` | `linkCard`, `image`, `divider`, `paragraph`, `formula`, `code` |
 | `se4-image-group` | `4` | `paragraph`, `divider`, `imageGroup` |
+| `se4-image-legacy-link` | `4` | `paragraph`, `image` |
 | `se4-quote-formula-code` | `4` | `linkCard`, `image`, `divider`, `paragraph`, `quote`, `formula`, `code` |
 | `se2-legacy` | `2` | `paragraph` |
+| `se2-thumburl-image-group` | `2` | `imageGroup`, `paragraph` |
 | `se3-legacy` | `3` | `paragraph` |
 
 ## Sample Gaps

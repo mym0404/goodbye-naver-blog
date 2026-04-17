@@ -56,6 +56,15 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     notes: ["구형 에디터 글의 기본 경로를 유지한다."],
   },
   {
+    id: "se2-thumburl-image-group",
+    blogId: "mym0404",
+    logNo: "221425068566",
+    editorVersion: 2,
+    expectedBlockTypes: ["imageGroup", "paragraph"],
+    description: "SE2 thumburl 기반 레거시 본문 이미지 묶음을 검증한다.",
+    notes: ["글 목록 썸네일과 별개로 본문 이미지 2장이 imageGroup으로 유지되어야 한다."],
+  },
+  {
     id: "se3-legacy",
     blogId: "mym0404",
     logNo: "221236891086",

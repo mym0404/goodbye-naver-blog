@@ -47,7 +47,7 @@ export const parserCapabilities: ParserCapability[] = [
     blockType: "imageGroup",
     supportedEditors: [2, 3, 4],
     fallbackPolicy: "markdown-paragraph",
-    sampleIds: ["se4-image-group"],
+    sampleIds: ["se4-image-group", "se2-thumburl-image-group"],
   },
   {
     blockType: "video",

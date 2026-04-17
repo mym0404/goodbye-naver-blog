@@ -32,6 +32,9 @@ describe("shared utils", () => {
     expect(normalizeAssetUrl("https://mblogthumb-phinf.pstatic.net/a.png?type=w2")).toBe(
       "https://mblogthumb-phinf.pstatic.net/a.png?type=w2",
     )
+    expect(normalizeAssetUrl("https://mblogthumb-phinf.pstatic.net/a.png?type=")).toBe(
+      "https://mblogthumb-phinf.pstatic.net/a.png?type=w800",
+    )
     expect(normalizeAssetUrl("  not-a-url  ")).toBe("not-a-url")
     expect(normalizeAssetUrl("   ")).toBe("")
   })

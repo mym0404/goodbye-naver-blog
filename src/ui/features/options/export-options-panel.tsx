@@ -378,98 +378,52 @@ export const ExportOptionsPanel = ({
                   }
                 />
 
-                <OptionField
-                  optionKey="structure-postDirectoryName"
-                  label="Post Directory Name"
-                  description={description("structure-postDirectoryName")}
-                >
-                  <Input
-                    id="structure-postDirectoryName"
-                    value={options.structure.postDirectoryName}
-                    onChange={(event) =>
-                      onOptionsChange((current) => ({
-                        ...current,
-                        structure: {
-                          ...current.structure,
-                          postDirectoryName: event.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </OptionField>
-
-                <OptionField
-                  optionKey="structure-assetDirectoryName"
-                  label="Asset Directory Name"
-                  description={description("structure-assetDirectoryName")}
-                >
-                  <Input
-                    id="structure-assetDirectoryName"
-                    value={options.structure.assetDirectoryName}
-                    onChange={(event) =>
-                      onOptionsChange((current) => ({
-                        ...current,
-                        structure: {
-                          ...current.structure,
-                          assetDirectoryName: event.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </OptionField>
-
-                <OptionField
-                  optionKey="structure-folderStrategy"
-                  label="Folder Strategy"
-                  description={description("structure-folderStrategy")}
-                >
-                  <select
-                    id="structure-folderStrategy"
-                    value={options.structure.folderStrategy}
-                    onChange={(event) =>
-                      onOptionsChange((current) => ({
-                        ...current,
-                        structure: {
-                          ...current.structure,
-                          folderStrategy: event.target.value as ExportOptions["structure"]["folderStrategy"],
-                        },
-                      }))
-                    }
-                  >
-                    <option value="category-path">카테고리 폴더 경로 유지</option>
-                    <option value="flat">한 폴더에 평탄화</option>
-                  </select>
-                </OptionField>
-
                 <CheckField
-                  inputId="structure-includeDateInFilename"
-                  optionKey="structure-includeDateInFilename"
-                  label="파일명에 날짜 포함"
-                  description={description("structure-includeDateInFilename")}
-                  checked={options.structure.includeDateInFilename}
+                  inputId="structure-groupByCategory"
+                  optionKey="structure-groupByCategory"
+                  label="카테고리 폴더 유지"
+                  description={description("structure-groupByCategory")}
+                  checked={options.structure.groupByCategory}
                   onChange={(checked) =>
                     onOptionsChange((current) => ({
                       ...current,
                       structure: {
                         ...current.structure,
-                        includeDateInFilename: checked,
+                        groupByCategory: checked,
                       },
                     }))
                   }
                 />
 
                 <CheckField
-                  inputId="structure-includeLogNoInFilename"
-                  optionKey="structure-includeLogNoInFilename"
-                  label="파일명에 logNo 포함"
-                  description={description("structure-includeLogNoInFilename")}
-                  checked={options.structure.includeLogNoInFilename}
+                  inputId="structure-includeDateInPostFolderName"
+                  optionKey="structure-includeDateInPostFolderName"
+                  label="글 폴더 이름에 날짜 포함"
+                  description={description("structure-includeDateInPostFolderName")}
+                  checked={options.structure.includeDateInPostFolderName}
                   onChange={(checked) =>
                     onOptionsChange((current) => ({
                       ...current,
                       structure: {
                         ...current.structure,
-                        includeLogNoInFilename: checked,
+                        includeDateInPostFolderName: checked,
+                      },
+                    }))
+                  }
+                />
+
+                <CheckField
+                  inputId="structure-includeLogNoInPostFolderName"
+                  optionKey="structure-includeLogNoInPostFolderName"
+                  label="글 폴더 이름에 logNo 포함"
+                  description={description("structure-includeLogNoInPostFolderName")}
+                  checked={options.structure.includeLogNoInPostFolderName}
+                  onChange={(checked) =>
+                    onOptionsChange((current) => ({
+                      ...current,
+                      structure: {
+                        ...current.structure,
+                        includeLogNoInPostFolderName: checked,
                       },
                     }))
                   }
@@ -758,29 +712,61 @@ export const ExportOptionsPanel = ({
             <TabsContent value="assets" className="option-tab-panel mt-0">
               <OptionSection title="Assets" note="Download and reference strategy">
                 <OptionField
-                  optionKey="assets-assetPathMode"
-                  label="Asset Path Mode"
-                  description={description("assets-assetPathMode")}
-                  disabled={isBase64Embedding}
+                  optionKey="assets-imageHandlingMode"
+                  label="이미지 처리 방식"
+                  description={description("assets-imageHandlingMode")}
                 >
                   <select
-                    id="assets-assetPathMode"
-                    value={options.assets.assetPathMode}
-                    disabled={isBase64Embedding}
+                    id="assets-imageHandlingMode"
+                    value={options.assets.imageHandlingMode}
                     onChange={(event) =>
                       onOptionsChange((current) => ({
                         ...current,
                         assets: {
                           ...current.assets,
-                          assetPathMode: event.target.value as ExportOptions["assets"]["assetPathMode"],
+                          imageHandlingMode:
+                            event.target.value as ExportOptions["assets"]["imageHandlingMode"],
+                          compressionEnabled:
+                            event.target.value === "remote" ? false : current.assets.compressionEnabled,
+                          downloadImages:
+                            event.target.value === "remote"
+                              ? false
+                              : event.target.value === "download-and-upload"
+                                ? true
+                                : current.assets.downloadImages,
+                          downloadThumbnails:
+                            event.target.value === "remote"
+                              ? false
+                              : event.target.value === "download-and-upload"
+                                ? true
+                                : current.assets.downloadThumbnails,
                         },
                       }))
                     }
                   >
-                    <option value="relative">로컬 상대경로</option>
-                    <option value="remote">원격 URL 유지</option>
+                    <option value="download">다운로드 유지</option>
+                    <option value="remote">네이버 원본 URL 유지</option>
+                    <option value="download-and-upload">다운로드 후 PicGo 업로드</option>
                   </select>
                 </OptionField>
+
+                <CheckField
+                  inputId="assets-compressionEnabled"
+                  optionKey="assets-compressionEnabled"
+                  label="로컬 이미지 압축"
+                  description={description("assets-compressionEnabled")}
+                  checked={options.assets.compressionEnabled}
+                  disabled={isBase64Embedding || options.assets.imageHandlingMode === "remote"}
+                  onChange={(checked) =>
+                    onOptionsChange((current) => ({
+                      ...current,
+                      assets: {
+                        ...current.assets,
+                        compressionEnabled: checked,
+                      },
+                    }))
+                  }
+                />
 
                 <OptionField
                   optionKey="assets-imageContentMode"
@@ -796,6 +782,12 @@ export const ExportOptionsPanel = ({
                         assets: {
                           ...current.assets,
                           imageContentMode: event.target.value as ExportOptions["assets"]["imageContentMode"],
+                          imageHandlingMode:
+                            event.target.value === "base64" ? "download" : current.assets.imageHandlingMode,
+                          compressionEnabled:
+                            event.target.value === "base64" ? false : current.assets.compressionEnabled,
+                          downloadImages:
+                            event.target.value === "base64" ? true : current.assets.downloadImages,
                         },
                       }))
                     }
@@ -834,7 +826,9 @@ export const ExportOptionsPanel = ({
                   label="본문 이미지 다운로드"
                   description={description("assets-downloadImages")}
                   checked={options.assets.downloadImages}
-                  disabled={isBase64Embedding}
+                  disabled={
+                    isBase64Embedding || options.assets.imageHandlingMode !== "download"
+                  }
                   onChange={(checked) =>
                     onOptionsChange((current) => ({
                       ...current,
@@ -852,7 +846,9 @@ export const ExportOptionsPanel = ({
                   label="썸네일 다운로드"
                   description={description("assets-downloadThumbnails")}
                   checked={options.assets.downloadThumbnails}
-                  disabled={isBase64Embedding}
+                  disabled={
+                    isBase64Embedding || options.assets.imageHandlingMode !== "download"
+                  }
                   onChange={(checked) =>
                     onOptionsChange((current) => ({
                       ...current,

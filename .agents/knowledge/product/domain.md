@@ -24,10 +24,19 @@
 - `ScanResult`: 전체 공개 글 수, 카테고리 목록, UI 즉시 집계를 위한 post summary snapshot
 - `ExportOptions`: scope, structure, frontmatter, markdown, assets 규칙
 - `ParsedPost`: 공용 AST 블록, 태그, 비디오, 경고를 가진 파싱 결과
-- `ExportManifest`: 전체 작업 결과와 post별 성공/실패를 기록하는 요약
+- `UploadCandidate`: 로컬로 저장된 이미지/썸네일이 PicGo 업로드 단계로 넘어갈 때 쓰는 자산 단위
+- `PostUploadSummary`: 글별 업로드 대상 수, 완료 수, 실패 수, candidate 목록을 가진 결과 묶음
+- `ExportManifest`: 전체 작업 결과와 post별 성공/실패, 업로드 요약을 기록하는 최종 묶음
+- `ExportJobState`: export 단계와 upload 단계를 같은 job 안에서 이어서 보여 주는 UI/API 상태
 
 ## Domain Constraints
 - 공개 글만 대상으로 한다.
 - category path와 post 메타데이터는 export 구조와 frontmatter에 같이 영향을 준다.
 - SE2, SE3, SE4 글을 공용 AST로 맞춘 뒤 Markdown으로 렌더링한다.
 - frontmatter는 field on/off와 alias를 같이 조절할 수 있고, 활성 field끼리 alias 충돌이 나면 export를 막는다.
+- 출력 파일은 글마다 독립 폴더를 만들고 Markdown 본문은 항상 그 안의 `index.md`에 쓴다.
+- `structure.groupByCategory`, `includeDateInPostFolderName`, `includeLogNoInPostFolderName` 조합으로 글 폴더 경로가 결정되고, 기본값은 날짜 + slug다.
+- 이미지 처리 방식은 `download`, `remote`, `download-and-upload` 세 가지다.
+- `download-and-upload`는 export를 먼저 끝낸 뒤 같은 job을 `upload-ready -> uploading -> upload-completed | upload-failed`로 진행한다.
+- 업로드 대상이 하나도 없으면 `download-and-upload`여도 upload 단계로 넘어가지 않고 `completed + skipped-no-candidates`로 닫힌다.
+- `imageContentMode === base64`는 업로드 모드와 양립하지 않으므로 로컬 다운로드 기반 경로만 허용한다.

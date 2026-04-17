@@ -1,7 +1,8 @@
 import path from "node:path"
+import { writeFile } from "node:fs/promises"
 
 import type { AssetRecord, ExportOptions } from "../../shared/types.js"
-import { normalizeAssetUrl, relativePathFrom } from "../../shared/utils.js"
+import { ensureDir, normalizeAssetUrl, relativePathFrom } from "../../shared/utils.js"
 
 type AssetBinary = {
   bytes: Buffer
@@ -17,6 +18,12 @@ type AssetDownloader = {
     sourceUrl: string
   }) => Promise<AssetBinary>
 }
+
+type AssetCompressor = (input: {
+  bytes: Buffer
+  contentType: string | null
+  sourceUrl: string
+}) => Promise<Buffer>
 
 const extensionFromUrl = (value: string) => {
   try {
@@ -51,6 +58,37 @@ const inferMimeType = (value: string) => {
   return "image/jpeg"
 }
 
+const normalizeOutputPath = (value: string) => value.split(path.sep).join("/")
+
+const isCompressionSafeMimeType = (contentType: string | null, sourceUrl: string) => {
+  const resolvedContentType = (contentType || inferMimeType(sourceUrl)).toLowerCase()
+
+  return (
+    resolvedContentType === "image/jpeg" ||
+    resolvedContentType === "image/png" ||
+    resolvedContentType === "image/webp"
+  )
+}
+
+const compressWithSharp: AssetCompressor = async ({ bytes, contentType, sourceUrl }) => {
+  const sharpModule = await import("sharp")
+  const sharp = sharpModule.default
+  const resolvedContentType = (contentType || inferMimeType(sourceUrl)).toLowerCase()
+  const image = sharp(bytes, {
+    failOn: "none",
+  }).rotate()
+
+  if (resolvedContentType === "image/png") {
+    return image.png({ compressionLevel: 9 }).toBuffer()
+  }
+
+  if (resolvedContentType === "image/webp") {
+    return image.webp({ quality: 80 }).toBuffer()
+  }
+
+  return image.jpeg({ quality: 82, mozjpeg: true }).toBuffer()
+}
+
 export class AssetStore {
   readonly outputDir: string
   readonly downloader: AssetDownloader
@@ -58,19 +96,23 @@ export class AssetStore {
   readonly cache = new Map<string, string>()
   readonly dataUrlCache = new Map<string, string>()
   readonly counters = new Map<string, number>()
+  readonly compressImage: AssetCompressor
 
   constructor({
     outputDir,
     downloader,
     options,
+    compressImage,
   }: {
     outputDir: string
     downloader: AssetDownloader
     options: Pick<ExportOptions, "assets" | "structure">
+    compressImage?: AssetCompressor
   }) {
     this.outputDir = outputDir
     this.downloader = downloader
     this.options = options
+    this.compressImage = compressImage ?? compressWithSharp
   }
 
   async saveAsset({
@@ -99,6 +141,7 @@ export class AssetStore {
           reference: cachedDataUrl,
           relativePath: null,
           storageMode: "base64",
+          uploadCandidate: null,
         } satisfies AssetRecord
       }
 
@@ -120,11 +163,12 @@ export class AssetStore {
         reference: dataUrl,
         relativePath: null,
         storageMode: "base64",
+        uploadCandidate: null,
       } satisfies AssetRecord
     }
 
     const shouldDownload =
-      this.options.assets.assetPathMode === "relative" &&
+      this.options.assets.imageHandlingMode !== "remote" &&
       ((kind === "image" && this.options.assets.downloadImages) ||
         (kind === "thumbnail" && this.options.assets.downloadThumbnails))
 
@@ -135,6 +179,7 @@ export class AssetStore {
         reference: normalizedSourceUrl,
         relativePath: null,
         storageMode: "remote",
+        uploadCandidate: null,
       } satisfies AssetRecord
     }
 
@@ -153,6 +198,12 @@ export class AssetStore {
         reference: relativePath,
         relativePath,
         storageMode: "relative",
+        uploadCandidate: {
+          kind,
+          sourceUrl: normalizedSourceUrl,
+          localPath: normalizeOutputPath(path.relative(this.outputDir, cachedAbsolutePath)),
+          markdownReference: relativePath,
+        },
       } satisfies AssetRecord
     }
 
@@ -160,32 +211,56 @@ export class AssetStore {
     const nextIndex = (this.counters.get(counterKey) ?? 0) + 1
     const extension = extensionFromUrl(normalizedSourceUrl)
     const fileName = `${kind}-${String(nextIndex).padStart(2, "0")}${extension}`
-    const absolutePath = path.join(
-      this.outputDir,
-      this.options.structure.assetDirectoryName,
-      postLogNo,
-      fileName,
-    )
+    const absolutePath = path.join(path.dirname(markdownFilePath), fileName)
 
     this.counters.set(counterKey, nextIndex)
-    await this.downloader.downloadBinary({
-      sourceUrl: normalizedSourceUrl,
-      destinationPath: absolutePath,
-    })
+    await ensureDir(path.dirname(absolutePath))
+
+    if (this.options.assets.compressionEnabled && this.downloader.fetchBinary) {
+      const binary = await this.downloader.fetchBinary({
+        sourceUrl: normalizedSourceUrl,
+      })
+
+      if (isCompressionSafeMimeType(binary.contentType, normalizedSourceUrl)) {
+        try {
+          const compressedBytes = await this.compressImage({
+            bytes: binary.bytes,
+            contentType: binary.contentType,
+            sourceUrl: normalizedSourceUrl,
+          })
+
+          await writeFile(absolutePath, compressedBytes)
+        } catch {
+          await writeFile(absolutePath, binary.bytes)
+        }
+      } else {
+        await writeFile(absolutePath, binary.bytes)
+      }
+    } else {
+      await this.downloader.downloadBinary({
+        sourceUrl: normalizedSourceUrl,
+        destinationPath: absolutePath,
+      })
+    }
     this.cache.set(cacheKey, absolutePath)
+
+    const relativePath = relativePathFrom({
+      from: markdownFilePath,
+      to: absolutePath,
+    })
 
     return {
       kind,
       sourceUrl: normalizedSourceUrl,
-      reference: relativePathFrom({
-        from: markdownFilePath,
-        to: absolutePath,
-      }),
-      relativePath: relativePathFrom({
-        from: markdownFilePath,
-        to: absolutePath,
-      }),
+      reference: relativePath,
+      relativePath,
       storageMode: "relative",
+      uploadCandidate: {
+        kind,
+        sourceUrl: normalizedSourceUrl,
+        localPath: normalizeOutputPath(path.relative(this.outputDir, absolutePath)),
+        markdownReference: relativePath,
+      },
     } satisfies AssetRecord
   }
 }

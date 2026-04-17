@@ -96,7 +96,7 @@ pnpm start
 
 - 출력 포맷: `GFM + YAML frontmatter + 로컬 이미지 자산`
 - 기본 폴더 전략: 카테고리 경로 유지
-- 기본 파일명: `YYYY-MM-DD-slug.md`
+- 기본 글 폴더명: `YYYY-MM-DD-slug` (`index.md` 저장)
 - 비디오는 기본적으로 썸네일과 원문 링크로 렌더링
 - 단순 표는 GFM, 복잡한 표는 HTML fallback 사용
 - raw HTML fallback은 기본적으로 경고와 함께 Markdown 텍스트로 최대한 복구
