@@ -110,7 +110,7 @@ describe("NaverBlogExporter", () => {
     const writtenManifest = JSON.parse(await readFile(manifestPath, "utf8")) as typeof manifest
 
     expect(writtenManifest.successCount).toBe(1)
-    expect(writtenManifest.posts[0]?.outputPath).toMatch(/\.md$/)
+    expect(writtenManifest.posts[0]?.outputPath).toBe("posts/PS-알고리즘-팁/2023-03-04-테스트-글.md")
 
     await rm(outputDir, { recursive: true, force: true })
   })

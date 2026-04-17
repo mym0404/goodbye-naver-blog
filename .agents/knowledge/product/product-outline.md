@@ -27,7 +27,7 @@
 - 본문 이미지는 옵션에 따라 로컬 파일 경로 또는 base64 data URL로 렌더링할 수 있다.
 - 네이버 스티커는 기본적으로 무시하고, 필요할 때만 원본 자산 URL로 내려받는다.
 - 파일 구조 기본값은 category path 기반 폴더다.
-- 기본 파일명은 `YYYY-MM-DD-logNo-slug.md`다.
+- 기본 파일명은 `YYYY-MM-DD-slug.md`다.
 - 네이버 미리보기형 media/link card와 video는 일반 Markdown 링크로 export한다.
 - 본문 `<br>` 줄바꿈은 Markdown hard break로 유지해 미리보기와 실제 렌더에서 줄이 붙지 않게 한다.
 - table은 단순 표는 GFM, 복잡한 표는 HTML fallback을 사용한다.

@@ -25,6 +25,8 @@ describe("export options", () => {
     expect(options.assets.imageContentMode).toBe("path")
     expect(options.markdown.formulaInlineWrapperOpen).toBe("$")
     expect(options.markdown.formulaBlockWrapperOpen).toBe("$$")
+    expect(options.structure.includeDateInFilename).toBe(true)
+    expect(options.structure.includeLogNoInFilename).toBe(false)
   })
 
   it("drops removed legacy markdown options while keeping supported fields", () => {

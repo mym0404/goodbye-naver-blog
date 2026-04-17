@@ -212,7 +212,7 @@ export const defaultExportOptions = (): ExportOptions => ({
     assetDirectoryName: "assets",
     folderStrategy: "category-path",
     includeDateInFilename: true,
-    includeLogNoInFilename: true,
+    includeLogNoInFilename: false,
     slugStyle: "kebab",
   },
   frontmatter: {
