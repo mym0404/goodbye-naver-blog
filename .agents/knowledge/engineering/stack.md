@@ -21,6 +21,8 @@
 - 실행 엔트리는 `tsx`를 사용한다.
 
 ## Core Libraries
+- `react`, `react-dom`, `vite`, `tailwindcss`: 로컬 대시보드 런타임과 빌드
+- `radix-ui`, `@radix-ui/react-scroll-area`, `@radix-ui/react-slot`, `sonner`: 대시보드 UI 프리미티브와 토스트
 - `yaml`: frontmatter 직렬화
 - `cheerio`, `jsdom`: HTML 파싱과 DOM 처리
 - `turndown`, `turndown-plugin-gfm`: HTML to Markdown 변환
@@ -39,6 +41,6 @@
 - `src/modules`: fetcher, parser, reviewer, converter, exporter
 - `src/server`: job store와 HTTP API
 - `src/shared`: 타입, 옵션, parser capability, sample corpus, 유틸
-- `src/ui`: React 앱, feature 컴포넌트, hook, Markdown renderer
+- `src/ui`: React 앱, feature 컴포넌트, hook, shadcn 기반 UI 조합
 - `tests`: unit, integration, smoke 보조 테스트
 - `docs`: 사용자 문서와 generated 보고서

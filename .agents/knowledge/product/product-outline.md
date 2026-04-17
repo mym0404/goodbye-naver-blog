@@ -20,7 +20,7 @@
 2. scan으로 전체 공개 글 수와 카테고리 목록을 확인한다.
 3. 카테고리 범위와 export 옵션을 조정한다.
 4. exporter가 공개 글을 순회하며 Markdown, 자산, `manifest.json`을 생성한다.
-5. UI는 job status, summary, logs, 완료 파일 트리, warning/error 필터, Markdown modal 확인 흐름을 제공한다.
+5. UI는 job status, summary, logs, 완료 파일 표, warning/error 필터, upload 상태 확인 흐름을 제공한다.
 
 ## Output Rules
 - 기본 출력은 `GFM + YAML frontmatter + 로컬 이미지 자산`이다.

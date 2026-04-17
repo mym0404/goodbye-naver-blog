@@ -31,7 +31,7 @@
 - `pnpm test:network`: 네트워크 필요한 통합 테스트
 - `pnpm parser:check`: capability, fixture, 테스트, sample 대응 검사
 - `pnpm samples:verify`: 실샘플 fetch -> parse -> render 검증
-- `pnpm smoke:ui`: scan -> category select -> export 브라우저 smoke
+- `pnpm smoke:ui`: scan -> category select -> export -> status/upload 브라우저 smoke
 - `pnpm quality:report`: parser/sample coverage 기반 generated 품질 리포트 갱신
 
 ## Hook And CI
@@ -44,4 +44,4 @@
 - parser 변경: `pnpm check:quick`, 필요 시 `pnpm samples:verify`
 - renderer/exporter 변경: `pnpm check:full`, `pnpm test:coverage`
 - docs만 변경: 수정한 링크와 코드 기준점을 수동 점검하고, generated 보고서 축을 건드렸다면 `pnpm quality:report`
-- UI/API 변경: `pnpm smoke:ui`, 필요 시 `pnpm test:coverage`
+- UI/API 변경: `pnpm smoke:ui`, 필요 시 `pnpm test:coverage`와 관련 focused vitest
