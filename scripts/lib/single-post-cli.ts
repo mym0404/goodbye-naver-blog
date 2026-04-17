@@ -34,7 +34,6 @@ const allowedFrontmatterFieldKeys = [
 ] as const
 const allowedMarkdownKeys = [
   "linkStyle",
-  "linkCardStyle",
   "formulaStyle",
   "formulaInlineWrapperOpen",
   "formulaInlineWrapperClose",
@@ -42,7 +41,6 @@ const allowedMarkdownKeys = [
   "formulaBlockWrapperOpen",
   "formulaBlockWrapperClose",
   "tableStyle",
-  "videoStyle",
   "imageStyle",
   "imageGroupStyle",
   "rawHtmlPolicy",
@@ -64,11 +62,9 @@ const categoryModes = ["selected-and-descendants", "exact-selected"] as const
 const folderStrategies = ["category-path", "flat"] as const
 const slugStyles = ["kebab", "keep-title"] as const
 const linkStyles = ["inlined", "referenced"] as const
-const linkCardStyles = ["inline", "quote", "html"] as const
 const formulaStyles = ["double-dollar", "math-fence"] as const
 const formulaBlockStyles = ["wrapper", "math-fence"] as const
 const tableStyles = ["gfm-or-html", "html-only"] as const
-const videoStyles = ["thumbnail-link", "link-only", "html"] as const
 const imageStyles = ["markdown-image", "linked-image", "source-only"] as const
 const imageGroupStyles = ["split-images", "html"] as const
 const rawHtmlPolicies = ["keep", "omit"] as const
@@ -321,12 +317,6 @@ const validateMarkdownOptions = (value: unknown, optionsPath: string) => {
     markdown.linkStyle = linkStyle
   }
 
-  if ("linkCardStyle" in value) {
-    const linkCardStyle = value.linkCardStyle
-    assertEnum(linkCardStyle, linkCardStyles, "markdown.linkCardStyle", optionsPath)
-    markdown.linkCardStyle = linkCardStyle
-  }
-
   if ("formulaStyle" in value) {
     const formulaStyle = value.formulaStyle
     assertEnum(formulaStyle, formulaStyles, "markdown.formulaStyle", optionsPath)
@@ -365,12 +355,6 @@ const validateMarkdownOptions = (value: unknown, optionsPath: string) => {
     const tableStyle = value.tableStyle
     assertEnum(tableStyle, tableStyles, "markdown.tableStyle", optionsPath)
     markdown.tableStyle = tableStyle
-  }
-
-  if ("videoStyle" in value) {
-    const videoStyle = value.videoStyle
-    assertEnum(videoStyle, videoStyles, "markdown.videoStyle", optionsPath)
-    markdown.videoStyle = videoStyle
   }
 
   if ("imageStyle" in value) {

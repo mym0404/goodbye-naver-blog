@@ -28,7 +28,7 @@
 - 네이버 스티커는 기본적으로 무시하고, 필요할 때만 원본 자산 URL로 내려받는다.
 - 파일 구조 기본값은 category path 기반 폴더다.
 - 기본 파일명은 `YYYY-MM-DD-logNo-slug.md`다.
-- video 기본 렌더링은 썸네일 + 원문 링크다.
+- 네이버 미리보기형 media/link card와 video는 일반 Markdown 링크로 export한다.
 - table은 단순 표는 GFM, 복잡한 표는 HTML fallback을 사용한다.
 - raw HTML fallback은 경고 callout과 추출 텍스트를 함께 남기는 방향을 기본값으로 둔다.
 

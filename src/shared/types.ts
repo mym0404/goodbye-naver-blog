@@ -33,15 +33,11 @@ export type FrontmatterFieldMeta = {
 
 export type MarkdownLinkStyle = "inlined" | "referenced"
 
-export type LinkCardStyle = "inline" | "quote" | "html"
-
 export type FormulaInlineStyle = "wrapper"
 
 export type FormulaBlockStyle = "wrapper" | "math-fence"
 
 export type TableStyle = "gfm-or-html" | "html-only"
-
-export type VideoStyle = "thumbnail-link" | "link-only" | "html"
 
 export type ImageStyle = "markdown-image" | "linked-image" | "source-only"
 
@@ -86,7 +82,6 @@ export type ExportOptions = {
   }
   markdown: {
     linkStyle: MarkdownLinkStyle
-    linkCardStyle: LinkCardStyle
     formulaInlineStyle: FormulaInlineStyle
     formulaInlineWrapperOpen: string
     formulaInlineWrapperClose: string
@@ -94,7 +89,6 @@ export type ExportOptions = {
     formulaBlockWrapperOpen: string
     formulaBlockWrapperClose: string
     tableStyle: TableStyle
-    videoStyle: VideoStyle
     imageStyle: ImageStyle
     imageGroupStyle: ImageGroupStyle
     rawHtmlPolicy: RawHtmlPolicy

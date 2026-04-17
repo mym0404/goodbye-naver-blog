@@ -128,14 +128,12 @@ export const optionDescriptions: OptionDescriptionMap = {
   "structure-slugStyle": "제목을 안전한 slug로 바꿀지 원문 제목을 최대한 유지할지 정합니다.",
   "frontmatter-enabled": "YAML frontmatter 블록 자체를 Markdown 파일 상단에 넣을지 정합니다.",
   "markdown-linkStyle": "일반 링크를 inline 형식으로 쓸지 reference 형식으로 분리할지 정합니다.",
-  "markdown-linkCardStyle": "링크 카드 블록을 일반 링크 문단으로 렌더링할지 quote 카드처럼 묶을지 정합니다.",
   "markdown-formulaInlineWrapperOpen": "인라인 수식 앞에 붙일 래퍼 문자열입니다. 기본값은 `$`입니다.",
   "markdown-formulaInlineWrapperClose": "인라인 수식 뒤에 붙일 래퍼 문자열입니다. 기본값은 `$`입니다.",
   "markdown-formulaBlockStyle": "블록 수식을 wrapper 문자열로 감쌀지 `math` fence를 사용할지 정합니다.",
   "markdown-formulaBlockWrapperOpen": "블록 수식 시작 래퍼 문자열입니다. 기본값은 `$$`입니다.",
   "markdown-formulaBlockWrapperClose": "블록 수식 종료 래퍼 문자열입니다. 기본값은 `$$`입니다.",
   "markdown-tableStyle": "단순 표는 Markdown으로 유지하고 복잡한 표는 가능한 텍스트를 최대한 보존합니다.",
-  "markdown-videoStyle": "비디오를 썸네일+링크로 남길지 링크만 남길지 정합니다.",
   "markdown-imageStyle": "이미지를 일반 Markdown 이미지, 원본 링크 감싸기, 링크만 남기기 중에서 고릅니다.",
   "markdown-imageGroupStyle": "이미지 묶음을 개별 이미지로 풀어서 렌더링하는 방식을 제어합니다.",
   "markdown-dividerStyle": "구분선을 `---` 또는 `***` 중 어떤 문자로 출력할지 정합니다.",
@@ -256,7 +254,6 @@ export const defaultExportOptions = (): ExportOptions => ({
   },
   markdown: {
     linkStyle: "inlined",
-    linkCardStyle: "inline",
     formulaInlineStyle: "wrapper",
     formulaInlineWrapperOpen: "$",
     formulaInlineWrapperClose: "$",
@@ -264,7 +261,6 @@ export const defaultExportOptions = (): ExportOptions => ({
     formulaBlockWrapperOpen: "$$",
     formulaBlockWrapperClose: "$$",
     tableStyle: "gfm-or-html",
-    videoStyle: "thumbnail-link",
     imageStyle: "markdown-image",
     imageGroupStyle: "split-images",
     rawHtmlPolicy: "omit",
@@ -308,12 +304,36 @@ export const cloneExportOptions = (options?: PartialExportOptions) => {
       },
     },
     markdown: {
-      ...defaults.markdown,
-      ...options?.markdown,
+      linkStyle: options?.markdown?.linkStyle ?? defaults.markdown.linkStyle,
+      formulaInlineStyle: options?.markdown?.formulaInlineStyle ?? defaults.markdown.formulaInlineStyle,
+      formulaInlineWrapperOpen:
+        options?.markdown?.formulaInlineWrapperOpen ?? defaults.markdown.formulaInlineWrapperOpen,
+      formulaInlineWrapperClose:
+        options?.markdown?.formulaInlineWrapperClose ?? defaults.markdown.formulaInlineWrapperClose,
+      formulaBlockStyle: options?.markdown?.formulaBlockStyle ?? defaults.markdown.formulaBlockStyle,
+      formulaBlockWrapperOpen:
+        options?.markdown?.formulaBlockWrapperOpen ?? defaults.markdown.formulaBlockWrapperOpen,
+      formulaBlockWrapperClose:
+        options?.markdown?.formulaBlockWrapperClose ?? defaults.markdown.formulaBlockWrapperClose,
+      tableStyle: options?.markdown?.tableStyle ?? defaults.markdown.tableStyle,
+      imageStyle: options?.markdown?.imageStyle ?? defaults.markdown.imageStyle,
+      imageGroupStyle: options?.markdown?.imageGroupStyle ?? defaults.markdown.imageGroupStyle,
+      rawHtmlPolicy: options?.markdown?.rawHtmlPolicy ?? defaults.markdown.rawHtmlPolicy,
+      dividerStyle: options?.markdown?.dividerStyle ?? defaults.markdown.dividerStyle,
+      codeFenceStyle: options?.markdown?.codeFenceStyle ?? defaults.markdown.codeFenceStyle,
+      headingLevelOffset:
+        options?.markdown?.headingLevelOffset ?? defaults.markdown.headingLevelOffset,
     },
     assets: {
-      ...defaults.assets,
-      ...options?.assets,
+      assetPathMode: options?.assets?.assetPathMode ?? defaults.assets.assetPathMode,
+      imageContentMode: options?.assets?.imageContentMode ?? defaults.assets.imageContentMode,
+      stickerAssetMode: options?.assets?.stickerAssetMode ?? defaults.assets.stickerAssetMode,
+      downloadImages: options?.assets?.downloadImages ?? defaults.assets.downloadImages,
+      downloadThumbnails:
+        options?.assets?.downloadThumbnails ?? defaults.assets.downloadThumbnails,
+      includeImageCaptions:
+        options?.assets?.includeImageCaptions ?? defaults.assets.includeImageCaptions,
+      thumbnailSource: options?.assets?.thumbnailSource ?? defaults.assets.thumbnailSource,
     },
   } satisfies ExportOptions
 

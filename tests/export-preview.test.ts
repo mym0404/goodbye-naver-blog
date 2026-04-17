@@ -9,9 +9,7 @@ describe("buildExportPreview", () => {
     const options = defaultExportOptions()
 
     options.scope.categoryIds = [10]
-    options.markdown.linkCardStyle = "html"
     options.markdown.tableStyle = "html-only"
-    options.markdown.videoStyle = "html"
     options.markdown.imageGroupStyle = "html"
     options.markdown.rawHtmlPolicy = "omit"
 

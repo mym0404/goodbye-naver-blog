@@ -27,6 +27,24 @@ describe("export options", () => {
     expect(options.markdown.formulaBlockWrapperOpen).toBe("$$")
   })
 
+  it("drops removed legacy markdown options while keeping supported fields", () => {
+    const legacyOptions = JSON.parse(`{
+      "markdown": {
+        "linkStyle": "referenced",
+        "headingLevelOffset": 1,
+        "linkCardStyle": "quote",
+        "videoStyle": "link-only"
+      }
+    }`) as Parameters<typeof cloneExportOptions>[0]
+
+    const options = cloneExportOptions(legacyOptions)
+
+    expect(options.markdown.linkStyle).toBe("referenced")
+    expect(options.markdown.headingLevelOffset).toBe(1)
+    expect("linkCardStyle" in options.markdown).toBe(false)
+    expect("videoStyle" in options.markdown).toBe(false)
+  })
+
   it("returns field name when alias is blank", () => {
     expect(
       getFrontmatterExportKey({

@@ -366,6 +366,41 @@ describe("single-post cli", () => {
     }
   })
 
+  it("fails fast when removed markdown options are present in options JSON", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
+    const outputDir = path.join(rootDir, "output")
+    const optionsPath = path.join(rootDir, "options.json")
+
+    await mkdir(outputDir, { recursive: true })
+    await writeFile(optionsPath, JSON.stringify({ markdown: { videoStyle: "link-only" } }), "utf8")
+
+    const exportSinglePost = vi.fn()
+
+    try {
+      await expect(
+        runSinglePostCli({
+          argv: [
+            "--blogId",
+            "my-blog",
+            "--logNo",
+            "123456789012",
+            "--outputDir",
+            outputDir,
+            "--options",
+            optionsPath,
+          ],
+          exportSinglePost: exportSinglePost as RunSinglePostExportFn,
+          stdoutWrite: vi.fn(),
+          stderrWrite: vi.fn(),
+        }),
+      ).rejects.toThrow("markdown contains unsupported keys: videoStyle")
+
+      expect(exportSinglePost).not.toHaveBeenCalled()
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
   it("fails fast when frontmatter aliases collide", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "single-post-cli-"))
     const outputDir = path.join(rootDir, "output")

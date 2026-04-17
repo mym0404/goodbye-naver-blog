@@ -24,6 +24,8 @@ const parseJsonAttribute = (value: string | undefined) => {
   }
 }
 
+const se4ImageLinkSelector = "a.se-module-image-link, a.__se_image_link"
+
 const getComponentModule = ($component: ReturnType<CheerioAPI>) => {
   const moduleScript = $component.find("script.__se_module_data").first()
 
@@ -102,7 +104,7 @@ const parseStickerBlock = ($component: ReturnType<CheerioAPI>) => {
 
 const parseImageStripBlock = ($component: ReturnType<CheerioAPI>) => {
   const images = $component
-    .find("a.se-module-image-link")
+    .find(se4ImageLinkSelector)
     .toArray()
     .map((node): ImageData | null => parseImageLink($component.find(node)))
     .filter((image): image is ImageData => image !== null)
@@ -646,7 +648,7 @@ const parseUnsupportedComponent = ({
 }
 
 const parseImageBlock = ($component: ReturnType<CheerioAPI>) => {
-  const image = parseImageLink($component.find("a.se-module-image-link").first())
+  const image = parseImageLink($component.find(se4ImageLinkSelector).first())
 
   if (!image) {
     return null
@@ -660,7 +662,7 @@ const parseImageBlock = ($component: ReturnType<CheerioAPI>) => {
 
 const parseImageGroupBlock = ($component: ReturnType<CheerioAPI>) => {
   const images = $component
-    .find("a.se-module-image-link")
+    .find(se4ImageLinkSelector)
     .toArray()
     .map((node): ImageData | null => parseImageLink($component.find(node)))
     .filter((image): image is ImageData => image !== null)

@@ -522,29 +522,6 @@ export const ExportOptionsPanel = ({
                 </OptionField>
 
                 <OptionField
-                  optionKey="markdown-linkCardStyle"
-                  label="Link Card Style"
-                  description={description("markdown-linkCardStyle")}
-                >
-                  <select
-                    id="markdown-linkCardStyle"
-                    value={options.markdown.linkCardStyle === "html" ? "inline" : options.markdown.linkCardStyle}
-                    onChange={(event) =>
-                      onOptionsChange((current) => ({
-                        ...current,
-                        markdown: {
-                          ...current.markdown,
-                          linkCardStyle: event.target.value as ExportOptions["markdown"]["linkCardStyle"],
-                        },
-                      }))
-                    }
-                  >
-                    <option value="inline">inline link + description</option>
-                    <option value="quote">blockquote card</option>
-                  </select>
-                </OptionField>
-
-                <OptionField
                   optionKey="markdown-formulaInlineWrapperOpen"
                   label="Inline Formula Open"
                   description={description("markdown-formulaInlineWrapperOpen")}
@@ -662,25 +639,6 @@ export const ExportOptionsPanel = ({
                     }
                   >
                     <option value="gfm-or-html">Markdown 우선, 복잡한 표는 best-effort 변환</option>
-                  </select>
-                </OptionField>
-
-                <OptionField optionKey="markdown-videoStyle" label="Video Style" description={description("markdown-videoStyle")}>
-                  <select
-                    id="markdown-videoStyle"
-                    value={options.markdown.videoStyle === "html" ? "thumbnail-link" : options.markdown.videoStyle}
-                    onChange={(event) =>
-                      onOptionsChange((current) => ({
-                        ...current,
-                        markdown: {
-                          ...current.markdown,
-                          videoStyle: event.target.value as ExportOptions["markdown"]["videoStyle"],
-                        },
-                      }))
-                    }
-                  >
-                    <option value="thumbnail-link">썸네일 + 원문 링크</option>
-                    <option value="link-only">링크만</option>
                   </select>
                 </OptionField>
 

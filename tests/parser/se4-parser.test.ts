@@ -343,6 +343,43 @@ console.log(value)
     ])
   })
 
+  it("parses image components that use __se_image_link markup", () => {
+    const parsed = parseSe4Fixture(`
+      <div class="se-component se-image se-l-default">
+        <div class="se-component-content se-component-content-fit">
+          <div class="se-section se-section-image se-l-default se-section-align-">
+            <a
+              href="#"
+              class="se-module se-module-image __se_image_link __se_link"
+              data-linktype="img"
+              data-linkdata='{"src":"https://example.com/legacy-se4.png"}'
+            >
+              <img
+                src="https://example.com/legacy-se4.png?type=w80_blur"
+                data-lazy-src="https://example.com/legacy-se4.png?type=w800"
+                alt=""
+                class="se-image-resource"
+              />
+            </a>
+          </div>
+        </div>
+      </div>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      {
+        type: "image",
+        image: {
+          sourceUrl: "https://example.com/legacy-se4.png",
+          originalSourceUrl: "https://example.com/legacy-se4.png",
+          alt: "",
+          caption: null,
+          mediaKind: "image",
+        },
+      },
+    ])
+  })
+
   it("parses image strip components into imageGroup blocks", () => {
     const parsed = parseSe4Fixture(`
       <div class="se-component se-imageStrip se-imageStrip2 se-l-default">

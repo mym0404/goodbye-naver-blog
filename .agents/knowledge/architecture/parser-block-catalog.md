@@ -27,7 +27,7 @@
 | `divider` | `2, 4` | `structured` | `se4-formula-code-linkcard`, `se4-image-group` |
 | `code` | `2, 3, 4` | `markdown-paragraph` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
 | `formula` | `4` | `skip` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
-| `image` | `2, 3, 4` | `markdown-paragraph` | `se4-video-table`, `se4-quote-formula-code` |
+| `image` | `2, 3, 4` | `markdown-paragraph` | `se4-video-table`, `se4-image-legacy-link`, `se4-quote-formula-code` |
 | `imageGroup` | `2, 3, 4` | `markdown-paragraph` | `se4-image-group` |
 | `video` | `4` | `skip` | `se4-video-table` |
 | `linkCard` | `4` | `markdown-paragraph` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
@@ -38,3 +38,4 @@
 - `rawHtml`은 fallback 블록이라 실샘플보다 fixture와 parser 테스트로 고정하는 비중이 높다.
 - `heading`도 현재 실샘플 대표값이 없어 fixture/test coverage를 우선 사용한다.
 - `formula`, `video`는 unsupported 시 skip 가능성이 있어 샘플 검증이 특히 중요하다.
+- SE4 `image`는 `se-module-image-link`와 `__se_image_link` 두 앵커 변형을 모두 실샘플로 검증한다.

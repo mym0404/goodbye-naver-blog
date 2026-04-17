@@ -102,7 +102,6 @@ describe("ExportOptionsPanel", () => {
 
     await user.click(screen.getByRole("tab", { name: "Markdown" }))
     await user.selectOptions(query<HTMLSelectElement>("#markdown-linkStyle"), "referenced")
-    await user.selectOptions(query<HTMLSelectElement>("#markdown-linkCardStyle"), "quote")
     fireEvent.change(query<HTMLInputElement>("#markdown-formulaInlineWrapperOpen"), {
       target: {
         value: "\\(",
@@ -124,7 +123,6 @@ describe("ExportOptionsPanel", () => {
         value: "```",
       },
     })
-    await user.selectOptions(query<HTMLSelectElement>("#markdown-videoStyle"), "link-only")
     await user.selectOptions(query<HTMLSelectElement>("#markdown-imageStyle"), "linked-image")
     await user.selectOptions(query<HTMLSelectElement>("#markdown-dividerStyle"), "asterisk")
     await user.selectOptions(query<HTMLSelectElement>("#markdown-codeFenceStyle"), "tilde")
@@ -160,13 +158,11 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.frontmatter.fields.title).toBe(false)
     expect(latestOptions.frontmatter.aliases.title).toBe("headline")
     expect(latestOptions.markdown.linkStyle).toBe("referenced")
-    expect(latestOptions.markdown.linkCardStyle).toBe("quote")
     expect(latestOptions.markdown.formulaInlineWrapperOpen).toBe("\\(")
     expect(latestOptions.markdown.formulaInlineWrapperClose).toBe("\\)")
     expect(latestOptions.markdown.formulaBlockStyle).toBe("math-fence")
     expect(latestOptions.markdown.formulaBlockWrapperOpen).toBe("```math")
     expect(latestOptions.markdown.formulaBlockWrapperClose).toBe("```")
-    expect(latestOptions.markdown.videoStyle).toBe("link-only")
     expect(latestOptions.markdown.imageStyle).toBe("linked-image")
     expect(latestOptions.markdown.dividerStyle).toBe("asterisk")
     expect(latestOptions.markdown.codeFenceStyle).toBe("tilde")
@@ -200,6 +196,30 @@ describe("ExportOptionsPanel", () => {
     await user.click(screen.getByRole("tab", { name: "Frontmatter" }))
     expect(query<HTMLElement>("#frontmatter-fields").className).toContain("md:grid-cols-2")
     expect(query<HTMLElement>("#frontmatter-fields").className).toContain("2xl:grid-cols-3")
+  })
+
+  it("does not render removed link card and video controls", async () => {
+    const user = userEvent.setup()
+
+    render(
+      <ExportOptionsPanel
+        outputDir="./output"
+        options={defaultExportOptions()}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    await user.click(screen.getByRole("tab", { name: "Markdown" }))
+
+    expect(screen.queryByLabelText("Link Card Style")).not.toBeInTheDocument()
+    expect(screen.queryByLabelText("Video Style")).not.toBeInTheDocument()
+    expect(document.querySelector("#markdown-linkCardStyle")).toBeNull()
+    expect(document.querySelector("#markdown-videoStyle")).toBeNull()
   })
 
   it("disables path and download asset options in base64 embedding mode", async () => {

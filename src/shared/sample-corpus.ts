@@ -29,6 +29,15 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     notes: ["기본 정책은 이미지 그룹을 개별 이미지 나열로 렌더링한다."],
   },
   {
+    id: "se4-image-legacy-link",
+    blogId: "mym0404",
+    logNo: "221589718939",
+    editorVersion: 4,
+    expectedBlockTypes: ["paragraph", "image"],
+    description: "__se_image_link 마크업을 쓰는 오래된 SE4 본문 이미지를 검증한다.",
+    notes: ["frontmatter thumbnail과 별개로 본문 이미지가 image 블록으로 유지되어야 한다."],
+  },
+  {
     id: "se4-quote-formula-code",
     blogId: "mym0404",
     logNo: "222619228134",

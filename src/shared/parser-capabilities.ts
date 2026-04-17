@@ -41,7 +41,7 @@ export const parserCapabilities: ParserCapability[] = [
     blockType: "image",
     supportedEditors: [2, 3, 4],
     fallbackPolicy: "markdown-paragraph",
-    sampleIds: ["se4-video-table", "se4-quote-formula-code"],
+    sampleIds: ["se4-video-table", "se4-image-legacy-link", "se4-quote-formula-code"],
   },
   {
     blockType: "imageGroup",

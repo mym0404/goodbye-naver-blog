@@ -160,8 +160,11 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("$g(n)=n-1$")
     expect(rendered.markdown).toContain("![one](../../assets/223034929697/image-01.png)")
     expect(rendered.markdown).toContain("| col |")
-    expect(rendered.markdown).toContain("**Video:** Demo")
-    expect(rendered.assetRecords).toHaveLength(3)
+    expect(rendered.markdown).toContain("[External article](https://example.com/article)")
+    expect(rendered.markdown).toContain("[Demo](https://blog.naver.com/mym0404/223034929697)")
+    expect(rendered.markdown).not.toContain("**Video:** Demo")
+    expect(rendered.markdown).not.toContain("preview text")
+    expect(rendered.assetRecords).toHaveLength(2)
   })
 
   it("renders base64 image references and custom formula wrappers", async () => {
@@ -269,13 +272,12 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).not.toContain("\nsource: https://blog.naver.com/mym0404/223034929697")
   })
 
-  it("renders referenced links, quotes, and link-only videos without frontmatter", async () => {
+  it("renders referenced links, quotes, and plain video links without frontmatter", async () => {
     const options = defaultExportOptions()
 
     options.frontmatter.enabled = false
     options.markdown.linkStyle = "referenced"
     options.markdown.imageStyle = "source-only"
-    options.markdown.videoStyle = "link-only"
 
     const rendered = await renderMarkdownPost({
       post,
@@ -322,20 +324,19 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("> 인용문")
     expect(rendered.markdown).toContain("> 둘째 줄")
     expect(rendered.markdown).toContain("[source only][ref-1]")
-    expect(rendered.markdown).toContain("[Open Original Post][ref-2]")
+    expect(rendered.markdown).toContain("[Reference Demo][ref-2]")
     expect(rendered.markdown).toContain("[ref-1]: ../../assets/223034929697/image-01.png")
     expect(rendered.markdown).toContain("[ref-2]: https://example.com/watch")
     expect(rendered.markdown).not.toContain("---\n")
   })
 
-  it("renders fallback warnings for html/image-group/video/table edge cases", async () => {
+  it("renders fallback warnings for image-group and table edge cases while keeping videos as plain links", async () => {
     const options = defaultExportOptions()
 
     options.markdown.formulaBlockStyle = "math-fence"
     options.markdown.codeFenceStyle = "tilde"
     options.markdown.dividerStyle = "asterisk"
     options.markdown.imageGroupStyle = "html"
-    options.markdown.videoStyle = "html"
 
     const rendered = await renderMarkdownPost({
       post,
@@ -398,8 +399,44 @@ describe("renderMarkdownPost", () => {
     expect(rendered.markdown).toContain("~~~")
     expect(rendered.markdown).toContain("```math\nx+y\n```")
     expect(rendered.markdown).toContain("imageGroup html 옵션은 지원하지 않아")
-    expect(rendered.markdown).toContain("video html 옵션은 지원하지 않아")
+    expect(rendered.markdown).toContain("[HTML Demo](https://example.com/watch-html)")
+    expect(rendered.markdown).not.toContain("![HTML Demo]")
+    expect(rendered.markdown).not.toContain("Open Original Post")
     expect(rendered.markdown).toContain("<table><tbody><tr><td>cell</td></tr></tbody></table>")
     expect(rendered.markdown).toContain("> ❌ Error: raw HTML 블록을 생략했습니다: iframe-only")
+  })
+
+  it("keeps description only for non-preview link cards without duplicating bare urls", async () => {
+    const rendered = await renderMarkdownPost({
+      post,
+      category,
+      parsedPost: {
+        ...parsedPost,
+        blocks: [
+          {
+            type: "linkCard",
+            card: {
+              title: "Docs",
+              description: "Useful reference\nhttps://example.com/docs",
+              url: "https://example.com/docs",
+              imageUrl: null,
+            },
+          },
+        ],
+      },
+      markdownFilePath: "/tmp/output/posts/Algorithm/test.md",
+      reviewedWarnings: [],
+      options: defaultExportOptions(),
+      resolveAsset: async ({ kind, sourceUrl }) =>
+        createAssetRecord({
+          kind,
+          sourceUrl,
+          relativePath: `../../assets/223034929697/${kind}-01.png`,
+        }),
+    })
+
+    expect(rendered.markdown).toContain("[Docs](https://example.com/docs)")
+    expect(rendered.markdown).toContain("Useful reference")
+    expect(rendered.markdown).not.toContain("\nhttps://example.com/docs\n")
   })
 })

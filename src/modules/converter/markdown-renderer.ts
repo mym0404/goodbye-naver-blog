@@ -213,11 +213,9 @@ const extractFallbackText = ({
 
 const renderLinkCardBlock = ({
   block,
-  options,
   formatLink,
 }: {
   block: Extract<AstBlock, { type: "linkCard" }>
-  options: Pick<ExportOptions, "markdown">
   formatLink: (input: { label: string; url: string }) => string
 }) => {
   const title = block.card.title || block.card.url
@@ -242,22 +240,14 @@ const renderLinkCardBlock = ({
     })
     .join("\n")
 
-  if (options.markdown.linkCardStyle === "quote") {
-    return [title, description, block.card.url]
-      .filter(Boolean)
-      .map((line) => `> ${line}`)
-      .join("\n")
+  if (block.card.imageUrl) {
+    return formatLink({
+      label: title,
+      url: block.card.url,
+    })
   }
 
-  if (options.markdown.linkCardStyle === "html") {
-    return [formatLink({ label: title, url: block.card.url }), description, block.card.url]
-      .filter(Boolean)
-      .join("\n")
-  }
-
-  return [formatLink({ label: title, url: block.card.url }), description, block.card.url]
-    .filter(Boolean)
-    .join("\n")
+  return [formatLink({ label: title, url: block.card.url }), description].filter(Boolean).join("\n\n")
 }
 
 const renderGfmTable = (block: Extract<AstBlock, { type: "table" }>) => {
@@ -483,56 +473,16 @@ export const renderMarkdownPost = async ({
   }
 
   const renderVideoBlock = async (block: Extract<AstBlock, { type: "video" }>) => {
-    const thumbnailPath = block.video.thumbnailUrl
-      ? await resolveAssetPath({
-          kind: "thumbnail",
-          sourceUrl: block.video.thumbnailUrl,
-          embedAsDataUrl: options.assets.imageContentMode === "base64",
-        })
-      : null
-
-    maybeRecordBodyThumbnail(thumbnailPath)
     renderedVideos.push({
       title: block.video.title,
       sourceUrl: block.video.sourceUrl,
-      thumbnail: thumbnailPath,
+      thumbnail: block.video.thumbnailUrl,
     })
 
-    if (options.markdown.videoStyle === "html") {
-      const message = "video html 옵션은 지원하지 않아 Markdown 링크 형식으로 변환했습니다."
-
-      warnings.push(message)
-      diagnostics.push({
-        level: "warning",
-        message,
-      })
-    }
-
-    if (options.markdown.videoStyle === "link-only") {
-      return [
-        `**Video:** ${block.video.title}`,
-        linkFormatter.formatLink({
-          label: "Open Original Post",
-          url: block.video.sourceUrl,
-        }),
-      ].join("\n\n")
-    }
-
-    const lines: string[] = []
-
-    if (thumbnailPath) {
-      lines.push(`![${block.video.title}](${thumbnailPath})`)
-    }
-
-    lines.push(`**Video:** ${block.video.title}`)
-    lines.push(
-      linkFormatter.formatLink({
-        label: "Open Original Post",
-        url: block.video.sourceUrl,
-      }),
-    )
-
-    return lines.join("\n\n")
+    return linkFormatter.formatLink({
+      label: block.video.title || block.video.sourceUrl,
+      url: block.video.sourceUrl,
+    })
   }
 
   const renderTableBlock = (block: Extract<AstBlock, { type: "table" }>) => {
@@ -629,7 +579,6 @@ export const renderMarkdownPost = async ({
       sections.push(
         renderLinkCardBlock({
           block,
-          options,
           formatLink: linkFormatter.formatLink,
         }),
       )
