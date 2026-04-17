@@ -1,3 +1,4 @@
+import type { AnyNode } from "domhandler"
 import type { CheerioAPI } from "cheerio"
 
 import { convertHtmlToMarkdown, sanitizeHtmlFragment } from "../converter/html-fragment-converter.js"
@@ -67,6 +68,25 @@ const isSpacerBlock = ({
   return compactText(clone.text()) === ""
 }
 
+const nestedBlockTags = new Set(["p", "div"])
+
+const shouldTraverseNestedBlocks = ({
+  element,
+  tagName,
+}: {
+  element: ReturnType<CheerioAPI>
+  tagName: string
+}) => {
+  if (tagName !== "div") {
+    return false
+  }
+
+  return element
+    .contents()
+    .toArray()
+    .some((node) => node.type === "tag" && nestedBlockTags.has(node.tagName.toLowerCase()))
+}
+
 const parseSingleColumnTableAsParagraphs = ({
   parsedTable,
   options,
@@ -105,6 +125,63 @@ const parseSingleColumnTableAsParagraphs = ({
   return paragraphs.length > 0 ? paragraphs : null
 }
 
+const parseBookWidgetBlocks = ({
+  element,
+}: {
+  element: ReturnType<CheerioAPI>
+}) => {
+  const bookWidget = element.is('[s_type="db"][s_subtype="book"]') ? element : null
+
+  if (!bookWidget || bookWidget.length === 0) {
+    return null
+  }
+
+  const blocks: AstBlock[] = []
+  const imageNode = bookWidget.find("img").first()
+  const imageSource = imageNode.attr("src")?.trim()
+
+  if (imageSource) {
+    blocks.push({
+      type: "image",
+      image: {
+        sourceUrl: imageSource,
+        originalSourceUrl: null,
+        alt: imageNode.attr("alt")?.trim() ?? "",
+        caption: null,
+        mediaKind: "image",
+      },
+    })
+  }
+
+  const title = compactText(bookWidget.find("strong.tit").first().text())
+  const detailLines = bookWidget
+    .find("dl")
+    .first()
+    .children()
+    .toArray()
+    .map((node) => compactText(bookWidget.find(node).text()))
+    .filter(Boolean)
+  const summaryLines = [title ? `**${title}**` : "", ...detailLines].filter(Boolean)
+
+  if (summaryLines.length > 0) {
+    blocks.push({
+      type: "paragraph",
+      text: summaryLines.join("  \n"),
+    })
+  }
+
+  const reviewUrl = bookWidget.find("a.link, a.con_link").last().attr("href")?.trim()
+
+  if (reviewUrl) {
+    blocks.push({
+      type: "paragraph",
+      text: `[리뷰보기](${reviewUrl})`,
+    })
+  }
+
+  return blocks.length > 0 ? blocks : null
+}
+
 export const parseSe2Post = ({
   $,
   tags,
@@ -118,7 +195,7 @@ export const parseSe2Post = ({
   const blocks: AstBlock[] = []
   const container = $("#viewTypeSelector").first()
 
-  container.contents().toArray().forEach((node) => {
+  const appendBlocksFromNode = (node: AnyNode) => {
     if (node.type === "text") {
       const text = compactText(node.data ?? "")
 
@@ -134,6 +211,18 @@ export const parseSe2Post = ({
 
     const element = $(node)
     const tagName = node.tagName.toLowerCase()
+    const bookWidgetBlocks = parseBookWidgetBlocks({ element })
+
+    if (bookWidgetBlocks) {
+      blocks.push(...bookWidgetBlocks)
+      return
+    }
+
+    if (shouldTraverseNestedBlocks({ element, tagName })) {
+      element.contents().toArray().forEach(appendBlocksFromNode)
+      return
+    }
+
     const standaloneImages = getStandaloneImages({ $, element })
 
     if (tagName === "table") {
@@ -245,7 +334,9 @@ export const parseSe2Post = ({
       html,
       reason: `se2:${tagName}`,
     })
-  })
+  }
+
+  container.contents().toArray().forEach(appendBlocksFromNode)
 
   const videos = blocks
     .filter((block): block is Extract<AstBlock, { type: "video" }> => block.type === "video")
