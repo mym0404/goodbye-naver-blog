@@ -189,7 +189,6 @@ describe("NaverBlogExporter", () => {
     expect(onItem).toHaveBeenCalledTimes(1)
     expect(onItem.mock.calls[0]?.[0]).toMatchObject({
       status: "success",
-      markdown: expect.stringContaining("본문입니다."),
       warningCount: expect.any(Number),
       upload: {
         eligible: false,
@@ -345,7 +344,6 @@ describe("NaverBlogExporter", () => {
     expect(onItem).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "failed",
-        markdown: null,
         error: "post fetch failed",
       }),
     )
@@ -393,7 +391,6 @@ describe("NaverBlogExporter", () => {
             warnings: [],
             warningCount: 0,
             error: null,
-            markdown: fixture.markdown,
             updatedAt: "2026-04-17T04:00:01.000Z",
           },
         ],
@@ -425,7 +422,6 @@ describe("NaverBlogExporter", () => {
         "https://cdn.example.com/thumbnail-01.png",
         "https://cdn.example.com/image-01.png",
       ])
-      expect(rewritten.items[0]?.markdown).toContain("https://cdn.example.com/image-01.png")
     } finally {
       await rm(outputDir, { recursive: true, force: true })
     }

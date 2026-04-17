@@ -232,7 +232,6 @@ export class NaverBlogExporter {
           warnings: rendered.warnings,
           warningCount: warningCountForPost,
           error: null,
-          markdown: rendered.markdown,
           updatedAt: new Date().toISOString(),
         })
         this.onProgress({
@@ -276,7 +275,6 @@ export class NaverBlogExporter {
           warnings: [],
           warningCount: 0,
           error: manifestEntry.error,
-          markdown: null,
           updatedAt: new Date().toISOString(),
         })
         this.onLog(`글 export 실패: ${post.logNo} (${toErrorMessage(error)})`)

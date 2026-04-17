@@ -111,7 +111,6 @@ export class JobStore {
       warnings: post.warnings,
       warningCount: post.warningCount,
       error: post.error,
-      markdown: null,
       updatedAt: new Date().toISOString(),
     }))
 

@@ -4,7 +4,6 @@ import type {
   FrontmatterFieldMeta,
   FrontmatterFieldName,
   OptionDescriptionMap,
-  PostSummary,
 } from "../../shared/types.js"
 
 export type ExportDefaultsResponse = {
@@ -13,18 +12,6 @@ export type ExportDefaultsResponse = {
   frontmatterFieldOrder: FrontmatterFieldName[]
   frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterFieldMeta>
   optionDescriptions: OptionDescriptionMap
-}
-
-export type ExportPreviewResult = {
-  candidatePost: PostSummary
-  markdown: string
-  markdownFilePath: string
-  editorVersion: number
-  blockTypes: string[]
-  parserWarnings: string[]
-  reviewerWarnings: string[]
-  renderWarnings: string[]
-  assetPaths: string[]
 }
 
 export const fetchJson = async <T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> => {

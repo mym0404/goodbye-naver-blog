@@ -9,7 +9,6 @@ import {
 } from '../shared/export-options.js';
 import { filterPostsByScope } from '../shared/export-scope.js';
 import type {
-  ExportJobItem,
   ExportJobState,
   ExportOptions,
   ScanResult,
@@ -31,14 +30,10 @@ import { toggleCategorySelection } from './features/scan/category-selection.js';
 import { CategoryPanel } from './features/scan/category-panel.js';
 import { ExportOptionsPanel } from './features/options/export-options-panel.js';
 import { JobResultsPanel } from './features/job-results/job-results-panel.js';
-import { PreviewPanel } from './features/preview/preview-panel.js';
 import { useExportJob } from './hooks/use-export-job.js';
-import type { ExportDefaultsResponse, ExportPreviewResult } from './lib/api.js';
+import type { ExportDefaultsResponse } from './lib/api.js';
 import { fetchJson, postJson } from './lib/api.js';
 import { cn } from './lib/cn.js';
-
-const previewIdleStatus =
-  '스캔 후 카테고리를 고르면 예시 Markdown을 확인할 수 있습니다.';
 
 const fallbackDefaults: ExportDefaultsResponse = {
   profile: 'gfm',
@@ -66,12 +61,6 @@ const navigationItems = [
     href: '#export-panel',
     label: '출력 설정',
     iconClass: 'ri-equalizer-3-line',
-  },
-  {
-    id: 'preview-panel',
-    href: '#preview-panel',
-    label: '미리보기',
-    iconClass: 'ri-markdown-line',
   },
   {
     id: 'status-panel',
@@ -146,7 +135,6 @@ const getRailStatus = ({
 const runningHiddenSectionIds = new Set<SectionId>([
   'category-panel',
   'export-panel',
-  'preview-panel',
 ]);
 
 const statusPillClass = (status: string) =>
@@ -178,15 +166,7 @@ export const App = () => {
     '스캔 후 카테고리를 선택할 수 있습니다.',
   );
   const [categorySearch, setCategorySearch] = useState('');
-  const [preview, setPreview] = useState<ExportPreviewResult | null>(null);
-  const [previewStatus, setPreviewStatus] = useState(previewIdleStatus);
-  const [previewDirty, setPreviewDirty] = useState(true);
-  const [previewPending, setPreviewPending] = useState(false);
-  const [previewMode, setPreviewMode] = useState<
-    'source' | 'split' | 'rendered'
-  >('source');
   const [scanPending, setScanPending] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<ExportJobItem | null>(null);
   const [activeJobFilter, setActiveJobFilter] = useState<
     'all' | 'warnings' | 'errors'
   >('all');
@@ -215,7 +195,6 @@ export const App = () => {
   const selectedCategoryIds = options.scope.categoryIds;
   const selectedCount = scanResult ? selectedCategoryIds.length : 0;
   const exportDisabled = !scanResult || frontmatterValidationErrors.length > 0;
-  const previewDisabled = exportDisabled;
   const isJobRunning =
     submitting ||
     uploadSubmitting ||
@@ -258,9 +237,7 @@ export const App = () => {
 
     const loadDefaults = async () => {
       try {
-        const nextDefaults = await fetchJson<ExportDefaultsResponse>(
-          '/api/export-defaults',
-        );
+        const nextDefaults = await fetchJson<ExportDefaultsResponse>('/api/export-defaults');
 
         if (cancelled) {
           return;
@@ -284,27 +261,6 @@ export const App = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  useEffect(() => {
-    if (!selectedItem || !job) {
-      return;
-    }
-
-    const nextSelectedItem =
-      job.items.find((item) => item.id === selectedItem.id) ?? null;
-    setSelectedItem(nextSelectedItem);
-  }, [job, selectedItem]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setSelectedItem(null);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   useEffect(() => {
@@ -421,27 +377,10 @@ export const App = () => {
     };
   }, [visibleNavigationItems]);
 
-  const markPreviewDirty = (
-    message = '옵션이 바뀌었습니다. 예시를 다시 확인하세요.',
-  ) => {
-    setPreviewDirty(true);
-    setPreviewStatus(message);
-  };
-
   const updateOptions = (
     updater: (current: ExportOptions) => ExportOptions,
   ) => {
     setOptions((current) => updater(current));
-    if (scanResult) {
-      markPreviewDirty();
-    }
-  };
-
-  const resetPreview = (message = previewIdleStatus) => {
-    setPreview(null);
-    setPreviewStatus(message);
-    setPreviewDirty(true);
-    setPreviewMode('source');
   };
 
   const resetScanState = (message: string) => {
@@ -456,7 +395,6 @@ export const App = () => {
         categoryIds: [],
       },
     }));
-    resetPreview();
   };
 
   const handleBlogInputChange = (value: string) => {
@@ -497,7 +435,6 @@ export const App = () => {
           categoryIds: nextScanResult.categories.map((category) => category.id),
         },
       }));
-      resetPreview('스캔이 끝났습니다. 예시 Markdown을 확인할 수 있습니다.');
       toast.success('카테고리 스캔이 완료되었습니다.', {
         description: `${nextScanResult.totalPostCount}개 글과 ${nextScanResult.categories.length}개 카테고리를 불러왔습니다.`,
       });
@@ -563,52 +500,6 @@ export const App = () => {
     });
   };
 
-  const handlePreview = async () => {
-    if (!scanResult) {
-      resetPreview();
-      return;
-    }
-
-    if (frontmatterValidationErrors.length > 0) {
-      setPreviewStatus(
-        'Frontmatter alias 오류를 먼저 해결해야 preview를 볼 수 있습니다.',
-      );
-      return;
-    }
-
-    setPreviewPending(true);
-    setPreviewStatus('대표 글을 가져와 예시 Markdown을 렌더링하는 중입니다.');
-
-    try {
-      const nextPreview = await postJson<ExportPreviewResult>('/api/preview', {
-        blogIdOrUrl: blogIdOrUrl.trim(),
-        outputDir: outputDir.trim(),
-        options,
-      });
-
-      setPreview(nextPreview);
-      setPreviewStatus(
-        nextPreview.renderWarnings.length > 0
-          ? 'preview는 현재 옵션 기준으로 렌더링했습니다. 경고가 있으면 아래 글 요약에서 함께 확인하세요.'
-          : 'preview는 현재 옵션 기준으로 렌더링했습니다. 본문 HTML은 export 결과에 남기지 않습니다.',
-      );
-      setPreviewDirty(false);
-      toast.success('예시 Markdown을 갱신했습니다.', {
-        description: nextPreview.candidatePost.title,
-      });
-    } catch (error) {
-      setPreview(null);
-      const message = error instanceof Error ? error.message : String(error);
-      setPreviewStatus(message);
-      setPreviewDirty(true);
-      toast.error('예시 Markdown 생성에 실패했습니다.', {
-        description: message,
-      });
-    } finally {
-      setPreviewPending(false);
-    }
-  };
-
   const handleSubmit = async () => {
     if (interactionsLocked) {
       return;
@@ -624,7 +515,6 @@ export const App = () => {
       return;
     }
 
-    setSelectedItem(null);
     setActiveJobFilter('all');
 
     try {
@@ -1103,28 +993,15 @@ export const App = () => {
                 onOptionsChange={updateOptions}
               />
 
-              <PreviewPanel
-                preview={preview}
-                previewDirty={previewDirty}
-                previewStatus={previewStatus}
-                previewMode={previewMode}
-                disabled={previewDisabled}
-                pending={previewPending}
-                onPreview={handlePreview}
-                onPreviewModeChange={setPreviewMode}
-              />
             </>
           ) : null}
 
           <JobResultsPanel
             job={job}
-            selectedItem={selectedItem}
             activeJobFilter={activeJobFilter}
             uploadSubmitting={uploadSubmitting}
             onFilterChange={setActiveJobFilter}
-            onItemSelect={setSelectedItem}
             onUploadStart={handleUpload}
-            onModalClose={() => setSelectedItem(null)}
           />
         </div>
       </div>

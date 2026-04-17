@@ -1,11 +1,9 @@
 import { mkdtemp, rm } from "node:fs/promises"
-import { createElement } from "react"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { mkdir } from "node:fs/promises"
 
 import { chromium } from "playwright"
-import { renderToStaticMarkup } from "react-dom/server"
 
 import { createHttpServer } from "../../src/server/http-server.js"
 import {
@@ -14,8 +12,6 @@ import {
   frontmatterFieldOrder,
   optionDescriptions,
 } from "../../src/shared/export-options.js"
-import { MarkdownDocument } from "../../src/ui/lib/markdown.js"
-import { markdownShowcase } from "../../tests/fixtures/markdown-showcase.js"
 
 const responseTimeoutMs = 90_000
 const desktopViewport = {
@@ -29,14 +25,11 @@ const mobileViewport = {
 
 const contrastTargets = [
   { selector: "#category-status", minRatio: 4.5 },
-  { selector: "#preview-status", minRatio: 4.5 },
   { selector: ".panel-description", minRatio: 4.5 },
   { selector: ".field-help", minRatio: 4.5 },
   { selector: ".frontmatter-description", minRatio: 4.5 },
   { selector: ".results-description", minRatio: 4.5 },
   { selector: ".job-results-row span", minRatio: 4.5 },
-  { selector: "#markdown-modal-meta span", minRatio: 4.5 },
-  { selector: ".markdown-frontmatter-key", minRatio: 4.5 },
   { selector: ".scan-status-note", minRatio: 4.5 },
   { selector: ".sidebar-brand strong", minRatio: 4.5 },
   { selector: ".sidebar-heading", minRatio: 4.5 },
@@ -45,22 +38,6 @@ const contrastTargets = [
   { selector: ".sidebar-summary-metric span", minRatio: 4.5 },
   { selector: "#export-button span", minRatio: 4.5 },
 ] as const
-
-const assertRendererFixture = () => {
-  const markup = renderToStaticMarkup(createElement(MarkdownDocument, { markdown: markdownShowcase }))
-
-  if (!markup.includes("hljs")) {
-    throw new Error("renderer fixture did not produce highlighted code blocks")
-  }
-
-  if (!markup.includes("<table")) {
-    throw new Error("renderer fixture did not render tables")
-  }
-
-  if (!markup.includes("Warning: parser note")) {
-    throw new Error("renderer fixture did not preserve warning callouts")
-  }
-}
 
 const getCaptureDir = () => {
   const index = process.argv.indexOf("--capture-dir")
@@ -81,24 +58,6 @@ const buildJsonResponse = (body: unknown, status = 200) => ({
 const smokeImageBytes = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO9Wn6kAAAAASUVORK5CYII=",
   "base64",
-)
-
-const previewMarkdown = [
-  "---",
-  "postTitle: NestJS 업로드 플로우 점검",
-  "source: https://blog.naver.com/mym0404/223034929697",
-  "---",
-  "",
-  "# 업로드 준비",
-  "",
-  "로컬 이미지를 업로드 단계까지 확인합니다.",
-  "",
-  "![diagram](NestJS/2026-04-11-223034929697/index/image-01.png)",
-].join("\n")
-
-const uploadedMarkdown = previewMarkdown.replace(
-  "NestJS/2026-04-11-223034929697/index/image-01.png",
-  "https://cdn.example.com/NestJS/2026-04-11-223034929697/image-01.png",
 )
 
 const scanResult = {
@@ -220,7 +179,6 @@ const createUploadReadyJob = () => ({
       warnings: [],
       warningCount: 0,
       error: null,
-      markdown: previewMarkdown,
       updatedAt: "2026-04-11T04:00:01.000Z",
     },
   ],
@@ -313,7 +271,6 @@ const createUploadCompletedJob = () => ({
         ...createUploadReadyJob().items[0].upload,
         uploadedCount: 2,
       },
-      markdown: uploadedMarkdown,
       updatedAt: "2026-04-11T04:00:05.000Z",
     },
   ],
@@ -366,13 +323,10 @@ const captureReviewScreens = async ({
     path: path.join(captureDir, "desktop-overview.png"),
     fullPage: true,
   })
-  await page.click("#job-file-tree [data-job-item-id]")
-  await page.waitForSelector("#markdown-modal")
   await page.screenshot({
-    path: path.join(captureDir, "desktop-modal.png"),
+    path: path.join(captureDir, "desktop-status.png"),
     fullPage: true,
   })
-  await page.click("#markdown-modal-close")
   await page.setViewportSize(mobileViewport)
   await page.screenshot({
     path: path.join(captureDir, "mobile-overview.png"),
@@ -824,26 +778,6 @@ const run = async () => {
       return
     }
 
-    if (pathname === "/api/preview" && request.method() === "POST") {
-      await route.fulfill(
-        buildJsonResponse({
-          candidatePost: scanResult.posts[0],
-          markdown: previewMarkdown,
-          markdownFilePath: "NestJS/2026-04-11-223034929697/index.md",
-          editorVersion: 4,
-          blockTypes: ["heading", "image"],
-          parserWarnings: [],
-          reviewerWarnings: [],
-          renderWarnings: [],
-          assetPaths: [
-            "NestJS/2026-04-11-223034929697/thumbnail-01.png",
-            "NestJS/2026-04-11-223034929697/image-01.png",
-          ],
-        }),
-      )
-      return
-    }
-
     if (pathname === "/api/export" && request.method() === "POST") {
       mockState.uploadRequested = false
       mockState.uploadFetchCount = 0
@@ -942,7 +876,6 @@ const run = async () => {
   })
 
   try {
-    assertRendererFixture()
     await page.goto(baseUrl)
     await assertNoHorizontalOverflow({
       page,
@@ -1108,179 +1041,6 @@ const run = async () => {
       throw new Error("upload form should not appear inside the Assets tab")
     }
 
-    const previewResponsePromise = page.waitForResponse(
-      (response) =>
-        response.url() === `${baseUrl}/api/preview` &&
-        response.request().method() === "POST",
-      { timeout: responseTimeoutMs },
-    )
-
-    await assertNavActive({
-      page,
-      sectionId: "preview-panel",
-    })
-    await page.click("#preview-button")
-    await previewResponsePromise
-    await page.waitForFunction(
-      () =>
-        document.querySelector("#preview-markdown")?.textContent?.includes("postTitle:") ?? false,
-    )
-
-    const previewMarkdown = await page.locator("#preview-markdown").textContent()
-
-    if (!previewMarkdown?.includes("postTitle:")) {
-      throw new Error("preview markdown missing frontmatter alias")
-    }
-
-    if (/<[a-z][^>]*>/i.test(previewMarkdown)) {
-      throw new Error("preview markdown still contains html")
-    }
-
-    const sourceModeLayoutOk = await page.evaluate(() => {
-      const grid = document.querySelector<HTMLElement>(".preview-content-grid")
-      const sourcePane = document.querySelector<HTMLElement>(".preview-markdown-shell")
-      const sourceContent = document.querySelector<HTMLElement>("#preview-markdown")
-      const renderedPane = document.querySelector<HTMLElement>("#preview-rendered")
-
-      if (!grid || !sourcePane || !sourceContent || renderedPane) {
-        return false
-      }
-
-      const gridColumns = window
-        .getComputedStyle(grid)
-        .gridTemplateColumns
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean).length
-      const gridRect = grid.getBoundingClientRect()
-      const paneRect = sourcePane.getBoundingClientRect()
-      const sourceStyle = window.getComputedStyle(sourceContent)
-
-      return (
-        gridColumns === 1 &&
-        Math.abs(gridRect.width - paneRect.width) <= 2 &&
-        sourceStyle.marginTop === "0px" &&
-        sourceStyle.marginRight === "0px" &&
-        sourceStyle.marginBottom === "0px" &&
-        sourceStyle.marginLeft === "0px"
-      )
-    })
-
-    if (!sourceModeLayoutOk) {
-      throw new Error("preview source mode layout regressed")
-    }
-
-    await page.click('[data-preview-mode="rendered"]')
-
-    const renderedModeState = await page.locator('[data-preview-mode="rendered"]').getAttribute("class")
-
-    if (!renderedModeState?.includes("is-active")) {
-      throw new Error("preview rendered mode did not become active")
-    }
-
-    await page.waitForFunction(
-      () => document.querySelector("#preview-rendered")?.textContent?.includes("postTitle:") ?? false,
-    )
-
-    const previewRenderedText = await page.locator("#preview-rendered").textContent()
-
-    if (!previewRenderedText?.includes("postTitle:")) {
-      throw new Error("preview rendered pane missing markdown result")
-    }
-
-    const renderedModeLayoutOk = await page.evaluate(() => {
-      const grid = document.querySelector<HTMLElement>(".preview-content-grid")
-      const sourcePane = document.querySelector<HTMLElement>(".preview-markdown-shell")
-      const renderedPane = document.querySelector<HTMLElement>("#preview-rendered")
-      const renderedContent = document.querySelector<HTMLElement>("#preview-rendered .preview-rendered-content")
-
-      if (!grid || sourcePane || !renderedPane || !renderedContent) {
-        return false
-      }
-
-      const gridColumns = window
-        .getComputedStyle(grid)
-        .gridTemplateColumns
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean).length
-      const gridRect = grid.getBoundingClientRect()
-      const paneRect = renderedPane.getBoundingClientRect()
-      const renderedStyle = window.getComputedStyle(renderedContent)
-
-      return (
-        gridColumns === 1 &&
-        Math.abs(gridRect.width - paneRect.width) <= 2 &&
-        renderedStyle.paddingTop === renderedStyle.paddingBottom &&
-        renderedStyle.paddingLeft === renderedStyle.paddingRight
-      )
-    })
-
-    if (!renderedModeLayoutOk) {
-      throw new Error("preview rendered mode layout regressed")
-    }
-
-    await page.click('[data-preview-mode="split"]')
-    await page.waitForFunction(
-      () => document.querySelector('[data-preview-mode="split"]')?.className.includes("is-active") ?? false,
-    )
-
-    const previewLayoutOk = await page.evaluate(() => {
-      const previewPanel = document.querySelector<HTMLElement>("#preview-panel")
-      const statusPanel = document.querySelector<HTMLElement>("#status-panel")
-      const sourcePane = document.querySelector<HTMLElement>(".preview-markdown-shell")
-      const renderedPane = document.querySelector<HTMLElement>("#preview-rendered")
-
-      if (!previewPanel || !statusPanel || !sourcePane || !renderedPane) {
-        return false
-      }
-
-      const previewBeforeStatus =
-        (previewPanel.compareDocumentPosition(statusPanel) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
-
-      return previewBeforeStatus && sourcePane.clientHeight > 280 && renderedPane.clientHeight > 280
-    })
-
-    if (!previewLayoutOk) {
-      throw new Error("preview section order or scrollable pane sizing was incorrect")
-    }
-
-    const splitModeLayoutOk = await page.evaluate(() => {
-      const grid = document.querySelector<HTMLElement>(".preview-content-grid")
-      const sourcePane = document.querySelector<HTMLElement>(".preview-markdown-shell")
-      const renderedPane = document.querySelector<HTMLElement>("#preview-rendered")
-      const sourceContent = document.querySelector<HTMLElement>("#preview-markdown")
-      const renderedContent = document.querySelector<HTMLElement>("#preview-rendered .preview-rendered-content")
-
-      if (!grid || !sourcePane || !renderedPane || !sourceContent || !renderedContent) {
-        return false
-      }
-
-      const gridColumns = window
-        .getComputedStyle(grid)
-        .gridTemplateColumns
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean).length
-      const sourceRect = sourcePane.getBoundingClientRect()
-      const renderedRect = renderedPane.getBoundingClientRect()
-      const sourceStyle = window.getComputedStyle(sourceContent)
-      const renderedStyle = window.getComputedStyle(renderedContent)
-
-      return (
-        gridColumns === 2 &&
-        Math.abs(sourceRect.width - renderedRect.width) <= 4 &&
-        sourceStyle.paddingTop === renderedStyle.paddingTop &&
-        sourceStyle.paddingRight === renderedStyle.paddingRight &&
-        sourceStyle.paddingBottom === renderedStyle.paddingBottom &&
-        sourceStyle.paddingLeft === renderedStyle.paddingLeft
-      )
-    })
-
-    if (!splitModeLayoutOk) {
-      throw new Error("preview split mode width or padding regressed")
-    }
-
     const exportResponsePromise = page.waitForResponse(
       (response) =>
         response.url() === `${baseUrl}/api/export` &&
@@ -1409,14 +1169,6 @@ const run = async () => {
     }
 
     await page.click('[data-job-filter="all"]')
-    await page.click("#job-file-tree [data-job-item-id]")
-    await page.waitForSelector("#markdown-modal")
-
-    const modalImageSrc = await page.locator("#markdown-modal-body img").first().getAttribute("src")
-
-    if (!modalImageSrc?.includes("cdn.example.com")) {
-      throw new Error("markdown modal did not reflect uploaded URL rewrites")
-    }
 
     await assertStickyTop({
       page,
@@ -1436,8 +1188,6 @@ const run = async () => {
       page,
       label: "desktop export flow",
     })
-
-    await page.click("#markdown-modal-close")
 
     await page.setViewportSize(mobileViewport)
     await page.waitForTimeout(150)
@@ -1476,28 +1226,6 @@ const run = async () => {
 
     if (mobileCommandBarHeight > 360) {
       throw new Error(`mobile command bar is too tall: ${mobileCommandBarHeight}`)
-    }
-
-    await page.locator("#preview-panel").scrollIntoViewIfNeeded()
-    await page.waitForTimeout(150)
-
-    const previewMobileLayoutOk = await page.evaluate(() => {
-      const frontmatterItem = document.querySelector<HTMLElement>("#preview-rendered .markdown-frontmatter-item")
-      const frontmatterValue = frontmatterItem?.querySelector<HTMLElement>("pre")
-
-      if (!frontmatterItem || !frontmatterValue) {
-        return false
-      }
-
-      const columns = window.getComputedStyle(frontmatterItem).gridTemplateColumns.trim().split(/\s+/)
-      const itemRect = frontmatterItem.getBoundingClientRect()
-      const valueRect = frontmatterValue.getBoundingClientRect()
-
-      return columns.length === 1 && valueRect.width > itemRect.width * 0.7 && valueRect.height < 160
-    })
-
-    if (!previewMobileLayoutOk) {
-      throw new Error("mobile preview frontmatter layout collapsed")
     }
 
     await page.locator("#status-panel").scrollIntoViewIfNeeded()

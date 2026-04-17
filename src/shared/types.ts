@@ -311,7 +311,6 @@ export type ExportJobItem = {
   warnings: string[]
   warningCount: number
   error: string | null
-  markdown: string | null
   updatedAt: string
 }
 

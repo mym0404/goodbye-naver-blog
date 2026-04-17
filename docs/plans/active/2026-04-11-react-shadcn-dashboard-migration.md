@@ -8,7 +8,7 @@ This document must be maintained in accordance with `.agents/PLANS.md`.
 
 After this change, the export dashboard will stop being a static HTML page driven by manual DOM mutation and become a React application whose state, rendering, and interaction logic are explicit component code. The visual language must not become a generic starter app: it must keep the current bright analysis-dashboard design, the left navy sidebar, the KPI strip, the same export workflow, and the same behavior the user already has today.
 
-The user-visible outcome is concrete. After building the client bundle and starting the server, the browser should open the same export workflow, but the interface will now be composed from shadcn/ui components, the preview and modal Markdown rendering will use a real React Markdown renderer instead of the current string-replacement renderer, and repeated alignment bugs such as unstable pills, mismatched row heights, or broken segmented toggles will be systematically removed through five screenshot review passes. The final result must still scan, preview, export, poll job status, filter completed items, and open the Markdown modal exactly as it does now.
+The user-visible outcome is concrete. After building the client bundle and starting the server, the browser should open the same export workflow, but the interface will now be composed from shadcn/ui components, repeated alignment bugs such as unstable pills, mismatched row heights, or broken segmented toggles will be systematically removed through five screenshot review passes, and the final result must still scan, edit options, export, poll job status, filter completed items, and continue into upload results exactly as it does now.
 
 ## Progress
 
@@ -33,7 +33,7 @@ The user-visible outcome is concrete. After building the client bundle and start
   Evidence: `tsconfig.json` includes `src/**/*.ts` and `tests/**/*.ts` only.
 
 - Observation: the current browser smoke test is tightly coupled to specific `id` and `data-*` attributes. A “full React rewrite” that casually renames elements would fail immediately even if the UI looks correct.
-  Evidence: `scripts/harness/run-ui-smoke.ts` directly uses selectors such as `#blogIdOrUrl`, `#scan-button`, `#preview-markdown`, `#job-file-tree`, and `#markdown-modal-body`.
+  Evidence: `scripts/harness/run-ui-smoke.ts` directly uses selectors such as `#blogIdOrUrl`, `#scan-button`, `#export-button`, `#job-file-tree`, and `#upload-targets-table`.
 
 - Observation: the current design knowledge already contains a drift bug. The design document says the sidebar is `272px`, while the actual CSS uses `248px`.
   Evidence: `.agents/knowledge/product/ui-dashboard-design-system.md` and `src/static/styles.css` disagree on the sidebar width.
@@ -76,7 +76,7 @@ The user-visible outcome is concrete. After building the client bundle and start
 
 ## Outcomes & Retrospective
 
-This plan is now implemented. The dashboard runtime is React + Vite with shadcn source components, the Node server still owns the export APIs, and the browser entry path is now only the built client bundle under `dist/client`. The migration kept smoke-critical selectors stable, replaced the modal and preview renderer with a real React Markdown pipeline, and added direct React tests so the new UI stays inside the existing coverage gate.
+This plan is now implemented. The dashboard runtime is React + Vite with shadcn source components, the Node server still owns the export APIs, and the browser entry path is now only the built client bundle under `dist/client`. The migration kept smoke-critical selectors stable and added direct React tests so the new UI stays inside the existing coverage gate.
 
 The five screenshot passes were not decorative. Round 1 established parity, Round 2 exposed muted-text and helper-space instability, Round 3 surfaced low-contrast labels inside the status board, Round 4 fixed chip and badge readability, and Round 5 confirmed that the final panel separation and mobile layout were stable enough to stop. The legacy static runtime was removed after parity and coverage were proven, so the repository now has a single browser implementation path.
 
@@ -84,11 +84,11 @@ The five screenshot passes were not decorative. Round 1 established parity, Roun
 
 This repository has two major surfaces today. The first surface is the export engine, which fetches and parses Naver Blog posts into Markdown. That work lives under `src/modules/*`, `src/shared/*`, and `src/server/*`. The second surface is the browser dashboard, which is currently a single static page plus one large browser script. That dashboard lives in `src/static/index.html`, `src/static/app.js`, and `src/static/styles.css`.
 
-The Node HTTP server in `src/server/http-server.ts` serves two kinds of things. It serves files for the dashboard, and it serves JSON APIs such as `/api/export-defaults`, `/api/scan`, `/api/preview`, `/api/export`, and `/api/export/:jobId`. Those APIs already power the current dashboard and must remain stable during this migration. The browser smoke test in `scripts/harness/run-ui-smoke.ts` drives the page through scan, preview, export, filter, and modal interactions using fixed DOM selectors.
+The Node HTTP server in `src/server/http-server.ts` serves two kinds of things. It serves files for the dashboard, and it serves JSON APIs such as `/api/export-defaults`, `/api/scan`, `/api/export`, and `/api/export/:jobId`. Those APIs already power the current dashboard and must remain stable during this migration. The browser smoke test in `scripts/harness/run-ui-smoke.ts` drives the page through scan, export, filter, and upload interactions using fixed DOM selectors.
 
 React in this plan means that the browser interface is rendered from component functions instead of string templates and direct DOM mutation. A React hook is React’s way to keep component state and browser side effects, such as interval polling, inside ordinary functions. Vite in this plan means a browser build tool that turns `.tsx`, CSS, and imported assets into a production-ready client bundle that the existing Node server can serve. shadcn/ui in this plan means source files copied into this repository, not a closed external widget library. The copied component source will live in this repository and can be styled to match the existing design system.
 
-The current dashboard behavior is already feature-rich. It can scan a blog, render category selection, show option descriptions and frontmatter alias controls, build a preview in source/split/rendered modes, submit exports, poll in-memory job state, show completed items, filter warning/error results, and open a Markdown modal. This plan must migrate that behavior, not shrink it. The current active plan at `docs/plans/active/2026-04-11-export-options-job-filetree-coverage.md` is useful historical context for what the static dashboard already does, but this document includes the migration-specific instructions and does not rely on the reader knowing that older plan.
+The current dashboard behavior is already feature-rich. It can scan a blog, render category selection, show option descriptions and frontmatter alias controls, submit exports, poll in-memory job state, show completed items, filter warning/error results, and continue into upload handling. This plan must migrate that behavior, not shrink it. The current active plan at `docs/plans/active/2026-04-11-export-options-job-filetree-coverage.md` is useful historical context for what the static dashboard already does, but this document includes the migration-specific instructions and does not rely on the reader knowing that older plan.
 
 ## Plan of Work
 

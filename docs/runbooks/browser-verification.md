@@ -14,7 +14,7 @@
 - [../../src/ui/App.tsx](../../src/ui/App.tsx)
 - [../../src/ui/styles/globals.css](../../src/ui/styles/globals.css)
 - [../../src/ui/features/options/export-options-panel.tsx](../../src/ui/features/options/export-options-panel.tsx)
-- [../../src/ui/features/preview/preview-panel.tsx](../../src/ui/features/preview/preview-panel.tsx)
+- [../../src/ui/features/job-results/job-results-panel.tsx](../../src/ui/features/job-results/job-results-panel.tsx)
 - [../../.agents/knowledge/product/ui-dashboard-design-system.md](../../.agents/knowledge/product/ui-dashboard-design-system.md)
 - [../../src/server/http-server.ts](../../src/server/http-server.ts)
 - [../../scripts/harness/run-ui-smoke.ts](../../scripts/harness/run-ui-smoke.ts)
@@ -27,18 +27,15 @@
 1. 로컬 서버를 띄운다.
 2. `mym0404`를 입력하고 scan을 실행한다.
 3. `NestJS` 같이 글 수가 작은 카테고리를 검색한다.
-4. 선택 카테고리를 하나만 남기고 preview를 먼저 확인한다.
-5. preview에 HTML 태그가 그대로 남지 않는지 확인한다.
-6. preview 우상단의 `소스보기 / 같이보기 / 결과보기` 토글이 모두 동작하고 결과보기가 Markdown renderer 결과를 보여주는지 확인한다.
-7. `Assets` 탭에서 `이미지 처리 방식`을 확인하고, `download-and-upload` 경로에서는 업로더 폼이 설정 탭에 나오지 않는지 본다.
-8. export를 시작하고 상태가 바로 `completed`로 끝나는지, 아니면 `upload-ready`로 멈추는지 확인한다.
-9. `upload-ready`면 결과 패널의 업로드 대상 표, `uploaderKey`, `uploaderConfigJson`, 시작 버튼이 보이는지 확인한다.
-10. placeholder 값으로 업로드를 시작하고 `uploading -> upload-completed` 전환을 확인한다.
-11. zero-candidate 케이스에서는 업로드 폼 없이 `export만 완료` 안내만 보이는지 확인한다.
-12. status, summary, logs, 완료 파일 트리, manifest 응답을 확인한다.
-13. warning/error 필터를 눌러 결과가 좁혀지는지 확인한다.
-14. 완료 항목을 눌러 Modal에서 Markdown 렌더링과 업로드 후 URL 반영이 보이는지 확인한다.
-15. 결과 설명, field help, modal meta, file subtitle 텍스트가 육안으로도 옅지 않은지 확인한다.
+4. 선택 카테고리를 하나만 남기고 선택 범위 수치가 즉시 줄어드는지 확인한다.
+5. `Assets` 탭에서 `이미지 처리 방식`을 확인하고, `download-and-upload` 경로에서도 업로더 폼이 설정 탭에 나타나지 않는지 본다.
+6. export를 시작하고 상태가 `completed` 또는 `upload-ready`로 바뀌는지 확인한다.
+7. `upload-ready`면 결과 패널의 업로드 대상 표, `uploaderKey`, `uploaderConfigJson`, 시작 버튼이 보이는지 확인한다.
+8. placeholder 값으로 업로드를 시작하고 `uploading -> upload-completed` 전환을 확인한다.
+9. zero-candidate 케이스에서는 업로드 폼 없이 `export만 완료` 안내만 보이는지 확인한다.
+10. status, summary, logs, 완료 파일 표, manifest 응답을 확인한다.
+11. warning/error 필터를 눌러 결과가 좁혀지는지 확인한다.
+12. 결과 설명, field help, 파일 subtitle 텍스트가 육안으로도 옅지 않은지 확인한다.
 
 ## Screenshot Feedback Loop
 같은 시나리오로 아래 루프를 5번 반복한다.
@@ -66,24 +63,17 @@
 - focus, disabled, loading 상태가 구분되는지
 - 상태 패널과 작업 패널이 같은 메인 보드 안에서 자연스럽게 읽히는지
 - 로그, 요약, 카테고리 패널이 같은 시각 언어를 유지하는지
-- preview 후보 글 정보와 Markdown 예시가 현재 선택 범위와 맞는지
-- preview와 export 결과 모두 HTML 태그를 본문에 남기지 않는지
-- preview mode toggle이 source/split/rendered 상태를 올바르게 전환하는지
-- preview source/rendered 단일 모드가 반폭으로 줄지 않고 full width를 쓰는지
-- preview source `pre`와 rendered pane의 내부 padding이 mode에 따라 달라지지 않는지
-- preview의 frontmatter/value block이 모바일에서 세로로 찌그러지지 않는지
 - frontmatter alias 충돌 시 오류가 즉시 보이고 export가 막히는지
 - 결과 패널의 upload target table이 desktop/mobile 모두 과하게 넘치지 않는지
 - `upload-ready`일 때만 업로드 폼이 보이고, 완료 후에는 placeholder config 값이 화면에 남지 않는지
 - per-post 결과 경로가 `.../index.md` 패턴을 유지하는지
 - 완료 파일 트리에서 경고/에러 아이콘과 필터가 일관되게 동작하는지
-- Modal Markdown preview가 데스크톱과 모바일에서 읽기 어렵지 않은지
 - 설정 탭 5개 높이가 너무 낮지 않고 클릭 타깃이 충분한지
 
 ## Contrast Gate
 - smoke는 핵심 selector의 computed foreground/background 대비를 계산하고 `4.5:1` 미만이면 실패한다.
 - smoke는 desktop/mobile 모두 viewport horizontal overflow가 1px를 넘으면 실패한다.
-- 회귀 대상 selector는 `#category-status`, `#preview-status`, `.panel-description`, `.field-help`, `.frontmatter-description`, `.results-description`, `.job-tree-item-copy small`, `#markdown-modal-meta span`, `.markdown-frontmatter-key`, `.sidebar-brand strong`, `.sidebar-heading`, `.sidebar-link span`, `.sidebar-summary-title`, `.sidebar-summary-metric span`, `#export-button span`다.
+- 회귀 대상 selector는 `#category-status`, `.panel-description`, `.field-help`, `.frontmatter-description`, `.results-description`, `.job-results-row span`, `.scan-status-note`, `.sidebar-brand strong`, `.sidebar-heading`, `.sidebar-link span`, `.sidebar-summary-title`, `.sidebar-summary-metric span`, `#export-button span`다.
 - 새 설명 텍스트나 helper UI를 추가하면 smoke 대상 selector도 같이 확장한다.
 
 ## Icon Policy

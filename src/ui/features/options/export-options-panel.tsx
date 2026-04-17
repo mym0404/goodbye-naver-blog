@@ -153,7 +153,7 @@ export const ExportOptionsPanel = ({
             <span className="frontmatter-state-label text-sm font-semibold text-slate-900">Alias 상태</span>
             <p className="frontmatter-description text-sm leading-6 text-slate-500">
               {frontmatterValidationErrors.length > 0
-                ? "중복 또는 비어 있는 alias를 먼저 정리해야 export와 preview가 다시 활성화됩니다."
+                ? "중복 또는 비어 있는 alias를 먼저 정리해야 export를 진행할 수 있습니다."
                 : "현재 frontmatter alias 구성이 유효합니다."}
             </p>
           </div>

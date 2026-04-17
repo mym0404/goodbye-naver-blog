@@ -23,7 +23,7 @@
 - `exporter`: fetch -> parse -> review -> render -> write -> manifest 실행과 PicGo upload/rewrite 단계를 묶음
 - `server`: 로컬 웹 UI, export job API, 같은 job의 upload trigger/polling lifecycle 제공
 - `shared`: export 옵션, 타입, lifecycle contract, capability, sample corpus
-- `ui`: scan -> category select -> preview -> export -> upload results 대시보드 UI
+- `ui`: scan -> category select -> export options -> export -> upload results 대시보드 UI
 
 ## Dependency Direction
 - `server` -> `modules/*`, `shared/*`

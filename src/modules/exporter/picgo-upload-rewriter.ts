@@ -151,7 +151,6 @@ export const rewriteUploadedAssets = async ({
     return {
       ...item,
       assetPaths: rewritten.post.assetPaths,
-      markdown: rewritten.rewrittenMarkdown,
       upload: rewritten.post.upload,
       updatedAt: new Date().toISOString(),
     } satisfies ExportJobItem

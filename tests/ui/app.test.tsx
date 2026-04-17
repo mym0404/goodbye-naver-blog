@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { userEvent } from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -14,7 +14,6 @@ import {
 } from "../../src/shared/export-options.js"
 import type { ExportJobState, ScanResult } from "../../src/shared/types.js"
 import { App } from "../../src/ui/App.js"
-import { markdownShowcase } from "../fixtures/markdown-showcase.js"
 
 const buildJsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -62,16 +61,11 @@ const scanResult: ScanResult = {
     },
   ],
   posts: [
-    ...Array.from({ length: 5 }, (_, index) =>
-      buildPostSummary(index + 1, 101, "NestJS"),
-    ),
-    ...Array.from({ length: 7 }, (_, index) =>
-      buildPostSummary(index + 6, 202, "React"),
-    ),
+    ...Array.from({ length: 5 }, (_, index) => buildPostSummary(index + 1, 101, "NestJS")),
+    ...Array.from({ length: 7 }, (_, index) => buildPostSummary(index + 6, 202, "React")),
   ],
 }
 
-const previewMarkdown = markdownShowcase
 const exportedOptions = (() => {
   const options = defaultExportOptions()
   options.scope.categoryIds = [101]
@@ -135,7 +129,6 @@ const completedJob: ExportJobState = {
       warnings: ["parser note"],
       warningCount: 1,
       error: null,
-      markdown: previewMarkdown,
       updatedAt: "2026-04-11T04:00:01.000Z",
     },
   ],
@@ -158,9 +151,7 @@ const runningJob: ExportJobState = {
 
 const uploadFlowOptions = (() => {
   const options = defaultExportOptions()
-
   options.scope.categoryIds = scanResult.categories.map((category) => category.id)
-
   return options
 })()
 
@@ -237,7 +228,6 @@ const uploadCompletedJob: ExportJobState = {
         "https://cdn.example.com/thumbnail-01.png",
         "https://cdn.example.com/image-01.png",
       ],
-      markdown: previewMarkdown.replaceAll("test.md", "https://cdn.example.com/image-01.png"),
       upload: {
         ...uploadItem.upload,
         uploadedCount: 2,
@@ -293,7 +283,7 @@ beforeEach(() => {
 })
 
 describe("App", () => {
-  it("runs the main export flow with preview, filters, and modal rendering", async () => {
+  it("runs the main export flow without preview or modal", async () => {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()
 
@@ -311,34 +301,8 @@ describe("App", () => {
         return buildJsonResponse(scanResult)
       }
 
-      if (url.endsWith("/api/preview")) {
-        return buildJsonResponse({
-          candidatePost: {
-            blogId: "mym0404",
-            logNo: "1",
-            title: "테스트 글",
-            publishedAt: "2026-04-11T04:00:00.000Z",
-            categoryId: 101,
-            categoryName: "NestJS",
-            source: "https://blog.naver.com/mym0404/1",
-            editorVersion: 4,
-            thumbnailUrl: null,
-          },
-          markdown: previewMarkdown,
-          markdownFilePath: "posts/NestJS/test.md",
-          editorVersion: 4,
-          blockTypes: ["heading"],
-          parserWarnings: ["parser note"],
-          reviewerWarnings: [],
-          renderWarnings: [],
-          assetPaths: [],
-        })
-      }
-
       if (url.endsWith("/api/export")) {
-        return buildJsonResponse({
-          jobId: "job-1",
-        }, init?.method === "POST" ? 202 : 200)
+        return buildJsonResponse({ jobId: "job-1" }, init?.method === "POST" ? 202 : 200)
       }
 
       if (url.endsWith("/api/export/job-1")) {
@@ -359,7 +323,6 @@ describe("App", () => {
     await screen.findByText("mym0404 스캔 완료")
     expect(document.querySelector("#scan-button")?.closest("#scan-workbench")).not.toBeNull()
     expect(document.querySelector("#export-button")?.closest(".app-sidebar")).not.toBeNull()
-
     await user.click(screen.getByRole("tab", { name: "Frontmatter" }))
     expect(await screen.findByText("글 제목을 기록합니다.")).toBeInTheDocument()
     const titleAliasInput = screen.getByPlaceholderText("title")
@@ -382,44 +345,17 @@ describe("App", () => {
       expect(document.querySelector("#summary")?.textContent).toContain("남음5")
     })
 
-    await user.click(screen.getByRole("button", { name: "예시 보기" }))
-
-    await waitFor(() => {
-      expect(document.querySelector("#preview-markdown")?.textContent).toContain("postTitle:")
-      expect(document.querySelector("#preview-markdown")?.textContent).toContain("테스트 글")
-    })
-    expect(document.querySelector(".preview-content-grid")?.className).not.toContain("xl:grid-cols-2")
-    expect(document.querySelector("#preview-markdown")?.className).toContain("m-0")
-
-    await user.click(screen.getByTitle("결과보기"))
-    await waitFor(() => {
-      const renderedPreview = document.querySelector("#preview-rendered")
-      expect(renderedPreview?.textContent).toContain("Frontmatter")
-      expect(renderedPreview?.textContent).toContain("postTitle:")
-    })
-    expect(document.querySelector(".preview-content-grid")?.className).not.toContain("xl:grid-cols-2")
-    expect(document.querySelector("#preview-rendered .hljs-keyword")).not.toBeNull()
-
-    await user.click(screen.getByTitle("같이보기"))
-    await waitFor(() => {
-      expect(document.querySelector(".preview-content-grid")?.className).toContain("xl:grid-cols-2")
-      expect(document.querySelector("#preview-markdown")).not.toBeNull()
-      expect(document.querySelector("#preview-rendered")).not.toBeNull()
-    })
-
     await user.click(screen.getByRole("button", { name: "내보내기" }))
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("completed")
       expect(document.querySelector("#summary")?.textContent).toContain("1")
     })
+
     expect(document.querySelector('[data-job-log-timestamp]')?.textContent).toBe("2026-04-11T04:00:00.000Z")
     expect(document.querySelector('[data-job-log-timestamp]')?.className).toContain("text-[11px]")
     expect(document.querySelector('[data-job-log-message]')?.textContent).toContain("작업을 큐에 등록했습니다.")
     expect(document.querySelector('[data-job-log-message]')?.className).toContain("whitespace-pre-wrap")
     expect((document.querySelector('#logs [data-slot="scroll-area-viewport"]') as HTMLElement | null)?.scrollTop).toBe(240)
-    const previewOrder =
-      document.querySelector("#preview-panel")?.compareDocumentPosition(document.querySelector("#status-panel") ?? document.body) ?? 0
-    expect((previewOrder & Node.DOCUMENT_POSITION_FOLLOWING) !== 0).toBe(true)
 
     const errorFilterButton = document.querySelector('[data-job-filter="errors"]') as HTMLButtonElement
     expect(errorFilterButton).not.toBeNull()
@@ -429,12 +365,11 @@ describe("App", () => {
     const allFilterButton = document.querySelector('[data-job-filter="all"]') as HTMLButtonElement
     expect(allFilterButton).not.toBeNull()
     await user.click(allFilterButton)
-    const item = document.querySelector('[data-job-item-id="posts/NestJS/test.md"]') as HTMLButtonElement
+    const item = document.querySelector('[data-job-item-id="posts/NestJS/test.md"]') as HTMLElement
     expect(item).not.toBeNull()
     expect(item.className).toContain("whitespace-normal")
-    await user.click(item)
     expect(document.querySelector("#job-file-tree table")).not.toBeNull()
-    expect(document.querySelector("#category-list table")).not.toBeNull()
+    expect(document.querySelector('[role="dialog"]')).toBeNull()
 
     const reactCheckbox = document.querySelector('[data-category-id="202"] button[role="checkbox"]')
     expect(reactCheckbox).not.toBeNull()
@@ -443,14 +378,6 @@ describe("App", () => {
       expect(document.querySelector("#summary")?.textContent).toContain("총 글12")
       expect(document.querySelector("#summary")?.textContent).toContain("남음12")
     })
-
-    const modal = document.querySelector('[role="dialog"]') as HTMLElement
-    expect(modal).not.toBeNull()
-    expect(within(modal).getByText("결과 미리보기")).toBeInTheDocument()
-    expect(modal.className).toContain("!w-[calc(100vw-1.5rem)]")
-    expect(modal.className).toContain("!max-w-[96rem]")
-    expect(document.querySelector("#markdown-modal-body")?.textContent).toContain("postTitle:")
-    expect(document.querySelector("#markdown-modal-body")?.textContent).toContain("테스트 글")
   })
 
   it("hides setup panels while the export job is running", async () => {
@@ -472,12 +399,7 @@ describe("App", () => {
       }
 
       if (url.endsWith("/api/export")) {
-        return buildJsonResponse(
-          {
-            jobId: "job-1",
-          },
-          init?.method === "POST" ? 202 : 200,
-        )
+        return buildJsonResponse({ jobId: "job-1" }, init?.method === "POST" ? 202 : 200)
       }
 
       if (url.endsWith("/api/export/job-1")) {
@@ -505,9 +427,8 @@ describe("App", () => {
       expect(document.querySelector("#export-button")).toBeDisabled()
       expect(document.querySelector("#category-panel")).toBeNull()
       expect(document.querySelector("#export-panel")).toBeNull()
-      expect(document.querySelector("#preview-panel")).toBeNull()
       expect(document.querySelector('[data-section-link="category-panel"]')).toBeNull()
-      expect(document.querySelector('[data-mobile-section-link="preview-panel"]')).toBeNull()
+      expect(document.querySelector('[data-mobile-section-link="status-panel"]')).not.toBeNull()
     })
   })
 

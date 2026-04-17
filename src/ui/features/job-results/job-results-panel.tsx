@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import type { ExportJobItem, ExportJobState } from '../../../shared/types.js';
+import type { ExportJobState } from '../../../shared/types.js';
 
 import { Badge } from '../../components/ui/badge.js';
 import { Button } from '../../components/ui/button.js';
@@ -11,14 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from '../../components/ui/card.js';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '../../components/ui/dialog.js';
 import { Input } from '../../components/ui/input.js';
 import { ScrollArea } from '../../components/ui/scroll-area.js';
 import { Separator } from '../../components/ui/separator.js';
@@ -30,14 +22,13 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/ui/table.js';
-import { MarkdownDocument } from '../../lib/markdown.js';
 import { cn } from '../../lib/cn.js';
 
 type JobFilter = 'all' | 'warnings' | 'errors';
 
 const INDEX_MARKDOWN_FILE = 'index.md';
 
-const buildJobItemSeverity = (item: ExportJobItem) => {
+const buildJobItemSeverity = (item: ExportJobState["items"][number]) => {
   if (item.status === 'failed' || item.error) {
     return 'error';
   }
@@ -73,7 +64,7 @@ const splitOutputPath = (outputPath: string | null) => {
   return outputPath.split('/').filter(Boolean);
 };
 
-const buildJobItemPathMeta = (item: Pick<ExportJobItem, 'logNo' | 'outputPath'>) => {
+const buildJobItemPathMeta = (item: Pick<ExportJobState["items"][number], 'logNo' | 'outputPath'>) => {
   const pathSegments = splitOutputPath(item.outputPath);
 
   if (pathSegments.length === 0) {
@@ -94,24 +85,6 @@ const buildJobItemPathMeta = (item: Pick<ExportJobItem, 'logNo' | 'outputPath'>)
     directoryLabel: directorySegments.length > 0 ? directorySegments.join(' / ') : 'root',
     outputLabel: item.outputPath ?? 'diagnostics only',
   };
-};
-
-const buildModalMarkdown = (item: ExportJobItem) => {
-  if (item.markdown) {
-    return item.markdown;
-  }
-
-  if (item.error) {
-    return `> ❌ Error: ${item.error}`;
-  }
-
-  if (item.warningCount > 0) {
-    return item.warnings
-      .map((warning) => `> ⚠️ Warning: ${warning}`)
-      .join('\n\n');
-  }
-
-  return '표시할 Markdown이 없습니다.';
 };
 
 const severityMeta = {
@@ -148,25 +121,19 @@ const jobStatusClass = (status: string | undefined) =>
 
 export const JobResultsPanel = ({
   job,
-  selectedItem,
   activeJobFilter,
   uploadSubmitting,
   onFilterChange,
-  onItemSelect,
   onUploadStart,
-  onModalClose,
 }: {
   job: ExportJobState | null;
-  selectedItem: ExportJobItem | null;
   activeJobFilter: JobFilter;
   uploadSubmitting: boolean;
   onFilterChange: (filter: JobFilter) => void;
-  onItemSelect: (item: ExportJobItem) => void;
   onUploadStart: (input: {
     uploaderKey: string;
     uploaderConfigJson: string;
   }) => Promise<void> | void;
-  onModalClose: () => void;
 }) => {
   const logsScrollAreaRef = useRef<HTMLDivElement | null>(null)
   const [uploaderKey, setUploaderKey] = useState('')
@@ -356,7 +323,7 @@ export const JobResultsPanel = ({
               <div className="job-results-header grid gap-4 lg:flex lg:items-start lg:justify-between">
                 <div>
                   <CardDescription className="results-description text-sm leading-7 text-slate-600">
-                    파일을 눌러 내용을 확인합니다.
+                    생성된 파일과 상태를 확인합니다.
                   </CardDescription>
                 </div>
                 <div
@@ -426,13 +393,10 @@ export const JobResultsPanel = ({
                             data-severity={severity}
                           >
                             <TableCell className="min-w-0 align-top">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                className="job-results-row grid h-auto min-h-0 w-full min-w-0 justify-start rounded-xl px-2 py-1.5 text-left whitespace-normal hover:bg-slate-100"
+                              <div
+                                className="job-results-row grid min-h-0 w-full min-w-0 whitespace-normal rounded-xl px-2 py-1.5 text-left"
                                 data-job-item-id={item.id}
                                 data-severity={severity}
-                                onClick={() => onItemSelect(item)}
                               >
                                 <span className="grid min-w-0 gap-0.5">
                                   <strong className="break-all text-sm font-semibold text-slate-900">
@@ -442,7 +406,7 @@ export const JobResultsPanel = ({
                                     {item.title}
                                   </span>
                                 </span>
-                              </Button>
+                              </div>
                             </TableCell>
                             <TableCell className="align-top text-xs text-slate-600">
                               <div className="grid gap-0.5">
@@ -520,80 +484,6 @@ export const JobResultsPanel = ({
           </div>
         </CardContent>
       </Card>
-
-      {selectedItem ? (
-        <Dialog open onOpenChange={(open) => !open && onModalClose()}>
-          <DialogContent
-            id="markdown-modal"
-            className="markdown-modal-dialog flex !h-[min(96vh,78rem)] !w-[calc(100vw-1.5rem)] !max-w-[96rem] flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-0 shadow-[0_36px_120px_rgba(15,23,42,0.3)] sm:!w-[calc(100vw-3rem)]"
-            showCloseButton={false}
-          >
-            <DialogHeader className="markdown-modal-header grid gap-4 border-b border-slate-200 bg-white px-6 py-5 sm:flex sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <DialogTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
-                  결과 미리보기
-                </DialogTitle>
-              </div>
-              <DialogClose asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="ghost-button min-h-10 rounded-xl px-4"
-                  id="markdown-modal-close"
-                >
-                  닫기
-                </Button>
-              </DialogClose>
-            </DialogHeader>
-            <DialogDescription className="sr-only">
-              export 결과 Markdown 또는 진단 내용을 확인합니다.
-            </DialogDescription>
-            <div
-              id="markdown-modal-meta"
-              className="markdown-modal-meta grid gap-3 border-b border-slate-200 bg-slate-50/90 px-6 py-5 sm:grid-cols-2 xl:grid-cols-4"
-            >
-              <article className="preview-meta-card grid gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_10px_24px_rgba(22,33,50,0.06)]">
-                <span className="text-sm font-medium text-slate-500">Item</span>
-                <strong className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">
-                  {selectedItem.title}
-                </strong>
-              </article>
-              <article className="preview-meta-card grid gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_10px_24px_rgba(22,33,50,0.06)]">
-                <span className="text-sm font-medium text-slate-500">
-                  Status
-                </span>
-                <strong className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">
-                  {selectedItem.status}
-                </strong>
-              </article>
-              <article className="preview-meta-card grid gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_10px_24px_rgba(22,33,50,0.06)]">
-                <span className="text-sm font-medium text-slate-500">
-                  Warnings
-                </span>
-                <strong className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">
-                  {selectedItem.warningCount}
-                </strong>
-              </article>
-              <article className="preview-meta-card grid gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_10px_24px_rgba(22,33,50,0.06)]">
-                <span className="text-sm font-medium text-slate-500">
-                  Output
-                </span>
-                <strong className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">
-                  {selectedItem.outputPath ?? 'diagnostics only'}
-                </strong>
-              </article>
-            </div>
-            <ScrollArea
-              id="markdown-modal-body"
-              className="markdown-modal-body min-h-0 flex-1 overflow-hidden bg-white"
-            >
-              <article className="markdown-modal-content mx-auto min-h-full w-full max-w-[80rem] px-6 py-6">
-                <MarkdownDocument markdown={buildModalMarkdown(selectedItem)} />
-              </article>
-            </ScrollArea>
-          </DialogContent>
-        </Dialog>
-      ) : null}
     </>
   );
 };
