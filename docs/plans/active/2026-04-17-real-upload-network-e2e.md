@@ -17,7 +17,7 @@ After this change, a contributor can run one explicit command that fetches a rea
 - [x] (2026-04-17 14:10Z) Wired `.github/workflows/required-checks.yml` to run `pnpm test:network:upload` on every non-draft PR using repository vars/secrets.
 - [x] (2026-04-17 14:17Z) Fixed the upload destination to GitHub `mym0404/image-archive` with path `/` and removed provider/repo/path env knobs.
 - [x] (2026-04-17 14:19Z) Switched local and CI configuration to root `.env` management and added `.env.example`.
-- [x] (2026-04-17 14:21Z) Changed the default GitHub upload branch to `master` when no branch env is provided.
+- [x] (2026-04-17 14:21Z) Fixed the GitHub upload branch to `master` and removed branch env dependency from the live test contract.
 - [ ] (2026-04-17 14:10Z) `pnpm typecheck` still fails on pre-existing `SinglePostFetcher.fetchBinary` mismatches in `scripts/lib/single-post-metadata-cache.ts` and `tests/single-post-metadata-cache.test.ts`; the live upload work did not resolve those unrelated errors.
 - [ ] Run the new test with real provider credentials and record a passing transcript.
 
@@ -31,12 +31,12 @@ After this change, a contributor can run one explicit command that fetches a rea
   Evidence: `scripts/lib/single-post-metadata-cache.ts` and `tests/single-post-metadata-cache.test.ts` both fail because `SinglePostFetcher` now requires `fetchBinary`.
 - Observation: forcing the live upload step into the existing `pull_request` workflow means fork PRs can fail before code quality is evaluated, because repository secrets are not exposed there.
   Evidence: the workflow now sources `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN` from repository secrets under `.github/workflows/required-checks.yml`.
-- Observation: once repo/path were fixed, the extra provider/repo/path env knobs only added variance without improving coverage.
-  Evidence: the test now needs only `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN` and optional branch while still exercising the same HTTP export and PicGo upload path.
+- Observation: once repo/path and branch were fixed, the extra provider env knobs only added variance without improving coverage.
+  Evidence: the test now needs only `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN` while still exercising the same HTTP export and PicGo upload path.
 - Observation: loading `.env` inside the test keeps local UX simple without changing unrelated runtime entrypoints.
   Evidence: `tests/naver.upload.integration.test.ts` now populates `process.env` from `.env` before resolving the live upload config.
-- Observation: a concrete branch default is better than an empty optional branch because CI no longer depends on repo variable setup for the common case.
-  Evidence: the test now resolves `FAREWELL_UPLOAD_E2E_GITHUB_BRANCH?.trim() || "master"`.
+- Observation: fixing the branch to `master` is better than keeping a branch env because local and CI setup no longer carry an unnecessary override surface.
+  Evidence: the live harness now resolves the GitHub provider branch to `master` without reading env.
 
 ## Decision Log
 
@@ -58,8 +58,8 @@ After this change, a contributor can run one explicit command that fetches a rea
 - Decision: manage the live upload credential contract through root `.env` rather than ad-hoc shell exports.
   Rationale: the user explicitly wanted `.env` management; CI can still comply by materializing the same `.env` file before the test step.
   Date/Author: 2026-04-17 / Codex
-- Decision: default the upload branch to `master`.
-  Rationale: the user explicitly asked for `master` as the default branch so local and CI setup can omit the branch in the common case.
+- Decision: fix the upload branch to `master`.
+  Rationale: the user explicitly asked for `master` as the only live upload branch, so keeping a branch env only adds an invalid configuration path.
   Date/Author: 2026-04-17 / Codex
 
 ## Outcomes & Retrospective
@@ -74,7 +74,7 @@ Today the repository already has two kinds of upload verification. `scripts/harn
 
 ## Plan of Work
 
-Add one new integration test file at `tests/naver.upload.integration.test.ts`. The file should load root `.env`, skip entirely unless `FAREWELL_UPLOAD_E2E=1`, use GitHub `mym0404/image-archive` with path `/` as fixed upload settings, default the branch to `master`, and fail immediately if the enable flag is set without `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`. The test should start the real HTTP server, create a temp output directory, export one real `mym0404` post using `download-and-upload`, wait for `upload-ready`, submit the real upload request, wait for `upload-completed`, and then verify that both the manifest and the written Markdown now contain uploaded absolute URLs instead of local asset references.
+Add one new integration test file at `tests/naver.upload.integration.test.ts`. The file should load root `.env`, skip entirely unless `FAREWELL_UPLOAD_E2E=1`, use GitHub `mym0404/image-archive` with fixed `master` branch and path `/`, and fail immediately if the enable flag is set without `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`. The test should start the real HTTP server, create a temp output directory, export one real `mym0404` post using `download-and-upload`, wait for `upload-ready`, submit the real upload request, wait for `upload-completed`, and then verify that both the manifest and the written Markdown now contain uploaded absolute URLs instead of local asset references.
 
 Update `package.json` to add a dedicated `pnpm test:network:upload` command. Keep `pnpm test:network` and `pnpm check:full` unchanged so default validation never creates remote state. Update `.agents/knowledge/engineering/validation.md` and `README.md` so the new command, its opt-in nature, and the reduced `.env`-based contract are discoverable from the repository’s validation guidance.
 
@@ -117,6 +117,5 @@ Important live values discovered during implementation:
 
 - `FAREWELL_UPLOAD_E2E=1` to enable real upload.
 - `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN` for GitHub `mym0404/image-archive`.
-- Optional `FAREWELL_UPLOAD_E2E_GITHUB_BRANCH`, defaulting to `master`.
 
 Revision note: 2026-04-17. Added a new ExecPlan for opt-in live upload verification because the repository already had mocked upload coverage but no real network upload proof path.

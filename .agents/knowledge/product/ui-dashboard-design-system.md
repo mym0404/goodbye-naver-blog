@@ -27,7 +27,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 
 ## Style Direction
 - 메인 캔버스는 밝은 blue-neutral surface를 사용하고, 핵심 단계 카드 하나에 시선을 모은다.
-- 상단은 현재 단계와 요약만 남기는 최소 헤더를 사용하고, 단계 액션 버튼은 현재 콘텐츠 아래에 둔다.
+- 상단은 현재 단계와 요약만 남기는 최소 헤더를 사용하고, 단계 액션 버튼은 설정 단계에서 피그마 같은 floating bottom toolbar로 고정한다.
 - 블로그 ID 입력과 카테고리 스캔 액션은 첫 단계 카드에 둔다.
 - 카테고리 패널은 카드 나열 대신 고정 높이 scroll area 안의 표로 유지한다.
 - 앱의 관리용 표는 compact row density를 기본으로 하고, 파일/상태 확인도 카드 리스트보다 표를 우선한다.
@@ -56,6 +56,8 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - `CardHeader/CardDescription/CardContent`를 기본 계층으로 사용한다. 큰 feature도 임의 wrapper 대신 card composition으로 쪼갠다.
 - 헤더 카피는 짧게 유지하고, `Stage`, `Command Rail` 같은 장식성 라벨은 두지 않는다.
 - form 성격의 단계는 입력/선택 UI를 먼저 읽고 마지막에 CTA를 누르는 흐름을 우선한다.
+- 하단 floating toolbar가 떠 있는 단계는 툴바 폭을 화면 전체로 늘리지 않고, 본문 위에 떠 있는 보조 레이어처럼 보이게 유지한다.
+- 하단 floating toolbar가 떠 있는 단계는 본문 마지막 요소가 버튼 아래로 가려지지 않도록 하단 여백을 함께 확보한다.
 - 텍스트 입력은 `Input`, 상태 pill과 count는 `Badge`, 오류/가이드 배너는 `Alert`를 우선한다.
 - 사용자 피드백 토스트는 `sonner` 기반 `Toaster`/`toast()`로 통일한다.
 - 앱 표는 `src/ui/components/ui/table.tsx` 공용 컴포넌트를 사용하고, header/cell padding은 compact 기본값을 유지한다.

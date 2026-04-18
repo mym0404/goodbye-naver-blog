@@ -93,7 +93,7 @@ pnpm start
 
 ### 실업로드 e2e
 
-`pnpm test:network:upload`는 opt-in Playwright e2e입니다. 업로드 대상은 항상 GitHub `mym0404/image-archive`, path는 항상 `/`입니다. 루트 `.env`에서 `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`, 선택적으로 `FAREWELL_UPLOAD_E2E_GITHUB_BRANCH`를 읽고, 비어 있으면 기본 브랜치는 `master`입니다.
+`pnpm test:network:upload`는 opt-in Playwright e2e입니다. 업로드 대상은 항상 GitHub `mym0404/image-archive`, branch는 항상 `master`, path는 항상 `/`입니다. 루트 `.env`에서 `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`를 읽습니다.
 
 `.env` 준비:
 
@@ -106,7 +106,6 @@ cp .env.example .env
 ```bash
 FAREWELL_UPLOAD_E2E=1
 FAREWELL_UPLOAD_E2E_GITHUB_TOKEN=ghp_xxx
-FAREWELL_UPLOAD_E2E_GITHUB_BRANCH=master
 ```
 
 로컬 실행:
@@ -120,7 +119,6 @@ pnpm test:network:upload
 GitHub Actions 준비:
 
 - Repository secret: `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`
-- Repository variable: `FAREWELL_UPLOAD_E2E_GITHUB_BRANCH` (`master`가 기본값이라 생략 가능)
 
 현재 [required-checks.yml](./.github/workflows/required-checks.yml)에서는 실행 전에 `.env`를 만들고 `pnpm test:network:upload` Playwright e2e를 항상 실행합니다.
 

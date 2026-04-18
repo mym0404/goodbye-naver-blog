@@ -11,6 +11,7 @@ import type { ExportJobState, PostManifestEntry, ScanResult } from "../../src/sh
 const blogId = "mym0404"
 const targetLogNo = "222990202785"
 const uploadRepo = "mym0404/image-archive"
+const uploadBranch = "master"
 const uploadPath = "/"
 const responseTimeoutMs = 240_000
 const githubApiBaseUrl = "https://api.github.com"
@@ -111,7 +112,7 @@ const resolveLiveUploadConfig = (): LiveUploadConfig => {
 
   return {
     token,
-    branch: process.env.FAREWELL_UPLOAD_E2E_GITHUB_BRANCH?.trim() || "master",
+    branch: uploadBranch,
   }
 }
 

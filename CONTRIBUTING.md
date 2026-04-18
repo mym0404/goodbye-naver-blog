@@ -38,16 +38,15 @@ pnpm dev
 `pnpm test:network:upload`는 opt-in 검증입니다.
 
 - 고정 업로드 대상: GitHub `mym0404/image-archive`
+- 고정 branch: `master`
 - 고정 path: `/`
 - 필수 환경 변수: `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`
-- 선택 환경 변수: `FAREWELL_UPLOAD_E2E_GITHUB_BRANCH`
 
 예시:
 
 ```bash
 FAREWELL_UPLOAD_E2E=1 \
 FAREWELL_UPLOAD_E2E_GITHUB_TOKEN=ghp_xxx \
-FAREWELL_UPLOAD_E2E_GITHUB_BRANCH=main \
 pnpm test:network:upload
 ```
 

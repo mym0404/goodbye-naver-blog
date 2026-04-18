@@ -27,6 +27,7 @@
 - `agent-browser`
 - `pnpm smoke:ui`
 - `pnpm smoke:ui -- --capture-dir docs/generated/ui-review/round-01`
+- `FAREWELL_UPLOAD_E2E=1 FAREWELL_UPLOAD_E2E_GITHUB_TOKEN=... pnpm test:network:upload`
 
 ## Manual Steps
 1. 로컬 서버를 띄운다.
@@ -34,14 +35,17 @@
 3. `NestJS` 같이 글 수가 작은 카테고리를 검색한다.
 4. 선택 카테고리를 하나만 남기고 선택 범위 수치가 즉시 줄어드는지 확인한다.
 5. `Assets` 탭에서 `이미지 처리 방식`을 확인하고, `download-and-upload` 경로에서도 업로드 provider 폼이 설정 탭에 나타나지 않는지 본다.
-6. export를 시작하고 상태가 `completed` 또는 `upload-ready`로 바뀌는지 확인한다.
-7. `upload-ready`면 결과 패널의 업로드 대상 표, provider 선택, provider별 구조화 필드, 시작 버튼이 보이는지 확인한다.
-8. placeholder 값으로 업로드를 시작하고 `uploading -> upload-failed` 전환 뒤 같은 job에서 값을 수정해 재시도할 수 있는지 본다.
-9. 재시도 후 `upload-completed` 전환과 결과 행 상태 변경을 확인한다.
-10. zero-candidate 케이스에서는 업로드 폼 없이 `export만 완료` 안내만 보이는지 확인한다.
-11. status, summary, logs, 완료 파일 표, manifest 응답을 확인한다.
-12. warning/error 필터를 눌러 결과가 좁혀지는지 확인한다.
-13. 결과 설명, field help, 파일 subtitle 텍스트가 육안으로도 옅지 않은지 확인한다.
+6. export를 시작하고 상태가 `running`일 때 `#running-progress`가 `처리한 글 수 / 전체 글 수`를 반영하는지 본다.
+7. export가 `completed` 또는 `upload-ready`로 바뀌는지 확인한다.
+8. `upload-ready`면 결과 패널의 업로드 대상 표, `#upload-progress`, provider 선택, provider별 구조화 필드, 시작 버튼이 보이는지 확인한다.
+9. placeholder 값으로 업로드를 시작하고 `uploading` 동안 `#upload-progress`와 row 상태가 `대기 / 부분 완료 / 완료`로 바뀌는지 본다.
+10. `uploadedCount === candidateCount && status === "uploading"` 구간에서는 full bar여도 완료가 아니라 rewrite 대기 문구가 보이는지 확인한다.
+11. `uploading -> upload-failed` 전환 뒤 같은 job에서 값을 수정해 재시도할 수 있는지 본다. 이때 row 상태는 모두 `실패`여야 한다.
+12. 재시도 후 `upload-completed` 전환과 결과 행 상태 변경을 확인한다.
+13. zero-candidate 케이스에서는 업로드 폼 없이 `export만 완료` 안내만 보이는지 확인한다.
+14. status, summary, logs, 완료 파일 표, manifest 응답을 확인한다.
+15. warning/error 필터를 눌러 결과가 좁혀지는지 확인한다.
+16. 결과 설명, field help, 파일 subtitle 텍스트가 육안으로도 옅지 않은지 확인한다.
 
 ## Screenshot Feedback Loop
 같은 시나리오로 아래 루프를 5번 반복한다.
@@ -71,7 +75,9 @@
 - 로그, 요약, 카테고리 패널이 같은 시각 언어를 유지하는지
 - frontmatter alias 충돌 시 오류가 즉시 보이고 export가 막히는지
 - 결과 패널의 upload target table이 desktop/mobile 모두 과하게 넘치지 않는지
+- `#upload-targets-scroll`이 `max-height` 안에서 내부 스크롤로만 길어지는지
 - `upload-ready`, `upload-failed`에서만 업로드 폼이 보이고, 완료 후에는 placeholder provider 값이 화면에 남지 않는지
+- full bar 업로드 진행률이 곧바로 완료 카피로 바뀌지 않고 rewrite 대기 문구를 거치는지
 - per-post 결과 경로가 `.../index.md` 패턴을 유지하는지
 - 완료 파일 트리에서 경고/에러 아이콘과 필터가 일관되게 동작하는지
 - 설정 탭 5개 높이가 너무 낮지 않고 클릭 타깃이 충분한지
@@ -92,6 +98,7 @@
 - category list 렌더 여부
 - export job이 `completed` 또는 `upload-ready`로 끝났는지
 - upload trigger 후 `uploading -> upload-failed -> retry -> upload-completed` 또는 동등한 retry chain 전환 여부
+- live upload 검증을 돌렸다면 같은 `master` branch에서 GitHub partial upload 증거와 UI `uploading + uploadedCount > 0` 증거를 함께 남겼는지
 - zero-candidate 시 `skipped-no-candidates` 안내 여부
 - manifest 응답 여부
 - UI와 API 상태가 어긋나는지 여부

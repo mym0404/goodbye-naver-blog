@@ -37,7 +37,7 @@
 - `pnpm test:offline`: 네트워크 없는 로컬 테스트만 다시 확인할 때 실행한다.
 - `pnpm test:coverage`: V8 coverage 리포트와 90% threshold를 다시 확인할 때 실행한다.
 - `pnpm test:network`: 네트워크가 필요한 통합 테스트를 다시 확인할 때 실행한다.
-- `pnpm test:network:upload`: Playwright가 실제 브라우저 UI로 `mym0404` 공개 글 1건을 scan, scope 설정, export한 뒤 GitHub `mym0404/image-archive` 루트 경로(`/`)로 PicGo 실업로드를 수행할 때 실행한다. 업로드 뒤에는 공개 GitHub raw URL 이미지 렌더를 확인하고, branch head가 바뀐 경우 compare diff에 이미지 파일이 잡히는지까지 본다. 같은 글을 같은 루트 경로로 다시 올리는 idempotent 재실행에서는 branch head가 그대로일 수 있으므로 repo tree 존재 여부로 대체 검증한다. 루트 `.env`에서 `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`, 선택적으로 `FAREWELL_UPLOAD_E2E_GITHUB_BRANCH`를 읽고, 브랜치를 비우면 기본값은 `master`다.
+- `pnpm test:network:upload`: Playwright가 실제 브라우저 UI로 `mym0404` 공개 글 1건을 scan, scope 설정, export한 뒤 GitHub `mym0404/image-archive` `master` branch 루트 경로(`/`)로 PicGo 실업로드를 수행할 때 실행한다. 업로드 뒤에는 공개 GitHub raw URL 이미지 렌더를 확인하고, branch head가 바뀐 경우 compare diff에 이미지 파일이 잡히는지까지 본다. 같은 글을 같은 루트 경로로 다시 올리는 idempotent 재실행에서는 branch head가 그대로일 수 있으므로 repo tree 존재 여부로 대체 검증한다. 루트 `.env`에서 `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`를 읽는다.
 - `pnpm parser:check`: parser capability, fixture, 테스트, sample 대응이 맞는지 확인할 때 실행한다.
 - `pnpm samples:verify`: 실제 공개 샘플 export 결과가 renderer/exporter 변경 뒤에도 유지되는지 확인할 때 실행한다.
 - `pnpm smoke:ui`: Playwright로 고정한 scan -> category select -> export -> upload 결과 화면 회귀를 다시 확인할 때 실행한다.
@@ -48,7 +48,7 @@
 - `pre-commit` hook은 `pnpm test:offline`을 돈다.
 - `pre-push` hook은 `pnpm check:local`을 돈다.
 - PR CI는 `pnpm check:full` 뒤 Playwright 기반 `pnpm test:network:upload`, `pnpm test:coverage`를 실행하고 `coverage/lcov.info`를 Codecov로 업로드한다.
-- 실업로드 step은 GitHub `mym0404/image-archive` 저장소와 루트 경로(`/`)를 고정값으로 사용한다. GitHub Actions에서는 repository secret `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`, 선택적으로 repository variable `FAREWELL_UPLOAD_E2E_GITHUB_BRANCH`로 `.env`를 만들어 실행한다. variable을 비우면 `master`로 업로드한다.
+- 실업로드 step은 GitHub `mym0404/image-archive` 저장소, `master` branch, 루트 경로(`/`)를 고정값으로 사용한다. GitHub Actions에서는 repository secret `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`로 `.env`를 만들어 실행한다.
 - fork PR에서는 기본 `pull_request` 보안 모델상 secret이 주입되지 않으므로 이 workflow를 그대로 유지하면 외부 기여 PR은 실패할 수 있다.
 
 ## Task Loops
