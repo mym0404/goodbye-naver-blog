@@ -791,16 +791,26 @@ export const App = () => {
           </CardContent>
         </Card>
 
-        <section className="grid gap-4" data-step-view={currentStep}>
+        <section
+          className={cn(
+            "grid gap-4",
+            isSetupStep ? "pb-28 sm:pb-32" : "",
+          )}
+          data-step-view={currentStep}
+        >
           {renderCurrentStep()}
+        </section>
+      </div>
 
-          {isSetupStep ? (
-            <div className="flex flex-wrap items-center justify-end gap-2.5">
+      {isSetupStep ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4 sm:pb-5 xl:px-6">
+          <div className="mx-auto flex w-full max-w-6xl justify-center">
+            <div className="flex min-h-16 w-full max-w-fit flex-wrap items-center justify-end gap-2.5 rounded-[1.4rem] border border-white/90 bg-white/78 px-3 py-3 shadow-[0_20px_50px_rgba(22,33,50,0.18)] ring-1 ring-slate-900/5 backdrop-blur-xl supports-[backdrop-filter]:bg-white/72">
               {setupStepIndex > 0 ? (
                 <Button
                   type="button"
                   variant="secondary"
-                  className="h-9 rounded-xl px-4"
+                  className="h-10 rounded-xl border border-slate-200/80 bg-white px-4 shadow-[0_1px_2px_rgba(22,33,50,0.06)]"
                   onClick={goToPreviousStep}
                 >
                   이전
@@ -810,7 +820,7 @@ export const App = () => {
               <Button
                 type="button"
                 id={setupStep === "blog-input" ? "scan-button" : setupStep === "assets-options" ? "export-button" : undefined}
-                className="h-9 rounded-xl px-4"
+                className="h-10 rounded-xl px-4 shadow-[0_10px_24px_rgba(51,102,255,0.24)]"
                 disabled={
                   setupStep === "blog-input"
                     ? scanPending
@@ -839,9 +849,9 @@ export const App = () => {
                 <span>{nextButtonLabel}</span>
               </Button>
             </div>
-          ) : null}
-        </section>
-      </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }
