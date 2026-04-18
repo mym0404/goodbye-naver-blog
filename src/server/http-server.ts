@@ -21,7 +21,7 @@ import {
   optionDescriptions,
   type PartialExportOptions,
 } from "../shared/export-options.js"
-import type { ExportRequest } from "../shared/types.js"
+import type { ExportRequest, ScanResult } from "../shared/types.js"
 import { extractBlogId, toErrorMessage } from "../shared/utils.js"
 import { JobStore } from "./job-store.js"
 
@@ -312,15 +312,18 @@ export const createHttpServer = ({
   const runExport = async ({
     jobId,
     request,
+    cachedScanResult,
   }: {
     jobId: string
     request: ExportRequest
+    cachedScanResult?: ScanResult | null
   }) => {
     jobStore.start(jobId)
 
     try {
       const exporter = new NaverBlogExporter({
         request,
+        cachedScanResult,
         onLog: (message) => jobStore.appendLog(jobId, message),
         onProgress: (progress) => jobStore.updateProgress(jobId, progress),
         onItem: (item) => jobStore.appendItem(jobId, item),
@@ -457,6 +460,7 @@ export const createHttpServer = ({
           blogIdOrUrl?: string
           outputDir?: string
           options?: PartialExportOptions
+          scanResult?: ScanResult
         }
 
         if (!payload.blogIdOrUrl?.trim() || !payload.outputDir?.trim()) {
@@ -496,6 +500,7 @@ export const createHttpServer = ({
         void runExport({
           jobId: job.id,
           request: exportRequest,
+          cachedScanResult: payload.scanResult ?? null,
         })
 
         sendJson({

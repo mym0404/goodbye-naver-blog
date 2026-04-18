@@ -11,6 +11,7 @@ import type {
   ExportRequest,
   PostManifestEntry,
   PostSummary,
+  ScanResult,
 } from "../../shared/types.js"
 import {
   ensureDir,
@@ -44,12 +45,14 @@ export class NaverBlogExporter {
     warnings: number
   }) => void
   readonly onItem: ((item: ExportJobItem) => void) | null
+  readonly cachedScanResult: ScanResult | null
 
   constructor({
     request,
     onLog,
     onProgress,
     onItem,
+    cachedScanResult,
   }: {
     request: ExportRequest
     onLog: (message: string) => void
@@ -60,11 +63,13 @@ export class NaverBlogExporter {
       warnings: number
     }) => void
     onItem?: (item: ExportJobItem) => void
+    cachedScanResult?: ScanResult | null
   }) {
     this.request = request
     this.onLog = onLog
     this.onProgress = onProgress
     this.onItem = onItem ?? null
+    this.cachedScanResult = cachedScanResult ?? null
   }
 
   async run() {
@@ -84,10 +89,25 @@ export class NaverBlogExporter {
       options.assets.imageHandlingMode === "download-and-upload" &&
       options.assets.imageContentMode !== "base64"
 
-    const [scan, posts] = await Promise.all([
-      fetcher.scanBlog(),
-      fetcher.getAllPosts(),
-    ])
+    const reusablePosts =
+      this.cachedScanResult?.blogId === blogId && this.cachedScanResult.posts
+        ? this.cachedScanResult.posts
+        : null
+    const reusableScanResult = reusablePosts ? this.cachedScanResult : null
+    const [scan, posts] = reusableScanResult && reusablePosts
+      ? [
+          {
+            blogId: reusableScanResult.blogId,
+            totalPostCount: reusableScanResult.totalPostCount,
+            categories: reusableScanResult.categories,
+          } satisfies ScanResult,
+          reusablePosts,
+        ]
+      : await Promise.all([fetcher.scanBlog(), fetcher.getAllPosts()])
+
+    if (reusableScanResult) {
+      this.onLog(`이전 스캔 결과 재사용: categories=${scan.categories.length}, posts=${posts.length}`)
+    }
     const categoryMap = new Map(scan.categories.map((category) => [category.id, category]))
     const filteredPosts = filterPostsByScope({
       posts,

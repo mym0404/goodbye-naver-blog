@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 
-import type { ExportJobState, ExportOptions } from "../../shared/types.js"
+import type { ExportJobState, ExportOptions, ScanResult } from "../../shared/types.js"
 
 import { fetchJson, postJson, postUploadJson } from "../lib/api.js"
 
@@ -68,10 +68,12 @@ export const useExportJob = () => {
     blogIdOrUrl,
     outputDir,
     options,
+    scanResult,
   }: {
     blogIdOrUrl: string
     outputDir: string
     options: ExportOptions
+    scanResult?: ScanResult | null
   }) => {
     setSubmitting(true)
     setUploadSubmitting(false)
@@ -82,6 +84,7 @@ export const useExportJob = () => {
         blogIdOrUrl,
         outputDir,
         options,
+        scanResult,
       })
 
       setJobId(response.jobId)

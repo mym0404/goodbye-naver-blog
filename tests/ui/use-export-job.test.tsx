@@ -4,6 +4,7 @@ import { act, renderHook, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { defaultExportOptions } from "../../src/shared/export-options.js"
+import type { ScanResult } from "../../src/shared/types.js"
 import { useExportJob } from "../../src/ui/hooks/use-export-job.js"
 import { fetchJson, postJson, postUploadJson } from "../../src/ui/lib/api.js"
 
@@ -16,6 +17,35 @@ vi.mock("../../src/ui/lib/api.js", () => ({
 const mockedFetchJson = vi.mocked(fetchJson)
 const mockedPostJson = vi.mocked(postJson)
 const mockedPostUploadJson = vi.mocked(postUploadJson)
+const scanResult: ScanResult = {
+  blogId: "mym0404",
+  totalPostCount: 1,
+  categories: [
+    {
+      id: 84,
+      name: "PS 알고리즘, 팁",
+      parentId: null,
+      postCount: 1,
+      isDivider: false,
+      isOpen: true,
+      path: ["PS 알고리즘, 팁"],
+      depth: 0,
+    },
+  ],
+  posts: [
+    {
+      blogId: "mym0404",
+      logNo: "223034929697",
+      title: "테스트 글",
+      publishedAt: "2023-03-04T13:00:00+09:00",
+      categoryId: 84,
+      categoryName: "PS 알고리즘, 팁",
+      source: "https://blog.naver.com/mym0404/223034929697",
+      editorVersion: 4,
+      thumbnailUrl: null,
+    },
+  ],
+}
 
 describe("useExportJob", () => {
   afterEach(() => {
@@ -110,6 +140,7 @@ describe("useExportJob", () => {
         blogIdOrUrl: "mym0404",
         outputDir: "./output",
         options: defaultExportOptions(),
+        scanResult,
       })
     })
 
@@ -122,6 +153,7 @@ describe("useExportJob", () => {
       blogIdOrUrl: "mym0404",
       outputDir: "./output",
       options: defaultExportOptions(),
+      scanResult,
     })
     expect(mockedFetchJson).toHaveBeenCalledTimes(2)
     expect(mockedFetchJson).toHaveBeenCalledWith("/api/export/job-1")
@@ -215,6 +247,7 @@ describe("useExportJob", () => {
         blogIdOrUrl: "mym0404",
         outputDir: "./output",
         options: uploadFlowOptions,
+        scanResult,
       })
     })
 

@@ -17,9 +17,9 @@
 
 ## User Flow
 1. 사용자가 블로그 ID 또는 URL을 입력한다.
-2. scan으로 전체 공개 글 수와 카테고리 목록을 확인한다.
+2. scan으로 전체 공개 글 수, 카테고리 목록, 공개 글 메타데이터를 함께 확보한다.
 3. 카테고리 범위와 export 옵션을 조정한다.
-4. exporter가 공개 글을 순회하며 Markdown, 자산, `manifest.json`을 생성한다.
+4. exporter가 scan snapshot을 재사용해 대상 글을 정하고 공개 글 본문을 순회하며 Markdown, 자산, `manifest.json`을 생성한다.
 5. UI는 job status, summary, logs, 완료 파일 표, warning/error 필터, upload 상태 확인 흐름을 제공한다.
 
 ## Output Rules

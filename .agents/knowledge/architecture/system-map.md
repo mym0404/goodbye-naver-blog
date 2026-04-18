@@ -22,6 +22,7 @@
 - `converter`: AST를 Markdown과 frontmatter로 렌더링
 - `exporter`: fetch -> parse -> review -> render -> write -> manifest 실행과 PicGo upload/rewrite 단계를 묶음
 - `server`: 로컬 웹 UI, export job API, 같은 job의 upload trigger/polling lifecycle, `providerKey/providerFields -> PicGo config` 매핑 제공
+- scan 후 export는 UI가 가진 scan snapshot을 실행 경로에 넘겨 목록 재수집을 줄인다.
 - `shared`: export 옵션, 타입, lifecycle contract, capability, sample corpus
 - `ui`: 단계형 wizard(`블로그 입력 -> 카테고리 -> 구조 -> Frontmatter -> Markdown -> Assets -> 실행/업로드/결과`) 대시보드 UI
 

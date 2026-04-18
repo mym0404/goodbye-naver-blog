@@ -315,6 +315,14 @@ describe("App", () => {
       }
 
       if (url.endsWith("/api/export")) {
+        expect(init?.body).toBe(
+          JSON.stringify({
+            blogIdOrUrl: "mym0404",
+            outputDir: "./output",
+            options: exportedOptions,
+            scanResult,
+          }),
+        )
         return buildJsonResponse({ jobId: "job-1" }, init?.method === "POST" ? 202 : 200)
       }
 

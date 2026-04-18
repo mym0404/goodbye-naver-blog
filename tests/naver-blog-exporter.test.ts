@@ -207,6 +207,45 @@ describe("NaverBlogExporter", () => {
     await rm(outputDir, { recursive: true, force: true })
   })
 
+  it("reuses the scanned metadata snapshot instead of fetching the list again", async () => {
+    const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
+    const scanBlogSpy = vi.spyOn(NaverBlogFetcher.prototype, "scanBlog")
+    const getAllPostsSpy = vi.spyOn(NaverBlogFetcher.prototype, "getAllPosts")
+    const fetchPostHtmlSpy = vi.spyOn(NaverBlogFetcher.prototype, "fetchPostHtml").mockResolvedValue(postHtml)
+    const downloadBinarySpy = vi.spyOn(NaverBlogFetcher.prototype, "downloadBinary").mockResolvedValue()
+    const fetchBinarySpy = vi.spyOn(NaverBlogFetcher.prototype, "fetchBinary").mockResolvedValue({
+      bytes: Buffer.from("image"),
+      contentType: "image/png",
+    })
+
+    const exporter = new NaverBlogExporter({
+      request: {
+        blogIdOrUrl: "https://blog.naver.com/mym0404",
+        outputDir,
+        profile: "gfm",
+        options: defaultExportOptions(),
+      },
+      cachedScanResult: {
+        ...scanResult,
+        posts,
+      },
+      onLog: () => {},
+      onProgress: () => {},
+      onItem: () => {},
+    })
+
+    const manifest = await exporter.run()
+
+    expect(manifest.totalPosts).toBe(1)
+    expect(scanBlogSpy).not.toHaveBeenCalled()
+    expect(getAllPostsSpy).not.toHaveBeenCalled()
+    expect(fetchPostHtmlSpy).toHaveBeenCalledTimes(1)
+    expect(downloadBinarySpy).not.toHaveBeenCalled()
+    expect(fetchBinarySpy).toHaveBeenCalled()
+
+    await rm(outputDir, { recursive: true, force: true })
+  })
+
   it("marks download-and-upload exports as upload-ready with local candidate metadata", async () => {
     const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
     const onItem = vi.fn()

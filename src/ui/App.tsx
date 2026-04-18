@@ -472,6 +472,7 @@ export const App = () => {
         blogIdOrUrl: currentScanTarget,
         outputDir: outputDir.trim(),
         options,
+        scanResult: activeScanResult,
       })
       toast.success("내보내기 작업을 등록했습니다.", {
         description: `${scopedPostCount}개 글을 처리합니다. job ${jobId}`,
