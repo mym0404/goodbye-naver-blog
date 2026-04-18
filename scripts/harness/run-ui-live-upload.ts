@@ -30,8 +30,8 @@ const resolveBrowserMode = () => {
   }
 
   return {
-    headless: Boolean(process.env.CI),
-    slowMo: process.env.CI ? 0 : 200,
+    headless: true,
+    slowMo: 0,
   }
 }
 
