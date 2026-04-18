@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "../../components/ui/card.js"
 import { Input } from "../../components/ui/input.js"
+import { Progress } from "../../components/ui/progress.js"
 import { ScrollArea } from "../../components/ui/scroll-area.js"
 import { Separator } from "../../components/ui/separator.js"
 import {
@@ -223,6 +224,71 @@ const panelCopy: Record<JobResultsMode, { title: string; description: string }> 
   },
 }
 
+const toProgressValue = (completed: number, total: number) =>
+  total > 0 ? Math.round((completed / total) * 100) : 0
+
+const buildUploadRowStatus = ({
+  jobStatus,
+  item,
+}: {
+  jobStatus: ExportJobState["status"] | undefined
+  item: ExportJobState["items"][number]
+}) => {
+  if (jobStatus === "upload-failed") {
+    return {
+      key: "failed",
+      label: "실패",
+    } as const
+  }
+
+  if (item.upload.uploadedCount <= 0) {
+    return {
+      key: "pending",
+      label: "대기",
+    } as const
+  }
+
+  if (item.upload.uploadedCount < item.upload.candidateCount) {
+    return {
+      key: "partial",
+      label: "부분 완료",
+    } as const
+  }
+
+  return {
+    key: "complete",
+    label: "완료",
+  } as const
+}
+
+const buildUploadPanelCopy = (job: ExportJobState | null) => {
+  if (!job) {
+    return "업로드 대상과 진행 상태를 같은 작업에서 이어서 확인합니다."
+  }
+
+  if (
+    job.status === "uploading" &&
+    job.upload.candidateCount > 0 &&
+    job.upload.uploadedCount === job.upload.candidateCount
+  ) {
+    return "자산 업로드는 끝났고 결과 파일에 URL을 반영하는 중입니다."
+  }
+
+  if (job.status === "uploading") {
+    return "업로드한 자산 수를 같은 작업에서 실시간으로 확인합니다."
+  }
+
+  if (job.status === "upload-failed") {
+    return "업로드한 자산 수는 유지한 채 실패 상태를 확인하고 다시 시도할 수 있습니다."
+  }
+
+  if (job.status === "upload-completed") {
+    return "업로드 결과와 대상별 상태를 최종 결과와 함께 확인합니다."
+  }
+
+  return "업로드 대상과 진행 상태를 같은 작업에서 이어서 확인합니다."
+}
+
 export const JobResultsPanel = ({
   mode,
   job,
@@ -261,6 +327,8 @@ export const JobResultsPanel = ({
   })
   const uploadTargetItems = getUploadTargetItems(job)
   const activeProviderDefinition = uploadProviderDefinitions[providerKey]
+  const showUploadPanel =
+    (mode === "upload" || mode === "result") && (job?.upload.candidateCount ?? 0) > 0
   const showUploadForm =
     mode === "upload" &&
     (job?.status === "upload-ready" || job?.status === "upload-failed")
@@ -273,6 +341,11 @@ export const JobResultsPanel = ({
 
     return `${job?.logs.length ?? 0}:${lastEntry.timestamp}:${lastEntry.message}`
   })()
+  const runningProgressValue = toProgressValue(job?.progress.completed ?? 0, job?.progress.total ?? 0)
+  const uploadProgressValue = toProgressValue(
+    job?.upload.uploadedCount ?? 0,
+    job?.upload.candidateCount ?? 0,
+  )
 
   useEffect(() => {
     const viewport = logsScrollAreaRef.current?.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]')
@@ -315,6 +388,19 @@ export const JobResultsPanel = ({
       <CardContent className="status-layout grid gap-5 p-6">
         {mode === "running" ? (
           <section className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
+            <div className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center justify-between gap-3">
+                <strong className="text-sm font-semibold text-slate-900">수집 진행률</strong>
+                <span className="text-sm text-slate-600">
+                  {job?.progress.completed ?? 0} / {job?.progress.total ?? 0}
+                </span>
+              </div>
+              <Progress
+                id="running-progress"
+                value={runningProgressValue}
+                indicatorClassName="bg-sky-600"
+              />
+            </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
                 <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">총 글</span>
@@ -336,12 +422,12 @@ export const JobResultsPanel = ({
           </section>
         ) : null}
 
-        {mode === "upload" ? (
+        {showUploadPanel ? (
           <section className="upload-panel grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
             <div className="grid gap-3 lg:flex lg:items-start lg:justify-between">
               <div>
                 <CardDescription className="text-sm leading-7 text-slate-600">
-                  업로드 대상과 진행 상태를 같은 작업에서 이어서 확인합니다.
+                  {buildUploadPanelCopy(job)}
                 </CardDescription>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -364,7 +450,24 @@ export const JobResultsPanel = ({
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white">
+            <div className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center justify-between gap-3">
+                <strong className="text-sm font-semibold text-slate-900">업로드 진행률</strong>
+                <span className="text-sm text-slate-600">
+                  {job?.upload.uploadedCount ?? 0} / {job?.upload.candidateCount ?? 0}
+                </span>
+              </div>
+              <Progress
+                id="upload-progress"
+                value={uploadProgressValue}
+                indicatorClassName="bg-emerald-600"
+              />
+            </div>
+
+            <ScrollArea
+              id="upload-targets-scroll"
+              className="max-h-[28rem] rounded-[1.5rem] border border-slate-200 bg-white"
+            >
               <Table id="upload-targets-table" className="w-full table-fixed">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
@@ -374,34 +477,46 @@ export const JobResultsPanel = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {uploadTargetItems.map((item) => (
-                    <TableRow key={`upload:${item.id}`}>
-                      <TableCell className="min-w-0">
-                        <div className="grid gap-0.5">
-                          <strong className="truncate text-sm font-semibold text-slate-900">{item.title}</strong>
-                          <span className="truncate text-xs text-slate-500">{item.outputPath ?? item.logNo}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-700">{item.upload.candidateCount}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="rounded-full px-2.5 py-0.5">
-                          {job?.status === "upload-completed"
-                            ? "완료"
-                            : job?.status === "uploading"
-                              ? "업로드 중"
-                              : job?.status === "upload-failed"
-                                ? "실패"
-                                : "대기"}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {uploadTargetItems.map((item) => {
+                    const rowStatus = buildUploadRowStatus({
+                      jobStatus: job?.status,
+                      item,
+                    })
+
+                    return (
+                      <TableRow
+                        key={`upload:${item.id}`}
+                        data-upload-row-id={item.id}
+                        data-upload-row-status={rowStatus.key}
+                      >
+                        <TableCell className="min-w-0">
+                          <div className="grid gap-0.5">
+                            <strong className="truncate text-sm font-semibold text-slate-900">{item.title}</strong>
+                            <span className="truncate text-xs text-slate-500">{item.outputPath ?? item.logNo}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-slate-700">
+                          {item.upload.uploadedCount} / {item.upload.candidateCount}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className="rounded-full px-2.5 py-0.5"
+                            data-upload-row-status-badge={rowStatus.key}
+                          >
+                            {rowStatus.label}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
-            </div>
+            </ScrollArea>
 
             {showUploadForm ? (
               <form
+                id="upload-form"
                 className="grid gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 md:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)_auto]"
                 onSubmit={async (event) => {
                   event.preventDefault()

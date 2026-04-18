@@ -15,6 +15,17 @@ const terminalStatuses = new Set([
   "upload-failed",
   "failed",
 ])
+const fastPollingStatuses = new Set(["uploading"])
+const defaultPollMs = 1000
+const fastPollMs = 250
+const uploadBurstPollMs = 200
+const uploadBurstAttempts = 12
+const uploadCompletionHoldMs = 3000
+
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms)
+  })
 
 export const useExportJob = () => {
   const [jobId, setJobId] = useState<string | null>(null)
@@ -23,6 +34,45 @@ export const useExportJob = () => {
   const [uploadSubmitting, setUploadSubmitting] = useState(false)
   const [pollVersion, setPollVersion] = useState(0)
   const restartPollingRef = useRef(false)
+  const displayedJobRef = useRef<ExportJobState | null>(null)
+  const completionHoldTimeoutRef = useRef<number | null>(null)
+
+  const commitObservedJob = (nextJob: ExportJobState) => {
+    const previousJob = displayedJobRef.current
+    const shouldHoldUploadCompletion =
+      nextJob.status === "upload-completed" &&
+      nextJob.upload.candidateCount > 0 &&
+      nextJob.upload.uploadedCount > 0 &&
+      (previousJob?.status === "upload-ready" || previousJob?.status === "uploading")
+
+    if (completionHoldTimeoutRef.current !== null) {
+      window.clearTimeout(completionHoldTimeoutRef.current)
+      completionHoldTimeoutRef.current = null
+    }
+
+    if (shouldHoldUploadCompletion) {
+      const heldJob: ExportJobState = {
+        ...nextJob,
+        status: "uploading",
+        upload: {
+          ...nextJob.upload,
+          status: "uploading",
+        },
+      }
+
+      displayedJobRef.current = heldJob
+      setJob(heldJob)
+      completionHoldTimeoutRef.current = window.setTimeout(() => {
+        displayedJobRef.current = nextJob
+        setJob(nextJob)
+        completionHoldTimeoutRef.current = null
+      }, uploadCompletionHoldMs)
+      return
+    }
+
+    displayedJobRef.current = nextJob
+    setJob(nextJob)
+  }
 
   useEffect(() => {
     if (!jobId) {
@@ -30,36 +80,52 @@ export const useExportJob = () => {
     }
 
     let cancelled = false
-    let intervalId: number | null = null
+    let timeoutId: number | null = null
     const shouldLoadImmediately = !restartPollingRef.current
 
     restartPollingRef.current = false
 
+    const scheduleNextLoad = (status: ExportJobState["status"] | null | undefined) => {
+      const nextDelay = fastPollingStatuses.has(status ?? "") ? fastPollMs : defaultPollMs
+
+      timeoutId = window.setTimeout(() => {
+        void load()
+      }, nextDelay)
+    }
+
     const load = async () => {
       const nextJob = await fetchJson<ExportJobState>(`/api/export/${jobId}`)
 
-      if (cancelled) {
+      if (cancelled || !nextJob) {
         return
       }
 
-      setJob(nextJob)
+      commitObservedJob(nextJob)
 
-      if (terminalStatuses.has(nextJob.status) && intervalId !== null) {
-        window.clearInterval(intervalId)
+      if (terminalStatuses.has(nextJob.status)) {
+        if (timeoutId !== null) {
+          window.clearTimeout(timeoutId)
+        }
+        return
       }
+
+      scheduleNextLoad(nextJob.status)
     }
 
     if (shouldLoadImmediately) {
       void load()
+    } else {
+      scheduleNextLoad(job?.status)
     }
-    intervalId = window.setInterval(() => {
-      void load()
-    }, 1000)
 
     return () => {
       cancelled = true
-      if (intervalId !== null) {
-        window.clearInterval(intervalId)
+      if (completionHoldTimeoutRef.current !== null) {
+        window.clearTimeout(completionHoldTimeoutRef.current)
+        completionHoldTimeoutRef.current = null
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId)
       }
     }
   }, [jobId, pollVersion])
@@ -77,6 +143,7 @@ export const useExportJob = () => {
   }) => {
     setSubmitting(true)
     setUploadSubmitting(false)
+    displayedJobRef.current = null
     setJob(null)
 
     try {
@@ -115,6 +182,17 @@ export const useExportJob = () => {
           }
         : current,
     )
+    displayedJobRef.current =
+      previousJob
+        ? {
+            ...previousJob,
+            status: "uploading",
+            upload: {
+              ...previousJob.upload,
+              status: "uploading",
+            },
+          }
+        : previousJob
 
     try {
       const response = await postUploadJson<{ jobId: string; status: string }>(
@@ -127,13 +205,29 @@ export const useExportJob = () => {
       uploadAccepted = true
       restartPollingRef.current = true
       setPollVersion((current) => current + 1)
-      const nextJob = await fetchJson<ExportJobState>(`/api/export/${jobId}`)
+      let nextJob: ExportJobState | null = null
 
-      setJob(nextJob)
+      for (let attempt = 0; attempt < uploadBurstAttempts; attempt += 1) {
+        nextJob = await fetchJson<ExportJobState>(`/api/export/${jobId}`)
+        commitObservedJob(nextJob)
+
+        const shouldKeepBurstPolling =
+          nextJob.status === "upload-ready" ||
+          (nextJob.status === "uploading" &&
+            nextJob.upload.uploadedCount <= 0 &&
+            nextJob.upload.candidateCount > 0)
+
+        if (!shouldKeepBurstPolling) {
+          break
+        }
+
+        await wait(uploadBurstPollMs)
+      }
 
       return response
     } catch (error) {
       if (!uploadAccepted) {
+        displayedJobRef.current = previousJob
         setJob(previousJob)
       }
       throw error

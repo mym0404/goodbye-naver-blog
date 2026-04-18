@@ -158,15 +158,17 @@ const uploadFlowOptions = (() => {
 
 const sharedPublicPath = "../../public/hash-shared-image.png"
 const sharedLocalPath = "public/hash-shared-image.png"
+const detailPublicPath = "../../public/hash-detail-image.png"
+const detailLocalPath = "public/hash-detail-image.png"
 
 const uploadItem = {
   ...completedJob.items[0]!,
   id: "NestJS/2026-04-11-1/index.md",
   outputPath: "NestJS/2026-04-11-1/index.md",
-  assetPaths: [sharedPublicPath],
+  assetPaths: [sharedPublicPath, detailPublicPath],
   upload: {
     eligible: true,
-    candidateCount: 1,
+    candidateCount: 2,
     uploadedCount: 0,
     failedCount: 0,
     candidates: [
@@ -176,8 +178,21 @@ const uploadItem = {
         localPath: sharedLocalPath,
         markdownReference: sharedPublicPath,
       },
+      {
+        kind: "image" as const,
+        sourceUrl: "https://example.com/detail.png",
+        localPath: detailLocalPath,
+        markdownReference: detailPublicPath,
+      },
     ],
   },
+}
+
+const uploadPendingItem = {
+  ...uploadItem,
+  id: "React/2026-04-12-2/index.md",
+  title: "대기 중인 글",
+  outputPath: "React/2026-04-12-2/index.md",
 }
 
 const uploadReadyJob: ExportJobState = {
@@ -191,13 +206,13 @@ const uploadReadyJob: ExportJobState = {
   finishedAt: null,
   upload: {
     status: "upload-ready",
-    eligiblePostCount: 1,
-    candidateCount: 1,
+    eligiblePostCount: 2,
+    candidateCount: 4,
     uploadedCount: 0,
     failedCount: 0,
     terminalReason: null,
   },
-  items: [uploadItem],
+  items: [uploadItem, uploadPendingItem],
 }
 
 const uploadingJob: ExportJobState = {
@@ -206,8 +221,50 @@ const uploadingJob: ExportJobState = {
   upload: {
     ...uploadReadyJob.upload,
     status: "uploading",
-    uploadedCount: 1,
+    uploadedCount: 3,
   },
+  items: [
+    {
+      ...uploadItem,
+      upload: {
+        ...uploadItem.upload,
+        uploadedCount: 2,
+      },
+    },
+    {
+      ...uploadPendingItem,
+      upload: {
+        ...uploadPendingItem.upload,
+        uploadedCount: 1,
+      },
+    },
+  ],
+}
+
+const rewritePendingJob: ExportJobState = {
+  ...uploadReadyJob,
+  status: "uploading",
+  upload: {
+    ...uploadReadyJob.upload,
+    status: "uploading",
+    uploadedCount: 4,
+  },
+  items: [
+    {
+      ...uploadItem,
+      upload: {
+        ...uploadItem.upload,
+        uploadedCount: 2,
+      },
+    },
+    {
+      ...uploadPendingItem,
+      upload: {
+        ...uploadPendingItem.upload,
+        uploadedCount: 2,
+      },
+    },
+  ],
 }
 
 const uploadCompletedJob: ExportJobState = {
@@ -217,15 +274,29 @@ const uploadCompletedJob: ExportJobState = {
   upload: {
     ...uploadReadyJob.upload,
     status: "upload-completed",
-    uploadedCount: 1,
+    uploadedCount: 4,
   },
   items: [
     {
       ...uploadItem,
-      assetPaths: ["https://cdn.example.com/shared.png"],
+      assetPaths: [
+        "https://cdn.example.com/shared.png",
+        "https://cdn.example.com/detail.png",
+      ],
       upload: {
         ...uploadItem.upload,
-        uploadedCount: 1,
+        uploadedCount: 2,
+      },
+    },
+    {
+      ...uploadPendingItem,
+      assetPaths: [
+        "https://cdn.example.com/shared.png",
+        "https://cdn.example.com/detail.png",
+      ],
+      upload: {
+        ...uploadPendingItem.upload,
+        uploadedCount: 2,
       },
     },
   ],
@@ -239,7 +310,24 @@ const uploadFailedJob: ExportJobState = {
     ...uploadReadyJob.upload,
     status: "upload-failed",
     failedCount: 1,
+    uploadedCount: 3,
   },
+  items: [
+    {
+      ...uploadItem,
+      upload: {
+        ...uploadItem.upload,
+        uploadedCount: 2,
+      },
+    },
+    {
+      ...uploadPendingItem,
+      upload: {
+        ...uploadPendingItem.upload,
+        uploadedCount: 1,
+      },
+    },
+  ],
 }
 
 const skippedUploadJob: ExportJobState = {
@@ -437,6 +525,8 @@ describe("App", () => {
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("running")
       expect(document.querySelector('[data-step-view="running"]')).not.toBeNull()
+      expect(document.querySelector("#running-progress")).not.toBeNull()
+      expect(document.querySelector("#running-progress")?.getAttribute("aria-valuenow")).toBe("40")
       expect(screen.queryByLabelText("블로그 ID 또는 URL")).not.toBeInTheDocument()
       expect(screen.queryByRole("button", { name: "카테고리 불러오기" })).not.toBeInTheDocument()
       expect(document.querySelector("#export-button")).toBeNull()
@@ -487,11 +577,11 @@ describe("App", () => {
       if (url.endsWith("/api/export/job-upload")) {
         uploadPollCount += 1
 
-        if (uploadPollCount === 1) {
+        if (uploadPollCount <= 2) {
           return buildJsonResponse(uploadReadyJob)
         }
 
-        if (uploadPollCount === 2) {
+        if (uploadPollCount <= 5) {
           return buildJsonResponse(uploadingJob)
         }
 
@@ -511,6 +601,12 @@ describe("App", () => {
     await waitFor(() => {
       expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
       expect(document.querySelector("#upload-targets-table")).not.toBeNull()
+      expect(document.querySelector("#upload-targets-scroll")).not.toBeNull()
+      expect(document.querySelector("#upload-targets-scroll")?.className).toContain("max-h-[28rem]")
+      expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("0")
+      expect(document.querySelector('#upload-targets-table [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("pending")
+      expect(document.querySelector('#upload-targets-table [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("pending")
+      expect(document.querySelector("#upload-form")).not.toBeNull()
       expect(screen.getByLabelText("Provider")).toBeInTheDocument()
       expect(screen.getByLabelText("Repository")).toBeInTheDocument()
       expect(screen.getByLabelText("Token")).toBeInTheDocument()
@@ -526,12 +622,28 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "업로드 시작" }))
 
     await waitFor(() => {
+      expect(document.querySelector("#status-text")?.textContent).toContain("uploading")
+      expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
+      expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("75")
+      expect(document.querySelector("#status-panel")?.textContent).toContain("업로드한 자산 수를 같은 작업에서 실시간으로 확인합니다.")
+      expect(document.querySelector("#upload-form")).toBeNull()
+      expect(document.querySelector('#upload-targets-table [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("complete")
+      expect(document.querySelector('#upload-targets-table [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("partial")
+    }, { timeout: 7000 })
+
+    await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("upload-completed")
       expect(document.querySelector('[data-step-view="result"]')).not.toBeNull()
-      expect(document.querySelector("#upload-targets-table")).toBeNull()
+      expect(document.querySelector("#upload-targets-table")).not.toBeNull()
+      expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("100")
+      expect(document.querySelector('#upload-targets-table [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("complete")
+      expect(document.querySelector('#upload-targets-table [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("complete")
       expect(document.querySelector('[data-job-item-id="NestJS/2026-04-11-1/index.md"]')?.textContent).toContain("2026-04-11-1")
       expect(document.querySelector("#job-file-tree")?.textContent).toContain("NestJS/2026-04-11-1/index.md")
-    }, { timeout: 4000 })
+      expect(document.querySelector("#status-panel")?.textContent).toContain(
+        "업로드 결과와 대상별 상태를 최종 결과와 함께 확인합니다.",
+      )
+    }, { timeout: 7000 })
   })
 
   it("keeps the same job editable after upload failure and allows retry with corrected fields", async () => {
@@ -601,15 +713,15 @@ describe("App", () => {
       if (url.endsWith("/api/export/job-failed")) {
         jobFetchCount += 1
 
-        if (jobFetchCount === 1) {
+        if (jobFetchCount <= 2) {
           return buildJsonResponse(retryReadyJob)
         }
 
-        if (jobFetchCount === 2) {
+        if (jobFetchCount <= 4) {
           return buildJsonResponse(retryFailedJob)
         }
 
-        if (jobFetchCount === 3) {
+        if (jobFetchCount <= 6) {
           return buildJsonResponse(retryUploadingJob)
         }
 
@@ -643,6 +755,10 @@ describe("App", () => {
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("upload-failed")
       expect(screen.getByText("PicGo upload failed.")).toBeInTheDocument()
+      expect(document.querySelector("#upload-form")).not.toBeNull()
+      expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("75")
+      expect(document.querySelector('#upload-targets-table [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("failed")
+      expect(document.querySelector('#upload-targets-table [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("failed")
       expect(screen.getByLabelText("Provider")).toBeInTheDocument()
       expect(screen.getByLabelText("Repository")).toHaveValue("owner/name")
       expect(screen.getByLabelText("Token")).toHaveValue("ghp_bad_secret")
@@ -655,8 +771,83 @@ describe("App", () => {
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("upload-completed")
       expect(document.querySelector('[data-step-view="result"]')).not.toBeNull()
-      expect(document.querySelector("#upload-targets-table")).toBeNull()
-    }, { timeout: 4000 })
+      expect(document.querySelector("#upload-targets-table")).not.toBeNull()
+      expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("100")
+    }, { timeout: 7000 })
+  }, 12000)
+
+  it("shows rewrite-pending copy when the upload bar is full but completion is not final yet", async () => {
+    let jobFetchCount = 0
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-defaults")) {
+        return buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse(scanResult)
+      }
+
+      if (url.endsWith("/api/export")) {
+        return buildJsonResponse({ jobId: "job-rewrite-pending" }, init?.method === "POST" ? 202 : 200)
+      }
+
+      if (url.endsWith("/api/export/job-rewrite-pending/upload")) {
+        return buildJsonResponse({ jobId: "job-rewrite-pending", status: "uploading" }, 202)
+      }
+
+      if (url.endsWith("/api/export/job-rewrite-pending")) {
+        jobFetchCount += 1
+
+        if (jobFetchCount <= 2) {
+          return buildJsonResponse(uploadReadyJob)
+        }
+
+        if (jobFetchCount <= 6) {
+          return buildJsonResponse(rewritePendingJob)
+        }
+
+        return buildJsonResponse(uploadCompletedJob)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    await moveToAssetsStep(user)
+    await user.click(screen.getByRole("button", { name: "내보내기" }))
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
+      expect(document.querySelector("#upload-form")).not.toBeNull()
+    })
+
+    fireEvent.change(screen.getByLabelText("Repository"), {
+      target: { value: "owner/name" },
+    })
+    fireEvent.change(screen.getByLabelText("Token"), {
+      target: { value: "ghp_upload_secret" },
+    })
+    await user.click(screen.getByRole("button", { name: "업로드 시작" }))
+
+    await waitFor(() => {
+      expect(document.querySelector("#status-text")?.textContent).toContain("uploading")
+      expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("100")
+      expect(document.querySelector("#status-panel")?.textContent).toContain(
+        "자산 업로드는 끝났고 결과 파일에 URL을 반영하는 중입니다.",
+      )
+      expect(document.querySelector("#upload-form")).toBeNull()
+    })
   })
 
   it("hides the upload form when the export completed with skipped-no-candidates", async () => {

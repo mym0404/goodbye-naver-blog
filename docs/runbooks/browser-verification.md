@@ -41,7 +41,7 @@
 9. placeholder 값으로 업로드를 시작하고 `uploading` 동안 `#upload-progress`와 row 상태가 `대기 / 부분 완료 / 완료`로 바뀌는지 본다.
 10. `uploadedCount === candidateCount && status === "uploading"` 구간에서는 full bar여도 완료가 아니라 rewrite 대기 문구가 보이는지 확인한다.
 11. `uploading -> upload-failed` 전환 뒤 같은 job에서 값을 수정해 재시도할 수 있는지 본다. 이때 row 상태는 모두 `실패`여야 한다.
-12. 재시도 후 `upload-completed` 전환과 결과 행 상태 변경을 확인한다.
+12. 재시도 후 `upload-completed` 전환과 결과 행 상태 변경을 확인한다. 업로드 대상이 있었던 job이면 결과 단계에서도 `#upload-progress`와 업로드 대상 표가 남아 마지막 업로드 스냅샷을 확인할 수 있어야 한다.
 13. zero-candidate 케이스에서는 업로드 폼 없이 `export만 완료` 안내만 보이는지 확인한다.
 14. status, summary, logs, 완료 파일 표, manifest 응답을 확인한다.
 15. warning/error 필터를 눌러 결과가 좁혀지는지 확인한다.

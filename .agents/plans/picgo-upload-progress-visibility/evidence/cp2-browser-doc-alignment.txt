@@ -1,0 +1,12 @@
+CP2 browser + docs alignment
+
+Commands
+- `pnpm smoke:ui`
+- `pnpm test:network:upload`
+- `rg -n "부분 완료|progress|uploadedCount|rewrite|max-height|test:network:upload|upload-completed" .agents/knowledge/product/domain.md .agents/knowledge/product/ui-dashboard-design-system.md .agents/knowledge/architecture/system-map.md docs/runbooks/browser-verification.md`
+
+Result
+- PASS
+- Smoke evidence still covers running progress, upload partial progress, rewrite-pending full bar, form visibility, and bounded upload-table overflow
+- Live evidence now covers same-branch partial progress on `master` and persisted result-stage upload snapshot after completion
+- Evergreen docs and runbook now describe that completed jobs with upload targets keep `#upload-progress` and the upload table visible in the result step

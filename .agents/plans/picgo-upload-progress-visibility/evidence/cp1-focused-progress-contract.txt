@@ -1,0 +1,7 @@
+Command: pnpm check:local
+Result: pass
+Notes:
+- typecheck passed with the new PicGo runner, server upload lifecycle, progress component, and UI hooks.
+- test:offline passed including focused suites for picgo-upload-phase, http-server, and app upload progress UI.
+- parser:check stayed green.
+- Manual diff inspection confirmed: real partial upload counts now flow picgo-upload-phase -> http-server/job-store -> job-results-panel, rewrite completion stays separate from upload-completed, and upload table rendering is bounded by #upload-targets-scroll.

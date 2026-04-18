@@ -121,6 +121,81 @@ const createUploadFlowOptions = () => {
   return options
 }
 
+const uploadTargetCount = 18
+const uploadCandidatesPerPost = 3
+const uploadTimelineTimestamps = {
+  createdAt: "2026-04-11T04:00:00.000Z",
+  startedAt: "2026-04-11T04:00:01.000Z",
+  runningAt: "2026-04-11T04:00:02.000Z",
+  partialAt: "2026-04-11T04:00:03.000Z",
+  rewriteAt: "2026-04-11T04:00:04.000Z",
+  finishedAt: "2026-04-11T04:00:05.000Z",
+} as const
+
+const uploadCounts = Array.from({ length: uploadTargetCount }, (_, index) => ({
+  pending: 0,
+  partial: index === 0 ? uploadCandidatesPerPost : index === 1 ? 1 : 0,
+  rewrite: uploadCandidatesPerPost,
+  completed: uploadCandidatesPerPost,
+}))
+
+const buildLocalAssetPath = (index: number, assetIndex: number) =>
+  `NestJS/2026-04-11-223034929${String(700 + index).padStart(3, "0")}/image-${String(assetIndex + 1).padStart(2, "0")}.png`
+
+const buildRemoteAssetPath = (index: number, assetIndex: number) =>
+  `https://cdn.example.com/${buildLocalAssetPath(index, assetIndex)}`
+
+const buildUploadCandidates = (index: number) =>
+  Array.from({ length: uploadCandidatesPerPost }, (_, assetIndex) => ({
+    kind: assetIndex === 0 ? "thumbnail" : "image",
+    sourceUrl: `https://example.com/image-${index + 1}-${assetIndex + 1}.png`,
+    localPath: buildLocalAssetPath(index, assetIndex),
+    markdownReference: `image-${String(assetIndex + 1).padStart(2, "0")}.png`,
+  }))
+
+const buildUploadItem = ({
+  index,
+  uploadedCount,
+  assetPaths,
+  updatedAt,
+}: {
+  index: number
+  uploadedCount: number
+  assetPaths: string[]
+  updatedAt: string
+}) => {
+  const logNo = `223034929${String(700 + index).padStart(3, "0")}`
+  const title = `NestJS 업로드 플로우 점검 ${index + 1}`
+  const outputPath = `NestJS/2026-04-11-${logNo}/index.md`
+  const candidates = buildUploadCandidates(index)
+
+  return {
+    id: outputPath,
+    logNo,
+    title,
+    source: `https://blog.naver.com/mym0404/${logNo}`,
+    category: {
+      id: 101,
+      name: "NestJS",
+      path: ["NestJS"],
+    },
+    status: "success" as const,
+    outputPath,
+    assetPaths,
+    upload: {
+      eligible: true,
+      candidateCount: uploadCandidatesPerPost,
+      uploadedCount,
+      failedCount: 0,
+      candidates,
+    },
+    warnings: [],
+    warningCount: 0,
+    error: null,
+    updatedAt,
+  }
+}
+
 const createBaseJob = () => ({
   id: "job-smoke",
   request: {
@@ -131,202 +206,250 @@ const createBaseJob = () => ({
   },
   logs: [
     {
-      timestamp: "2026-04-11T04:00:00.000Z",
+      timestamp: uploadTimelineTimestamps.createdAt,
       message: "작업을 큐에 등록했습니다.",
     },
   ],
-  createdAt: "2026-04-11T04:00:00.000Z",
-  startedAt: "2026-04-11T04:00:01.000Z",
+  createdAt: uploadTimelineTimestamps.createdAt,
+  startedAt: uploadTimelineTimestamps.startedAt,
   progress: {
-    total: 1,
-    completed: 1,
+    total: uploadTargetCount,
+    completed: uploadTargetCount,
     failed: 0,
     warnings: 0,
   },
   error: null,
 })
 
-const createUploadReadyJob = () => ({
-  ...createBaseJob(),
-  status: "upload-ready",
-  finishedAt: null,
-  upload: {
-    status: "upload-ready",
-    eligiblePostCount: 1,
-    candidateCount: 2,
-    uploadedCount: 0,
-    failedCount: 0,
-    terminalReason: null,
-  },
-  items: [
-    {
-      id: "NestJS/2026-04-11-223034929697/index.md",
-      logNo: "223034929697",
-      title: "NestJS 업로드 플로우 점검",
-      source: "https://blog.naver.com/mym0404/223034929697",
-      category: {
-        id: 101,
-        name: "NestJS",
-        path: ["NestJS"],
-      },
-      status: "success",
-      outputPath: "NestJS/2026-04-11-223034929697/index.md",
-      assetPaths: [
-        "NestJS/2026-04-11-223034929697/thumbnail-01.png",
-        "NestJS/2026-04-11-223034929697/image-01.png",
-      ],
-      upload: {
-        eligible: true,
-        candidateCount: 2,
-        uploadedCount: 0,
-        failedCount: 0,
-        candidates: [
-          {
-            kind: "thumbnail",
-            sourceUrl: "https://example.com/thumb.png",
-            localPath: "NestJS/2026-04-11-223034929697/thumbnail-01.png",
-            markdownReference: "thumbnail-01.png",
-          },
-          {
-            kind: "image",
-            sourceUrl: "https://example.com/image-01.png",
-            localPath: "NestJS/2026-04-11-223034929697/image-01.png",
-            markdownReference: "image-01.png",
-          },
-        ],
-      },
-      warnings: [],
+const buildUploadJob = ({
+  jobStatus,
+  uploadStatus,
+  perItemUploadedCounts,
+  progress,
+  finishedAt,
+  error,
+  logs,
+}: {
+  jobStatus: "running" | "upload-ready" | "uploading" | "upload-failed" | "upload-completed"
+  uploadStatus: "not-requested" | "upload-ready" | "uploading" | "upload-failed" | "upload-completed"
+  perItemUploadedCounts: number[]
+  progress: {
+    total: number
+    completed: number
+    failed: number
+    warnings: number
+  }
+  finishedAt: string | null
+  error: string | null
+  logs: Array<{
+    timestamp: string
+    message: string
+  }>
+}) => {
+  const items = perItemUploadedCounts.map((uploadedCount, index) =>
+    buildUploadItem({
+      index,
+      uploadedCount,
+      assetPaths:
+        jobStatus === "upload-completed"
+          ? buildUploadCandidates(index).map((_, assetIndex) => buildRemoteAssetPath(index, assetIndex))
+          : buildUploadCandidates(index).map((candidate) => candidate.localPath),
+      updatedAt: finishedAt ?? logs.at(-1)?.timestamp ?? uploadTimelineTimestamps.startedAt,
+    }),
+  )
+  const uploadedCount = perItemUploadedCounts.reduce((sum, value) => sum + value, 0)
+  const manifestPosts = items.map(({ updatedAt: _updatedAt, ...item }) => item)
+
+  return {
+    ...createBaseJob(),
+    status: jobStatus,
+    finishedAt,
+    logs,
+    progress,
+    upload: {
+      status: uploadStatus,
+      eligiblePostCount: uploadTargetCount,
+      candidateCount: uploadTargetCount * uploadCandidatesPerPost,
+      uploadedCount,
+      failedCount:
+        uploadStatus === "upload-failed"
+          ? uploadTargetCount * uploadCandidatesPerPost - uploadedCount
+          : 0,
+      terminalReason: uploadStatus === "upload-failed" ? "provider-failed" : null,
+    },
+    items,
+    manifest: {
+      generatedAt: finishedAt ?? logs.at(-1)?.timestamp ?? uploadTimelineTimestamps.startedAt,
+      blogId: "mym0404",
+      profile: "gfm",
+      options: createUploadFlowOptions(),
+      selectedCategoryIds: [101],
+      startedAt: uploadTimelineTimestamps.startedAt,
+      finishedAt,
+      outputDir: "/tmp/farewell-naver-blog-smoke",
+      totalPosts: uploadTargetCount,
+      successCount: uploadTargetCount,
+      failureCount: 0,
       warningCount: 0,
-      error: null,
-      updatedAt: "2026-04-11T04:00:01.000Z",
-    },
-  ],
-  manifest: {
-    generatedAt: "2026-04-11T04:00:01.000Z",
-    blogId: "mym0404",
-    outputDir: "/tmp/farewell-naver-blog-smoke",
-    totalPosts: 1,
-    successCount: 1,
-    failureCount: 0,
-    warningCount: 0,
-    upload: {
-      status: "upload-ready",
-      eligiblePostCount: 1,
-      candidateCount: 2,
-      uploadedCount: 0,
-      failedCount: 0,
-      terminalReason: null,
-    },
-    posts: [
-      {
-        logNo: "223034929697",
-        title: "NestJS 업로드 플로우 점검",
-        source: "https://blog.naver.com/mym0404/223034929697",
-        category: {
-          id: 101,
-          name: "NestJS",
-          path: ["NestJS"],
-        },
-        status: "success",
-        outputPath: "NestJS/2026-04-11-223034929697/index.md",
-        assetPaths: [
-          "NestJS/2026-04-11-223034929697/thumbnail-01.png",
-          "NestJS/2026-04-11-223034929697/image-01.png",
-        ],
-        upload: {
-          eligible: true,
-          candidateCount: 2,
-          uploadedCount: 0,
-          failedCount: 0,
-          candidates: [
-            {
-              kind: "thumbnail",
-              sourceUrl: "https://example.com/thumb.png",
-              localPath: "NestJS/2026-04-11-223034929697/thumbnail-01.png",
-              markdownReference: "thumbnail-01.png",
-            },
-            {
-              kind: "image",
-              sourceUrl: "https://example.com/image-01.png",
-              localPath: "NestJS/2026-04-11-223034929697/image-01.png",
-              markdownReference: "image-01.png",
-            },
-          ],
-        },
-        warnings: [],
-        error: null,
-      },
-    ],
-  },
-})
-
-const createUploadingJob = () => ({
-  ...createUploadReadyJob(),
-  status: "uploading",
-  upload: {
-    ...createUploadReadyJob().upload,
-    status: "uploading",
-    uploadedCount: 1,
-  },
-})
-
-const createUploadFailedJob = () => ({
-  ...createUploadReadyJob(),
-  status: "upload-failed",
-  upload: {
-    ...createUploadReadyJob().upload,
-    status: "upload-failed",
-    failedCount: 2,
-  },
-  error: "PicGo upload failed.",
-})
-
-const createUploadCompletedJob = () => ({
-  ...createUploadReadyJob(),
-  status: "upload-completed",
-  finishedAt: "2026-04-11T04:00:05.000Z",
-  upload: {
-    ...createUploadReadyJob().upload,
-    status: "upload-completed",
-    uploadedCount: 2,
-  },
-  items: [
-    {
-      ...createUploadReadyJob().items[0],
-      assetPaths: [
-        "https://cdn.example.com/NestJS/2026-04-11-223034929697/thumbnail-01.png",
-        "https://cdn.example.com/NestJS/2026-04-11-223034929697/image-01.png",
-      ],
       upload: {
-        ...createUploadReadyJob().items[0].upload,
-        uploadedCount: 2,
+        status: uploadStatus,
+        eligiblePostCount: uploadTargetCount,
+        candidateCount: uploadTargetCount * uploadCandidatesPerPost,
+        uploadedCount,
+        failedCount:
+          uploadStatus === "upload-failed"
+            ? uploadTargetCount * uploadCandidatesPerPost - uploadedCount
+            : 0,
+        terminalReason: uploadStatus === "upload-failed" ? "provider-failed" : null,
       },
-      updatedAt: "2026-04-11T04:00:05.000Z",
+      categories: scanResult.categories,
+      posts: manifestPosts,
     },
-  ],
-  manifest: {
-    ...createUploadReadyJob().manifest,
-    generatedAt: "2026-04-11T04:00:05.000Z",
-    upload: {
-      ...createUploadReadyJob().manifest.upload,
-      status: "upload-completed",
-      uploadedCount: 2,
+    error,
+  }
+}
+
+const createRunningJob = () =>
+  buildUploadJob({
+    jobStatus: "running",
+    uploadStatus: "not-requested",
+    perItemUploadedCounts: uploadCounts.map((count) => count.pending),
+    progress: {
+      total: uploadTargetCount,
+      completed: 7,
+      failed: 0,
+      warnings: 0,
     },
-    posts: [
+    finishedAt: null,
+    error: null,
+    logs: [
       {
-        ...createUploadReadyJob().manifest.posts[0],
-        assetPaths: [
-          "https://cdn.example.com/NestJS/2026-04-11-223034929697/thumbnail-01.png",
-          "https://cdn.example.com/NestJS/2026-04-11-223034929697/image-01.png",
-        ],
-        upload: {
-          ...createUploadReadyJob().manifest.posts[0].upload,
-          uploadedCount: 2,
-        },
+        timestamp: uploadTimelineTimestamps.createdAt,
+        message: "작업을 큐에 등록했습니다.",
+      },
+      {
+        timestamp: uploadTimelineTimestamps.runningAt,
+        message: "수집 진행률을 갱신했습니다.",
       },
     ],
-  },
-})
+  })
+
+const createUploadReadyJob = () =>
+  buildUploadJob({
+    jobStatus: "upload-ready",
+    uploadStatus: "upload-ready",
+    perItemUploadedCounts: uploadCounts.map((count) => count.pending),
+    progress: {
+      total: uploadTargetCount,
+      completed: uploadTargetCount,
+      failed: 0,
+      warnings: 0,
+    },
+    finishedAt: null,
+    error: null,
+    logs: [
+      {
+        timestamp: uploadTimelineTimestamps.createdAt,
+        message: "작업을 큐에 등록했습니다.",
+      },
+      {
+        timestamp: uploadTimelineTimestamps.startedAt,
+        message: "내보내기를 완료했고 이미지 업로드 대기 상태입니다.",
+      },
+    ],
+  })
+
+const createPartialUploadingJob = () =>
+  buildUploadJob({
+    jobStatus: "uploading",
+    uploadStatus: "uploading",
+    perItemUploadedCounts: uploadCounts.map((count) => count.partial),
+    progress: {
+      total: uploadTargetCount,
+      completed: uploadTargetCount,
+      failed: 0,
+      warnings: 0,
+    },
+    finishedAt: null,
+    error: null,
+    logs: [
+      {
+        timestamp: uploadTimelineTimestamps.partialAt,
+        message: "이미지 업로드 진행률을 갱신했습니다.",
+      },
+    ],
+  })
+
+const createRewritePendingJob = () =>
+  buildUploadJob({
+    jobStatus: "uploading",
+    uploadStatus: "uploading",
+    perItemUploadedCounts: uploadCounts.map((count) => count.rewrite),
+    progress: {
+      total: uploadTargetCount,
+      completed: uploadTargetCount,
+      failed: 0,
+      warnings: 0,
+    },
+    finishedAt: null,
+    error: null,
+    logs: [
+      {
+        timestamp: uploadTimelineTimestamps.rewriteAt,
+        message: "PicGo 업로드가 끝났고 결과 치환을 진행합니다.",
+      },
+    ],
+  })
+
+const createUploadFailedJob = () =>
+  buildUploadJob({
+    jobStatus: "upload-failed",
+    uploadStatus: "upload-failed",
+    perItemUploadedCounts: uploadCounts.map((count) => count.partial),
+    progress: {
+      total: uploadTargetCount,
+      completed: uploadTargetCount,
+      failed: 0,
+      warnings: 0,
+    },
+    finishedAt: null,
+    error: "PicGo upload failed.",
+    logs: [
+      {
+        timestamp: uploadTimelineTimestamps.partialAt,
+        message: "이미지 업로드 진행률을 갱신했습니다.",
+      },
+      {
+        timestamp: uploadTimelineTimestamps.rewriteAt,
+        message: "PicGo upload failed.",
+      },
+    ],
+  })
+
+const createUploadCompletedJob = () =>
+  buildUploadJob({
+    jobStatus: "upload-completed",
+    uploadStatus: "upload-completed",
+    perItemUploadedCounts: uploadCounts.map((count) => count.completed),
+    progress: {
+      total: uploadTargetCount,
+      completed: uploadTargetCount,
+      failed: 0,
+      warnings: 0,
+    },
+    finishedAt: uploadTimelineTimestamps.finishedAt,
+    error: null,
+    logs: [
+      {
+        timestamp: uploadTimelineTimestamps.rewriteAt,
+        message: "PicGo 업로드가 끝났고 결과 치환을 진행합니다.",
+      },
+      {
+        timestamp: uploadTimelineTimestamps.finishedAt,
+        message: "이미지 업로드를 완료했습니다.",
+      },
+    ],
+  })
 
 const applyCurrentOutputDir = <T extends {
   request: { outputDir: string }
@@ -395,6 +518,80 @@ const waitForJobStatus = async ({
   }
 
   throw new Error(`${timeoutLabel} timed out`)
+}
+
+const readProgressValue = async ({
+  page,
+  selector,
+}: {
+  page: import("playwright").Page
+  selector: string
+}) => {
+  const value = await page.locator(selector).getAttribute("aria-valuenow")
+
+  return Number(value ?? "0")
+}
+
+const assertUploadRowStatus = async ({
+  page,
+  rowId,
+  expectedStatus,
+}: {
+  page: import("playwright").Page
+  rowId: string
+  expectedStatus: "pending" | "partial" | "complete" | "failed"
+}) => {
+  const status = await page
+    .locator(`[data-upload-row-id="${rowId}"]`)
+    .getAttribute("data-upload-row-status")
+
+  if (status !== expectedStatus) {
+    throw new Error(`unexpected upload row status for ${rowId}: ${status}`)
+  }
+}
+
+const assertUploadTargetsBounded = async ({
+  page,
+  label,
+}: {
+  page: import("playwright").Page
+  label: string
+}) => {
+  const bounded = await page.evaluate(() => {
+    const root = document.querySelector<HTMLElement>("#upload-targets-scroll")
+    const viewport = root?.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]')
+    const table = document.querySelector<HTMLElement>("#upload-targets-table")
+    const section = document.querySelector<HTMLElement>("#status-panel")
+
+    if (!root || !viewport || !table || !section) {
+      return null
+    }
+
+    const rootStyles = window.getComputedStyle(root)
+    const tableRect = table.getBoundingClientRect()
+    const sectionRect = section.getBoundingClientRect()
+
+    return {
+      hasMaxHeight:
+        rootStyles.maxHeight !== "none" &&
+        rootStyles.maxHeight !== "0px" &&
+        Number.parseFloat(rootStyles.maxHeight) > 0,
+      viewportHasInternalOverflow: viewport.scrollHeight > viewport.clientHeight,
+      tableFitsPanel: tableRect.width <= sectionRect.width + 1,
+    }
+  })
+
+  if (!bounded?.hasMaxHeight) {
+    throw new Error(`${label} missing upload table max-height`)
+  }
+
+  if (!bounded.viewportHasInternalOverflow) {
+    throw new Error(`${label} missing internal upload table overflow`)
+  }
+
+  if (!bounded.tableFitsPanel) {
+    throw new Error(`${label} upload table overflowed its panel`)
+  }
 }
 
 const assertTextContrast = async ({
@@ -774,7 +971,7 @@ const run = async () => {
   const mockState: {
     scanRequestCount: number
     uploadAttempt: 0 | 1 | 2
-    uploadFetchCount: number
+    jobFetchCount: number
     uploadPayload: null | {
       providerKey: string
       providerFields: Record<string, string>
@@ -782,7 +979,7 @@ const run = async () => {
   } = {
     scanRequestCount: 0,
     uploadAttempt: 0,
-    uploadFetchCount: 0,
+    jobFetchCount: 0,
     uploadPayload: null,
   }
 
@@ -812,7 +1009,7 @@ const run = async () => {
 
     if (pathname === "/api/export" && request.method() === "POST") {
       mockState.uploadAttempt = 0
-      mockState.uploadFetchCount = 0
+      mockState.jobFetchCount = 0
       mockState.uploadPayload = null
       await route.fulfill(
         buildJsonResponse(
@@ -826,24 +1023,24 @@ const run = async () => {
     }
 
     if (pathname === "/api/export/job-smoke" && request.method() === "GET") {
+      mockState.jobFetchCount += 1
+
       if (mockState.uploadAttempt === 0) {
-        await route.fulfill(buildJsonResponse(applyCurrentOutputDir(createUploadReadyJob(), outputDir)))
+        const nextJob =
+          mockState.jobFetchCount <= 8 ? createRunningJob() : createUploadReadyJob()
+
+        await route.fulfill(buildJsonResponse(applyCurrentOutputDir(nextJob, outputDir)))
         return
       }
 
-      mockState.uploadFetchCount += 1
       const nextJob =
         mockState.uploadAttempt === 1
           ? applyCurrentOutputDir(
-              mockState.uploadFetchCount === 1
-                ? createUploadingJob()
-                : createUploadFailedJob(),
+              mockState.jobFetchCount <= 12 ? createPartialUploadingJob() : createUploadFailedJob(),
               outputDir,
             )
           : applyCurrentOutputDir(
-              mockState.uploadFetchCount === 1
-                ? createUploadingJob()
-                : createUploadCompletedJob(),
+              mockState.jobFetchCount <= 20 ? createRewritePendingJob() : createUploadCompletedJob(),
               outputDir,
             )
 
@@ -870,7 +1067,7 @@ const run = async () => {
       }
 
       mockState.uploadAttempt = mockState.uploadAttempt === 0 ? 1 : 2
-      mockState.uploadFetchCount = 0
+      mockState.jobFetchCount = 0
       mockState.uploadPayload = {
         providerKey: body.providerKey,
         providerFields: body.providerFields,
@@ -1197,6 +1394,21 @@ const run = async () => {
 
     await waitForStepView({
       page,
+      step: "running",
+    })
+    await waitForJobStatus({
+      page,
+      timeoutMs: 10_000,
+      accept: (status) => status === "running",
+      timeoutLabel: "UI running state",
+    })
+
+    if ((await readProgressValue({ page, selector: "#running-progress" })) !== 39) {
+      throw new Error("running progress bar did not reflect completed/total posts")
+    }
+
+    await waitForStepView({
+      page,
       step: "upload",
     })
     await waitForJobStatus({
@@ -1215,6 +1427,7 @@ const run = async () => {
     }
 
     await page.waitForSelector("#upload-targets-table")
+    await page.waitForSelector("#upload-targets-scroll")
     await page.waitForSelector("#upload-providerKey")
     await page.waitForSelector("#upload-providerField-repo")
     await page.waitForSelector("#upload-providerField-token")
@@ -1230,6 +1443,20 @@ const run = async () => {
     if (!uploadTargetPath?.includes("NestJS 업로드 플로우 점검")) {
       throw new Error("upload target table did not render the expected post")
     }
+
+    if ((await readProgressValue({ page, selector: "#upload-progress" })) !== 0) {
+      throw new Error("upload-ready state did not start from zero progress")
+    }
+
+    await assertUploadRowStatus({
+      page,
+      rowId: "NestJS/2026-04-11-223034929700/index.md",
+      expectedStatus: "pending",
+    })
+    await assertUploadTargetsBounded({
+      page,
+      label: "desktop upload-ready flow",
+    })
 
     const providerValue = await page.locator("#upload-providerKey").inputValue()
 
@@ -1265,6 +1492,35 @@ const run = async () => {
       timeoutLabel: "UI uploading state",
     })
 
+    if ((await page.locator("#upload-providerKey").count()) !== 0) {
+      throw new Error("uploading state should hide the upload form")
+    }
+
+    await assertUploadRowStatus({
+      page,
+      rowId: "NestJS/2026-04-11-223034929700/index.md",
+      expectedStatus: "complete",
+    })
+    await assertUploadRowStatus({
+      page,
+      rowId: "NestJS/2026-04-11-223034929701/index.md",
+      expectedStatus: "partial",
+    })
+    await assertUploadRowStatus({
+      page,
+      rowId: "NestJS/2026-04-11-223034929702/index.md",
+      expectedStatus: "pending",
+    })
+
+    const partialProgressValue = await readProgressValue({
+      page,
+      selector: "#upload-progress",
+    })
+
+    if (partialProgressValue <= 0 || partialProgressValue >= 100) {
+      throw new Error("partial uploading state did not expose intermediate progress")
+    }
+
     await waitForJobStatus({
       page,
       timeoutMs: 90_000,
@@ -1282,6 +1538,12 @@ const run = async () => {
       throw new Error("upload-failed state did not keep the retry message visible")
     }
 
+    const failedRows = await page.locator('[data-upload-row-status="failed"]').count()
+
+    if (failedRows !== uploadTargetCount) {
+      throw new Error("upload-failed state did not override every row to 실패")
+    }
+
     const retainedRepo = await page.locator("#upload-providerField-repo").inputValue()
     const retainedToken = await page.locator("#upload-providerField-token").inputValue()
 
@@ -1295,24 +1557,10 @@ const run = async () => {
       page,
       label: "mobile upload flow",
     })
-
-    const mobileUploadTableOk = await page.evaluate(() => {
-      const section = document.querySelector<HTMLElement>("#status-panel")
-      const table = document.querySelector<HTMLElement>("#upload-targets-table")
-
-      if (!section || !table) {
-        return false
-      }
-
-      const sectionRect = section.getBoundingClientRect()
-      const tableRect = table.getBoundingClientRect()
-
-      return tableRect.width <= sectionRect.width + 1
+    await assertUploadTargetsBounded({
+      page,
+      label: "mobile upload flow",
     })
-
-    if (!mobileUploadTableOk) {
-      throw new Error("mobile upload targets table overflowed its panel")
-    }
 
     await page.setViewportSize(desktopViewport)
     await page.waitForTimeout(150)
@@ -1336,15 +1584,41 @@ const run = async () => {
       throw new Error("upload retry did not submit the corrected placeholder provider payload")
     }
 
-    await waitForStepView({
+    await page.waitForFunction(
+      () =>
+        document.querySelector("#status-text")?.textContent?.trim() === "uploading" &&
+        (document.querySelector("#status-panel")?.textContent?.includes(
+          "자산 업로드는 끝났고 결과 파일에 URL을 반영하는 중입니다.",
+        ) ??
+          false),
+      undefined,
+      { timeout: 10_000 },
+    )
+
+    const rewritePendingProgress = await readProgressValue({
       page,
-      step: "result",
+      selector: "#upload-progress",
     })
+
+    if (rewritePendingProgress < 95) {
+      throw new Error("rewrite-pending state did not keep a full upload bar")
+    }
+
+    const rewritePendingText = await page.locator("#status-panel").textContent()
+
+    if (!rewritePendingText?.includes("자산 업로드는 끝났고 결과 파일에 URL을 반영하는 중입니다.")) {
+      throw new Error("rewrite-pending state did not expose the rewrite copy")
+    }
+
     await waitForJobStatus({
       page,
       timeoutMs: 90_000,
       accept: (status) => status === "upload-completed",
       timeoutLabel: "UI upload-completed state",
+    })
+    await waitForStepView({
+      page,
+      step: "result",
     })
 
     const manifest = await page.evaluate(async () => {
@@ -1381,7 +1655,10 @@ const run = async () => {
       throw new Error("manifest totalPosts invariant failed")
     }
 
-    if (manifest.upload.status !== "upload-completed" || manifest.upload.uploadedCount !== 2) {
+    if (
+      manifest.upload.status !== "upload-completed" ||
+      manifest.upload.uploadedCount !== uploadTargetCount * uploadCandidatesPerPost
+    ) {
       throw new Error("manifest did not reflect upload completion")
     }
 
@@ -1434,7 +1711,7 @@ const run = async () => {
       throw new Error("manifest outputPath missing")
     }
 
-    if (firstOutputPath !== "NestJS/2026-04-11-223034929697/index.md") {
+    if (firstOutputPath !== "NestJS/2026-04-11-223034929700/index.md") {
       throw new Error("per-post index.md output path regressed")
     }
 

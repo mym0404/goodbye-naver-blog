@@ -1,0 +1,6 @@
+Command: pnpm exec vitest run tests/picgo-upload-phase.test.ts --silent
+Result: pass
+Notes:
+- runPicGoUploadPhase now uploads one deduped candidate at a time.
+- Progress callback emits an initial 0 state, then monotonic uploadedCount updates per completed asset.
+- PicGoUploadPhaseError preserves uploadedResults after partial success.

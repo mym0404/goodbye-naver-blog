@@ -1,0 +1,32 @@
+T4 browser harness execution
+
+Commands
+- `pnpm smoke:ui`
+- `pnpm test:network:upload`
+
+Smoke result
+- PASS
+- Verified `running -> upload-ready -> uploading(partial) -> upload-failed -> uploading(rewrite-pending) -> upload-completed`
+- Verified `#running-progress`, `#upload-progress`, row status hooks, upload form visibility, rewrite-pending copy, and bounded `#upload-targets-scroll` overflow on desktop/mobile
+
+Live result
+- PASS
+- Forced live uploads onto `master` with a run-unique `farewell-live/<timestamp>` path so GitHub writes were not no-op
+- Captured same-branch partial progress before final completion:
+  - `job.status=uploading`
+  - `job.upload.uploadedCount=1/2`
+  - UI snapshot: `statusText=uploading`, `uploadProgress=50`, `partialRowCount=1`, `completeRowCount=0`, `uploadFormVisible=false`
+- Captured persisted post-rewrite upload snapshot:
+  - `job.status=upload-completed`
+  - `job.upload.uploadedCount=2/2`
+  - UI snapshot: `statusText=upload-completed`, `uploadProgress=100`, `partialRowCount=0`, `completeRowCount=1`, `uploadFormVisible=false`
+- GitHub branch evidence on `master`
+  - `beforeSha=3a63a2bc80ca1d90d9356479aa59b225b45208fc`
+  - `partial headSha=9223a4ba4c2e30fde0da7752df6840c1e0ff6943`
+  - changed files:
+    - `farewell-live/177651812326790d25499b1c92da72427820dabeb147a8df292957f436c463397858a6bc2130b.jpg`
+    - `farewell-live/1776518123267d5238f0028fcc5442ee92a205785f473c98f574d3d0bc2f72153ba9b3dbcf1fb.png`
+
+Conclusion
+- Mocked browser regression and real-provider live verification both prove the UI can observe upload progress before the final result.
+- Fast live runs may skip a human-visible rewrite-pending frame, so the result-stage upload snapshot remains visible after `upload-completed` as the stable fallback evidence.

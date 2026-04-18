@@ -1,0 +1,15 @@
+Commands:
+- pnpm exec vitest run tests/ui/app.test.tsx --silent
+- agent-browser --session picgo-t3 open http://127.0.0.1:4173
+- agent-browser browser checks on running/upload mocked flows
+Result: pass
+Browser checks:
+- running state: status=running, #running-progress aria-valuenow=40, running count text present
+- upload-ready state: status=upload-ready, #upload-progress aria-valuenow=0, #upload-form visible, #upload-targets-scroll has max-h wrapper, viewport overflow=true with long mocked rows
+- upload-failed state: status=upload-failed, #upload-form visible again, failed row override visible
+Focused UI test coverage:
+- running/upload progress bars render with stable hooks
+- row states render as pending/partial/complete/failed
+- rewrite-pending full bar copy stays distinct from final completion
+- upload form visibility stays limited to upload-ready and upload-failed
+- upload table remains inside #upload-targets-scroll max-height wrapper

@@ -1,0 +1,7 @@
+Command: pnpm exec vitest run tests/http-server.test.ts --silent
+Result: pass
+Notes:
+- http-server now streams upload progress into the existing polling payload through jobStore.updateUpload.
+- Item-level uploadedCount updates while job status remains uploading.
+- Rewrite boundary logs are split from final completion.
+- rewrite failure keeps uploadedCount visible instead of collapsing it to zero.

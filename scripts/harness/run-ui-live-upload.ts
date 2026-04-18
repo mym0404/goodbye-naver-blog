@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs"
-import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 
@@ -12,9 +12,18 @@ const blogId = "mym0404"
 const targetLogNo = "222990202785"
 const uploadRepo = "mym0404/image-archive"
 const uploadBranch = "master"
-const uploadPath = "/"
+const uploadPath = `farewell-live/${Date.now()}`
 const responseTimeoutMs = 240_000
 const githubApiBaseUrl = "https://api.github.com"
+const getCaptureDir = () => {
+  const index = process.argv.indexOf("--capture-dir")
+
+  if (index < 0) {
+    return null
+  }
+
+  return process.argv[index + 1] ?? null
+}
 const resolveBrowserMode = () => {
   if (process.argv.includes("--headed")) {
     return {
@@ -319,6 +328,116 @@ const assertImageVisible = async ({
   }
 }
 
+const saveCapture = async ({
+  page,
+  captureDir,
+  fileName,
+}: {
+  page: import("playwright").Page
+  captureDir: string | null
+  fileName: string
+}) => {
+  if (!captureDir) {
+    return null
+  }
+
+  await mkdir(captureDir, {
+    recursive: true,
+  })
+
+  const filePath = path.join(captureDir, fileName)
+  await page.screenshot({
+    path: filePath,
+    fullPage: true,
+  })
+
+  return filePath
+}
+
+const saveJsonCapture = async ({
+  captureDir,
+  fileName,
+  payload,
+}: {
+  captureDir: string | null
+  fileName: string
+  payload: unknown
+}) => {
+  if (!captureDir) {
+    return null
+  }
+
+  await mkdir(captureDir, {
+    recursive: true,
+  })
+
+  const filePath = path.join(captureDir, fileName)
+  await writeFile(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8")
+  return filePath
+}
+
+const readUiUploadState = async ({
+  page,
+}: {
+  page: import("playwright").Page
+}) =>
+  page.evaluate(() => ({
+    statusText: document.querySelector("#status-text")?.textContent?.trim() ?? null,
+    uploadProgress: Number(
+      document.querySelector("#upload-progress")?.getAttribute("aria-valuenow") ?? "0",
+    ),
+    partialRowCount: document.querySelectorAll('[data-upload-row-status="partial"]').length,
+    completeRowCount: document.querySelectorAll('[data-upload-row-status="complete"]').length,
+    uploadFormVisible: Boolean(document.querySelector("#upload-providerKey")),
+    rewritePendingCopy: document.querySelector("#status-panel")?.textContent?.includes(
+      "자산 업로드는 끝났고 결과 파일에 URL을 반영하는 중입니다.",
+    ),
+  }))
+
+const waitForObservedUploadState = async ({
+  page,
+  baseUrl,
+  jobId,
+  timeoutMs,
+  accept,
+}: {
+  page: import("playwright").Page
+  baseUrl: string
+  jobId: string
+  timeoutMs: number
+  accept: (snapshot: {
+    job: ExportJobState
+    ui: Awaited<ReturnType<typeof readUiUploadState>>
+  }) => Promise<boolean> | boolean
+}) => {
+  const startTime = Date.now()
+  let lastSnapshot: {
+    job: ExportJobState
+    ui: Awaited<ReturnType<typeof readUiUploadState>>
+  } | null = null
+
+  while (Date.now() - startTime < timeoutMs) {
+    const job = await fetchJson<ExportJobState>(`${baseUrl}/api/export/${jobId}`)
+    const ui = await readUiUploadState({
+      page,
+    })
+    lastSnapshot = {
+      job,
+      ui,
+    }
+
+    if (await accept({ job, ui })) {
+      return { job, ui }
+    }
+
+    await page.waitForTimeout(1_000)
+  }
+
+  throw new Error(
+    `expected live upload state was not observed before timeout: ${JSON.stringify(lastSnapshot)}`,
+  )
+}
+
 const run = async () => {
   const config = resolveLiveUploadConfig()
   const server = createHttpServer()
@@ -332,8 +451,18 @@ const run = async () => {
   })
   const page = await context.newPage()
   const outputDir = await mkdtemp(path.join(tmpdir(), "farewell-live-upload-ui-"))
+  const captureDir = getCaptureDir()
   const consoleErrors: string[] = []
   const pageErrors: string[] = []
+  const liveEvidence: {
+    branch: string
+    beforeSha?: string
+    partial?: Record<string, unknown>
+    rewritePending?: Record<string, unknown>
+    final?: Record<string, unknown>
+  } = {
+    branch: config.branch,
+  }
   let baseUrl = ""
 
   page.on("console", (message) => {
@@ -520,6 +649,7 @@ const run = async () => {
     }
 
     const branchHeadBeforeUpload = await getBranchHeadSha(config)
+    liveEvidence.beforeSha = branchHeadBeforeUpload
     const uploadRequestPromise = page.waitForRequest(
       (request) => request.url() === `${baseUrl}/api/export/${jobId}/upload` && request.method() === "POST",
       { timeout: responseTimeoutMs },
@@ -556,6 +686,116 @@ const run = async () => {
       uploadPayload.providerFields.token !== config.token
     ) {
       throw new Error("browser upload payload did not match the expected GitHub config")
+    }
+
+    await waitForStatus({
+      page,
+      status: "uploading",
+    })
+
+    const partialState = await waitForObservedUploadState({
+      page,
+      baseUrl,
+      jobId,
+      timeoutMs: 60_000,
+      accept: async ({ job, ui }) => {
+        const uploadObserved =
+          job.upload.uploadedCount > 0 &&
+          (job.status === "uploading" || job.status === "upload-completed") &&
+          (ui.statusText === "uploading" || ui.statusText === "upload-completed")
+
+        if (!uploadObserved) {
+          return false
+        }
+
+        const currentHead = await getBranchHeadSha(config)
+
+        if (currentHead === branchHeadBeforeUpload) {
+          return false
+        }
+
+        const changedFiles = await getChangedFilesBetween({
+          token: config.token,
+          beforeSha: branchHeadBeforeUpload,
+          afterSha: currentHead,
+        })
+
+        return (
+          changedFiles.some((filename) => /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(filename)) &&
+          ui.uploadProgress > 0 &&
+          !ui.uploadFormVisible &&
+          (ui.partialRowCount > 0 || ui.completeRowCount > 0)
+        )
+      },
+    })
+    const partialSha = await getBranchHeadSha(config)
+    const partialChangedFiles = await getChangedFilesBetween({
+      token: config.token,
+      beforeSha: branchHeadBeforeUpload,
+      afterSha: partialSha,
+    })
+    const partialScreenshot = await saveCapture({
+      page,
+      captureDir,
+      fileName: "live-upload-partial-progress.png",
+    })
+
+    liveEvidence.partial = {
+      jobStatus: partialState.job.status,
+      uploadedCount: partialState.job.upload.uploadedCount,
+      candidateCount: partialState.job.upload.candidateCount,
+      uiStatus: partialState.ui.statusText,
+      uiUploadProgress: partialState.ui.uploadProgress,
+      partialRowCount: partialState.ui.partialRowCount,
+      completeRowCount: partialState.ui.completeRowCount,
+      branch: config.branch,
+      headSha: partialSha,
+      changedFiles: partialChangedFiles,
+      screenshot: partialScreenshot,
+    }
+
+    const rewritePendingState = await waitForObservedUploadState({
+      page,
+      baseUrl,
+      jobId,
+      timeoutMs: 60_000,
+      accept: ({ job, ui }) => {
+        const rewritePendingObserved =
+          job.status === "uploading" &&
+          job.upload.uploadedCount === job.upload.candidateCount &&
+          ui.statusText === "uploading" &&
+          ui.uploadProgress === 100 &&
+          ui.rewritePendingCopy &&
+          !ui.uploadFormVisible
+
+        if (rewritePendingObserved) {
+          return true
+        }
+
+        return (
+          job.status === "upload-completed" &&
+          job.upload.uploadedCount === job.upload.candidateCount &&
+          ui.statusText === "upload-completed" &&
+          ui.uploadProgress === 100 &&
+          ui.completeRowCount > 0 &&
+          !ui.uploadFormVisible
+        )
+      },
+    })
+    const rewritePendingScreenshot = await saveCapture({
+      page,
+      captureDir,
+      fileName: "live-upload-rewrite-pending.png",
+    })
+
+    liveEvidence.rewritePending = {
+      jobStatus: rewritePendingState.job.status,
+      uploadedCount: rewritePendingState.job.upload.uploadedCount,
+      candidateCount: rewritePendingState.job.upload.candidateCount,
+      uiStatus: rewritePendingState.ui.statusText,
+      uiUploadProgress: rewritePendingState.ui.uploadProgress,
+      rewritePendingCopy: rewritePendingState.ui.rewritePendingCopy,
+      screenshot: rewritePendingScreenshot,
     }
 
     await waitForStatus({
@@ -660,6 +900,29 @@ const run = async () => {
       }
     }
 
+    const finalScreenshot = await saveCapture({
+      page,
+      captureDir,
+      fileName: "live-upload-completed.png",
+    })
+
+    liveEvidence.final = {
+      jobStatus: completedJob.status,
+      uploadStatus: completedJob.upload.status,
+      uploadedCount: completedJob.upload.uploadedCount,
+      candidateCount: completedJob.upload.candidateCount,
+      branch: config.branch,
+      headSha: branchHeadAfterUpload,
+      screenshot: finalScreenshot,
+      uploadedFiles: uploadedFileNames,
+    }
+
+    await saveJsonCapture({
+      captureDir,
+      fileName: "live-upload-evidence.json",
+      payload: liveEvidence,
+    })
+
     await assertImageVisible({
       context,
       imageUrl: completedPost.assetPaths[0]!,
@@ -672,6 +935,8 @@ const run = async () => {
     if (pageErrors.length > 0) {
       throw new Error(`browser page error: ${pageErrors[0]}`)
     }
+
+    console.log(JSON.stringify(liveEvidence, null, 2))
   } finally {
     await context.close()
     await browser.close()

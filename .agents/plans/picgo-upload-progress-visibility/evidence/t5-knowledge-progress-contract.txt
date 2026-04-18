@@ -1,0 +1,7 @@
+Command: rg -n "부분 완료|progress|uploadedCount|rewrite|max-height|test:network:upload|FAREWELL_UPLOAD_E2E_GITHUB_BRANCH" .agents/knowledge/product/domain.md .agents/knowledge/product/ui-dashboard-design-system.md .agents/knowledge/architecture/system-map.md docs/runbooks/browser-verification.md
+Result: pass
+Notes:
+- Domain docs now define running/upload progress bar semantics and rewrite-gated completion.
+- UI design docs now fix row states, full-bar rewrite-pending copy, upload form visibility, and max-height scroll wrapper.
+- System map now documents the upload progress callback path through runner -> server/job store -> UI.
+- Browser runbook now includes dedicated branch live verification and partial-progress evidence requirements.

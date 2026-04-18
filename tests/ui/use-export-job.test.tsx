@@ -123,15 +123,15 @@ describe("useExportJob", () => {
         error: null,
       })
 
-    const clearIntervalSpy = vi.spyOn(window, "clearInterval")
-    vi.spyOn(window, "setInterval").mockImplementation((handler: TimerHandler) => {
+    const clearTimeoutSpy = vi.spyOn(window, "clearTimeout")
+    vi.spyOn(window, "setTimeout").mockImplementation((handler: TimerHandler) => {
       void Promise.resolve().then(() => {
         if (typeof handler === "function") {
           handler()
         }
       })
 
-      return 1 as unknown as ReturnType<typeof window.setInterval>
+      return 1 as unknown as ReturnType<typeof window.setTimeout>
     })
     const { result, unmount } = renderHook(() => useExportJob())
 
@@ -157,7 +157,7 @@ describe("useExportJob", () => {
     })
     expect(mockedFetchJson).toHaveBeenCalledTimes(2)
     expect(mockedFetchJson).toHaveBeenCalledWith("/api/export/job-1")
-    expect(clearIntervalSpy).toHaveBeenCalled()
+    expect(clearTimeoutSpy).toHaveBeenCalled()
 
     unmount()
   })
@@ -236,10 +236,6 @@ describe("useExportJob", () => {
         manifest: null,
         error: null,
       })
-    vi.spyOn(window, "setInterval").mockImplementation(() => {
-      return 1 as unknown as ReturnType<typeof window.setInterval>
-    })
-
     const { result } = renderHook(() => useExportJob())
 
     await act(async () => {
@@ -251,9 +247,7 @@ describe("useExportJob", () => {
       })
     })
 
-    await waitFor(() => {
-      expect(result.current.job?.status).toBe("upload-ready")
-    })
+    expect(result.current.job?.status).toBe("upload-ready")
 
     await act(async () => {
       await result.current.startUpload({
@@ -273,6 +267,156 @@ describe("useExportJob", () => {
         token: "ghp_test_secret",
       },
     })
+  })
+
+  it("keeps burst polling after upload starts until partial progress becomes observable", async () => {
+    const uploadFlowOptions = defaultExportOptions()
+    uploadFlowOptions.assets.imageHandlingMode = "download-and-upload"
+
+    mockedPostJson.mockResolvedValue({
+      jobId: "job-burst",
+    })
+    mockedPostUploadJson.mockResolvedValue({
+      jobId: "job-burst",
+      status: "uploading",
+    })
+    mockedFetchJson
+      .mockResolvedValueOnce({
+        id: "job-burst",
+        request: {
+          blogIdOrUrl: "mym0404",
+          outputDir: "./output",
+          profile: "gfm",
+          options: uploadFlowOptions,
+        },
+        status: "upload-ready",
+        logs: [],
+        createdAt: "2026-04-11T04:00:00.000Z",
+        startedAt: "2026-04-11T04:00:00.000Z",
+        finishedAt: null,
+        progress: {
+          total: 1,
+          completed: 1,
+          failed: 0,
+          warnings: 0,
+        },
+        upload: {
+          status: "upload-ready",
+          eligiblePostCount: 1,
+          candidateCount: 2,
+          uploadedCount: 0,
+          failedCount: 0,
+          terminalReason: null,
+        },
+        items: [],
+        manifest: null,
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        id: "job-burst",
+        request: {
+          blogIdOrUrl: "mym0404",
+          outputDir: "./output",
+          profile: "gfm",
+          options: uploadFlowOptions,
+        },
+        status: "uploading",
+        logs: [],
+        createdAt: "2026-04-11T04:00:00.000Z",
+        startedAt: "2026-04-11T04:00:00.000Z",
+        finishedAt: null,
+        progress: {
+          total: 1,
+          completed: 1,
+          failed: 0,
+          warnings: 0,
+        },
+        upload: {
+          status: "uploading",
+          eligiblePostCount: 1,
+          candidateCount: 2,
+          uploadedCount: 0,
+          failedCount: 0,
+          terminalReason: null,
+        },
+        items: [],
+        manifest: null,
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        id: "job-burst",
+        request: {
+          blogIdOrUrl: "mym0404",
+          outputDir: "./output",
+          profile: "gfm",
+          options: uploadFlowOptions,
+        },
+        status: "uploading",
+        logs: [],
+        createdAt: "2026-04-11T04:00:00.000Z",
+        startedAt: "2026-04-11T04:00:00.000Z",
+        finishedAt: null,
+        progress: {
+          total: 1,
+          completed: 1,
+          failed: 0,
+          warnings: 0,
+        },
+        upload: {
+          status: "uploading",
+          eligiblePostCount: 1,
+          candidateCount: 2,
+          uploadedCount: 1,
+          failedCount: 0,
+          terminalReason: null,
+        },
+        items: [],
+        manifest: null,
+        error: null,
+      })
+
+    const nativeSetTimeout = window.setTimeout.bind(window)
+    vi.spyOn(window, "setTimeout").mockImplementation((handler: TimerHandler, timeout?: number) => {
+      if (timeout === 200) {
+        return nativeSetTimeout(() => {
+          if (typeof handler === "function") {
+            handler()
+          }
+        }, 0) as unknown as ReturnType<typeof window.setTimeout>
+      }
+
+      return nativeSetTimeout(() => {
+        if (typeof handler === "function") {
+          handler()
+        }
+      }, timeout) as unknown as ReturnType<typeof window.setTimeout>
+    })
+
+    const { result } = renderHook(() => useExportJob())
+
+    await act(async () => {
+      await result.current.startJob({
+        blogIdOrUrl: "mym0404",
+        outputDir: "./output",
+        options: uploadFlowOptions,
+        scanResult,
+      })
+    })
+
+    expect(result.current.job?.status).toBe("upload-ready")
+
+    await act(async () => {
+      await result.current.startUpload({
+        providerKey: "github",
+        providerFields: {
+          repo: "owner/name",
+          token: "ghp_test_secret",
+        },
+      })
+    })
+
+    expect(result.current.job?.upload.uploadedCount).toBe(1)
+    expect(mockedFetchJson).toHaveBeenCalledTimes(3)
   })
 
   it("restores the previous upload-ready job when the upload request is rejected", async () => {
@@ -316,10 +460,6 @@ describe("useExportJob", () => {
     })
     mockedFetchJson.mockResolvedValue(uploadReadyJob)
     mockedPostUploadJson.mockRejectedValueOnce(new Error("provider validation failed"))
-    vi.spyOn(window, "setInterval").mockImplementation(() => {
-      return 1 as unknown as ReturnType<typeof window.setInterval>
-    })
-
     const { result } = renderHook(() => useExportJob())
 
     await act(async () => {
@@ -330,9 +470,7 @@ describe("useExportJob", () => {
       })
     })
 
-    await waitFor(() => {
-      expect(result.current.job?.status).toBe("upload-ready")
-    })
+    expect(result.current.job?.status).toBe("upload-ready")
 
     await expect(
       act(async () => {
@@ -415,10 +553,6 @@ describe("useExportJob", () => {
       .mockResolvedValueOnce(uploadReadyJob)
       .mockResolvedValueOnce(uploadFailedJob)
       .mockResolvedValueOnce(uploadingJob)
-    vi.spyOn(window, "setInterval").mockImplementation(() => {
-      return 1 as unknown as ReturnType<typeof window.setInterval>
-    })
-
     const { result } = renderHook(() => useExportJob())
 
     await act(async () => {
@@ -429,9 +563,7 @@ describe("useExportJob", () => {
       })
     })
 
-    await waitFor(() => {
-      expect(result.current.job?.status).toBe("upload-ready")
-    })
+    expect(result.current.job?.status).toBe("upload-ready")
 
     await act(async () => {
       await result.current.startUpload({

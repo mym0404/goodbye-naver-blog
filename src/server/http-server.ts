@@ -11,7 +11,7 @@ import type { ViteDevServer } from "vite"
 import { NaverBlogFetcher } from "../modules/blog-fetcher/naver-blog-fetcher.js"
 import { NaverBlogExporter } from "../modules/exporter/naver-blog-exporter.js"
 import { rewriteUploadedAssets } from "../modules/exporter/picgo-upload-rewriter.js"
-import { runPicGoUploadPhase } from "../modules/exporter/picgo-upload-phase.js"
+import { PicGoUploadPhaseError, runPicGoUploadPhase } from "../modules/exporter/picgo-upload-phase.js"
 import { dedupeUploadCandidatesByLocalPath } from "../modules/exporter/upload-candidate-utils.js"
 import {
   cloneExportOptions,
@@ -201,6 +201,57 @@ const sanitizeUploadError = ({
   return redacted.slice(0, 240)
 }
 
+const syncJobUploadProgress = ({
+  jobStore,
+  jobId,
+  uploadedLocalPaths,
+}: {
+  jobStore: JobStore
+  jobId: string
+  uploadedLocalPaths: Set<string>
+}) => {
+  const job = jobStore.get(jobId)
+
+  if (!job) {
+    return
+  }
+
+  const updatedAt = new Date().toISOString()
+
+  jobStore.updateUpload(jobId, {
+    ...job.upload,
+    status: "uploading",
+    uploadedCount: uploadedLocalPaths.size,
+    failedCount: 0,
+    terminalReason: null,
+  })
+
+  for (const item of job.items) {
+    if (!item.upload.eligible) {
+      continue
+    }
+
+    const uploadedCount = item.upload.candidates.reduce(
+      (count, candidate) => count + (uploadedLocalPaths.has(candidate.localPath) ? 1 : 0),
+      0,
+    )
+
+    if (uploadedCount === item.upload.uploadedCount && item.upload.failedCount === 0) {
+      continue
+    }
+
+    jobStore.appendItem(jobId, {
+      ...item,
+      upload: {
+        ...item.upload,
+        uploadedCount,
+        failedCount: 0,
+      },
+      updatedAt,
+    })
+  }
+}
+
 export const createHttpServer = ({
   jobStore = new JobStore(),
   uploadPhaseRunner = runPicGoUploadPhase,
@@ -361,12 +412,31 @@ export const createHttpServer = ({
     jobStore.appendLog(jobId, "PicGo 업로드를 시작했습니다.")
 
     try {
+      const uploadedLocalPaths = new Set<string>()
       const uploadResults = await uploadPhaseRunner({
         outputDir: job.request.outputDir,
         candidates,
         uploaderKey,
         uploaderConfig,
+        onProgress: ({ lastCompletedLocalPath }) => {
+          if (lastCompletedLocalPath) {
+            uploadedLocalPaths.add(lastCompletedLocalPath)
+          }
+
+          syncJobUploadProgress({
+            jobStore,
+            jobId,
+            uploadedLocalPaths,
+          })
+        },
       })
+
+      syncJobUploadProgress({
+        jobStore,
+        jobId,
+        uploadedLocalPaths: new Set(uploadResults.map((result) => result.candidate.localPath)),
+      })
+      jobStore.appendLog(jobId, "PicGo 업로드가 끝났고 결과 치환을 진행합니다.")
 
       const rewritten = await uploadRewriter({
         outputDir: job.request.outputDir,
@@ -378,6 +448,14 @@ export const createHttpServer = ({
       jobStore.completeUpload(jobId, rewritten)
       jobStore.appendLog(jobId, "PicGo 업로드와 결과 치환이 완료되었습니다.")
     } catch (error) {
+      if (error instanceof PicGoUploadPhaseError) {
+        syncJobUploadProgress({
+          jobStore,
+          jobId,
+          uploadedLocalPaths: new Set(error.uploadedResults.map((result) => result.candidate.localPath)),
+        })
+      }
+
       const message = sanitizeUploadError({
         error,
         providerFields: Object.fromEntries(

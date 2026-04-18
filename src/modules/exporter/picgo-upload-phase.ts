@@ -18,11 +18,28 @@ export type PicGoUploadResult = {
   uploadedUrl: string
 }
 
+export type PicGoUploadProgress = {
+  total: number
+  uploadedCount: number
+  lastCompletedLocalPath: string | null
+}
+
+export class PicGoUploadPhaseError extends Error {
+  readonly uploadedResults: PicGoUploadResult[]
+
+  constructor(message: string, uploadedResults: PicGoUploadResult[]) {
+    super(message)
+    this.name = "PicGoUploadPhaseError"
+    this.uploadedResults = uploadedResults
+  }
+}
+
 export type RunPicGoUploadPhaseInput = {
   outputDir: string
   candidates: UploadCandidate[]
   uploaderKey: string
   uploaderConfig: Record<string, unknown>
+  onProgress?: (progress: PicGoUploadProgress) => void
 }
 
 const createPicGoClient = async (): Promise<PicGoLike> => {
@@ -47,27 +64,44 @@ export const runPicGoUploadPhase = async (
     },
   })
 
-  const filePaths = dedupedCandidates.map((candidate) => path.join(input.outputDir, candidate.localPath))
-  const uploaded = await client.upload(filePaths)
+  const total = dedupedCandidates.length
+  const uploadedResults: PicGoUploadResult[] = []
 
-  if (uploaded instanceof Error) {
-    throw new Error("PicGo upload failed.")
-  }
+  input.onProgress?.({
+    total,
+    uploadedCount: 0,
+    lastCompletedLocalPath: null,
+  })
 
-  if (uploaded.length !== dedupedCandidates.length) {
-    throw new Error("PicGo upload result count mismatch.")
-  }
+  for (const candidate of dedupedCandidates) {
+    const filePath = path.join(input.outputDir, candidate.localPath)
+    const uploaded = await client.upload([filePath])
 
-  return uploaded.map((result, index) => {
-    const uploadedUrl = getUploadedUrl(result)
+    if (uploaded instanceof Error) {
+      throw new PicGoUploadPhaseError("PicGo upload failed.", uploadedResults)
+    }
+
+    if (uploaded.length !== 1) {
+      throw new PicGoUploadPhaseError("PicGo upload result count mismatch.", uploadedResults)
+    }
+
+    const uploadedUrl = getUploadedUrl(uploaded[0]!)
 
     if (!uploadedUrl) {
-      throw new Error("PicGo upload result is missing a URL.")
+      throw new PicGoUploadPhaseError("PicGo upload result is missing a URL.", uploadedResults)
     }
 
-    return {
-      candidate: dedupedCandidates[index]!,
+    uploadedResults.push({
+      candidate,
       uploadedUrl,
-    }
-  })
+    })
+
+    input.onProgress?.({
+      total,
+      uploadedCount: uploadedResults.length,
+      lastCompletedLocalPath: candidate.localPath,
+    })
+  }
+
+  return uploadedResults
 }

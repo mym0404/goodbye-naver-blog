@@ -42,5 +42,10 @@
 - `download-and-upload`는 export를 먼저 끝낸 뒤 같은 job을 `upload-ready -> uploading -> upload-completed | upload-failed`로 진행한다.
 - post-export 업로드 입력은 export 옵션에 저장하지 않고 결과 패널에서만 `providerKey + providerFields` 형태로 받는다.
 - job 단위 업로드 대상 수는 글별 참조 수 합계가 아니라 고유 `localPath` 수를 뜻한다.
+- 실행 단계 progress bar는 `처리한 글 수 / 전체 글 수`를 기준으로 한다.
+- 업로드 단계 progress bar는 `업로드된 고유 자산 수 / 전체 대상 자산 수`를 기준으로 한다.
+- upload row 상태는 글 기준 `대기 / 부분 완료 / 완료 / 실패`만 사용한다.
+- `upload-failed`가 되면 이미 업로드된 자산 수와 무관하게 모든 row 상태는 `실패`로 보인다.
+- `uploading` 중에 `uploadedCount === candidateCount`가 먼저 될 수 있지만, 이때는 rewrite 대기 구간일 뿐 최종 완료가 아니다.
+- `upload-completed`로 넘어간 뒤에도 업로드 대상이 있었던 job은 결과 단계에서 마지막 upload progress와 row 상태를 계속 볼 수 있어야 한다.
 - 업로드 대상이 하나도 없으면 `download-and-upload`여도 upload 단계로 넘어가지 않고 `completed + skipped-no-candidates`로 닫힌다.
-- `imageContentMode === base64`는 업로드 모드와 양립하지 않으므로 로컬 다운로드 기반 경로만 허용한다.

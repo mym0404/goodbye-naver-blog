@@ -181,7 +181,7 @@ describe("http server", () => {
     expect(body.options.frontmatter.aliases.title).toBe("")
     expect(body.options.markdown.formulaBlockWrapperOpen).toBe("$$")
     expect(body.options.assets.stickerAssetMode).toBe("ignore")
-    expect(body.optionDescriptions["assets-imageContentMode"]).toContain("base64")
+    expect(body.optionDescriptions["assets-imageContentMode"]).toBeUndefined()
   })
 
   it("accepts same-origin upload actions for upload-ready jobs without persisting provider fields", async () => {
@@ -478,7 +478,115 @@ describe("http server", () => {
     expect(JSON.stringify(completedJob)).not.toContain("ghp_retry_fixed")
   })
 
-  it("keeps uploadedCount at zero when rewrite fails after upload results return", async () => {
+  it("exposes nonzero uploadedCount while the job is still uploading", async () => {
+    let releaseUpload = () => {}
+    const uploadPhaseRunner = vi.fn(
+      async ({
+        candidates,
+        onProgress,
+      }: {
+        candidates: UploadCandidate[]
+        onProgress?: (progress: {
+          total: number
+          uploadedCount: number
+          lastCompletedLocalPath: string | null
+        }) => void
+      }) => {
+        onProgress?.({
+          total: candidates.length,
+          uploadedCount: 0,
+          lastCompletedLocalPath: null,
+        })
+        onProgress?.({
+          total: candidates.length,
+          uploadedCount: 1,
+          lastCompletedLocalPath: candidates[0]?.localPath ?? null,
+        })
+
+        await new Promise<void>((resolve) => {
+          releaseUpload = resolve
+        })
+
+        return candidates.map((candidate) => ({
+          candidate,
+          uploadedUrl: `https://cdn.example.com/${candidate.localPath}`,
+        }))
+      },
+    )
+
+    mockFetcher({
+      html: uploadHtml,
+      thumbnailUrl: "https://example.com/thumb.png",
+    })
+
+    activeServer = createHttpServer({
+      uploadPhaseRunner,
+    })
+    const baseUrl = await startServer(activeServer)
+    const options = defaultExportOptions()
+
+    options.assets.imageHandlingMode = "download-and-upload"
+
+    const exportResponse = await fetch(`${baseUrl}/api/export`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        blogIdOrUrl: "https://blog.naver.com/mym0404",
+        outputDir: "/tmp/http-server-upload-progress",
+        options,
+      }),
+    })
+    const exportBody = (await exportResponse.json()) as {
+      jobId: string
+    }
+
+    await waitForJob({
+      baseUrl,
+      jobId: exportBody.jobId,
+      accept: (job) => job.status === "upload-ready",
+    })
+
+    const uploadResponse = await fetch(`${baseUrl}/api/export/${exportBody.jobId}/upload`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: baseUrl,
+        "x-requested-with": "XMLHttpRequest",
+      },
+      body: JSON.stringify(
+        createUploadPayload({
+          repo: "owner/name",
+          token: "ghp_upload_progress",
+        }),
+      ),
+    })
+
+    const uploadingJob = await waitForJob({
+      baseUrl,
+      jobId: exportBody.jobId,
+      accept: (job) => job.status === "uploading" && job.upload.uploadedCount === 1,
+    })
+
+    expect(uploadResponse.status).toBe(202)
+    expect(uploadingJob.upload.status).toBe("uploading")
+    expect(uploadingJob.upload.uploadedCount).toBe(1)
+    expect(uploadingJob.items[0]?.upload.uploadedCount).toBe(1)
+    expect(uploadingJob.logs.some((entry) => entry.message.includes("결과 치환"))).toBe(false)
+
+    releaseUpload()
+
+    const completedJob = await waitForJob({
+      baseUrl,
+      jobId: exportBody.jobId,
+      accept: (job) => job.status === "upload-completed",
+    })
+
+    expect(completedJob.logs.some((entry) => entry.message.includes("결과 치환을 진행합니다."))).toBe(true)
+  })
+
+  it("preserves uploadedCount when rewrite fails after upload results return", async () => {
     const uploadPhaseRunner = vi.fn(async ({ candidates }: { candidates: UploadCandidate[] }) =>
       candidates.map((candidate) => ({
         candidate,
@@ -547,8 +655,9 @@ describe("http server", () => {
     expect(uploadResponse.status).toBe(202)
     expect(uploadPhaseRunner).toHaveBeenCalledTimes(1)
     expect(uploadRewriter).toHaveBeenCalledTimes(1)
-    expect(failedJob.upload.uploadedCount).toBe(0)
-    expect(failedJob.upload.failedCount).toBe(failedJob.upload.candidateCount)
+    expect(failedJob.upload.uploadedCount).toBe(failedJob.upload.candidateCount)
+    expect(failedJob.upload.failedCount).toBe(0)
+    expect(failedJob.items[0]?.upload.uploadedCount).toBe(failedJob.items[0]?.upload.candidateCount)
   })
 
   it("finishes zero-candidate download-and-upload jobs as completed with skipped-no-candidates", async () => {

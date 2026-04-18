@@ -126,6 +126,7 @@ export class JobStore {
 
   startUpload(id: string) {
     const job = this.mustGet(id)
+    const updatedAt = new Date().toISOString()
 
     job.status = "uploading"
     job.error = null
@@ -137,6 +138,19 @@ export class JobStore {
       terminalReason: null,
     }
     job.finishedAt = null
+    job.items = job.items.map((item) =>
+      item.upload.eligible
+        ? {
+            ...item,
+            upload: {
+              ...item.upload,
+              uploadedCount: 0,
+              failedCount: 0,
+            },
+            updatedAt,
+          }
+        : item,
+    )
   }
 
   updateUpload(id: string, upload: ExportJobState["upload"]) {

@@ -1,0 +1,14 @@
+T6 final verification
+
+Commands
+- `pnpm check:full`
+- `pnpm test:network:upload`
+
+Result
+- PASS
+- `pnpm check:full` passed through `quality:report`, `check:local`, `test:network`, `samples:verify`, and `smoke:ui`
+- `pnpm test:network:upload` passed with same-branch GitHub evidence on `master`
+- Final live contract proved:
+  - partial upload visible before completion: `status=uploading`, `uploadedCount=1/2`, UI `uploadProgress=50`, row status `partial`
+  - final completion still gated after rewrite: job logs show upload start, rewrite start, then `upload-completed`
+  - completed jobs keep the upload snapshot visible: UI `uploadProgress=100` and completed row remain visible in result mode

@@ -73,15 +73,20 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - option panel은 `구조 -> Frontmatter -> Markdown -> Assets`를 각각 독립 단계로 렌더링한다.
 - `범위` 탭은 두지 않고, 카테고리 단계가 범위 설정을 함께 맡는다.
 - frontmatter 필드 목록은 데스크톱에서 2~3열 grid로 보여 주고, 각 필드 안에서 토글/설명/alias 입력을 함께 묶는다.
-- `Assets`는 `이미지 처리 방식`, `로컬 이미지 압축`, `이미지 본문 참조 방식`, 다운로드 토글을 관리하고, 업로더 설정 폼은 여기 두지 않는다.
+- `Assets`는 `이미지 처리 방식`, `로컬 이미지 압축`, 다운로드 토글을 관리하고, 업로더 설정 폼은 여기 두지 않는다.
 - `Assets`에서 `이미지 처리 방식`은 `download / remote / download-and-upload` 세 모드를 제공한다.
-- `Assets`에서 `이미지 본문 참조 방식`이 `base64`면 `이미지 처리 방식`은 업로드 모드로 갈 수 없고, 압축 토글은 비활성화한다.
 - `이미지 처리 방식`이 `remote`면 로컬 압축과 다운로드 토글은 모두 비활성화한다.
 - `이미지 처리 방식`이 `download-and-upload`면 결과 패널에서만 업로드 폼을 열고, 대상 자산 수와 상태를 함께 보여 준다.
 - status panel은 mode 기반으로 `실행 중 / 업로드 / 결과` 중 하나만 보여 준다.
 - upload 대상 표는 compact table을 유지하고, 업로드 입력은 raw JSON textarea 대신 provider 선택과 provider별 구조화 필드를 사용한다.
 - 업로드 폼은 `upload-ready`와 `upload-failed`에서만 보이고, `upload-failed`일 때는 같은 job에서 값 수정 후 바로 재시도할 수 있어야 한다.
-- 업로드가 진행되면 같은 표에서 `대기 / 업로드 중 / 완료 / 실패` 상태가 바뀌고, zero-candidate 완료는 폼 대신 설명 문구만 남긴다.
+- running panel은 `#running-progress`에서 `처리한 글 수 / 전체 글 수`를 progress bar로 보여 준다.
+- upload panel은 `#upload-progress`에서 `업로드된 고유 자산 수 / 전체 대상 자산 수`를 progress bar로 보여 준다.
+- 업로드가 진행되면 같은 표에서 글 기준 `대기 / 부분 완료 / 완료 / 실패` 상태가 바뀌고, `upload-failed`에서는 모든 row를 `실패`로 override한다.
+- `uploadedCount === candidateCount && status === "uploading"`이면 full bar여도 완료가 아니라 rewrite 대기 문구를 보여 줘야 한다.
+- 업로드 대상이 있었던 job은 `upload-completed` 뒤 결과 단계로 넘어가도 같은 `#upload-progress`와 대상 표를 유지해서 방금 끝난 업로드 상태를 놓치지 않게 한다.
+- upload 대상 표는 `#upload-targets-scroll` 내부 `max-height` 스크롤 영역에 넣어 desktop/mobile 모두 패널 높이를 무너뜨리지 않아야 한다.
+- zero-candidate 완료는 폼 대신 설명 문구만 남긴다.
 - 결과 파일 표는 `index.md` 같은 저장용 파일명만 전면에 노출하지 않는다. per-post export일 때는 마지막 글 폴더명을 대표 이름으로 보여 주고, 전체 `outputPath`는 경로 열에서 줄바꿈 가능해야 한다.
 - 결과 파일 행은 버튼 기본 `nowrap`에 기대지 않는다. 긴 파일명과 제목은 셀 안에서 줄바꿈되어야 하고, 다른 열 위로 겹치면 안 된다.
 - 결과 파일 표는 내용이 적을 때 불필요한 빈 높이를 만들지 않고, 길어질 때만 최대 높이 안에서 스크롤되어야 한다.
@@ -117,7 +122,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - smoke screenshot capture는 `docs/generated/ui-review/round-01`부터 `round-05`까지 동일 시나리오로 누적한다.
 - smoke는 desktop/mobile 모두 viewport horizontal overflow를 같이 검사한다.
 - smoke는 `data-step-view` 전환, scan 재사용/재조회, frontmatter 다열 grid, assets 단계 전 export 버튼 비노출을 같이 검사한다.
-- smoke는 mocked API payload로 `upload-ready -> uploading -> upload-failed -> retry -> upload-completed`를 강제로 재현하고, 결과 패널의 구조화 provider 폼 제출과 mobile upload table overflow까지 확인한다.
+- smoke는 mocked API payload로 `upload-ready -> uploading -> upload-failed -> retry -> upload-completed`를 강제로 재현하고, progress hook(`#running-progress`, `#upload-progress`), rewrite-pending full bar, row 상태, form visibility, mobile upload table overflow까지 확인한다.
 - smoke screenshot과 로그에는 placeholder config만 쓰고, raw secret 값은 남기지 않는다.
 - contrast gate는 translucent card 배경까지 ancestor background를 합성해서 계산한다.
 
