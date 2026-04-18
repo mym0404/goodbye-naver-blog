@@ -1,14 +1,13 @@
 # Validation
 
 ## 목적
-패키지 스크립트, git hook, CI, task loop를 저장소 실제 동작 기준으로 정리한다.
+패키지 스크립트, CI, task loop를 저장소 실제 동작 기준으로 정리한다.
 
 ## Source Of Truth
-- 실제 검증 명령은 `package.json`, `scripts/harness/*`, `lefthook.yml`, `.github/workflows/required-checks.yml`이 기준이다.
+- 실제 검증 명령은 `package.json`, `scripts/harness/*`, `.github/workflows/required-checks.yml`이 기준이다.
 
 ## 관련 코드
 - [../../../package.json](../../../package.json)
-- [../../../lefthook.yml](../../../lefthook.yml)
 - [../../../.github/workflows/required-checks.yml](../../../.github/workflows/required-checks.yml)
 - [../../../scripts/harness/verify-sample-exports.ts](../../../scripts/harness/verify-sample-exports.ts)
 - [../../../scripts/harness/generate-quality-report.ts](../../../scripts/harness/generate-quality-report.ts)
@@ -44,9 +43,7 @@
 - `pnpm quality:report`: parser/sample coverage 기반 generated 품질 리포트를 다시 만들 때 실행한다.
 
 ## Hook And CI
-- `prepare` 스크립트가 `lefthook install`을 실행한다.
-- `pre-commit` hook은 `pnpm test:offline`을 돈다.
-- `pre-push` hook은 `pnpm check:local`을 돈다.
+- 로컬 git hook은 저장소 설정으로 관리하지 않는다.
 - PR CI는 `pnpm check:full` 뒤 Playwright 기반 `pnpm test:network:upload`, `pnpm test:coverage`를 실행하고 `coverage/lcov.info`를 Codecov로 업로드한다.
 - 실업로드 step은 GitHub `mym0404/image-archive` 저장소, `master` branch, 루트 경로(`/`)를 고정값으로 사용한다. GitHub Actions에서는 repository secret `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`로 `.env`를 만들어 실행한다.
 - fork PR에서는 기본 `pull_request` 보안 모델상 secret이 주입되지 않으므로 이 workflow를 그대로 유지하면 외부 기여 PR은 실패할 수 있다.
