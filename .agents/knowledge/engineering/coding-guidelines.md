@@ -1,18 +1,12 @@
 # Coding Guidelines
 
-## 목적
-이 저장소에서 반복적으로 지켜야 하는 구현 우선순위와 문서 동기화 원칙을 정리한다.
-
-## Source Of Truth
-- 실제 규칙은 루트 `AGENTS.md`, 코드 구조, 검증 스크립트, 테스트 흐름을 기준으로 유지한다.
-
 ## 관련 코드
 - [../../../AGENTS.md](../../../AGENTS.md)
 - [../../../src/shared/parser-capabilities.ts](../../../src/shared/parser-capabilities.ts)
 - [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
 
 ## 검증 방법
-- `pnpm check:quick`: parser, renderer, exporter, server, UI 중 수정한 코드가 기본 타입·오프라인 회귀를 깨지 않았는지 확인할 때 실행한다.
+- `pnpm check:quick`: 현재 `check:local` 별칭이다. parser, renderer, exporter, server, UI 중 수정한 코드가 기본 타입·오프라인 회귀를 깨지 않았는지 확인할 때 실행한다.
 - 변경 영역 focused command: 한 seam만 바꿨을 때 관련 harness나 테스트만 다시 확인할 때 실행한다.
 
 ## Repo-Specific Priorities
@@ -30,12 +24,6 @@
 
 ## Documentation Discipline
 - evergreen 지식은 `.agents/knowledge/`가 기준이다.
-- `docs/`는 사용자 문서, 검증 문서, generated 보고서를 담는다.
+- `docs/runbooks/`는 반복 가능한 운영 절차, `docs/generated/`는 harness 산출물, `docs/plans/active/`는 활성 작업 메모다.
 - 코드 동작이 바뀌면 knowledge와 관련 docs를 같이 갱신한다.
-
-## README Policy
-- `README.md`는 사용자용 첫 화면으로 유지한다.
-- README에는 도구 소개, 사용 대상, 결과물, 기본 실행 방법 같은 사용자 정보만 우선 둔다.
-- 이 저장소의 기본 실행 흐름은 `git clone -> pnpm install -> pnpm start`다.
-- 개발 서버, 검증 명령, API, 내부 구조, harness 같은 기여자 정보는 README가 아니라 `CONTRIBUTING.md`, `.agents/knowledge/`, `docs/`에 둔다.
-- README는 실제 코드와 UI에서 확인 가능한 사실만 적고, 추측성 설명이나 계획성 문구는 넣지 않는다.
+- `README.md`는 사용자 진입, `CONTRIBUTING.md`는 기여자 진입 문서로 유지한다.

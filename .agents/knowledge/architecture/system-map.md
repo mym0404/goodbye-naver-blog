@@ -13,14 +13,14 @@
 
 ## 검증 방법
 - `pnpm typecheck`: 모듈 경계나 import 방향을 바꾼 뒤 정적 연결 상태를 빠르게 확인할 때 실행한다.
-- focused test 또는 `pnpm check:quick`: 바뀐 모듈 seam이 실제 동작과 parser 계약을 깨지 않았는지 확인할 때 실행한다.
+- focused test 또는 `pnpm check:quick`: `check:quick`는 현재 `check:local` 별칭이다. 바뀐 모듈 seam이 실제 동작과 parser 계약을 깨지 않았는지 확인할 때 실행한다.
 
 ## Module Boundaries
 - `blog-fetcher`: 네이버 모바일 API, 글 HTML fetch, 자산 다운로드
 - `parser`: SE2, SE3, SE4 본문을 공용 AST로 변환
 - `reviewer`: 파싱 경고를 보정하고 정리
 - `converter`: AST를 Markdown과 frontmatter로 렌더링
-- `exporter`: fetch -> parse -> review -> render -> write -> manifest 실행과 PicGo upload/rewrite 단계를 묶음
+- `exporter`: fetch -> parse -> review -> render -> write -> manifest 실행과 PicGo upload/rewrite 단계를 묶고, 글 본문 export는 제한된 동시성으로 처리하되 결과 반영 순서는 입력 순서를 유지한다.
 - `server`: 로컬 웹 UI, export job API, 같은 job의 upload trigger/polling lifecycle, `providerKey/providerFields -> PicGo config` 매핑 제공
 - scan 후 export는 UI가 가진 scan snapshot을 실행 경로에 넘겨 목록 재수집을 줄인다.
 - `shared`: export 옵션, 타입, lifecycle contract, capability, sample corpus

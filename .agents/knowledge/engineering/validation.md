@@ -14,7 +14,7 @@
 - [../../../scripts/harness/generate-quality-report.ts](../../../scripts/harness/generate-quality-report.ts)
 
 ## 검증 방법
-- `pnpm check:quick`: 작은 로컬 수정 뒤 타입, 오프라인 테스트, parser 계약만 빠르게 다시 확인할 때 실행한다.
+- `pnpm check:quick`: 현재 `check:local` 별칭이다. 작은 로컬 수정 뒤 같은 로컬 기준선(`typecheck + test:offline + parser:check`)을 다시 확인할 때 실행한다.
 - `pnpm check:full`: 네트워크 테스트, 실샘플 export, UI smoke까지 묶인 전체 회귀가 필요할 때 실행한다.
 - `pnpm test:coverage`: 커버리지 게이트나 CI 동작을 다시 확인해야 할 때 실행한다.
 
@@ -25,7 +25,7 @@
 - 이 저장소에서 Playwright로 고정된 UI 회귀 기준은 `scripts/harness/run-ui-smoke.ts`, `scripts/harness/run-ui-live-upload.ts`다.
 
 ## Primary Commands
-- `pnpm check:quick`: 작은 코드 수정 뒤 `typecheck + test:offline + parser:check`만 바로 확인할 때 실행한다.
+- `pnpm check:quick`: 현재 `pnpm check:local` 별칭이다. 작은 코드 수정 뒤 같은 로컬 기준선을 바로 확인할 때 실행한다.
 - `pnpm check:local`: 일반적인 구현 작업을 마친 뒤 handoff 전 기본 회귀를 확인할 때 실행한다.
 - `pnpm check:full`: export 결과, 네트워크 연동, UI 흐름까지 바뀌었거나 최종 인계 직전에 전체 회귀를 확인할 때 실행한다.
 - `pnpm check`: `check:full`을 그대로 부를 때 실행한다.

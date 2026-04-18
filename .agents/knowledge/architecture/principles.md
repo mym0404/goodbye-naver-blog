@@ -12,7 +12,7 @@
 - [../../../src/server/http-server.ts](../../../src/server/http-server.ts)
 
 ## 검증 방법
-- `pnpm check:quick`: 계층 경계나 구조 규칙을 건드린 뒤 기본 타입·오프라인·parser 계약이 유지되는지 확인할 때 실행한다.
+- `pnpm check:quick`: 현재 `check:local` 별칭이다. 계층 경계나 구조 규칙을 건드린 뒤 기본 타입·오프라인·parser 계약이 유지되는지 확인할 때 실행한다.
 - `pnpm check:full`: 구조 변경이 export 결과, 네트워크 연동, UI 흐름까지 번질 수 있을 때 실행한다.
 
 ## Core Principles
