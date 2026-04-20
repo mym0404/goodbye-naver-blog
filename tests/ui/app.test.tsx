@@ -680,15 +680,15 @@ describe("App", () => {
         expect(init?.headers).toMatchObject({
           "x-requested-with": "XMLHttpRequest",
         })
-        expect(init?.body).toBe(
-          JSON.stringify({
-            providerKey: "github",
-            providerFields: {
-              repo: "owner/name",
-              token: "ghp_upload_secret",
-            },
-          }),
-        )
+        expect(JSON.parse(String(init?.body))).toEqual({
+          providerKey: "github",
+          providerFields: {
+            branch: "main",
+            customUrl: "https://cdn.jsdelivr.net/gh/owner/name@main",
+            repo: "owner/name",
+            token: "ghp_upload_secret",
+          },
+        })
         return buildJsonResponse({ jobId: "job-upload", status: "uploading" }, 202)
       }
 
@@ -712,6 +712,7 @@ describe("App", () => {
     vi.stubGlobal("fetch", fetchMock)
 
     const user = renderApp()
+    let jsDelivrToggle: HTMLElement | null = null
 
     await moveToDiagnosticsStep(user)
     await user.click(screen.getByRole("button", { name: "내보내기" }))
@@ -727,7 +728,10 @@ describe("App", () => {
       expect(document.querySelector("#upload-form")).not.toBeNull()
       expect(screen.getByLabelText("Provider")).toBeInTheDocument()
       expect(screen.getByLabelText("Repository")).toBeInTheDocument()
+      expect(screen.getByLabelText("Branch")).toBeInTheDocument()
       expect(screen.getByLabelText("Token")).toBeInTheDocument()
+      jsDelivrToggle = screen.getByRole("checkbox", { name: /jsDelivr CDN 사용/i })
+      expect(jsDelivrToggle).not.toBeChecked()
       expect(document.querySelector("#job-file-tree")).not.toBeNull()
       expect(document.querySelector("#job-file-tree")?.textContent).toContain("NestJS/2026-04-11-1/index.md")
       expect(document.querySelector("#status-panel")?.textContent).toContain(
@@ -738,9 +742,14 @@ describe("App", () => {
     fireEvent.change(screen.getByLabelText("Repository"), {
       target: { value: "owner/name" },
     })
+    fireEvent.change(screen.getByLabelText("Branch"), {
+      target: { value: "main" },
+    })
     fireEvent.change(screen.getByLabelText("Token"), {
       target: { value: "ghp_upload_secret" },
     })
+    expect(jsDelivrToggle).not.toBeNull()
+    await user.click(jsDelivrToggle as HTMLElement)
     await user.click(screen.getByRole("button", { name: "업로드 시작" }))
 
     await waitFor(() => {

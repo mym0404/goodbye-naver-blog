@@ -76,13 +76,12 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - option panel은 `구조 -> Frontmatter -> Markdown -> Assets -> 진단`을 각각 독립 단계로 렌더링한다.
 - `범위` 탭은 두지 않고, 카테고리 단계가 범위 설정을 함께 맡는다.
 - frontmatter 필드 목록은 데스크톱에서 2~3열 grid로 보여 주고, 각 필드 안에서 토글/설명/alias 입력을 함께 묶는다.
-- `Assets`는 `이미지 처리 방식`, `로컬 이미지 압축`, `GitHub custom URL`, 다운로드 토글을 관리하고, 업로더 설정 폼은 여기 두지 않는다.
-- `Assets`는 `GitHub custom URL` 입력을 함께 두고, placeholder는 `https://cdn.jsdelivr.net/gh/mym0404/ia2` 형식을 기준으로 보여 준다.
+- `Assets`는 `이미지 처리 방식`, `로컬 이미지 압축`, 다운로드 토글을 관리하고, 업로더 설정 폼은 여기 두지 않는다.
 - `Assets`에서 `이미지 처리 방식`은 `download / remote / download-and-upload` 세 모드를 제공한다.
 - `Assets`의 기본값은 `download-and-upload + 로컬 이미지 압축 켬`이다.
 - `이미지 처리 방식`이 `remote`면 로컬 압축, 다운로드 토글은 모두 비활성화한다.
 - `이미지 처리 방식`이 `download-and-upload`면 결과 패널에서만 업로드 폼을 열고, 대상 자산 수와 상태를 함께 보여 준다.
-- `GitHub custom URL`은 `download-and-upload`에서만 활성화하고, 업로드 시 GitHub PicGo config의 `customUrl`로 전달한다.
+- 업로드 단계의 GitHub provider는 `jsDelivr CDN 사용` 체크박스를 따로 두고, 켜면 `https://cdn.jsdelivr.net/gh/<repo>@<branch>` 기준 `customUrl`을 함께 보낸다. branch가 비어 있으면 `@<branch>`는 생략한다.
 - `진단 설정`은 마지막 옵션 단계이고, 현재는 `이미지 다운로드 실패 처리`를 담당한다.
 - `upload-ready`와 `upload-failed` 단계에서도 결과 파일 표를 같이 보여 주어 경고/실패를 업로드 전에 확인할 수 있어야 한다.
 - 다음 단계로 이동하면 현재 옵션 섹션의 맨 위로 스크롤을 되돌린다.

@@ -701,29 +701,6 @@ export const ExportOptionsPanel = ({
       />
 
       <OptionField
-        optionKey="assets-githubCustomUrl"
-        label="GitHub custom URL"
-        description={description("assets-githubCustomUrl")}
-        disabled={options.assets.imageHandlingMode !== "download-and-upload"}
-      >
-        <Input
-          id="assets-githubCustomUrl"
-          value={options.assets.githubCustomUrl}
-          disabled={options.assets.imageHandlingMode !== "download-and-upload"}
-          placeholder="https://cdn.jsdelivr.net/gh/mym0404/ia2"
-          onChange={(event) =>
-            onOptionsChange((current) => ({
-              ...current,
-              assets: {
-                ...current.assets,
-                githubCustomUrl: event.target.value,
-              },
-            }))
-          }
-        />
-      </OptionField>
-
-      <OptionField
         optionKey="assets-stickerAssetMode"
         label="스티커 자산 처리"
         description={description("assets-stickerAssetMode")}

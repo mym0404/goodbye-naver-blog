@@ -199,19 +199,12 @@ const writeScanCacheFile = async ({
 const normalizeUploaderConfig = ({
   uploaderKey,
   providerFields,
-  assets,
 }: {
   uploaderKey: string
   providerFields: ProviderFields
-  assets: ExportRequest["options"]["assets"]
 }) =>
   Object.fromEntries(
-    [
-      ...Object.entries(providerFields),
-      ...(uploaderKey === "github" && assets.githubCustomUrl.trim()
-        ? [["customUrl", assets.githubCustomUrl.trim()] as const]
-        : []),
-    ].flatMap(([key, value]) => {
+    Object.entries(providerFields).flatMap(([key, value]) => {
       if (uploaderKey === "github" && key === "path") {
         const normalizedPath = value
           .split("/")
@@ -769,7 +762,6 @@ export const createHttpServer = ({
         const uploaderConfig = normalizeUploaderConfig({
           uploaderKey: providerKey,
           providerFields,
-          assets: job.request.options.assets,
         })
 
         void runUploadForJob({

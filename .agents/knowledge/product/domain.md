@@ -41,7 +41,7 @@
 - 기본 이미지 처리 방식은 `download-and-upload`이고, 기본 로컬 압축은 켜져 있다.
 - 이미지 처리 방식은 `download`, `remote`, `download-and-upload` 세 가지다.
 - 다운로드 실패 처리는 `warn-and-use-source`, `warn-and-omit` 두 가지다.
-- GitHub 업로드 경로는 asset 옵션의 `githubCustomUrl`로 CDN base URL을 덮어쓸 수 있다.
+- GitHub 이미지 업로드는 마지막 업로드 단계에서 `jsDelivr CDN 사용`을 켜면 Markdown URL을 `https://cdn.jsdelivr.net/gh/<repo>@<branch>` 기준으로 치환한다. branch가 비어 있으면 `@<branch>`는 생략한다.
 - 경고/실패 처리 옵션은 asset 전략과 분리된 마지막 `진단 설정` 단계에서 조정한다.
 - 블로그 입력 단계의 `카테고리 불러오기`는 현재 블로그 ID 기준으로 카테고리 스냅샷을 재사용한다.
 - 카테고리 스캔 캐시는 서버 파일 `outputs/scan-cache.json`에 저장되어 새로고침 뒤에도 유지된다.

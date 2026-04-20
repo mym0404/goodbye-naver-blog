@@ -128,7 +128,6 @@ export type ExportOptions = {
     imageHandlingMode: ImageHandlingMode
     compressionEnabled: boolean
     downloadFailureMode: AssetDownloadFailureMode
-    githubCustomUrl: string
     stickerAssetMode: StickerAssetMode
     downloadImages: boolean
     downloadThumbnails: boolean

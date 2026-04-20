@@ -140,7 +140,6 @@ export const optionDescriptions: OptionDescriptionMap = {
   "assets-imageHandlingMode": "이미지를 로컬로 유지할지, 원본 URL을 유지할지, 내보낸 뒤 업로드까지 이어갈지 정합니다.",
   "assets-compressionEnabled": "다운로드한 로컬 이미지 파일에 안전한 압축을 적용할지 정합니다.",
   "assets-downloadFailureMode": "이미지 다운로드가 실패했을 때 원본 URL로 남길지, 이미지 자체를 생략할지 정합니다.",
-  "assets-githubCustomUrl": "GitHub 업로드 뒤 Markdown에 치환할 custom URL prefix입니다. jsDelivr 같은 CDN 주소를 넣을 때 사용합니다.",
   "assets-stickerAssetMode": "네이버 스티커를 기본적으로 무시할지, 원본 자산 URL로 내려받아 본문에 포함할지 정합니다.",
   "assets-downloadImages": "본문 이미지 파일을 실제로 다운로드할지 정합니다.",
   "assets-downloadThumbnails": "썸네일과 비디오 썸네일 파일을 실제로 다운로드할지 정합니다.",
@@ -270,7 +269,6 @@ export const defaultExportOptions = (): ExportOptions => ({
     imageHandlingMode: "download-and-upload",
     compressionEnabled: true,
     downloadFailureMode: "warn-and-use-source",
-    githubCustomUrl: "",
     stickerAssetMode: "ignore",
     downloadImages: true,
     downloadThumbnails: true,
@@ -343,8 +341,6 @@ export const cloneExportOptions = (options?: PartialExportOptions) => {
         options?.assets?.compressionEnabled ?? defaults.assets.compressionEnabled,
       downloadFailureMode:
         options?.assets?.downloadFailureMode ?? defaults.assets.downloadFailureMode,
-      githubCustomUrl:
-        options?.assets?.githubCustomUrl ?? defaults.assets.githubCustomUrl,
       stickerAssetMode: options?.assets?.stickerAssetMode ?? defaults.assets.stickerAssetMode,
       downloadImages: options?.assets?.downloadImages ?? defaults.assets.downloadImages,
       downloadThumbnails:

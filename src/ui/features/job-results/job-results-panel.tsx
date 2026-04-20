@@ -119,6 +119,25 @@ const hasMissingRequiredProviderField = (
     (field) => field.required && !(providerFields[field.key]?.trim()),
   )
 
+const buildGitHubJsDelivrCustomUrl = ({
+  repo,
+  branch,
+}: {
+  repo: string
+  branch: string
+}) => {
+  const normalizedRepo = repo
+    .trim()
+    .replace(/^\/+|\/+$/g, "")
+  const normalizedBranch = branch.trim()
+
+  if (!normalizedRepo) {
+    return ""
+  }
+
+  return `https://cdn.jsdelivr.net/gh/${normalizedRepo}${normalizedBranch ? `@${normalizedBranch}` : ""}`
+}
+
 const buildJobItemSeverity = (item: ExportJobState["items"][number]) => {
   if (item.status === "failed" || item.error) {
     return "error"
@@ -312,6 +331,7 @@ export const JobResultsPanel = ({
   const [providerFields, setProviderFields] = useState<ProviderFormState>(
     buildInitialProviderFields(DEFAULT_PROVIDER_KEY),
   )
+  const [githubUseJsDelivr, setGithubUseJsDelivr] = useState(false)
   const jobItems = getJobItems(job).filter((item) => {
     const severity = buildJobItemSeverity(item)
 
@@ -365,6 +385,7 @@ export const JobResultsPanel = ({
 
     setProviderKey(DEFAULT_PROVIDER_KEY)
     setProviderFields(buildInitialProviderFields(DEFAULT_PROVIDER_KEY))
+    setGithubUseJsDelivr(false)
   }, [job?.id])
 
   return (
@@ -523,7 +544,17 @@ export const JobResultsPanel = ({
                   event.preventDefault()
                   await onUploadStart({
                     providerKey,
-                    providerFields: trimProviderFields(providerKey, providerFields),
+                    providerFields: {
+                      ...trimProviderFields(providerKey, providerFields),
+                      ...(providerKey === "github" && githubUseJsDelivr
+                        ? {
+                            customUrl: buildGitHubJsDelivrCustomUrl({
+                              repo: providerFields.repo ?? "",
+                              branch: providerFields.branch ?? "",
+                            }),
+                          }
+                        : {}),
+                    },
                   })
                 }}
               >
@@ -538,6 +569,7 @@ export const JobResultsPanel = ({
                         const nextProviderKey = event.target.value as ProviderKey
                         setProviderKey(nextProviderKey)
                         setProviderFields(buildInitialProviderFields(nextProviderKey))
+                        setGithubUseJsDelivr(false)
                       }}
                     >
                       {Object.entries(uploadProviderDefinitions).map(([key, definition]) => (
@@ -568,6 +600,31 @@ export const JobResultsPanel = ({
                     ))}
                   </div>
                 </div>
+                {providerKey === "github" ? (
+                  <label
+                    htmlFor="upload-github-use-jsdelivr"
+                    className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                  >
+                    <input
+                      id="upload-github-use-jsdelivr"
+                      className="size-[1.1rem] shrink-0 accent-primary"
+                      type="checkbox"
+                      checked={githubUseJsDelivr}
+                      onChange={(event) => setGithubUseJsDelivr(event.target.checked)}
+                    />
+                    <span className="grid gap-1">
+                      <span className="text-sm font-semibold text-slate-900">jsDelivr CDN 사용</span>
+                      <span className="text-sm leading-6 text-slate-500">
+                        {githubUseJsDelivr
+                          ? buildGitHubJsDelivrCustomUrl({
+                              repo: providerFields.repo ?? "",
+                              branch: providerFields.branch ?? "",
+                            }) || "Repository를 입력하면 jsDelivr 주소를 만듭니다."
+                          : "기본 GitHub 업로드 URL을 사용합니다."}
+                      </span>
+                    </span>
+                  </label>
+                ) : null}
                 <div className="flex justify-end">
                   <Button
                     id="upload-submit"

@@ -276,9 +276,10 @@ describe("http server", () => {
       expect(candidates).toHaveLength(1)
       expect(candidates[0]?.localPath).toMatch(/^public\/[a-f0-9]{64}\.png$/)
       expect(uploaderConfig).toMatchObject({
+        branch: "main",
         repo: "owner/name",
         token: "ghp_test_upload_token",
-        customUrl: "https://cdn.jsdelivr.net/gh/mym0404/ia2",
+        customUrl: "https://cdn.jsdelivr.net/gh/mym0404/ia2@main",
       })
       expect(uploaderConfig).not.toHaveProperty("path")
 
@@ -300,7 +301,6 @@ describe("http server", () => {
     const options = defaultExportOptions()
 
     options.assets.imageHandlingMode = "download-and-upload"
-    options.assets.githubCustomUrl = "https://cdn.jsdelivr.net/gh/mym0404/ia2"
 
     const exportResponse = await fetch(`${baseUrl}/api/export`, {
       method: "POST",
@@ -334,9 +334,11 @@ describe("http server", () => {
       },
       body: JSON.stringify(
         createUploadPayload({
+          branch: "main",
           repo: "owner/name",
           path: "/",
           token: "ghp_test_upload_token",
+          customUrl: "https://cdn.jsdelivr.net/gh/mym0404/ia2@main",
         }),
       ),
     })
