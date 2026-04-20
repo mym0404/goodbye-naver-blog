@@ -70,6 +70,9 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - category 선택은 tree semantics를 따른다. 부모 선택은 하위 전체를 함께 토글하고, 일부 자식만 선택되면 부모는 partial state로 보여야 한다.
 - category table은 parent-before-children 순서를 유지하고 depth 기반 indent로 위계를 바로 읽을 수 있어야 한다.
 - 카테고리 단계는 트리 선택과 함께 `카테고리 포함 범위`, `시작일`, `종료일` 입력을 같이 보여 준다.
+- 블로그 입력 단계 하단 액션에는 `카테고리 불러오기`와 `강제로 불러오기`를 같이 둔다.
+- 기본 `카테고리 불러오기`는 서버 파일 캐시 `outputs/scan-cache.json`을 재사용해 새로고침 뒤에도 같은 블로그 스캔을 빠르게 열어야 한다.
+- `강제로 불러오기`는 `캐시 무효화` tooltip을 노출하고, 같은 블로그 입력이어도 서버 재스캔을 강제한다.
 - option panel은 `구조 -> Frontmatter -> Markdown -> Assets -> 진단`을 각각 독립 단계로 렌더링한다.
 - `범위` 탭은 두지 않고, 카테고리 단계가 범위 설정을 함께 맡는다.
 - frontmatter 필드 목록은 데스크톱에서 2~3열 grid로 보여 주고, 각 필드 안에서 토글/설명/alias 입력을 함께 묶는다.

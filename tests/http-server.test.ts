@@ -1,3 +1,6 @@
+import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import path from "node:path"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { NaverBlogFetcher } from "../src/modules/blog-fetcher/naver-blog-fetcher.js"
@@ -182,6 +185,84 @@ describe("http server", () => {
     expect(body.options.markdown.formulaBlockWrapperOpen).toBe("$$")
     expect(body.options.assets.stickerAssetMode).toBe("ignore")
     expect(body.optionDescriptions["assets-imageContentMode"]).toBeUndefined()
+  })
+
+  it("persists scan results to a json file and reuses them after app reloads", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "scan-cache-"))
+    const scanCachePath = path.join(rootDir, "scan-cache.json")
+    const scanBlogSpy = vi.spyOn(NaverBlogFetcher.prototype, "scanBlog").mockResolvedValue({
+      ...baseScanResult,
+      posts: createPosts(null),
+    })
+
+    try {
+      activeServer = createHttpServer({
+        scanCachePath,
+      })
+      let baseUrl = await startServer(activeServer)
+
+      const firstResponse = await fetch(`${baseUrl}/api/scan`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          blogIdOrUrl: "https://blog.naver.com/mym0404",
+        }),
+      })
+
+      expect(firstResponse.status).toBe(200)
+      expect(scanBlogSpy).toHaveBeenCalledTimes(1)
+      expect(await readFile(scanCachePath, "utf8")).toContain("\"mym0404\"")
+
+      await new Promise<void>((resolve, reject) => {
+        activeServer?.close((error) => {
+          if (error) {
+            reject(error)
+            return
+          }
+
+          resolve()
+        })
+      })
+      activeServer = null
+
+      activeServer = createHttpServer({
+        scanCachePath,
+      })
+      baseUrl = await startServer(activeServer)
+
+      const secondResponse = await fetch(`${baseUrl}/api/scan`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          blogIdOrUrl: "https://blog.naver.com/mym0404",
+        }),
+      })
+      const secondBody = (await secondResponse.json()) as ScanResult
+
+      expect(secondResponse.status).toBe(200)
+      expect(secondBody.blogId).toBe("mym0404")
+      expect(scanBlogSpy).toHaveBeenCalledTimes(1)
+
+      const forcedResponse = await fetch(`${baseUrl}/api/scan`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          blogIdOrUrl: "https://blog.naver.com/mym0404",
+          forceRefresh: true,
+        }),
+      })
+
+      expect(forcedResponse.status).toBe(200)
+      expect(scanBlogSpy).toHaveBeenCalledTimes(2)
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
   })
 
   it("accepts same-origin upload actions for upload-ready jobs without persisting provider fields", async () => {

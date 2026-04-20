@@ -4,7 +4,7 @@ import {
   type Server as HttpServer,
   type ServerResponse,
 } from "node:http"
-import { access, readFile } from "node:fs/promises"
+import { access, mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import type { ViteDevServer } from "vite"
 
@@ -27,6 +27,7 @@ import { JobStore } from "./job-store.js"
 
 const builtClientRoot = path.resolve(process.cwd(), "dist/client")
 const devIndexPath = path.resolve(process.cwd(), "index.html")
+const defaultScanCachePath = path.resolve(process.cwd(), "outputs/scan-cache.json")
 
 const contentTypes: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
@@ -157,6 +158,44 @@ const normalizeProviderFields = (value: unknown): ProviderFields | null => {
   return Object.keys(normalized).length > 0 ? normalized : null
 }
 
+const readScanCacheFile = async (scanCachePath: string) => {
+  try {
+    const raw = await readFile(scanCachePath, "utf8")
+    const parsed = JSON.parse(raw) as {
+      scans?: Record<string, ScanResult>
+    }
+
+    return parsed.scans && typeof parsed.scans === "object" ? parsed.scans : {}
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return {}
+    }
+
+    throw error
+  }
+}
+
+const writeScanCacheFile = async ({
+  scanCachePath,
+  scans,
+}: {
+  scanCachePath: string
+  scans: Record<string, ScanResult>
+}) => {
+  await mkdir(path.dirname(scanCachePath), { recursive: true })
+  await writeFile(
+    scanCachePath,
+    JSON.stringify(
+      {
+        scans,
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  )
+}
+
 const normalizeUploaderConfig = ({
   uploaderKey,
   providerFields,
@@ -263,14 +302,17 @@ export const createHttpServer = ({
   jobStore = new JobStore(),
   uploadPhaseRunner = runPicGoUploadPhase,
   uploadRewriter = rewriteUploadedAssets,
+  scanCachePath = defaultScanCachePath,
 }: {
   jobStore?: JobStore
   uploadPhaseRunner?: typeof runPicGoUploadPhase
   uploadRewriter?: typeof rewriteUploadedAssets
+  scanCachePath?: string
 } = {}) => {
   const isDevelopment = process.env.NODE_ENV === "development"
   let httpServer: HttpServer
   let viteDevServerPromise: Promise<ViteDevServer> | null = null
+  let scanCachePromise: Promise<Record<string, ScanResult>> | null = null
 
   const ensureViteDevServer = () => {
     if (!viteDevServerPromise) {
@@ -288,6 +330,34 @@ export const createHttpServer = ({
     }
 
     return viteDevServerPromise
+  }
+
+  const ensureScanCache = () => {
+    if (!scanCachePromise) {
+      scanCachePromise = readScanCacheFile(scanCachePath)
+    }
+
+    return scanCachePromise
+  }
+
+  const updateScanCache = async ({
+    blogId,
+    scanResult,
+  }: {
+    blogId: string
+    scanResult: ScanResult
+  }) => {
+    const current = await ensureScanCache()
+    const next = {
+      ...current,
+      [blogId]: scanResult,
+    }
+
+    await writeScanCacheFile({
+      scanCachePath,
+      scans: next,
+    })
+    scanCachePromise = Promise.resolve(next)
   }
 
   const sendBrowserApp = async ({
@@ -510,6 +580,7 @@ export const createHttpServer = ({
         const rawBody = await readBody(request)
         const payload = JSON.parse(rawBody) as {
           blogIdOrUrl?: string
+          forceRefresh?: boolean
         }
 
         if (!payload.blogIdOrUrl?.trim()) {
@@ -524,11 +595,26 @@ export const createHttpServer = ({
         }
 
         const blogId = extractBlogId(payload.blogIdOrUrl)
+        const cachedScans = await ensureScanCache()
+
+        if (!payload.forceRefresh && cachedScans[blogId]) {
+          sendJson({
+            response,
+            statusCode: 200,
+            body: cachedScans[blogId],
+          })
+          return
+        }
+
         const fetcher = new NaverBlogFetcher({
           blogId,
         })
         const scanResult = await fetcher.scanBlog({
           includePosts: true,
+        })
+        await updateScanCache({
+          blogId,
+          scanResult,
         })
 
         sendJson({

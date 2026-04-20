@@ -545,6 +545,65 @@ describe("App", () => {
     expect(scrollIntoViewSpy).toHaveBeenCalled()
   })
 
+  it("reuses cached categories by default and forces a fresh scan when requested", async () => {
+    let scanRequestCount = 0
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-defaults")) {
+        return buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      if (url.endsWith("/api/scan")) {
+        scanRequestCount += 1
+        return buildJsonResponse(scanResult)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
+    await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
+    })
+
+    expect(scanRequestCount).toBe(1)
+
+    await user.click(screen.getByRole("button", { name: "이전" }))
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="blog-input"]')).not.toBeNull()
+    })
+    expect(screen.getByRole("button", { name: "강제로 불러오기" })).toHaveAttribute("title", "캐시 무효화")
+
+    await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
+    })
+    expect(scanRequestCount).toBe(1)
+
+    await user.click(screen.getByRole("button", { name: "이전" }))
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="blog-input"]')).not.toBeNull()
+    })
+
+    await user.click(screen.getByRole("button", { name: "강제로 불러오기" }))
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
+    })
+    expect(scanRequestCount).toBe(2)
+  })
+
   it("hides setup panels while the export job is running", async () => {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()

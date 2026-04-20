@@ -163,14 +163,29 @@ const statusPillClass = (status: string) =>
           : status === "upload-ready"
             ? "bg-sky-100 text-sky-800"
             : "bg-slate-100 text-slate-600",
+	  )
+
+const resolveScopedCategoryIds = ({
+  categories,
+  currentCategoryIds,
+}: {
+  categories: ScanResult["categories"]
+  currentCategoryIds: number[]
+}) => {
+  const validCategoryIds = currentCategoryIds.filter((categoryId) =>
+    categories.some((category) => category.id === categoryId),
   )
+
+  return validCategoryIds.length > 0
+    ? validCategoryIds
+    : categories.map((category) => category.id)
+}
 
 export const App = () => {
   const [defaults, setDefaults] = useState(fallbackDefaults)
   const [blogIdOrUrl, setBlogIdOrUrl] = useState("")
   const [outputDir, setOutputDir] = useState("./output")
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null)
-  const [lastSuccessfulScanTarget, setLastSuccessfulScanTarget] = useState<string | null>(null)
+  const [scanCache, setScanCache] = useState<Record<string, ScanResult>>({})
   const [options, setOptions] = useState<ExportOptions>(
     fallbackDefaults.options,
   )
@@ -196,11 +211,7 @@ export const App = () => {
     [options.frontmatter],
   )
   const currentScanTarget = blogIdOrUrl.trim()
-  const hasReusableScanResult =
-    Boolean(scanResult) &&
-    Boolean(lastSuccessfulScanTarget) &&
-    lastSuccessfulScanTarget === currentScanTarget
-  const activeScanResult = hasReusableScanResult ? scanResult : null
+  const activeScanResult = currentScanTarget ? scanCache[currentScanTarget] ?? null : null
   const scopedPostCount = useMemo(() => {
     if (!activeScanResult?.posts) {
       return activeScanResult?.totalPostCount ?? 0
@@ -346,30 +357,56 @@ export const App = () => {
     setOptions((current) => updater(current))
   }
 
-  const ensureScanResult = async () => {
+  const ensureScanResult = async ({
+    forceRefresh = false,
+  }: {
+    forceRefresh?: boolean
+  } = {}) => {
     if (!currentScanTarget) {
       setScanStatus("블로그 ID 또는 URL을 입력하세요.")
       return false
     }
 
-    if (activeScanResult) {
+    if (activeScanResult && !forceRefresh) {
       setScanStatus(`${activeScanResult.blogId} 스캔 결과를 재사용합니다.`)
       setCategoryStatus("내보낼 카테고리를 선택하세요.")
+      setCategorySearch("")
+      setOptions((current) => ({
+        ...current,
+        scope: {
+          ...current.scope,
+          categoryIds: resolveScopedCategoryIds({
+            categories: activeScanResult.categories,
+            currentCategoryIds: current.scope.categoryIds,
+          }),
+        },
+      }))
       setSetupStep("category-selection")
       return true
     }
 
     setScanPending(true)
-    setScanStatus("카테고리를 스캔하는 중입니다.")
+    setScanStatus(forceRefresh ? "캐시를 무효화하고 카테고리를 다시 불러오는 중입니다." : "카테고리를 스캔하는 중입니다.")
     setCategoryStatus("카테고리를 불러오는 중입니다.")
+
+    if (forceRefresh) {
+      setScanCache((current) => {
+        const next = { ...current }
+        delete next[currentScanTarget]
+        return next
+      })
+    }
 
     try {
       const nextScanResult = await postJson<ScanResult>("/api/scan", {
         blogIdOrUrl: currentScanTarget,
+        forceRefresh,
       })
 
-      setScanResult(nextScanResult)
-      setLastSuccessfulScanTarget(currentScanTarget)
+      setScanCache((current) => ({
+        ...current,
+        [currentScanTarget]: nextScanResult,
+      }))
       setScanStatus(`${nextScanResult.blogId} 스캔 완료`)
       setCategoryStatus("내보낼 카테고리를 선택하세요.")
       setCategorySearch("")
@@ -403,8 +440,8 @@ export const App = () => {
     setBlogIdOrUrl(value)
     setSetupStep("blog-input")
 
-    if (value.trim() === lastSuccessfulScanTarget) {
-      setScanStatus("이전 스캔 결과를 다시 사용할 수 있습니다.")
+    if (value.trim() && scanCache[value.trim()]) {
+      setScanStatus("캐시된 카테고리를 다시 사용할 수 있습니다.")
       setCategoryStatus("내보낼 카테고리를 선택하세요.")
       return
     }
@@ -840,6 +877,22 @@ export const App = () => {
                   onClick={goToPreviousStep}
                 >
                   이전
+                </Button>
+              ) : null}
+
+              {setupStep === "blog-input" ? (
+                <Button
+                  type="button"
+                  id="force-scan-button"
+                  variant="secondary"
+                  className="h-10 rounded-xl border border-slate-200/80 bg-white px-4 shadow-[0_1px_2px_rgba(22,33,50,0.06)]"
+                  title="캐시 무효화"
+                  disabled={!currentScanTarget || scanPending}
+                  onClick={() => {
+                    void ensureScanResult({ forceRefresh: true })
+                  }}
+                >
+                  강제로 불러오기
                 </Button>
               ) : null}
 

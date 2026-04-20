@@ -1163,6 +1163,36 @@ const run = async () => {
       page,
       step: "blog-input",
     })
+
+    const forceScanTooltip = await page.locator("#force-scan-button").getAttribute("title")
+
+    if (forceScanTooltip !== "캐시 무효화") {
+      throw new Error(`expected force scan tooltip to be cache invalidation, got ${forceScanTooltip ?? "null"}`)
+    }
+
+    const forcedScanResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url() === `${baseUrl}/api/scan` &&
+        response.request().method() === "POST",
+      { timeout: responseTimeoutMs },
+    )
+
+    await page.click("#force-scan-button")
+    await forcedScanResponsePromise
+    await waitForStepView({
+      page,
+      step: "category-selection",
+    })
+
+    if (mockState.scanRequestCount !== 2) {
+      throw new Error(`expected forced scan request count to be 2, got ${mockState.scanRequestCount}`)
+    }
+
+    await page.click('button:has-text("이전")')
+    await waitForStepView({
+      page,
+      step: "blog-input",
+    })
     await page.fill("#blogIdOrUrl", "another-blog")
 
     const secondScanResponsePromise = page.waitForResponse(
@@ -1179,8 +1209,8 @@ const run = async () => {
       step: "category-selection",
     })
 
-    if (mockState.scanRequestCount !== 2) {
-      throw new Error(`expected changed blog input to trigger a second scan, got ${mockState.scanRequestCount}`)
+    if (mockState.scanRequestCount !== 3) {
+      throw new Error(`expected changed blog input to trigger a third scan, got ${mockState.scanRequestCount}`)
     }
 
     const categoryTableLayoutOk = await page.evaluate(() => {
