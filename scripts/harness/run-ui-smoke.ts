@@ -203,16 +203,26 @@ const buildUploadItem = ({
   uploadedCount,
   assetPaths,
   updatedAt,
+  rewriteStatus,
+  rewrittenAt,
 }: {
   index: number
   uploadedCount: number
   assetPaths: string[]
   updatedAt: string
+  rewriteStatus: "pending" | "completed" | "failed"
+  rewrittenAt: string | null
 }) => {
   const logNo = `223034929${String(700 + index).padStart(3, "0")}`
   const title = `NestJS 업로드 플로우 점검 ${index + 1}`
   const outputPath = `NestJS/2026-04-11-${logNo}/index.md`
   const candidates = buildUploadCandidates(index)
+  const uploadedUrls =
+    rewriteStatus === "completed"
+      ? candidates.map((_, assetIndex) => buildRemoteAssetPath(index, assetIndex))
+      : []
+  const externalPreviewUrl =
+    rewriteStatus === "completed" ? `https://markdownviewer.pages.dev/#share=smoke-${logNo}` : null
 
   return {
     id: outputPath,
@@ -233,10 +243,14 @@ const buildUploadItem = ({
       uploadedCount,
       failedCount: 0,
       candidates,
+      uploadedUrls,
+      rewriteStatus,
+      rewrittenAt,
     },
     warnings: [],
     warningCount: 0,
     error: null,
+    externalPreviewUrl,
     updatedAt,
   }
 }
@@ -274,6 +288,7 @@ const buildUploadJob = ({
   finishedAt,
   error,
   logs,
+  perItemRewriteStatuses,
 }: {
   jobStatus: "running" | "upload-ready" | "uploading" | "upload-failed" | "upload-completed"
   uploadStatus: "not-requested" | "upload-ready" | "uploading" | "upload-failed" | "upload-completed"
@@ -290,18 +305,30 @@ const buildUploadJob = ({
     timestamp: string
     message: string
   }>
+  perItemRewriteStatuses?: Array<"pending" | "completed" | "failed">
 }) => {
-  const items = perItemUploadedCounts.map((uploadedCount, index) =>
-    buildUploadItem({
+  const items = perItemUploadedCounts.map((uploadedCount, index) => {
+    const rewriteStatus =
+      perItemRewriteStatuses?.[index] ??
+      (jobStatus === "upload-completed"
+        ? "completed"
+        : uploadStatus === "upload-failed"
+          ? "failed"
+          : "pending")
+    const rewrittenAt = rewriteStatus === "completed" ? uploadTimelineTimestamps.rewriteAt : null
+
+    return buildUploadItem({
       index,
       uploadedCount,
       assetPaths:
-        jobStatus === "upload-completed"
+        rewriteStatus === "completed"
           ? buildUploadCandidates(index).map((_, assetIndex) => buildRemoteAssetPath(index, assetIndex))
           : buildUploadCandidates(index).map((candidate) => candidate.localPath),
       updatedAt: finishedAt ?? logs.at(-1)?.timestamp ?? uploadTimelineTimestamps.startedAt,
-    }),
-  )
+      rewriteStatus,
+      rewrittenAt,
+    })
+  })
   const uploadedCount = perItemUploadedCounts.reduce((sum, value) => sum + value, 0)
   const manifestPosts = items.map(({ updatedAt: _updatedAt, ...item }) => item)
 
@@ -423,6 +450,9 @@ const createPartialUploadingJob = () =>
         message: "이미지 업로드 진행률을 갱신했습니다.",
       },
     ],
+    perItemRewriteStatuses: uploadCounts.map((count, index) =>
+      index === 0 && count.partial === uploadCandidatesPerPost ? "completed" : "pending",
+    ),
   })
 
 const createRewritePendingJob = () =>
@@ -441,7 +471,7 @@ const createRewritePendingJob = () =>
     logs: [
       {
         timestamp: uploadTimelineTimestamps.rewriteAt,
-        message: "PicGo 업로드가 끝났고 결과 치환을 진행합니다.",
+        message: "문서 치환 시작: NestJS/2026-04-11-223034929700/index.md",
       },
     ],
   })
@@ -458,7 +488,7 @@ const createUploadFailedJob = () =>
       warnings: 0,
     },
     finishedAt: null,
-    error: "PicGo upload failed.",
+    error: "Image upload failed.",
     logs: [
       {
         timestamp: uploadTimelineTimestamps.partialAt,
@@ -466,9 +496,12 @@ const createUploadFailedJob = () =>
       },
       {
         timestamp: uploadTimelineTimestamps.rewriteAt,
-        message: "PicGo upload failed.",
+        message: "Image upload failed.",
       },
     ],
+    perItemRewriteStatuses: uploadCounts.map((count, index) =>
+      index === 0 && count.partial === uploadCandidatesPerPost ? "completed" : "failed",
+    ),
   })
 
 const createUploadCompletedJob = () =>
@@ -487,11 +520,11 @@ const createUploadCompletedJob = () =>
     logs: [
       {
         timestamp: uploadTimelineTimestamps.rewriteAt,
-        message: "PicGo 업로드가 끝났고 결과 치환을 진행합니다.",
+        message: "문서 치환 완료: NestJS/2026-04-11-223034929700/index.md",
       },
       {
         timestamp: uploadTimelineTimestamps.finishedAt,
-        message: "이미지 업로드를 완료했습니다.",
+        message: "Image Upload와 결과 치환이 완료되었습니다.",
       },
     ],
   })
@@ -1678,14 +1711,15 @@ const run = async () => {
 
     const failedUploadMessage = await page.locator("#status-panel").textContent()
 
-    if (!failedUploadMessage?.includes("PicGo upload failed.")) {
+    if (!failedUploadMessage?.includes("Image upload failed.")) {
       throw new Error("upload-failed state did not keep the retry message visible")
     }
 
     const failedRows = await page.locator('[data-upload-row-status="failed"]').count()
+    const completedRows = await page.locator('[data-upload-row-status="complete"]').count()
 
-    if (failedRows !== uploadTargetCount) {
-      throw new Error("upload-failed state did not override every row to 실패")
+    if (failedRows !== uploadTargetCount - 1 || completedRows !== 1) {
+      throw new Error("upload-failed state did not preserve completed rows")
     }
 
     const retainedRepo = await page.locator("#upload-providerField-repo").inputValue()

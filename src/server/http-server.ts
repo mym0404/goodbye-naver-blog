@@ -10,8 +10,15 @@ import type { ViteDevServer } from "vite"
 
 import { NaverBlogFetcher } from "../modules/blog-fetcher/naver-blog-fetcher.js"
 import { NaverBlogExporter } from "../modules/exporter/naver-blog-exporter.js"
-import { rewriteUploadedAssets } from "../modules/exporter/picgo-upload-rewriter.js"
-import { PicGoUploadPhaseError, runPicGoUploadPhase } from "../modules/exporter/picgo-upload-phase.js"
+import {
+  rewriteImageUploadPost,
+  writeImageUploadManifestSnapshot,
+} from "../modules/exporter/image-upload-rewriter.js"
+import {
+  ImageUploadPhaseError,
+  runImageUploadPhase,
+  type ImageUploadResult,
+} from "../modules/exporter/image-upload-phase.js"
 import { dedupeUploadCandidatesByLocalPath } from "../modules/exporter/upload-candidate-utils.js"
 import {
   cloneExportOptions,
@@ -22,13 +29,13 @@ import {
   sanitizePersistedExportOptions,
   type PartialExportOptions,
 } from "../shared/export-options.js"
-import type { ExportRequest, ScanResult, UploadProviderValue } from "../shared/types.js"
+import type { ExportJobItem, ExportRequest, ExportManifest, ScanResult, UploadProviderValue } from "../shared/types.js"
 import { extractBlogId, toErrorMessage } from "../shared/utils.js"
 import { JobStore } from "./job-store.js"
 import {
-  createPicListUploadProviderSource,
+  createImageUploadProviderSource,
   type UploadProviderSource,
-} from "./piclist-upload-provider-source.js"
+} from "./image-upload-provider-source.js"
 
 const builtClientRoot = path.resolve(process.cwd(), "dist/client")
 const devIndexPath = path.resolve(process.cwd(), "index.html")
@@ -258,7 +265,7 @@ const sanitizeUploadError = ({
   const rawMessage = toErrorMessage(error).replace(/\s+/g, " ").trim()
 
   if (!rawMessage) {
-    return "PicGo upload failed."
+    return "Image upload failed."
   }
 
   const redacted = Object.values(providerFields)
@@ -280,6 +287,67 @@ const sanitizeUploadProviderCatalogError = (error: unknown) => {
   return "업로드 설정을 불러오지 못했습니다."
 }
 
+const getJobItemId = ({
+  outputPath,
+  logNo,
+}: {
+  outputPath: string | null
+  logNo: string
+}) => outputPath ?? `failed:${logNo}`
+
+const countUploadedCandidates = ({
+  item,
+  uploadedLocalPaths,
+}: {
+  item: ExportJobItem
+  uploadedLocalPaths: Set<string>
+}) =>
+  item.upload.candidates.reduce(
+    (count, candidate) => count + (uploadedLocalPaths.has(candidate.localPath) ? 1 : 0),
+    0,
+  )
+
+const syncManifestUploadProgress = ({
+  manifest,
+  items,
+  uploadedLocalPaths,
+}: {
+  manifest: ExportManifest
+  items: ExportJobItem[]
+  uploadedLocalPaths: Set<string>
+}) => {
+  const itemById = new Map(items.map((item) => [getJobItemId(item), item]))
+
+  manifest.upload = {
+    ...manifest.upload,
+    status: "uploading",
+    uploadedCount: uploadedLocalPaths.size,
+    failedCount: 0,
+    terminalReason: null,
+  }
+  manifest.posts = manifest.posts.map((post) => {
+    const item = itemById.get(getJobItemId(post))
+
+    if (!item) {
+      return post
+    }
+
+    return {
+      ...post,
+      assetPaths: item.assetPaths,
+      upload: {
+        ...post.upload,
+        ...item.upload,
+        uploadedCount: countUploadedCandidates({
+          item,
+          uploadedLocalPaths,
+        }),
+      },
+      externalPreviewUrl: item.externalPreviewUrl,
+    }
+  })
+}
+
 const syncJobUploadProgress = ({
   jobStore,
   jobId,
@@ -296,6 +364,32 @@ const syncJobUploadProgress = ({
   }
 
   const updatedAt = new Date().toISOString()
+  const nextItems = job.items.map((item) => {
+    if (!item.upload.eligible) {
+      return item
+    }
+
+    const uploadedCount = countUploadedCandidates({
+      item,
+      uploadedLocalPaths,
+    })
+
+    if (uploadedCount === item.upload.uploadedCount && item.upload.failedCount === 0) {
+      return item
+    }
+
+    return {
+      ...item,
+      upload: {
+        ...item.upload,
+        uploadedCount,
+        failedCount: 0,
+      },
+      updatedAt,
+    }
+  })
+
+  job.items = nextItems
 
   jobStore.updateUpload(jobId, {
     ...job.upload,
@@ -305,43 +399,28 @@ const syncJobUploadProgress = ({
     terminalReason: null,
   })
 
-  for (const item of job.items) {
-    if (!item.upload.eligible) {
-      continue
-    }
-
-    const uploadedCount = item.upload.candidates.reduce(
-      (count, candidate) => count + (uploadedLocalPaths.has(candidate.localPath) ? 1 : 0),
-      0,
-    )
-
-    if (uploadedCount === item.upload.uploadedCount && item.upload.failedCount === 0) {
-      continue
-    }
-
-    jobStore.appendItem(jobId, {
-      ...item,
-      upload: {
-        ...item.upload,
-        uploadedCount,
-        failedCount: 0,
-      },
-      updatedAt,
+  if (job.manifest) {
+    syncManifestUploadProgress({
+      manifest: job.manifest,
+      items: nextItems,
+      uploadedLocalPaths,
     })
   }
 }
 
 export const createHttpServer = ({
   jobStore = new JobStore(),
-  uploadPhaseRunner = runPicGoUploadPhase,
-  uploadRewriter = rewriteUploadedAssets,
+  uploadPhaseRunner = runImageUploadPhase,
+  postUploadRewriter = rewriteImageUploadPost,
+  manifestSnapshotWriter = writeImageUploadManifestSnapshot,
   scanCachePath = defaultScanCachePath,
   settingsPath = defaultSettingsPath,
-  uploadProviderSource = createPicListUploadProviderSource(),
+  uploadProviderSource = createImageUploadProviderSource(),
 }: {
   jobStore?: JobStore
-  uploadPhaseRunner?: typeof runPicGoUploadPhase
-  uploadRewriter?: typeof rewriteUploadedAssets
+  uploadPhaseRunner?: typeof runImageUploadPhase
+  postUploadRewriter?: typeof rewriteImageUploadPost
+  manifestSnapshotWriter?: typeof writeImageUploadManifestSnapshot
   scanCachePath?: string
   settingsPath?: string
   uploadProviderSource?: UploadProviderSource
@@ -503,6 +582,115 @@ export const createHttpServer = ({
     }
   }
 
+  const buildSeededUploadResults = (items: ExportJobItem[]) =>
+    items.flatMap((item) => {
+      if (item.upload.rewriteStatus !== "completed") {
+        return []
+      }
+
+      return item.upload.candidates.flatMap((candidate, index) => {
+        const uploadedUrl = item.upload.uploadedUrls[index]
+
+        return uploadedUrl
+          ? [
+              {
+                candidate,
+                uploadedUrl,
+              } satisfies ImageUploadResult,
+            ]
+          : []
+      })
+    })
+
+  const buildSeededUploadedLocalPaths = (items: ExportJobItem[]) =>
+    new Set(
+      items.flatMap((item) =>
+        item.upload.rewriteStatus === "completed"
+          ? item.upload.candidates.map((candidate) => candidate.localPath)
+          : [],
+      ),
+    )
+
+  const rewriteReadyPosts = async ({
+    jobId,
+    uploadedLocalPaths,
+    uploadResults,
+  }: {
+    jobId: string
+    uploadedLocalPaths: Set<string>
+    uploadResults: ImageUploadResult[]
+  }) => {
+    const job = jobStore.get(jobId)
+
+    if (!job?.manifest) {
+      return
+    }
+
+    const itemById = new Map(job.items.map((item) => [getJobItemId(item), item]))
+    const readyPosts = job.manifest.posts.flatMap((post) => {
+      const item = itemById.get(getJobItemId(post))
+
+      if (
+        !item ||
+        !post.outputPath ||
+        !item.outputPath ||
+        !item.upload.eligible ||
+        item.upload.rewriteStatus !== "pending"
+      ) {
+        return []
+      }
+
+      return item.upload.candidates.every((candidate) => uploadedLocalPaths.has(candidate.localPath))
+        ? [{ post, item }]
+        : []
+    })
+
+    if (readyPosts.length === 0) {
+      return
+    }
+
+    const rewrittenAt = new Date().toISOString()
+
+    for (const { post, item } of readyPosts) {
+      jobStore.appendLog(jobId, `문서 치환 시작: ${post.outputPath}`)
+
+      try {
+        const rewrittenEntry = await postUploadRewriter({
+          outputDir: job.request.outputDir,
+          post,
+          item,
+          uploadResults,
+          rewrittenAt,
+        })
+
+        job.items = job.items.map((currentItem) =>
+          currentItem.outputPath === rewrittenEntry.item.outputPath ? rewrittenEntry.item : currentItem,
+        )
+        job.manifest = {
+          ...job.manifest,
+          upload: {
+            ...job.manifest.upload,
+            status: "uploading",
+            uploadedCount: uploadedLocalPaths.size,
+            failedCount: 0,
+            terminalReason: null,
+          },
+          posts: job.manifest.posts.map((currentPost) =>
+            currentPost.outputPath === rewrittenEntry.post.outputPath ? rewrittenEntry.post : currentPost,
+          ),
+        }
+
+        await manifestSnapshotWriter({
+          outputDir: job.request.outputDir,
+          manifest: job.manifest,
+        })
+        jobStore.appendLog(jobId, `문서 치환 완료: ${post.outputPath}`)
+      } catch (error) {
+        throw new Error(`Document rewrite failed for ${post.outputPath}: ${toErrorMessage(error)}`)
+      }
+    }
+  }
+
   const runUploadForJob = async ({
     jobId,
     uploaderKey,
@@ -518,16 +706,25 @@ export const createHttpServer = ({
       return
     }
 
+    const uploadedLocalPaths = buildSeededUploadedLocalPaths(job.items)
+    const uploadResults = buildSeededUploadResults(job.items)
     const candidates = dedupeUploadCandidatesByLocalPath(
-      job.items.flatMap((item) => item.upload.candidates),
+      job.items
+        .filter((item) => item.upload.eligible && item.upload.rewriteStatus !== "completed")
+        .flatMap((item) => item.upload.candidates),
     )
 
-    jobStore.startUpload(jobId)
-    jobStore.appendLog(jobId, "PicGo 업로드를 시작했습니다.")
+    jobStore.startUpload(jobId, uploadedLocalPaths)
+    jobStore.appendLog(jobId, "Image Upload를 시작했습니다.")
 
     try {
-      const uploadedLocalPaths = new Set<string>()
-      const uploadResults = await uploadPhaseRunner({
+      await rewriteReadyPosts({
+        jobId,
+        uploadedLocalPaths,
+        uploadResults,
+      })
+
+      const phaseResults = await uploadPhaseRunner({
         outputDir: job.request.outputDir,
         candidates,
         uploaderKey,
@@ -543,30 +740,82 @@ export const createHttpServer = ({
             uploadedLocalPaths,
           })
         },
+        onAssetStart: (candidate) => {
+          jobStore.appendLog(jobId, `이미지 업로드 시작: ${candidate.localPath}`)
+        },
+        onAssetUploaded: async ({ result }) => {
+          uploadedLocalPaths.add(result.candidate.localPath)
+          uploadResults.push(result)
+          jobStore.appendLog(jobId, `이미지 업로드 완료: ${result.candidate.localPath}`)
+
+          syncJobUploadProgress({
+            jobStore,
+            jobId,
+            uploadedLocalPaths,
+          })
+          await rewriteReadyPosts({
+            jobId,
+            uploadedLocalPaths,
+            uploadResults,
+          })
+        },
       })
+
+      for (const result of phaseResults) {
+        if (uploadResults.some((existing) => existing.candidate.localPath === result.candidate.localPath)) {
+          continue
+        }
+
+        uploadResults.push(result)
+        uploadedLocalPaths.add(result.candidate.localPath)
+      }
 
       syncJobUploadProgress({
         jobStore,
         jobId,
-        uploadedLocalPaths: new Set(uploadResults.map((result) => result.candidate.localPath)),
+        uploadedLocalPaths,
       })
-      jobStore.appendLog(jobId, "PicGo 업로드가 끝났고 결과 치환을 진행합니다.")
-
-      const rewritten = await uploadRewriter({
-        outputDir: job.request.outputDir,
-        manifest: job.manifest,
-        items: job.items,
+      await rewriteReadyPosts({
+        jobId,
+        uploadedLocalPaths,
         uploadResults,
       })
 
-      jobStore.completeUpload(jobId, rewritten)
-      jobStore.appendLog(jobId, "PicGo 업로드와 결과 치환이 완료되었습니다.")
+      const completedJob = jobStore.get(jobId)
+
+      if (!completedJob?.manifest) {
+        return
+      }
+
+      const completedManifest = {
+        ...completedJob.manifest,
+        upload: {
+          ...completedJob.manifest.upload,
+          status: "upload-completed" as const,
+          uploadedCount: completedJob.manifest.upload.candidateCount,
+          failedCount: 0,
+          terminalReason: null,
+        },
+      }
+
+      await manifestSnapshotWriter({
+        outputDir: completedJob.request.outputDir,
+        manifest: completedManifest,
+      })
+      jobStore.completeUpload(jobId, {
+        manifest: completedManifest,
+        items: completedJob.items,
+      })
+      jobStore.appendLog(jobId, "Image Upload와 결과 치환이 완료되었습니다.")
     } catch (error) {
-      if (error instanceof PicGoUploadPhaseError) {
+      if (error instanceof ImageUploadPhaseError) {
         syncJobUploadProgress({
           jobStore,
           jobId,
-          uploadedLocalPaths: new Set(error.uploadedResults.map((result) => result.candidate.localPath)),
+          uploadedLocalPaths: new Set([
+            ...uploadedLocalPaths,
+            ...error.uploadedResults.map((result) => result.candidate.localPath),
+          ]),
         })
       }
 

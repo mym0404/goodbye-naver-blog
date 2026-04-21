@@ -189,7 +189,7 @@ const panelCopy: Record<JobResultsMode, { title: string; description: string }> 
     description: "",
   },
   upload: {
-    title: "이미지 업로드",
+    title: "Image Upload",
     description: "",
   },
   result: {
@@ -233,7 +233,14 @@ const buildUploadRowStatus = ({
   jobStatus: ExportJobState["status"] | undefined
   item: ExportJobState["items"][number]
 }) => {
-  if (jobStatus === "upload-failed") {
+  if (item.upload.rewriteStatus === "completed") {
+    return {
+      key: "complete",
+      label: "완료",
+    } as const
+  }
+
+  if (item.upload.rewriteStatus === "failed" || jobStatus === "upload-failed") {
     return {
       key: "failed",
       label: "실패",
@@ -255,8 +262,8 @@ const buildUploadRowStatus = ({
   }
 
   return {
-    key: "complete",
-    label: "완료",
+    key: "partial",
+    label: "부분 완료",
   } as const
 }
 

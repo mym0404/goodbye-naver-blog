@@ -95,7 +95,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - `upload-failed`일 때는 같은 job에서 마지막 provider 값을 복원한 상태로 바로 재시도할 수 있어야 한다.
 - running panel은 `#running-progress`에서 `처리한 글 수 / 전체 글 수`를 progress bar로 보여 준다.
 - upload panel은 `#upload-progress`에서 `업로드된 고유 자산 수 / 전체 대상 자산 수`를 progress bar로 보여 준다.
-- 업로드가 진행되면 같은 표에서 글 기준 `대기 / 부분 완료 / 완료 / 실패` 상태가 바뀌고, `upload-failed`에서는 모든 row를 `실패`로 override한다.
+- 업로드가 진행되면 같은 표에서 글 기준 `대기 / 부분 완료 / 완료 / 실패` 상태가 바뀐다. `upload-failed`에서도 rewrite가 끝난 row는 `완료`를 유지하고 미완료 row만 `실패`로 본다.
 - 통합 결과 표의 업로드 상태 badge는 `대기 / 부분 완료 / 완료 / 실패` 모두 soft background + border + text 조합으로 구분한다. `대기`도 묻히지 않게 별도 soft 색을 사용한다.
 - `uploadedCount === candidateCount && status === "uploading"`이면 full bar여도 완료가 아니라 rewrite 대기 문구를 보여 줘야 한다.
 - 업로드 대상이 있었던 job은 `upload-completed` 뒤 결과 단계로 넘어가도 같은 `#upload-progress`와 결과 표를 유지해서 방금 끝난 업로드 상태를 놓치지 않게 한다.

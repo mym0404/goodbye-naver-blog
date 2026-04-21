@@ -7,6 +7,51 @@ import type {
   ExportRequest,
 } from "../shared/types.js"
 
+const getJobItemId = ({
+  outputPath,
+  logNo,
+}: {
+  outputPath: string | null
+  logNo: string
+}) => outputPath ?? `failed:${logNo}`
+
+const countUploadedCandidates = ({
+  item,
+  uploadedLocalPaths,
+}: {
+  item: ExportJobItem
+  uploadedLocalPaths: Set<string>
+}) =>
+  item.upload.candidates.reduce(
+    (count, candidate) => count + (uploadedLocalPaths.has(candidate.localPath) ? 1 : 0),
+    0,
+  )
+
+const syncManifestPostsFromItems = ({
+  manifest,
+  items,
+}: {
+  manifest: ExportManifest
+  items: ExportJobItem[]
+}) => {
+  const itemById = new Map(items.map((item) => [getJobItemId(item), item]))
+
+  manifest.posts = manifest.posts.map((post) => {
+    const item = itemById.get(getJobItemId(post))
+
+    if (!item) {
+      return post
+    }
+
+    return {
+      ...post,
+      assetPaths: item.assetPaths,
+      upload: item.upload,
+      externalPreviewUrl: item.externalPreviewUrl,
+    }
+  })
+}
+
 export class JobStore {
   readonly jobs = new Map<string, ExportJobState>()
 
@@ -99,7 +144,7 @@ export class JobStore {
     }
     job.upload = manifest.upload
     job.items = job.items.length > 0 ? job.items : manifest.posts.map((post) => ({
-      id: post.outputPath ?? `failed:${post.logNo}`,
+      id: getJobItemId(post),
       logNo: post.logNo,
       title: post.title,
       source: post.source,
@@ -125,7 +170,7 @@ export class JobStore {
     job.finishedAt = new Date().toISOString()
   }
 
-  startUpload(id: string) {
+  startUpload(id: string, initialUploadedLocalPaths: Set<string> = new Set()) {
     const job = this.mustGet(id)
     const updatedAt = new Date().toISOString()
 
@@ -134,24 +179,46 @@ export class JobStore {
     job.upload = {
       ...job.upload,
       status: "uploading",
-      uploadedCount: 0,
+      uploadedCount: initialUploadedLocalPaths.size,
       failedCount: 0,
       terminalReason: null,
     }
     job.finishedAt = null
     job.items = job.items.map((item) =>
       item.upload.eligible
-        ? {
-            ...item,
-            upload: {
-              ...item.upload,
-              uploadedCount: 0,
-              failedCount: 0,
-            },
-            updatedAt,
-          }
+        ? item.upload.rewriteStatus === "completed"
+          ? item
+          : {
+              ...item,
+              upload: {
+                ...item.upload,
+                uploadedCount: countUploadedCandidates({
+                  item,
+                  uploadedLocalPaths: initialUploadedLocalPaths,
+                }),
+                failedCount: 0,
+                uploadedUrls: [],
+                rewriteStatus: "pending",
+                rewrittenAt: null,
+              },
+              updatedAt,
+            }
         : item,
     )
+
+    if (job.manifest) {
+      job.manifest.upload = {
+        ...job.manifest.upload,
+        status: "uploading",
+        uploadedCount: initialUploadedLocalPaths.size,
+        failedCount: 0,
+        terminalReason: null,
+      }
+      syncManifestPostsFromItems({
+        manifest: job.manifest,
+        items: job.items,
+      })
+    }
   }
 
   updateUpload(id: string, upload: ExportJobState["upload"]) {
@@ -171,6 +238,7 @@ export class JobStore {
 
   failUpload(id: string, error: string) {
     const job = this.mustGet(id)
+    const updatedAt = new Date().toISOString()
 
     job.status = "upload-failed"
     job.finishedAt = new Date().toISOString()
@@ -180,6 +248,33 @@ export class JobStore {
       status: "upload-failed",
       failedCount: job.upload.candidateCount - job.upload.uploadedCount,
       terminalReason: null,
+    }
+    job.items = job.items.map((item) =>
+      item.upload.eligible && item.upload.rewriteStatus !== "completed"
+        ? {
+            ...item,
+            upload: {
+              ...item.upload,
+              failedCount: Math.max(item.upload.candidateCount - item.upload.uploadedCount, 0),
+              rewriteStatus: "failed",
+            },
+            updatedAt,
+          }
+        : item,
+    )
+
+    if (job.manifest) {
+      job.manifest.upload = {
+        ...job.manifest.upload,
+        status: "upload-failed",
+        uploadedCount: job.upload.uploadedCount,
+        failedCount: job.upload.failedCount,
+        terminalReason: null,
+      }
+      syncManifestPostsFromItems({
+        manifest: job.manifest,
+        items: job.items,
+      })
     }
   }
 

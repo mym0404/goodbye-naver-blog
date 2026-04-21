@@ -34,6 +34,8 @@ const emptyPostUploadSummary = () => ({
   failedCount: 0,
   candidates: [],
   uploadedUrls: [],
+  rewriteStatus: "pending" as const,
+  rewrittenAt: null,
 })
 
 const postExportConcurrency = 3
@@ -282,6 +284,8 @@ export class NaverBlogExporter {
             failedCount: 0,
             candidates: uploadCandidates,
             uploadedUrls: [],
+            rewriteStatus: "pending" as const,
+            rewrittenAt: null,
           }
           const warningCountForPost = rendered.warnings.length
 

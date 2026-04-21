@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { NaverBlogFetcher } from "../src/modules/blog-fetcher/naver-blog-fetcher.js"
 import { NaverBlogExporter } from "../src/modules/exporter/naver-blog-exporter.js"
-import { rewriteUploadedAssets } from "../src/modules/exporter/picgo-upload-rewriter.js"
+import { rewriteUploadedAssets } from "../src/modules/exporter/image-upload-rewriter.js"
 import { defaultExportOptions } from "../src/shared/export-options.js"
 
 const scanResult = {
@@ -139,6 +139,8 @@ assetPaths:
               },
             ],
             uploadedUrls: [],
+            rewriteStatus: "pending" as const,
+            rewrittenAt: null,
           },
           warnings: [],
           warningCount: 0,
@@ -557,6 +559,8 @@ describe("NaverBlogExporter", () => {
         uploadedCount: 0,
         failedCount: 0,
         candidates: [],
+        rewriteStatus: "pending" as const,
+        rewrittenAt: null,
       },
     })
     expect(onItem).toHaveBeenCalledWith(
@@ -719,7 +723,7 @@ describe("NaverBlogExporter", () => {
     }
   })
 
-  it("rolls back staged temp swaps when a final rename fails", async () => {
+  it("keeps already rewritten markdown when the manifest snapshot rename fails", async () => {
     const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-rewrite-"))
     const fixture = createUploadReadyFixture({
       outputDir,
@@ -768,7 +772,9 @@ describe("NaverBlogExporter", () => {
         }),
       ).rejects.toThrow("rename failed")
 
-      expect(await readFile(fixture.markdownPath, "utf8")).toBe(fixture.markdown)
+      expect(await readFile(fixture.markdownPath, "utf8")).toContain(
+        "https://cdn.example.com/shared.png",
+      )
       expect(
         JSON.parse(await readFile(path.join(outputDir, "manifest.json"), "utf8")) as typeof fixture.manifest,
       ).toEqual(fixture.manifest)

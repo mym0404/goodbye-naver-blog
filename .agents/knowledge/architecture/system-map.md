@@ -20,8 +20,8 @@
 - `parser`: SE2, SE3, SE4 본문을 공용 AST로 변환
 - `reviewer`: 파싱 경고를 보정하고 정리
 - `converter`: AST를 Markdown과 frontmatter로 렌더링
-- `exporter`: fetch -> parse -> review -> render -> write -> manifest 실행과 PicGo upload/rewrite 단계를 묶고, 글 본문 export는 제한된 동시성으로 처리하되 결과 반영 순서는 입력 순서를 유지한다.
-- `server`: 로컬 웹 UI, export job API, 같은 job의 upload trigger/polling lifecycle, `providerKey/providerFields -> PicGo config` 매핑, upload 중간 count 집계 제공
+- `exporter`: fetch -> parse -> review -> render -> write -> manifest 실행과 image upload/rewrite 단계를 묶고, 글 본문 export는 제한된 동시성으로 처리하되 결과 반영 순서는 입력 순서를 유지한다.
+- `server`: 로컬 웹 UI, export job API, 같은 job의 upload trigger/polling lifecycle, `providerKey/providerFields -> runtime uploader config` 매핑, upload 중간 count 집계 제공
 - scan 후 export는 UI가 가진 scan snapshot을 실행 경로에 넘겨 목록 재수집을 줄인다.
 - `shared`: export 옵션, 타입, lifecycle contract, capability, sample corpus
 - `ui`: 단계형 wizard(`블로그 입력 -> 카테고리 -> 구조 -> Frontmatter -> Markdown -> Assets -> 실행/업로드/결과`) 대시보드 UI
@@ -38,8 +38,8 @@
 - sample corpus: `src/shared/sample-corpus.ts`
 - Markdown renderer: `src/modules/converter/markdown-renderer.ts`
 - exporter flow: `src/modules/exporter/naver-blog-exporter.ts`
-- upload runner: `src/modules/exporter/picgo-upload-phase.ts`
-- output rewrite after upload: `src/modules/exporter/picgo-upload-rewriter.ts`
+- upload runner: `src/modules/exporter/image-upload-phase.ts`
+- output rewrite after upload: `src/modules/exporter/image-upload-rewriter.ts`
 - HTTP API: `src/server/http-server.ts`
 - UI shell: `index.html`, `src/ui/App.tsx`, `src/ui/styles/globals.css`, `src/ui/features/*`
 - results/upload surface: `src/ui/features/job-results/job-results-panel.tsx`
@@ -47,9 +47,9 @@
 - progress primitive: `src/ui/components/ui/progress.tsx`
 
 ## Upload Progress Flow
-- `src/modules/exporter/picgo-upload-phase.ts`는 dedupe된 자산을 순차 업로드하고 asset-by-asset progress callback을 올린다.
+- `src/modules/exporter/image-upload-phase.ts`는 dedupe된 자산을 순차 업로드하고 asset-by-asset progress callback과 per-asset completion callback을 올린다.
 - `src/server/http-server.ts`는 callback을 받아 `JobStore.updateUpload()`와 item-level count로 반영한다.
-- `src/server/job-store.ts`는 같은 job의 `upload.uploadedCount`와 item별 `upload.uploadedCount`를 polling payload에 유지한다.
-- `src/modules/exporter/picgo-upload-rewriter.ts`는 upload가 끝난 뒤 Markdown/manifest/item asset path를 업로드 URL로 치환한다.
-- 최종 `upload-completed` 전이는 rewrite 성공 뒤에만 일어난다. 그래서 `status === "uploading"`인데 `uploadedCount === candidateCount`인 rewrite 대기 구간이 존재할 수 있다.
+- `src/server/job-store.ts`는 같은 job의 `upload.uploadedCount`, item별 `upload.uploadedCount`, `rewriteStatus`를 polling payload에 유지한다.
+- `src/modules/exporter/image-upload-rewriter.ts`는 글 단위 Markdown 치환과 `manifest.json` snapshot 기록을 분리한다.
+- 글에 필요한 자산이 모두 업로드되면 그 글만 즉시 치환한다. 최종 `upload-completed` 전이는 남은 rewrite 대상이 없어졌을 때만 일어난다.
 - `src/ui/features/job-results/job-results-panel.tsx`는 `upload-completed` 뒤에도 upload snapshot을 결과 단계에 남겨 fast live runs에서도 마지막 progress/row 상태를 확인할 수 있게 한다.

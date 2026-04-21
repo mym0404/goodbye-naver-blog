@@ -126,7 +126,7 @@ const stepMeta: Record<
     description: "",
   },
   upload: {
-    title: "이미지 업로드",
+    title: "Image Upload",
     description: "",
   },
   result: {
@@ -437,7 +437,7 @@ export const App = () => {
     lastNotifiedJobKeyRef.current = notificationKey
 
     if (job.status === "upload-ready") {
-      toast("내보내기가 끝났습니다. 이미지 업로드를 시작할 수 있습니다.", {
+      toast("내보내기가 끝났습니다. Image Upload를 시작할 수 있습니다.", {
         description: `업로드 대상 ${job.upload.candidateCount}개`,
       })
       return
@@ -451,14 +451,14 @@ export const App = () => {
     }
 
     if (job.status === "upload-completed") {
-      toast.success("이미지 업로드까지 완료되었습니다.", {
+      toast.success("Image Upload까지 완료되었습니다.", {
         description: `업로드 ${job.upload.uploadedCount}개`,
       })
       return
     }
 
     if (job.status === "upload-failed") {
-      toast.error("이미지 업로드에 실패했습니다.", {
+      toast.error("Image Upload에 실패했습니다.", {
         description: job.error ?? "로그를 확인하세요.",
       })
       return
@@ -684,12 +684,12 @@ export const App = () => {
         providerKey,
         providerFields,
       })
-      toast("이미지 업로드를 시작했습니다.", {
+      toast("Image Upload를 시작했습니다.", {
         description: "현재 단계에서 진행률을 확인할 수 있습니다.",
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      toast.error("이미지 업로드를 시작하지 못했습니다.", {
+      toast.error("Image Upload를 시작하지 못했습니다.", {
         description: message,
       })
     }

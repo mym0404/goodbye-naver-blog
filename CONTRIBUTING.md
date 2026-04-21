@@ -65,7 +65,7 @@ pnpm test:network:upload
 - `src/modules/parser`: SE2, SE3, SE4 본문 파싱
 - `src/modules/reviewer`: 파싱 경고 정리
 - `src/modules/converter`: Markdown, frontmatter 렌더링
-- `src/modules/exporter`: export workflow와 PicGo upload/rewrite
+- `src/modules/exporter`: export workflow와 Image Upload/rewrite
 - `src/server`: HTTP API, job 상태 관리
 - `src/ui`: React 로컬 웹 UI
 - `src/shared`: 타입, 옵션, parser capability, sample corpus

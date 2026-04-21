@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from "vitest"
 
 import type { UploadCandidate } from "../src/shared/types.js"
 import {
-  PicGoUploadPhaseError,
-  runPicGoUploadPhase,
-  type PicGoUploadProgress,
-} from "../src/modules/exporter/picgo-upload-phase.js"
+  ImageUploadPhaseError,
+  runImageUploadPhase,
+  type ImageUploadProgress,
+} from "../src/modules/exporter/image-upload-phase.js"
 
 const createCandidate = (localPath: string, sourceUrl = `https://example.com/${localPath}`): UploadCandidate => ({
   kind: "image",
@@ -14,9 +14,11 @@ const createCandidate = (localPath: string, sourceUrl = `https://example.com/${l
   markdownReference: `../../${localPath}`,
 })
 
-describe("runPicGoUploadPhase", () => {
+describe("runImageUploadPhase", () => {
   it("uploads deduped candidates one by one and reports monotonic progress", async () => {
-    const progressUpdates: PicGoUploadProgress[] = []
+    const progressUpdates: ImageUploadProgress[] = []
+    const startedCandidates: string[] = []
+    const uploadedCandidates: string[] = []
     const upload = vi
       .fn()
       .mockResolvedValueOnce([{ imgUrl: "https://cdn.example.com/a.png" }])
@@ -26,7 +28,7 @@ describe("runPicGoUploadPhase", () => {
       upload,
     }
 
-    const results = await runPicGoUploadPhase(
+    const results = await runImageUploadPhase(
       {
         outputDir: "/tmp/export",
         candidates: [
@@ -38,6 +40,12 @@ describe("runPicGoUploadPhase", () => {
         uploaderConfig: {
           repo: "owner/name",
         },
+        onAssetStart: (candidate) => {
+          startedCandidates.push(candidate.localPath)
+        },
+        onAssetUploaded: ({ result }) => {
+          uploadedCandidates.push(result.candidate.localPath)
+        },
         onProgress: (progress) => progressUpdates.push(progress),
       },
       async () => client,
@@ -47,6 +55,8 @@ describe("runPicGoUploadPhase", () => {
       repo: "owner/name",
     })
     expect(upload.mock.calls).toEqual([[["/tmp/export/public/a.png"]], [["/tmp/export/public/b.png"]]])
+    expect(startedCandidates).toEqual(["public/a.png", "public/b.png"])
+    expect(uploadedCandidates).toEqual(["public/a.png", "public/b.png"])
     expect(progressUpdates).toEqual([
       {
         total: 2,
@@ -77,7 +87,7 @@ describe("runPicGoUploadPhase", () => {
   })
 
   it("keeps already uploaded results on failure after partial success", async () => {
-    const progressUpdates: PicGoUploadProgress[] = []
+    const progressUpdates: ImageUploadProgress[] = []
     const client = {
       changeCurrentUploader: vi.fn(),
       upload: vi
@@ -86,7 +96,7 @@ describe("runPicGoUploadPhase", () => {
         .mockResolvedValueOnce(new Error("provider failed")),
     }
 
-    const uploadPromise = runPicGoUploadPhase(
+    const uploadPromise = runImageUploadPhase(
       {
         outputDir: "/tmp/export",
         candidates: [createCandidate("public/a.png"), createCandidate("public/b.png")],
@@ -99,13 +109,13 @@ describe("runPicGoUploadPhase", () => {
       async () => client,
     )
 
-    await expect(uploadPromise).rejects.toBeInstanceOf(PicGoUploadPhaseError)
+    await expect(uploadPromise).rejects.toBeInstanceOf(ImageUploadPhaseError)
 
     try {
       await uploadPromise
     } catch (error) {
-      expect(error).toBeInstanceOf(PicGoUploadPhaseError)
-      expect((error as PicGoUploadPhaseError).uploadedResults).toEqual([
+      expect(error).toBeInstanceOf(ImageUploadPhaseError)
+      expect((error as ImageUploadPhaseError).uploadedResults).toEqual([
         {
           candidate: createCandidate("public/a.png"),
           uploadedUrl: "https://cdn.example.com/a.png",

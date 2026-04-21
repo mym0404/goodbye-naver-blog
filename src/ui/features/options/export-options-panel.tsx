@@ -796,7 +796,7 @@ export const ExportOptionsPanel = ({
         >
           <option value="download">다운로드 유지</option>
           <option value="remote">네이버 원본 URL 유지</option>
-          <option value="download-and-upload">다운로드 후 PicGo 업로드</option>
+          <option value="download-and-upload">다운로드 후 Image Upload</option>
         </select>
       </OptionField>
 

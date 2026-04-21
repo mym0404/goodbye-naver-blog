@@ -95,6 +95,8 @@ export type UploadProviderCatalogResponse = {
 
 export type UploadTerminalReason = "skipped-no-candidates"
 
+export type UploadRewriteStatus = "pending" | "completed" | "failed"
+
 export type UploadSummary = {
   status:
     | "not-requested"
@@ -124,6 +126,8 @@ export type PostUploadSummary = {
   failedCount: number
   candidates: UploadCandidate[]
   uploadedUrls: string[]
+  rewriteStatus: UploadRewriteStatus
+  rewrittenAt: string | null
 }
 
 export type ExportOptions = {

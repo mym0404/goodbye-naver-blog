@@ -1,16 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-const { picgoCreateMock } = vi.hoisted(() => ({
-  picgoCreateMock: vi.fn(),
+const { runtimeCreateMock } = vi.hoisted(() => ({
+  runtimeCreateMock: vi.fn(),
 }))
 
 vi.mock("piclist", () => ({
   PicGo: {
-    create: picgoCreateMock,
+    create: runtimeCreateMock,
   },
 }))
 
-import { createPicListUploadProviderSource } from "../src/server/piclist-upload-provider-source.js"
+import { createImageUploadProviderSource } from "../src/server/image-upload-provider-source.js"
 
 const createRuntimeMock = () => ({
   helper: {
@@ -90,18 +90,18 @@ const createRuntimeMock = () => ({
   },
 })
 
-describe("createPicListUploadProviderSource", () => {
+describe("createImageUploadProviderSource", () => {
   beforeEach(async () => {
-    picgoCreateMock.mockReset()
-    picgoCreateMock.mockReturnValue(createRuntimeMock())
+    runtimeCreateMock.mockReset()
+    runtimeCreateMock.mockReturnValue(createRuntimeMock())
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
   })
 
-  it("loads catalog from the piclist runtime and normalizes fields", async () => {
-    const source = createPicListUploadProviderSource()
+  it("loads catalog from the image upload runtime and normalizes fields", async () => {
+    const source = createImageUploadProviderSource()
     const catalog = await source.getCatalog()
     const normalized = await source.normalizeProviderFields("tcyun", {
       secretId: "secret-id-123",
@@ -184,12 +184,12 @@ describe("createPicListUploadProviderSource", () => {
     })
   })
 
-  it("fails when the piclist runtime cannot be created", async () => {
-    picgoCreateMock.mockImplementation(() => {
+  it("fails when the image upload runtime cannot be created", async () => {
+    runtimeCreateMock.mockImplementation(() => {
       throw new Error("runtime bootstrap failed")
     })
 
-    const source = createPicListUploadProviderSource()
+    const source = createImageUploadProviderSource()
 
     await expect(source.getCatalog()).rejects.toThrow("runtime bootstrap failed")
   })

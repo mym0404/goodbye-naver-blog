@@ -18,7 +18,7 @@ const providerLabelMap: Record<string, string> = {
   imgur: "Imgur",
   local: "Local",
   lskyplist: "Lsky Pro",
-  piclist: "PicList",
+  piclist: "Runtime Server",
   qiniu: "Qiniu",
   sftpplist: "Built-in SFTP",
   smms: "SM.MS",
@@ -36,7 +36,7 @@ const providerDescriptionMap: Record<string, string> = {
   imgur: "Imgur 계정 또는 익명 업로드로 이미지를 보관합니다.",
   local: "현재 머신의 로컬 경로에 이미지를 저장합니다.",
   lskyplist: "Lsky Pro 이미지 호스팅 서버로 업로드합니다.",
-  piclist: "실행 중인 PicList 서버에 업로드 요청을 보냅니다.",
+  piclist: "실행 중인 업로드 서버에 요청을 보냅니다.",
   qiniu: "Qiniu 버킷과 CDN 주소를 사용해 업로드합니다.",
   sftpplist: "SFTP 서버 경로에 이미지를 전송합니다.",
   smms: "SM.MS 토큰으로 이미지를 업로드합니다.",
@@ -130,7 +130,7 @@ const commonFieldMetadata: Record<string, UploadFieldMetadata> = {
   },
   configName: {
     label: "Config Name",
-    description: "PicList 서버에서 사용할 업로드 설정 이름입니다.",
+    description: "업로드 서버에서 사용할 설정 이름입니다.",
     placeholder: "default",
   },
   customPrefix: {
@@ -226,7 +226,7 @@ const commonFieldMetadata: Record<string, UploadFieldMetadata> = {
   },
   picbed: {
     label: "PicBed",
-    description: "PicList 서버에서 사용할 업로더 이름입니다.",
+    description: "업로드 서버에서 사용할 업로더 이름입니다.",
     placeholder: "github",
   },
   port: {
@@ -280,7 +280,7 @@ const commonFieldMetadata: Record<string, UploadFieldMetadata> = {
   },
   serverKey: {
     label: "Server Key",
-    description: "PicList 서버 인증 키가 있으면 입력합니다.",
+    description: "업로드 서버 인증 키가 있으면 입력합니다.",
     placeholder: "server-key",
   },
   slim: {
@@ -415,7 +415,7 @@ const providerFieldMetadataMap: Record<string, Record<string, UploadFieldMetadat
   },
 }
 
-type PicListPluginField = {
+type RuntimePluginField = {
   name?: string
   type?: string
   alias?: unknown
@@ -426,14 +426,14 @@ type PicListPluginField = {
   choices?: unknown
 }
 
-type PicListLike = {
+type RuntimeCatalogLike = {
   helper: {
     uploader: {
       getIdList: () => string[]
       get: (id: string) =>
         | {
             name?: string
-            config?: (ctx: PicListLike) => PicListPluginField[]
+            config?: (ctx: RuntimeCatalogLike) => RuntimePluginField[]
           }
         | undefined
     }
@@ -693,7 +693,7 @@ const normalizeFieldDefinition = ({
   field,
 }: {
   providerKey: string
-  field: PicListPluginField
+  field: RuntimePluginField
 }): UploadProviderFieldDefinition | null => {
   const key = field.name?.trim()
 
@@ -741,13 +741,13 @@ const normalizeFieldDefinition = ({
   }
 }
 
-const createCatalogFromRuntime = (piclist: PicListLike): UploadProviderCatalogResponse => {
-  const providers = piclist.helper.uploader
+const createCatalogFromRuntime = (runtimeCatalog: RuntimeCatalogLike): UploadProviderCatalogResponse => {
+  const providers = runtimeCatalog.helper.uploader
     .getIdList()
     .map((key) => {
-      const uploader = piclist.helper.uploader.get(key)
+      const uploader = runtimeCatalog.helper.uploader.get(key)
       const label = normalizeProviderLabel(key, uploader?.name)
-      const rawFields = uploader?.config?.(piclist) ?? []
+      const rawFields = uploader?.config?.(runtimeCatalog) ?? []
       const fields = rawFields
         .map((field) =>
           normalizeFieldDefinition({
@@ -781,7 +781,7 @@ const createCatalogFromRuntime = (piclist: PicListLike): UploadProviderCatalogRe
 
 const createRuntimeInstance = async () => {
   const { PicGo } = await import("piclist")
-  const runtimeConfigPath = path.join(os.tmpdir(), "farewell-naver-blog-piclist-config.json")
+  const runtimeConfigPath = path.join(os.tmpdir(), "farewell-naver-blog-image-upload-config.json")
 
   return PicGo.create(runtimeConfigPath)
 }
@@ -854,14 +854,14 @@ const coerceTextValue = (rawValue: unknown) => {
   return trimmed ? trimmed : null
 }
 
-export const createPicListUploadProviderSource = (): UploadProviderSource => {
+export const createImageUploadProviderSource = (): UploadProviderSource => {
   let catalogPromise: Promise<UploadProviderCatalogResponse> | null = null
 
   const getCatalog = async () => {
     if (!catalogPromise) {
       catalogPromise = (async () => {
-        const piclist = await createRuntimeInstance()
-        return createCatalogFromRuntime(piclist)
+        const runtimeCatalog = await createRuntimeInstance()
+        return createCatalogFromRuntime(runtimeCatalog)
       })()
     }
 

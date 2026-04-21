@@ -531,7 +531,7 @@ describe("useExportJob", () => {
         status: "upload-failed" as const,
         failedCount: 2,
       },
-      error: "PicGo upload failed.",
+      error: "Image upload failed.",
     }
     const uploadingJob = {
       ...uploadReadyJob,

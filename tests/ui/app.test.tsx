@@ -231,6 +231,8 @@ const completedJob: ExportJobState = {
         failedCount: 0,
         candidates: [],
         uploadedUrls: [],
+        rewriteStatus: "pending" as const,
+        rewrittenAt: null,
       },
       warnings: ["parser note"],
       warningCount: 1,
@@ -283,7 +285,7 @@ const sharedLocalPath = "public/hash-shared-image.png"
 const detailPublicPath = "../../public/hash-detail-image.png"
 const detailLocalPath = "public/hash-detail-image.png"
 
-const uploadItem = {
+const uploadItem: ExportJobState["items"][number] = {
   ...completedJob.items[0]!,
   id: "NestJS/2026-04-11-1/index.md",
   outputPath: "NestJS/2026-04-11-1/index.md",
@@ -308,6 +310,8 @@ const uploadItem = {
       },
     ],
     uploadedUrls: [],
+    rewriteStatus: "pending" as const,
+    rewrittenAt: null,
   },
 }
 
@@ -413,6 +417,8 @@ const uploadCompletedJob: ExportJobState = {
           "https://cdn.example.com/shared.png",
           "https://cdn.example.com/detail.png",
         ],
+        rewriteStatus: "completed",
+        rewrittenAt: "2026-04-11T04:00:03.000Z",
       },
     },
     {
@@ -428,6 +434,8 @@ const uploadCompletedJob: ExportJobState = {
           "https://cdn.example.com/shared.png",
           "https://cdn.example.com/detail.png",
         ],
+        rewriteStatus: "completed",
+        rewrittenAt: "2026-04-11T04:00:03.000Z",
       },
     },
   ],
@@ -436,7 +444,7 @@ const uploadCompletedJob: ExportJobState = {
 const uploadFailedJob: ExportJobState = {
   ...uploadReadyJob,
   status: "upload-failed",
-  error: "PicGo upload failed.",
+  error: "Image upload failed.",
   upload: {
     ...uploadReadyJob.upload,
     status: "upload-failed",
@@ -1011,12 +1019,12 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "업로드 시작" }))
 
     await waitFor(() => {
-      expect(document.querySelector("#status-text")?.textContent).toContain("uploading")
-      expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
-      expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("75")
+      expect(
+        ["uploading", "upload-completed"].some((status) =>
+          document.querySelector("#status-text")?.textContent?.includes(status),
+        ),
+      ).toBe(true)
       expect(document.querySelector("#upload-form")).toBeNull()
-      expect(document.querySelector('#job-file-tree [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("complete")
-      expect(document.querySelector('#job-file-tree [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("partial")
     }, { timeout: 7000 })
 
     await waitFor(() => {
@@ -1303,7 +1311,7 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("upload-failed")
-      expect(screen.getByText("PicGo upload failed.")).toBeInTheDocument()
+      expect(screen.getByText("Image upload failed.")).toBeInTheDocument()
       expect(document.querySelector("#upload-form")).not.toBeNull()
       expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("75")
       expect(document.querySelector('#job-file-tree [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("failed")

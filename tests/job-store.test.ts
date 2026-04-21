@@ -52,6 +52,8 @@ const manifest: ExportManifest = {
         failedCount: 0,
         candidates: [],
         uploadedUrls: [],
+        rewriteStatus: "pending",
+        rewrittenAt: null,
       },
       warnings: [],
       warningCount: 0,
