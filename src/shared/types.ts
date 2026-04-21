@@ -57,6 +57,38 @@ export type StickerAssetMode = "ignore" | "download-original"
 
 export type OptionDescriptionMap = Record<string, string>
 
+export type UploadProviderValue = string | number | boolean
+
+export type UploadProviderInputType = "text" | "password" | "number" | "select" | "checkbox"
+
+export type UploadProviderOptionValue = string | number
+
+export type UploadProviderFieldOption = {
+  label: string
+  value: UploadProviderOptionValue
+}
+
+export type UploadProviderFieldDefinition = {
+  key: string
+  label: string
+  inputType: UploadProviderInputType
+  required: boolean
+  defaultValue: UploadProviderValue | null
+  placeholder: string
+  options?: UploadProviderFieldOption[]
+}
+
+export type UploadProviderDefinition = {
+  key: string
+  label: string
+  fields: UploadProviderFieldDefinition[]
+}
+
+export type UploadProviderCatalogResponse = {
+  defaultProviderKey: string | null
+  providers: UploadProviderDefinition[]
+}
+
 export type UploadTerminalReason = "skipped-no-candidates"
 
 export type UploadSummary = {

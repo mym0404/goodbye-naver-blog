@@ -61,7 +61,7 @@
 - `pnpm samples:verify`: 저장된 sample fixture가 parser -> review -> render 경로와 계속 맞는지 확인할 때 실행한다.
 - `pnpm samples:refresh -- --id <sampleId>`: 지정 sample 하나의 live HTML과 expected Markdown fixture를 갱신할 때 실행한다.
 - `pnpm smoke:ui`: Playwright로 고정한 mock 기반 scan -> category select -> export -> upload 결과 화면 회귀를 다시 확인할 때 실행한다.
-- `pnpm test:network:upload`: Playwright가 실제 브라우저 UI로 `mym0404` 공개 글 1건을 scan, scope 설정, export한 뒤 GitHub `mym0404/image-archive` `master` branch 루트 경로(`/`)로 PicGo 실업로드를 수행할 때 실행한다. 루트 `.env`에서 `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`를 읽는다.
+- `pnpm test:network:upload`: Playwright가 실제 브라우저 UI로 `mym0404` 공개 글 1건을 scan, scope 설정, export한 뒤 GitHub `mym0404/image-archive` `master` branch 루트 경로(`/`)로 PicList runtime 실업로드를 수행할 때 실행한다. 루트 `.env`에서 `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`를 읽는다.
 - `pnpm quality:report`: parser block fixture/test hint coverage와 capability/sample coverage generated 품질 리포트를 다시 만들 때 실행한다.
 
 ## 보장하지 않는 것
@@ -69,11 +69,13 @@
 - `pnpm samples:verify`는 저장된 fixture와 현재 코드의 일치만 보장한다. fixture가 오래됐는지는 보장하지 않는다.
 - `pnpm samples:verify`는 `parser-fixture` capability를 보장하지 않는다. 이 범위는 parser unit test와 parser fixture가 맡는다.
 - `pnpm smoke:ui`는 실제 네이버 live fetch가 아니라 mock 기반 UI 계약만 보장한다.
+- upload provider catalog 자체는 `~/Downloads/PicList` clone SoT를 따른다. live e2e는 그중 GitHub 경로만 검증한다.
 - `pnpm test:network:upload`만이 외부 업로드 상태까지 포함한다. 이 명령은 remote state를 만든다.
 
 ## Hook And CI
 - 로컬 git hook은 저장소 설정으로 관리하지 않는다.
 - PR CI는 `pnpm check:full`, `pnpm test:network:upload`, `pnpm test:coverage`를 실행하고 `coverage/lcov.info`를 Codecov로 업로드한다.
+- upload provider 관련 로컬 검증을 돌릴 때는 `~/Downloads/PicList` 또는 `~/Downloads/piclist` clone이 있어야 한다.
 - 실업로드 step은 GitHub `mym0404/image-archive` 저장소, `master` branch, 루트 경로(`/`)를 고정값으로 사용한다. GitHub Actions에서는 repository secret `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`로 `.env`를 만들어 실행한다.
 - fork PR에서는 기본 `pull_request` 보안 모델상 secret이 주입되지 않으므로 live upload step이 실패할 수 있다.
 

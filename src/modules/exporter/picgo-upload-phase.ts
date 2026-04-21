@@ -1,4 +1,5 @@
 import path from "node:path"
+import os from "node:os"
 
 import type { UploadCandidate } from "../../shared/types.js"
 import { dedupeUploadCandidatesByLocalPath } from "./upload-candidate-utils.js"
@@ -9,7 +10,7 @@ type PicGoUploadResponse = {
 }
 
 type PicGoLike = {
-  setConfig: (config: Record<string, unknown>) => void
+  changeCurrentUploader: (uploaderKey: string, uploaderConfig: Record<string, unknown>) => void
   upload: (input: string[]) => Promise<PicGoUploadResponse[] | Error>
 }
 
@@ -43,9 +44,10 @@ export type RunPicGoUploadPhaseInput = {
 }
 
 const createPicGoClient = async (): Promise<PicGoLike> => {
-  const picgoModule = await import("picgo")
+  const picgoModule = await import("piclist")
+  const runtimeConfigPath = path.join(os.tmpdir(), "farewell-naver-blog-piclist-upload.json")
 
-  return new picgoModule.PicGo()
+  return picgoModule.PicGo.create(runtimeConfigPath)
 }
 
 const getUploadedUrl = (result: PicGoUploadResponse) => result.imgUrl || result.url || null
@@ -57,12 +59,7 @@ export const runPicGoUploadPhase = async (
   const dedupedCandidates = dedupeUploadCandidatesByLocalPath(input.candidates)
   const client = await createClient()
 
-  client.setConfig({
-    picBed: {
-      current: input.uploaderKey,
-      [input.uploaderKey]: input.uploaderConfig,
-    },
-  })
+  client.changeCurrentUploader(input.uploaderKey, input.uploaderConfig)
 
   const total = dedupedCandidates.length
   const uploadedResults: PicGoUploadResult[] = []

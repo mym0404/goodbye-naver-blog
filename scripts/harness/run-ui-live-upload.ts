@@ -565,6 +565,14 @@ const run = async () => {
     }
 
     await page.selectOption("#assets-imageHandlingMode", "download-and-upload")
+    await clickWizardButton({
+      page,
+      label: "진단 설정",
+    })
+    await waitForStepView({
+      page,
+      step: "diagnostics-options",
+    })
 
     const exportRequestPromise = page.waitForRequest(
       (request) => request.url() === `${baseUrl}/api/export` && request.method() === "POST",
@@ -840,6 +848,10 @@ const run = async () => {
       if (!assetPath.includes("image-archive")) {
         throw new Error(`uploaded asset URL does not point at ${uploadRepo}: ${assetPath}`)
       }
+
+      if (!uploadedUrl.pathname.includes(uploadPath)) {
+        throw new Error(`uploaded asset URL did not preserve the requested GitHub path: ${assetPath}`)
+      }
     }
 
     const markdownAfterUpload = await readFile(markdownPath, "utf8")
@@ -864,13 +876,14 @@ const run = async () => {
     }
 
     const uploadedFileNames = completedPost.assetPaths.map((assetPath) => {
-      const fileName = decodeURIComponent(new URL(assetPath).pathname.split("/").filter(Boolean).at(-1) ?? "")
+      const uploadedUrl = new URL(assetPath)
+      const fileName = decodeURIComponent(uploadedUrl.pathname.split("/").filter(Boolean).at(-1) ?? "")
 
       if (!fileName) {
         throw new Error(`uploaded asset URL did not include a file name: ${assetPath}`)
       }
 
-      return fileName
+      return decodeURIComponent(`${uploadPath}/${fileName}`)
     })
 
     await assertRepoContainsFiles({

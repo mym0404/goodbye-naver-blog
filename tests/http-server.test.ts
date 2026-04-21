@@ -5,7 +5,13 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { NaverBlogFetcher } from "../src/modules/blog-fetcher/naver-blog-fetcher.js"
 import { defaultExportOptions } from "../src/shared/export-options.js"
-import type { ExportJobState, ScanResult, UploadCandidate } from "../src/shared/types.js"
+import type {
+  ExportJobState,
+  ScanResult,
+  UploadCandidate,
+  UploadProviderCatalogResponse,
+  UploadProviderValue,
+} from "../src/shared/types.js"
 import { createHttpServer } from "../src/server/http-server.js"
 
 let activeServer: ReturnType<typeof createHttpServer> | null = null
@@ -120,8 +126,201 @@ const waitForJob = async ({
   throw new Error(`timed out waiting for job ${jobId}`)
 }
 
-const createUploadPayload = (providerFields: Record<string, string>) => ({
-  providerKey: "github",
+const uploadProviderCatalog: UploadProviderCatalogResponse = {
+  defaultProviderKey: "github",
+  providers: [
+    {
+      key: "github",
+      label: "GitHub",
+      fields: [
+        {
+          key: "repo",
+          label: "Repository",
+          inputType: "text",
+          required: true,
+          defaultValue: null,
+          placeholder: "owner/repo",
+        },
+        {
+          key: "branch",
+          label: "Branch",
+          inputType: "text",
+          required: false,
+          defaultValue: "main",
+          placeholder: "",
+        },
+        {
+          key: "path",
+          label: "Path",
+          inputType: "text",
+          required: false,
+          defaultValue: null,
+          placeholder: "",
+        },
+        {
+          key: "token",
+          label: "Token",
+          inputType: "password",
+          required: true,
+          defaultValue: null,
+          placeholder: "",
+        },
+        {
+          key: "customUrl",
+          label: "Custom URL",
+          inputType: "text",
+          required: false,
+          defaultValue: null,
+          placeholder: "",
+        },
+      ],
+    },
+    {
+      key: "tcyun",
+      label: "Tencent COS",
+      fields: [
+        {
+          key: "secretId",
+          label: "Secret ID",
+          inputType: "text",
+          required: true,
+          defaultValue: null,
+          placeholder: "",
+        },
+        {
+          key: "port",
+          label: "Port",
+          inputType: "number",
+          required: false,
+          defaultValue: 0,
+          placeholder: "",
+        },
+        {
+          key: "permission",
+          label: "Permission",
+          inputType: "select",
+          required: true,
+          defaultValue: 0,
+          placeholder: "",
+          options: [
+            { label: "Public", value: 0 },
+            { label: "Private", value: 1 },
+          ],
+        },
+        {
+          key: "slim",
+          label: "Slim",
+          inputType: "checkbox",
+          required: false,
+          defaultValue: false,
+          placeholder: "",
+        },
+      ],
+    },
+  ],
+}
+
+const normalizeUploadProviderFields = (providerKey: string, input: unknown) => {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return null
+  }
+
+  const provider = uploadProviderCatalog.providers.find((item) => item.key === providerKey)
+
+  if (!provider) {
+    return null
+  }
+
+  const values = input as Record<string, unknown>
+  const entries: Array<readonly [string, UploadProviderValue]> = []
+
+  for (const field of provider.fields) {
+    const rawValue = values[field.key]
+
+    if (rawValue === undefined || rawValue === null) {
+      continue
+    }
+
+    if (field.inputType === "checkbox") {
+      if (typeof rawValue === "boolean") {
+        entries.push([field.key, rawValue] as const)
+        continue
+      }
+
+      if (typeof rawValue === "string") {
+        const normalized = rawValue.trim().toLowerCase()
+
+        if (normalized === "true" || normalized === "1" || normalized === "on") {
+          entries.push([field.key, true] as const)
+          continue
+        }
+
+        if (normalized === "false" || normalized === "0" || normalized === "off") {
+          entries.push([field.key, false] as const)
+          continue
+        }
+      }
+
+      continue
+    }
+
+    if (field.inputType === "number") {
+      if (typeof rawValue === "number" && Number.isFinite(rawValue)) {
+        entries.push([field.key, rawValue] as const)
+        continue
+      }
+
+      if (typeof rawValue === "string" && rawValue.trim()) {
+        const parsed = Number(rawValue.trim())
+
+        if (Number.isFinite(parsed)) {
+          entries.push([field.key, parsed] as const)
+        }
+      }
+
+      continue
+    }
+
+    if (field.inputType === "select") {
+      const option = field.options?.find((item) => String(item.value) === String(rawValue))
+
+      if (option) {
+        entries.push([field.key, option.value] as const)
+      }
+
+      continue
+    }
+
+    if (typeof rawValue !== "string" || !rawValue.trim()) {
+      continue
+    }
+
+    entries.push([field.key, rawValue.trim()] as const)
+  }
+
+  return entries.length > 0 ? Object.fromEntries(entries) : null
+}
+
+const createUploadProviderSourceStub = () => ({
+  getCatalog: vi.fn(async () => uploadProviderCatalog),
+  normalizeProviderFields: vi.fn(async (providerKey: string, value: unknown) =>
+    normalizeUploadProviderFields(providerKey, value),
+  ),
+})
+
+const createTestHttpServer = (
+  options: NonNullable<Parameters<typeof createHttpServer>[0]> = {},
+) =>
+  createHttpServer({
+    uploadProviderSource: createUploadProviderSourceStub(),
+    ...options,
+  })
+
+const createUploadPayload = (
+  providerFields: Record<string, UploadProviderValue>,
+  providerKey = "github",
+) => ({
+  providerKey,
   providerFields,
 })
 
@@ -147,7 +346,7 @@ afterEach(async () => {
 
 describe("http server", () => {
   it("returns frontmatter metadata from export defaults", async () => {
-    activeServer = createHttpServer()
+    activeServer = createTestHttpServer()
     const baseUrl = await startServer(activeServer)
 
     const response = await fetch(`${baseUrl}/api/export-defaults`)
@@ -187,6 +386,24 @@ describe("http server", () => {
     expect(body.optionDescriptions["assets-imageContentMode"]).toBeUndefined()
   })
 
+  it("returns the PicList-backed upload provider catalog", async () => {
+    activeServer = createTestHttpServer()
+    const baseUrl = await startServer(activeServer)
+
+    const response = await fetch(`${baseUrl}/api/upload-providers`)
+    const body = (await response.json()) as UploadProviderCatalogResponse
+
+    expect(response.status).toBe(200)
+    expect(body.defaultProviderKey).toBe("github")
+    expect(body.providers.map((provider) => provider.key)).toEqual(["github", "tcyun"])
+    expect(body.providers[1]?.fields.map((field) => field.inputType)).toEqual([
+      "text",
+      "number",
+      "select",
+      "checkbox",
+    ])
+  })
+
   it("persists scan results to a json file and reuses them after app reloads", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "scan-cache-"))
     const scanCachePath = path.join(rootDir, "scan-cache.json")
@@ -196,7 +413,7 @@ describe("http server", () => {
     })
 
     try {
-      activeServer = createHttpServer({
+      activeServer = createTestHttpServer({
         scanCachePath,
       })
       let baseUrl = await startServer(activeServer)
@@ -227,7 +444,7 @@ describe("http server", () => {
       })
       activeServer = null
 
-      activeServer = createHttpServer({
+      activeServer = createTestHttpServer({
         scanCachePath,
       })
       baseUrl = await startServer(activeServer)
@@ -294,7 +511,7 @@ describe("http server", () => {
       thumbnailUrl: "https://example.com/thumb.png",
     })
 
-    activeServer = createHttpServer({
+    activeServer = createTestHttpServer({
       uploadPhaseRunner,
     })
     const baseUrl = await startServer(activeServer)
@@ -358,6 +575,156 @@ describe("http server", () => {
     expect(serializedJob).not.toContain("owner/name")
   })
 
+  it("preserves false and 0 in normalized provider fields", async () => {
+    const uploadPhaseRunner = vi.fn(
+      async ({
+        candidates,
+        uploaderConfig,
+      }: {
+        candidates: UploadCandidate[]
+        uploaderConfig: Record<string, unknown>
+      }) => {
+      expect(uploaderConfig).toEqual({
+        permission: 0,
+        port: 0,
+        secretId: "secret-id-123",
+        slim: false,
+      })
+
+        return candidates.map((candidate) => ({
+          candidate,
+          uploadedUrl: `https://cdn.example.com/${candidate.localPath}`,
+        }))
+      },
+    )
+
+    mockFetcher({
+      html: uploadHtml,
+      thumbnailUrl: "https://example.com/thumb.png",
+    })
+
+    activeServer = createTestHttpServer({
+      uploadPhaseRunner,
+    })
+    const baseUrl = await startServer(activeServer)
+    const options = defaultExportOptions()
+
+    options.assets.imageHandlingMode = "download-and-upload"
+
+    const exportResponse = await fetch(`${baseUrl}/api/export`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        blogIdOrUrl: "https://blog.naver.com/mym0404",
+        outputDir: "/tmp/http-server-upload-provider-scalars",
+        options,
+      }),
+    })
+    const exportBody = (await exportResponse.json()) as {
+      jobId: string
+    }
+
+    await waitForJob({
+      baseUrl,
+      jobId: exportBody.jobId,
+      accept: (job) => job.status === "upload-ready",
+    })
+
+    const uploadResponse = await fetch(`${baseUrl}/api/export/${exportBody.jobId}/upload`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: baseUrl,
+        "x-requested-with": "XMLHttpRequest",
+      },
+      body: JSON.stringify(
+        createUploadPayload(
+          {
+            permission: 0,
+            port: 0,
+            secretId: "secret-id-123",
+            slim: false,
+          },
+          "tcyun",
+        ),
+      ),
+    })
+
+    expect(uploadResponse.status).toBe(202)
+    expect(uploadPhaseRunner).toHaveBeenCalledTimes(1)
+  })
+
+  it("redacts only string provider fields in upload failures", async () => {
+    const uploadPhaseRunner = vi.fn().mockRejectedValueOnce(new Error("secret-id-xyz false 0"))
+
+    mockFetcher({
+      html: uploadHtml,
+      thumbnailUrl: "https://example.com/thumb.png",
+    })
+
+    activeServer = createTestHttpServer({
+      uploadPhaseRunner,
+    })
+    const baseUrl = await startServer(activeServer)
+    const options = defaultExportOptions()
+
+    options.assets.imageHandlingMode = "download-and-upload"
+
+    const exportResponse = await fetch(`${baseUrl}/api/export`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        blogIdOrUrl: "https://blog.naver.com/mym0404",
+        outputDir: "/tmp/http-server-upload-provider-redaction",
+        options,
+      }),
+    })
+    const exportBody = (await exportResponse.json()) as {
+      jobId: string
+    }
+
+    await waitForJob({
+      baseUrl,
+      jobId: exportBody.jobId,
+      accept: (job) => job.status === "upload-ready",
+    })
+
+    const uploadResponse = await fetch(`${baseUrl}/api/export/${exportBody.jobId}/upload`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: baseUrl,
+        "x-requested-with": "XMLHttpRequest",
+      },
+      body: JSON.stringify(
+        createUploadPayload(
+          {
+            permission: 0,
+            port: 0,
+            secretId: "secret-id-xyz",
+            slim: false,
+          },
+          "tcyun",
+        ),
+      ),
+    })
+    const failedJob = await waitForJob({
+      baseUrl,
+      jobId: exportBody.jobId,
+      accept: (job) => job.status === "upload-failed",
+    })
+
+    expect(uploadResponse.status).toBe(202)
+    expect(failedJob.error).toContain("[redacted]")
+    expect(failedJob.error).toContain("false")
+    expect(failedJob.error).toContain("0")
+    expect(failedJob.error).not.toContain("secret-id-xyz")
+  })
+
   it("rejects cross-site style upload requests", async () => {
     const uploadPhaseRunner = vi.fn()
 
@@ -366,7 +733,7 @@ describe("http server", () => {
       thumbnailUrl: "https://example.com/thumb.png",
     })
 
-    activeServer = createHttpServer({
+    activeServer = createTestHttpServer({
       uploadPhaseRunner,
     })
     const baseUrl = await startServer(activeServer)
@@ -420,7 +787,7 @@ describe("http server", () => {
       thumbnailUrl: "https://example.com/thumb.png",
     })
 
-    activeServer = createHttpServer({
+    activeServer = createTestHttpServer({
       uploadPhaseRunner,
     })
     const baseUrl = await startServer(activeServer)
@@ -482,7 +849,7 @@ describe("http server", () => {
       thumbnailUrl: "https://example.com/thumb.png",
     })
 
-    activeServer = createHttpServer({
+    activeServer = createTestHttpServer({
       uploadPhaseRunner,
     })
     const baseUrl = await startServer(activeServer)
@@ -604,7 +971,7 @@ describe("http server", () => {
       thumbnailUrl: "https://example.com/thumb.png",
     })
 
-    activeServer = createHttpServer({
+    activeServer = createTestHttpServer({
       uploadPhaseRunner,
     })
     const baseUrl = await startServer(activeServer)
@@ -687,7 +1054,7 @@ describe("http server", () => {
       thumbnailUrl: "https://example.com/thumb.png",
     })
 
-    activeServer = createHttpServer({
+    activeServer = createTestHttpServer({
       uploadPhaseRunner,
       uploadRewriter,
     })
@@ -751,7 +1118,7 @@ describe("http server", () => {
       thumbnailUrl: null,
     })
 
-    activeServer = createHttpServer()
+    activeServer = createTestHttpServer()
     const baseUrl = await startServer(activeServer)
     const options = defaultExportOptions()
 

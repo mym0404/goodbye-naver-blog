@@ -12,6 +12,7 @@ import {
   frontmatterFieldOrder,
   optionDescriptions,
 } from "../../src/shared/export-options.js"
+import type { UploadProviderCatalogResponse, UploadProviderValue } from "../../src/shared/types.js"
 
 const responseTimeoutMs = 90_000
 const resolveBrowserMode = () => {
@@ -73,6 +74,50 @@ const buildJsonResponse = (body: unknown, status = 200) => ({
   contentType: "application/json",
   body: JSON.stringify(body),
 })
+
+const uploadProviderCatalog: UploadProviderCatalogResponse = {
+  defaultProviderKey: "github",
+  providers: [
+    {
+      key: "github",
+      label: "GitHub",
+      fields: [
+        {
+          key: "repo",
+          label: "Repository",
+          inputType: "text",
+          required: true,
+          defaultValue: null,
+          placeholder: "owner/repo",
+        },
+        {
+          key: "branch",
+          label: "Branch",
+          inputType: "text",
+          required: false,
+          defaultValue: "main",
+          placeholder: "",
+        },
+        {
+          key: "path",
+          label: "Path",
+          inputType: "text",
+          required: false,
+          defaultValue: null,
+          placeholder: "images/posts",
+        },
+        {
+          key: "token",
+          label: "Token",
+          inputType: "password",
+          required: true,
+          defaultValue: null,
+          placeholder: "ghp_xxx",
+        },
+      ],
+    },
+  ],
+}
 
 const smokeImageBytes = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO9Wn6kAAAAASUVORK5CYII=",
@@ -974,7 +1019,7 @@ const run = async () => {
     jobFetchCount: number
     uploadPayload: null | {
       providerKey: string
-      providerFields: Record<string, string>
+      providerFields: Record<string, UploadProviderValue>
     }
   } = {
     scanRequestCount: 0,
@@ -998,6 +1043,11 @@ const run = async () => {
           optionDescriptions,
         }),
       )
+      return
+    }
+
+    if (pathname === "/api/upload-providers") {
+      await route.fulfill(buildJsonResponse(uploadProviderCatalog))
       return
     }
 
@@ -1051,7 +1101,7 @@ const run = async () => {
     if (pathname === "/api/export/job-smoke/upload" && request.method() === "POST") {
       const body = request.postDataJSON() as {
         providerKey?: string
-        providerFields?: Record<string, string>
+        providerFields?: Record<string, UploadProviderValue>
       }
 
       if (!body.providerKey || !body.providerFields) {

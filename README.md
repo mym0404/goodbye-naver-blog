@@ -9,7 +9,7 @@
 - `SE2`, `SE3`, `ONE(SE4)` 글을 한 번에 export할 수 있습니다.
 - 여러 에디터에서 쓰는 본문 블록을 폭넓게 지원합니다.
 - 이미지와 썸네일은 중복 저장을 줄이면서 정리합니다.
-- 필요하면 export 뒤에 PicGo로 이미지를 업로드하고 Markdown 경로를 바꿉니다.
+- 필요하면 export 뒤에 PicList runtime으로 이미지를 업로드하고 Markdown 경로를 바꿉니다.
 - 로컬 웹 UI에서 범위 선택과 옵션 조절까지 바로 할 수 있습니다.
 
 지원 범위는 공개 글만입니다.
@@ -27,6 +27,7 @@
 git clone https://github.com/mym0404/farewell-naver-blog.git
 cd farewell-naver-blog
 pnpm install
+git clone https://github.com/Kuingsmile/PicList.git ~/Downloads/PicList
 ```
 
 ### 실행
@@ -131,11 +132,13 @@ UI에서 아래 5개 옵션 묶음을 조절할 수 있습니다.
 - `pnpm smoke:ui`: Playwright 기반 UI 흐름 확인
 - `pnpm check:full`: 전체 기본 회귀 확인
 
-## PicGo Upload
+## Upload Providers
 
 - 업로드 모드는 export 뒤에 같은 job에서 이어집니다.
-- 이미지 업로드는 PicGo 기반으로 동작합니다.
-- 현재 UI에서 지원하는 업로드 대상은 `GitHub`, `Imgur`입니다.
+- 업로드 provider Source Of Truth는 `~/Downloads/PicList` clone입니다. 폴더명이 소문자면 `~/Downloads/piclist`도 fallback으로 읽습니다.
+- 서버는 clone한 PicList가 runtime에 등록한 uploader 목록과 config schema를 읽어 `/api/upload-providers`로 노출합니다.
+- UI는 provider를 하드코딩하지 않고 PicList catalog 기준 schema-driven 폼으로 렌더링합니다.
+- GitHub를 고르면 `jsDelivr CDN 사용` 보조 UX를 계속 제공합니다.
 - 업로드가 끝나면 Markdown 안의 로컬 자산 경로를 업로드 URL로 치환합니다.
 
-실업로드 검증은 `pnpm test:network:upload`를 사용합니다.
+실업로드 검증은 `pnpm test:network:upload`를 사용하며, 현재는 GitHub 경로만 검증합니다.

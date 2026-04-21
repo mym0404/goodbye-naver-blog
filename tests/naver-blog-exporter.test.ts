@@ -173,7 +173,11 @@ describe("NaverBlogExporter", () => {
         blogIdOrUrl: "https://blog.naver.com/mym0404",
         outputDir,
         profile: "gfm",
-        options: defaultExportOptions(),
+        options: (() => {
+          const options = defaultExportOptions()
+          options.assets.imageHandlingMode = "download"
+          return options
+        })(),
       },
       onLog: () => {},
       onProgress,

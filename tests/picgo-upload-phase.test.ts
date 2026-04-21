@@ -22,7 +22,7 @@ describe("runPicGoUploadPhase", () => {
       .mockResolvedValueOnce([{ imgUrl: "https://cdn.example.com/a.png" }])
       .mockResolvedValueOnce([{ url: "https://cdn.example.com/b.png" }])
     const client = {
-      setConfig: vi.fn(),
+      changeCurrentUploader: vi.fn(),
       upload,
     }
 
@@ -43,13 +43,8 @@ describe("runPicGoUploadPhase", () => {
       async () => client,
     )
 
-    expect(client.setConfig).toHaveBeenCalledWith({
-      picBed: {
-        current: "github",
-        github: {
-          repo: "owner/name",
-        },
-      },
+    expect(client.changeCurrentUploader).toHaveBeenCalledWith("github", {
+      repo: "owner/name",
     })
     expect(upload.mock.calls).toEqual([[["/tmp/export/public/a.png"]], [["/tmp/export/public/b.png"]]])
     expect(progressUpdates).toEqual([
@@ -84,7 +79,7 @@ describe("runPicGoUploadPhase", () => {
   it("keeps already uploaded results on failure after partial success", async () => {
     const progressUpdates: PicGoUploadProgress[] = []
     const client = {
-      setConfig: vi.fn(),
+      changeCurrentUploader: vi.fn(),
       upload: vi
         .fn()
         .mockResolvedValueOnce([{ imgUrl: "https://cdn.example.com/a.png" }])

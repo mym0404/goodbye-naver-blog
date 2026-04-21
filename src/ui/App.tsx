@@ -12,6 +12,8 @@ import type {
   ExportJobState,
   ExportOptions,
   ScanResult,
+  UploadProviderCatalogResponse,
+  UploadProviderValue,
 } from "../shared/types.js"
 
 import { Badge } from "./components/ui/badge.js"
@@ -33,7 +35,10 @@ import {
 } from "./features/options/export-options-panel.js"
 import { JobResultsPanel } from "./features/job-results/job-results-panel.js"
 import { useExportJob } from "./hooks/use-export-job.js"
-import type { ExportDefaultsResponse } from "./lib/api.js"
+import type {
+  ExportDefaultsResponse,
+  UploadProvidersResponse,
+} from "./lib/api.js"
 import { fetchJson, postJson } from "./lib/api.js"
 import { cn } from "./lib/cn.js"
 
@@ -43,6 +48,11 @@ const fallbackDefaults: ExportDefaultsResponse = {
   frontmatterFieldOrder,
   frontmatterFieldMeta,
   optionDescriptions,
+}
+
+const fallbackUploadProviders: UploadProviderCatalogResponse = {
+  defaultProviderKey: null,
+  providers: [],
 }
 
 const setupSteps = [
@@ -183,6 +193,8 @@ const resolveScopedCategoryIds = ({
 
 export const App = () => {
   const [defaults, setDefaults] = useState(fallbackDefaults)
+  const [uploadProviders, setUploadProviders] = useState(fallbackUploadProviders)
+  const [uploadProviderError, setUploadProviderError] = useState<string | null>(null)
   const [blogIdOrUrl, setBlogIdOrUrl] = useState("")
   const [outputDir, setOutputDir] = useState("./output")
   const [scanCache, setScanCache] = useState<Record<string, ScanResult>>({})
@@ -296,6 +308,36 @@ export const App = () => {
     }
 
     void loadDefaults()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadUploadProviders = async () => {
+      try {
+        const nextCatalog = await fetchJson<UploadProvidersResponse>("/api/upload-providers")
+
+        if (cancelled) {
+          return
+        }
+
+        setUploadProviders(nextCatalog)
+        setUploadProviderError(null)
+      } catch (error) {
+        if (cancelled) {
+          return
+        }
+
+        setUploadProviders(fallbackUploadProviders)
+        setUploadProviderError(error instanceof Error ? error.message : String(error))
+      }
+    }
+
+    void loadUploadProviders()
 
     return () => {
       cancelled = true
@@ -557,7 +599,7 @@ export const App = () => {
     providerFields,
   }: {
     providerKey: string
-    providerFields: Record<string, string>
+    providerFields: Record<string, UploadProviderValue>
   }) => {
     try {
       await startUpload({
@@ -664,6 +706,8 @@ export const App = () => {
           job={job}
           activeJobFilter={activeJobFilter}
           uploadSubmitting={uploadSubmitting}
+          uploadProviders={uploadProviders}
+          uploadProviderError={uploadProviderError}
           onFilterChange={setActiveJobFilter}
           onUploadStart={handleUpload}
         />
@@ -677,6 +721,8 @@ export const App = () => {
           job={job}
           activeJobFilter={activeJobFilter}
           uploadSubmitting={uploadSubmitting}
+          uploadProviders={uploadProviders}
+          uploadProviderError={uploadProviderError}
           onFilterChange={setActiveJobFilter}
           onUploadStart={handleUpload}
         />
@@ -690,6 +736,8 @@ export const App = () => {
           job={job}
           activeJobFilter={activeJobFilter}
           uploadSubmitting={uploadSubmitting}
+          uploadProviders={uploadProviders}
+          uploadProviderError={uploadProviderError}
           onFilterChange={setActiveJobFilter}
           onUploadStart={handleUpload}
         />

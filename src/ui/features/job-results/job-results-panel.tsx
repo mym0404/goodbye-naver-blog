@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 
-import type { ExportJobState } from "../../../shared/types.js"
+import type {
+  ExportJobState,
+  UploadProviderCatalogResponse,
+  UploadProviderDefinition,
+  UploadProviderValue,
+} from "../../../shared/types.js"
 
 import { Badge } from "../../components/ui/badge.js"
 import { Button } from "../../components/ui/button.js"
@@ -27,96 +32,103 @@ import { cn } from "../../lib/cn.js"
 
 type JobFilter = "all" | "warnings" | "errors"
 type JobResultsMode = "running" | "upload" | "result"
-type ProviderFieldKey = "repo" | "branch" | "path" | "token" | "clientId" | "album"
-type ProviderKey = "github" | "imgur"
-type ProviderFormState = Partial<Record<ProviderFieldKey, string>>
-
-type UploadProviderDefinition = {
-  label: string
-  fields: Array<{
-    key: ProviderFieldKey
-    label: string
-    placeholder: string
-    required?: boolean
-    type?: "password" | "text"
-    autoComplete?: string
-  }>
-}
+type ProviderFormState = Record<string, string | boolean>
 
 const INDEX_MARKDOWN_FILE = "index.md"
-const DEFAULT_PROVIDER_KEY: ProviderKey = "github"
 
-const uploadProviderDefinitions: Record<ProviderKey, UploadProviderDefinition> = {
-  github: {
-    label: "GitHub",
-    fields: [
-      {
-        key: "repo",
-        label: "Repository",
-        placeholder: "owner/name",
-        required: true,
-      },
-      {
-        key: "branch",
-        label: "Branch",
-        placeholder: "main",
-      },
-      {
-        key: "path",
-        label: "Path",
-        placeholder: "blog-assets",
-      },
-      {
-        key: "token",
-        label: "Token",
-        placeholder: "ghp_xxx",
-        required: true,
-        type: "password",
-        autoComplete: "current-password",
-      },
-    ],
-  },
-  imgur: {
-    label: "Imgur",
-    fields: [
-      {
-        key: "clientId",
-        label: "Client ID",
-        placeholder: "imgur-client-id",
-        required: true,
-      },
-      {
-        key: "album",
-        label: "Album ID",
-        placeholder: "optional-album-id",
-      },
-    ],
-  },
-}
+const getPreferredDefaultProviderKey = (catalog: UploadProviderCatalogResponse) =>
+  catalog.providers.find((provider) => provider.key === "github")?.key ??
+  catalog.defaultProviderKey ??
+  catalog.providers[0]?.key ??
+  ""
 
-const buildInitialProviderFields = (providerKey: ProviderKey): ProviderFormState =>
+const buildInitialProviderFields = (provider: UploadProviderDefinition | null): ProviderFormState =>
   Object.fromEntries(
-    uploadProviderDefinitions[providerKey].fields.map((field) => [field.key, ""]),
-  ) as ProviderFormState
+    (provider?.fields ?? []).map((field) => {
+      if (field.inputType === "checkbox") {
+        return [field.key, field.defaultValue === true]
+      }
 
-const trimProviderFields = (
-  providerKey: ProviderKey,
-  providerFields: ProviderFormState,
-) =>
-  Object.fromEntries(
-    uploadProviderDefinitions[providerKey].fields.flatMap((field) => {
-      const value = providerFields[field.key]?.trim() ?? ""
+      if (
+        field.inputType === "select" &&
+        field.required &&
+        (field.defaultValue === null || field.defaultValue === undefined)
+      ) {
+        return [field.key, String(field.options?.[0]?.value ?? "")]
+      }
 
-      return value ? [[field.key, value]] : []
+      if (field.defaultValue === null || field.defaultValue === undefined) {
+        return [field.key, ""]
+      }
+
+      return [field.key, String(field.defaultValue)]
     }),
   )
 
-const hasMissingRequiredProviderField = (
-  providerKey: ProviderKey,
+const buildInitialProviderFieldMap = (catalog: UploadProviderCatalogResponse) =>
+  Object.fromEntries(
+    catalog.providers.map((provider) => [provider.key, buildInitialProviderFields(provider)]),
+  ) as Record<string, ProviderFormState>
+
+const trimProviderFields = (
+  provider: UploadProviderDefinition | null,
   providerFields: ProviderFormState,
 ) =>
-  uploadProviderDefinitions[providerKey].fields.some(
-    (field) => field.required && !(providerFields[field.key]?.trim()),
+  Object.fromEntries(
+    (provider?.fields ?? []).reduce<Array<readonly [string, UploadProviderValue]>>((entries, field) => {
+      const rawValue = providerFields[field.key]
+
+      if (field.inputType === "checkbox") {
+        if (typeof rawValue === "boolean") {
+          entries.push([field.key, rawValue] as const)
+        }
+
+        return entries
+      }
+
+      const value =
+        typeof rawValue === "string"
+          ? rawValue.trim()
+          : rawValue === undefined || rawValue === null
+            ? ""
+            : String(rawValue).trim()
+
+      if (!value) {
+        return entries
+      }
+
+      if (field.inputType === "number") {
+        const parsed = Number(value)
+
+        if (Number.isFinite(parsed)) {
+          entries.push([field.key, parsed] as const)
+        }
+
+        return entries
+      }
+
+      if (field.inputType === "select") {
+        const selectedOption = field.options?.find((option) => String(option.value) === value)
+
+        entries.push([field.key, selectedOption?.value ?? value] as const)
+        return entries
+      }
+
+      entries.push([field.key, value] as const)
+      return entries
+    }, []),
+  )
+
+const hasMissingRequiredProviderField = (
+  provider: UploadProviderDefinition | null,
+  providerFields: ProviderFormState,
+) =>
+  (provider?.fields ?? []).some(
+    (field) =>
+      field.required &&
+      (field.inputType === "checkbox"
+        ? typeof providerFields[field.key] !== "boolean"
+        : !String(providerFields[field.key] ?? "").trim()),
   )
 
 const buildGitHubJsDelivrCustomUrl = ({
@@ -313,6 +325,8 @@ export const JobResultsPanel = ({
   job,
   activeJobFilter,
   uploadSubmitting,
+  uploadProviders,
+  uploadProviderError,
   onFilterChange,
   onUploadStart,
 }: {
@@ -320,16 +334,18 @@ export const JobResultsPanel = ({
   job: ExportJobState | null
   activeJobFilter: JobFilter
   uploadSubmitting: boolean
+  uploadProviders: UploadProviderCatalogResponse
+  uploadProviderError: string | null
   onFilterChange: (filter: JobFilter) => void
   onUploadStart: (input: {
     providerKey: string
-    providerFields: Record<string, string>
+    providerFields: Record<string, UploadProviderValue>
   }) => Promise<void> | void
 }) => {
   const logsScrollAreaRef = useRef<HTMLDivElement | null>(null)
-  const [providerKey, setProviderKey] = useState<ProviderKey>(DEFAULT_PROVIDER_KEY)
-  const [providerFields, setProviderFields] = useState<ProviderFormState>(
-    buildInitialProviderFields(DEFAULT_PROVIDER_KEY),
+  const [providerKey, setProviderKey] = useState(() => getPreferredDefaultProviderKey(uploadProviders))
+  const [providerFieldMap, setProviderFieldMap] = useState<Record<string, ProviderFormState>>(() =>
+    buildInitialProviderFieldMap(uploadProviders),
   )
   const [githubUseJsDelivr, setGithubUseJsDelivr] = useState(false)
   const jobItems = getJobItems(job).filter((item) => {
@@ -346,7 +362,10 @@ export const JobResultsPanel = ({
     return true
   })
   const uploadTargetItems = getUploadTargetItems(job)
-  const activeProviderDefinition = uploadProviderDefinitions[providerKey]
+  const activeProviderDefinition =
+    uploadProviders.providers.find((provider) => provider.key === providerKey) ?? null
+  const activeProviderFields =
+    providerFieldMap[providerKey] ?? buildInitialProviderFields(activeProviderDefinition)
   const showUploadPanel =
     (mode === "upload" || mode === "result") && (job?.upload.candidateCount ?? 0) > 0
   const showUploadForm =
@@ -383,10 +402,10 @@ export const JobResultsPanel = ({
       return
     }
 
-    setProviderKey(DEFAULT_PROVIDER_KEY)
-    setProviderFields(buildInitialProviderFields(DEFAULT_PROVIDER_KEY))
+    setProviderKey(getPreferredDefaultProviderKey(uploadProviders))
+    setProviderFieldMap(buildInitialProviderFieldMap(uploadProviders))
     setGithubUseJsDelivr(false)
-  }, [job?.id])
+  }, [job?.id, uploadProviders])
 
   return (
     <Card
@@ -537,108 +556,207 @@ export const JobResultsPanel = ({
             </ScrollArea>
 
             {showUploadForm ? (
-              <form
-                id="upload-form"
-                className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-4"
-                onSubmit={async (event) => {
-                  event.preventDefault()
-                  await onUploadStart({
-                    providerKey,
-                    providerFields: {
-                      ...trimProviderFields(providerKey, providerFields),
-                      ...(providerKey === "github" && githubUseJsDelivr
-                        ? {
-                            customUrl: buildGitHubJsDelivrCustomUrl({
-                              repo: providerFields.repo ?? "",
-                              branch: providerFields.branch ?? "",
-                            }),
-                          }
-                        : {}),
-                    },
-                  })
-                }}
-              >
-                <div className="grid gap-4 xl:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] xl:items-start">
-                  <label className="grid gap-2">
-                    <span className="text-sm font-semibold text-slate-900">Provider</span>
-                    <select
-                      id="upload-providerKey"
-                      className="h-10 rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
-                      value={providerKey}
-                      onChange={(event) => {
-                        const nextProviderKey = event.target.value as ProviderKey
-                        setProviderKey(nextProviderKey)
-                        setProviderFields(buildInitialProviderFields(nextProviderKey))
-                        setGithubUseJsDelivr(false)
-                      }}
-                    >
-                      {Object.entries(uploadProviderDefinitions).map(([key, definition]) => (
-                        <option key={key} value={key}>
-                          {definition.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {activeProviderDefinition.fields.map((field) => (
-                      <label key={`${providerKey}:${field.key}`} className="grid gap-2">
-                        <span className="text-sm font-semibold text-slate-900">{field.label}</span>
-                        <Input
-                          id={`upload-providerField-${field.key}`}
-                          type={field.type ?? "text"}
-                          autoComplete={field.autoComplete}
-                          value={providerFields[field.key] ?? ""}
-                          onChange={(event) =>
-                            setProviderFields((current) => ({
-                              ...current,
-                              [field.key]: event.target.value,
-                            }))
-                          }
-                          placeholder={field.placeholder}
-                        />
-                      </label>
-                    ))}
+              uploadProviderError ? (
+                <p className="text-sm leading-7 text-rose-600">{uploadProviderError}</p>
+              ) : uploadProviders.providers.length === 0 || !activeProviderDefinition ? (
+                <p className="text-sm leading-7 text-slate-600">
+                  PicList provider catalog를 불러오지 못했습니다.
+                </p>
+              ) : (
+                <form
+                  id="upload-form"
+                  className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-4"
+                  onSubmit={async (event) => {
+                    event.preventDefault()
+                    const normalizedProviderFields = trimProviderFields(
+                      activeProviderDefinition,
+                      activeProviderFields,
+                    )
+
+                    await onUploadStart({
+                      providerKey,
+                      providerFields: {
+                        ...normalizedProviderFields,
+                        ...(providerKey === "github" && githubUseJsDelivr
+                          ? {
+                              customUrl: buildGitHubJsDelivrCustomUrl({
+                                repo: String(activeProviderFields.repo ?? ""),
+                                branch: String(activeProviderFields.branch ?? ""),
+                              }),
+                            }
+                          : {}),
+                      },
+                    })
+                  }}
+                >
+                  <div className="grid gap-4 xl:grid-cols-[minmax(16rem,0.8fr)_minmax(0,1.2fr)] xl:items-start">
+                    <label className="grid gap-2">
+                      <span className="text-sm font-semibold text-slate-900">Provider</span>
+                      <select
+                        id="upload-providerKey"
+                        className="h-10 rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                        value={providerKey}
+                        onChange={(event) => {
+                          const nextProviderKey = event.target.value
+                          setProviderKey(nextProviderKey)
+                          setProviderFieldMap((current) =>
+                            current[nextProviderKey]
+                              ? current
+                              : {
+                                  ...current,
+                                  [nextProviderKey]: buildInitialProviderFields(
+                                    uploadProviders.providers.find(
+                                      (provider) => provider.key === nextProviderKey,
+                                    ) ?? null,
+                                  ),
+                                },
+                          )
+                        }}
+                      >
+                        {uploadProviders.providers.map((provider) => (
+                          <option key={provider.key} value={provider.key}>
+                            {provider.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {activeProviderDefinition.fields.map((field) => {
+                        if (field.inputType === "checkbox") {
+                          return (
+                            <label
+                              key={`${providerKey}:${field.key}`}
+                              htmlFor={`upload-providerField-${field.key}`}
+                              className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 sm:col-span-2"
+                            >
+                              <input
+                                id={`upload-providerField-${field.key}`}
+                                className="size-[1.1rem] shrink-0 accent-primary"
+                                type="checkbox"
+                                checked={activeProviderFields[field.key] === true}
+                                onChange={(event) =>
+                                  setProviderFieldMap((current) => ({
+                                    ...current,
+                                    [providerKey]: {
+                                      ...(current[providerKey] ??
+                                        buildInitialProviderFields(activeProviderDefinition)),
+                                      [field.key]: event.target.checked,
+                                    },
+                                  }))
+                                }
+                              />
+                              <span className="grid gap-1">
+                                <span className="text-sm font-semibold text-slate-900">
+                                  {field.label}
+                                </span>
+                                {field.placeholder ? (
+                                  <span className="text-sm leading-6 text-slate-500">
+                                    {field.placeholder}
+                                  </span>
+                                ) : null}
+                              </span>
+                            </label>
+                          )
+                        }
+
+                        if (field.inputType === "select") {
+                          return (
+                            <label key={`${providerKey}:${field.key}`} className="grid gap-2">
+                              <span className="text-sm font-semibold text-slate-900">
+                                {field.label}
+                              </span>
+                              <select
+                                id={`upload-providerField-${field.key}`}
+                                className="h-10 rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                                value={String(activeProviderFields[field.key] ?? "")}
+                                onChange={(event) =>
+                                  setProviderFieldMap((current) => ({
+                                    ...current,
+                                    [providerKey]: {
+                                      ...(current[providerKey] ??
+                                        buildInitialProviderFields(activeProviderDefinition)),
+                                      [field.key]: event.target.value,
+                                    },
+                                  }))
+                                }
+                              >
+                                {!field.required ? <option value="">선택 안 함</option> : null}
+                                {(field.options ?? []).map((option) => (
+                                  <option key={`${field.key}:${option.value}`} value={String(option.value)}>
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          )
+                        }
+
+                        return (
+                          <label key={`${providerKey}:${field.key}`} className="grid gap-2">
+                            <span className="text-sm font-semibold text-slate-900">{field.label}</span>
+                            <Input
+                              id={`upload-providerField-${field.key}`}
+                              type={field.inputType}
+                              value={String(activeProviderFields[field.key] ?? "")}
+                              onChange={(event) =>
+                                setProviderFieldMap((current) => ({
+                                  ...current,
+                                  [providerKey]: {
+                                    ...(current[providerKey] ??
+                                      buildInitialProviderFields(activeProviderDefinition)),
+                                    [field.key]: event.target.value,
+                                  },
+                                }))
+                              }
+                              placeholder={field.placeholder}
+                            />
+                          </label>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-                {providerKey === "github" ? (
-                  <label
-                    htmlFor="upload-github-use-jsdelivr"
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-                  >
-                    <input
-                      id="upload-github-use-jsdelivr"
-                      className="size-[1.1rem] shrink-0 accent-primary"
-                      type="checkbox"
-                      checked={githubUseJsDelivr}
-                      onChange={(event) => setGithubUseJsDelivr(event.target.checked)}
-                    />
-                    <span className="grid gap-1">
-                      <span className="text-sm font-semibold text-slate-900">jsDelivr CDN 사용</span>
-                      <span className="text-sm leading-6 text-slate-500">
-                        {githubUseJsDelivr
-                          ? buildGitHubJsDelivrCustomUrl({
-                              repo: providerFields.repo ?? "",
-                              branch: providerFields.branch ?? "",
-                            }) || "Repository를 입력하면 jsDelivr 주소를 만듭니다."
-                          : "기본 GitHub 업로드 URL을 사용합니다."}
+                  {providerKey === "github" ? (
+                    <label
+                      htmlFor="upload-github-use-jsdelivr"
+                      className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    >
+                      <input
+                        id="upload-github-use-jsdelivr"
+                        className="size-[1.1rem] shrink-0 accent-primary"
+                        type="checkbox"
+                        checked={githubUseJsDelivr}
+                        onChange={(event) => setGithubUseJsDelivr(event.target.checked)}
+                      />
+                      <span className="grid gap-1">
+                        <span className="text-sm font-semibold text-slate-900">
+                          jsDelivr CDN 사용
+                        </span>
+                        <span className="text-sm leading-6 text-slate-500">
+                          {githubUseJsDelivr
+                            ? buildGitHubJsDelivrCustomUrl({
+                                repo: String(activeProviderFields.repo ?? ""),
+                                branch: String(activeProviderFields.branch ?? ""),
+                              }) || "Repository를 입력하면 jsDelivr 주소를 만듭니다."
+                            : "기본 GitHub 업로드 URL을 사용합니다."}
+                        </span>
                       </span>
-                    </span>
-                  </label>
-                ) : null}
-                <div className="flex justify-end">
-                  <Button
-                    id="upload-submit"
-                    type="submit"
-                    className="w-full rounded-xl sm:w-auto"
-                    disabled={
-                      uploadSubmitting ||
-                      hasMissingRequiredProviderField(providerKey, providerFields)
-                    }
-                  >
-                    {uploadSubmitting ? "업로드 시작 중..." : "업로드 시작"}
-                  </Button>
-                </div>
-              </form>
+                    </label>
+                  ) : null}
+                  <div className="flex justify-end">
+                    <Button
+                      id="upload-submit"
+                      type="submit"
+                      className="w-full rounded-xl sm:w-auto"
+                      disabled={
+                        uploadSubmitting ||
+                        hasMissingRequiredProviderField(activeProviderDefinition, activeProviderFields)
+                      }
+                    >
+                      {uploadSubmitting ? "업로드 시작 중..." : "업로드 시작"}
+                    </Button>
+                  </div>
+                </form>
+              )
             ) : null}
 
             {job?.upload.status === "skipped" ? (

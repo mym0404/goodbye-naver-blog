@@ -24,7 +24,7 @@
 - `ScanResult`: 전체 공개 글 수, 카테고리 목록, UI 즉시 집계를 위한 post summary snapshot
 - `ExportOptions`: scope, structure, frontmatter, markdown, assets 규칙
 - `ParsedPost`: 공용 AST 블록, 태그, 비디오, 경고를 가진 파싱 결과
-- `UploadCandidate`: 로컬로 저장된 이미지/썸네일이 PicGo 업로드 단계로 넘어갈 때 쓰는 자산 단위
+- `UploadCandidate`: 로컬로 저장된 이미지/썸네일이 PicList upload 단계로 넘어갈 때 쓰는 자산 단위
 - `PostUploadSummary`: 글별 업로드 대상 수, 완료 수, 실패 수, candidate 목록을 가진 결과 묶음
 - `ExportManifest`: 전체 작업 결과와 post별 성공/실패, 업로드 요약을 기록하는 최종 묶음
 - `ExportJobState`: export 단계와 upload 단계를 같은 job 안에서 이어서 보여 주는 UI/API 상태
@@ -41,6 +41,8 @@
 - 기본 이미지 처리 방식은 `download-and-upload`이고, 기본 로컬 압축은 켜져 있다.
 - 이미지 처리 방식은 `download`, `remote`, `download-and-upload` 세 가지다.
 - 다운로드 실패 처리는 `warn-and-use-source`, `warn-and-omit` 두 가지다.
+- 업로드 provider catalog Source Of Truth는 `~/Downloads/PicList` clone이고, 폴더명이 소문자면 `~/Downloads/piclist`를 fallback으로 허용한다.
+- provider 목록과 필드 schema는 clone한 PicList가 runtime에 등록한 uploader config를 정규화한 결과를 그대로 따른다.
 - GitHub 이미지 업로드는 마지막 업로드 단계에서 `jsDelivr CDN 사용`을 켜면 Markdown URL을 `https://cdn.jsdelivr.net/gh/<repo>@<branch>` 기준으로 치환한다. branch가 비어 있으면 `@<branch>`는 생략한다.
 - 경고/실패 처리 옵션은 asset 전략과 분리된 마지막 `진단 설정` 단계에서 조정한다.
 - 블로그 입력 단계의 `카테고리 불러오기`는 현재 블로그 ID 기준으로 카테고리 스냅샷을 재사용한다.
@@ -48,6 +50,7 @@
 - `강제로 불러오기`는 같은 블로그 입력이어도 파일 캐시를 무효화하고 `/api/scan`을 다시 호출한다.
 - `download-and-upload`는 export를 먼저 끝낸 뒤 같은 job을 `upload-ready -> uploading -> upload-completed | upload-failed`로 진행한다.
 - post-export 업로드 입력은 export 옵션에 저장하지 않고 결과 패널에서만 `providerKey + providerFields` 형태로 받는다.
+- `providerFields` 값 타입은 문자열만이 아니라 `string | number | boolean` scalar union이다.
 - job 단위 업로드 대상 수는 글별 참조 수 합계가 아니라 고유 `localPath` 수를 뜻한다.
 - 실행 단계 progress bar는 `처리한 글 수 / 전체 글 수`를 기준으로 한다.
 - 업로드 단계 progress bar는 `업로드된 고유 자산 수 / 전체 대상 자산 수`를 기준으로 한다.

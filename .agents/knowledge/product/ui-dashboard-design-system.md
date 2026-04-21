@@ -81,13 +81,15 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - `Assets`의 기본값은 `download-and-upload + 로컬 이미지 압축 켬`이다.
 - `이미지 처리 방식`이 `remote`면 로컬 압축, 다운로드 토글은 모두 비활성화한다.
 - `이미지 처리 방식`이 `download-and-upload`면 결과 패널에서만 업로드 폼을 열고, 대상 자산 수와 상태를 함께 보여 준다.
+- 업로드 provider form은 `/api/upload-providers` catalog를 기준으로 그린다. provider 목록과 필드 종류는 PicList clone SoT를 그대로 따른다.
 - 업로드 단계의 GitHub provider는 `jsDelivr CDN 사용` 체크박스를 따로 두고, 켜면 `https://cdn.jsdelivr.net/gh/<repo>@<branch>` 기준 `customUrl`을 함께 보낸다. branch가 비어 있으면 `@<branch>`는 생략한다.
 - `진단 설정`은 마지막 옵션 단계이고, 현재는 `이미지 다운로드 실패 처리`를 담당한다.
 - `upload-ready`와 `upload-failed` 단계에서도 결과 파일 표를 같이 보여 주어 경고/실패를 업로드 전에 확인할 수 있어야 한다.
 - 다음 단계로 이동하면 현재 옵션 섹션의 맨 위로 스크롤을 되돌린다.
 - status panel은 mode 기반으로 `실행 중 / 업로드 / 결과` 중 하나만 보여 준다.
-- upload 대상 표는 compact table을 유지하고, 업로드 입력은 raw JSON textarea 대신 provider 선택과 provider별 구조화 필드를 사용한다.
-- 업로드 폼은 `upload-ready`와 `upload-failed`에서만 보이고, `upload-failed`일 때는 같은 job에서 값 수정 후 바로 재시도할 수 있어야 한다.
+- upload 대상 표는 compact table을 유지하고, 업로드 입력은 raw JSON textarea 대신 provider 선택과 schema-driven 필드 조합을 사용한다.
+- 업로드 폼은 `upload-ready`와 `upload-failed`에서만 보이고, provider 전환 뒤에도 provider별 입력값을 유지해야 한다.
+- `upload-failed`일 때는 같은 job에서 마지막 provider 값을 복원한 상태로 바로 재시도할 수 있어야 한다.
 - running panel은 `#running-progress`에서 `처리한 글 수 / 전체 글 수`를 progress bar로 보여 준다.
 - upload panel은 `#upload-progress`에서 `업로드된 고유 자산 수 / 전체 대상 자산 수`를 progress bar로 보여 준다.
 - 업로드가 진행되면 같은 표에서 글 기준 `대기 / 부분 완료 / 완료 / 실패` 상태가 바뀌고, `upload-failed`에서는 모든 row를 `실패`로 override한다.

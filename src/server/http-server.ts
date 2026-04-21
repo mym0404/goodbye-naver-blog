@@ -21,9 +21,13 @@ import {
   optionDescriptions,
   type PartialExportOptions,
 } from "../shared/export-options.js"
-import type { ExportRequest, ScanResult } from "../shared/types.js"
+import type { ExportRequest, ScanResult, UploadProviderValue } from "../shared/types.js"
 import { extractBlogId, toErrorMessage } from "../shared/utils.js"
 import { JobStore } from "./job-store.js"
+import {
+  createPicListUploadProviderSource,
+  type UploadProviderSource,
+} from "./piclist-upload-provider-source.js"
 
 const builtClientRoot = path.resolve(process.cwd(), "dist/client")
 const devIndexPath = path.resolve(process.cwd(), "index.html")
@@ -111,8 +115,6 @@ const parseJsonBody = async <T>(request: IncomingMessage) => JSON.parse(await re
 const hasJsonContentType = (request: IncomingMessage) =>
   request.headers["content-type"]?.toLowerCase().startsWith("application/json") ?? false
 
-type ProviderFields = Record<string, string>
-
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value)
 
@@ -133,29 +135,6 @@ const isSameOriginUploadRequest = (request: IncomingMessage) => {
   } catch {
     return false
   }
-}
-
-const normalizeProviderFields = (value: unknown): ProviderFields | null => {
-  if (!isPlainObject(value)) {
-    return null
-  }
-
-  const normalized = Object.entries(value).reduce<ProviderFields>((result, [key, fieldValue]) => {
-    if (typeof fieldValue !== "string") {
-      return result
-    }
-
-    const trimmed = fieldValue.trim()
-
-    if (!trimmed) {
-      return result
-    }
-
-    result[key] = trimmed
-    return result
-  }, {})
-
-  return Object.keys(normalized).length > 0 ? normalized : null
 }
 
 const readScanCacheFile = async (scanCachePath: string) => {
@@ -201,11 +180,11 @@ const normalizeUploaderConfig = ({
   providerFields,
 }: {
   uploaderKey: string
-  providerFields: ProviderFields
+  providerFields: Record<string, UploadProviderValue>
 }) =>
   Object.fromEntries(
     Object.entries(providerFields).flatMap(([key, value]) => {
-      if (uploaderKey === "github" && key === "path") {
+      if (uploaderKey === "github" && key === "path" && typeof value === "string") {
         const normalizedPath = value
           .split("/")
           .map((segment) => segment.trim())
@@ -224,7 +203,7 @@ const sanitizeUploadError = ({
   providerFields,
 }: {
   error: unknown
-  providerFields: ProviderFields
+  providerFields: Record<string, UploadProviderValue>
 }) => {
   const rawMessage = toErrorMessage(error).replace(/\s+/g, " ").trim()
 
@@ -233,6 +212,7 @@ const sanitizeUploadError = ({
   }
 
   const redacted = Object.values(providerFields)
+    .flatMap((value) => (typeof value === "string" ? [value] : []))
     .filter((value) => value.length >= 3)
     .sort((left, right) => right.length - left.length)
     .reduce((message, secret) => message.replaceAll(secret, "[redacted]"), rawMessage)
@@ -296,16 +276,22 @@ export const createHttpServer = ({
   uploadPhaseRunner = runPicGoUploadPhase,
   uploadRewriter = rewriteUploadedAssets,
   scanCachePath = defaultScanCachePath,
+  uploadProviderSource = createPicListUploadProviderSource(),
 }: {
   jobStore?: JobStore
   uploadPhaseRunner?: typeof runPicGoUploadPhase
   uploadRewriter?: typeof rewriteUploadedAssets
   scanCachePath?: string
+  uploadProviderSource?: UploadProviderSource
 } = {}) => {
   const isDevelopment = process.env.NODE_ENV === "development"
   let httpServer: HttpServer
   let viteDevServerPromise: Promise<ViteDevServer> | null = null
   let scanCachePromise: Promise<Record<string, ScanResult>> | null = null
+
+  void uploadProviderSource.getCatalog().catch((error) => {
+    console.error(toErrorMessage(error))
+  })
 
   const ensureViteDevServer = () => {
     if (!viteDevServerPromise) {
@@ -569,6 +555,17 @@ export const createHttpServer = ({
         return
       }
 
+      if (method === "GET" && url.pathname === "/api/upload-providers") {
+        const catalog = await uploadProviderSource.getCatalog()
+
+        sendJson({
+          response,
+          statusCode: 200,
+          body: catalog,
+        })
+        return
+      }
+
       if (method === "POST" && url.pathname === "/api/scan") {
         const rawBody = await readBody(request)
         const payload = JSON.parse(rawBody) as {
@@ -746,7 +743,10 @@ export const createHttpServer = ({
         }>(request)
 
         const providerKey = payload.providerKey?.trim()
-        const providerFields = normalizeProviderFields(payload.providerFields)
+        const providerFields =
+          providerKey
+            ? await uploadProviderSource.normalizeProviderFields(providerKey, payload.providerFields)
+            : null
 
         if (!providerKey || !providerFields) {
           sendJson({

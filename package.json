@@ -31,7 +31,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "domhandler": "^5.0.3",
-    "picgo": "^2.0.3",
+    "piclist": "2.3.5",
     "radix-ui": "^1.4.3",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

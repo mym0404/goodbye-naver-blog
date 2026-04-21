@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from "react"
 
-import type { ExportJobState, ExportOptions, ScanResult } from "../../shared/types.js"
+import type {
+  ExportJobState,
+  ExportOptions,
+  ScanResult,
+  UploadProviderValue,
+} from "../../shared/types.js"
 
 import { fetchJson, postJson, postUploadJson } from "../lib/api.js"
 
 type UploadProviderInput = {
   providerKey: string
-  providerFields: Record<string, string>
+  providerFields: Record<string, UploadProviderValue>
 }
 
 const terminalStatuses = new Set([

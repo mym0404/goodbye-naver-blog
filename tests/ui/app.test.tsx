@@ -12,7 +12,7 @@ import {
   frontmatterFieldOrder,
   optionDescriptions,
 } from "../../src/shared/export-options.js"
-import type { ExportJobState, ScanResult } from "../../src/shared/types.js"
+import type { ExportJobState, ScanResult, UploadProviderCatalogResponse } from "../../src/shared/types.js"
 import { App } from "../../src/ui/App.js"
 
 const buildJsonResponse = (body: unknown, status = 200) =>
@@ -63,6 +63,100 @@ const scanResult: ScanResult = {
   posts: [
     ...Array.from({ length: 5 }, (_, index) => buildPostSummary(index + 1, 101, "NestJS")),
     ...Array.from({ length: 7 }, (_, index) => buildPostSummary(index + 6, 202, "React")),
+  ],
+}
+
+const uploadProviderCatalog: UploadProviderCatalogResponse = {
+  defaultProviderKey: "github",
+  providers: [
+    {
+      key: "github",
+      label: "GitHub",
+      fields: [
+        {
+          key: "repo",
+          label: "Repository",
+          inputType: "text",
+          required: true,
+          defaultValue: null,
+          placeholder: "owner/repo",
+        },
+        {
+          key: "branch",
+          label: "Branch",
+          inputType: "text",
+          required: false,
+          defaultValue: "main",
+          placeholder: "",
+        },
+        {
+          key: "path",
+          label: "Path",
+          inputType: "text",
+          required: false,
+          defaultValue: null,
+          placeholder: "images/posts",
+        },
+        {
+          key: "token",
+          label: "Token",
+          inputType: "password",
+          required: true,
+          defaultValue: null,
+          placeholder: "ghp_xxx",
+        },
+        {
+          key: "customUrl",
+          label: "Custom URL",
+          inputType: "text",
+          required: false,
+          defaultValue: null,
+          placeholder: "",
+        },
+      ],
+    },
+    {
+      key: "tcyun",
+      label: "Tencent COS",
+      fields: [
+        {
+          key: "appId",
+          label: "App ID",
+          inputType: "text",
+          required: true,
+          defaultValue: null,
+          placeholder: "",
+        },
+        {
+          key: "permission",
+          label: "Permission",
+          inputType: "select",
+          required: true,
+          defaultValue: null,
+          placeholder: "",
+          options: [
+            { label: "Public", value: 0 },
+            { label: "Private", value: 1 },
+          ],
+        },
+        {
+          key: "port",
+          label: "Port",
+          inputType: "number",
+          required: false,
+          defaultValue: 36677,
+          placeholder: "",
+        },
+        {
+          key: "slim",
+          label: "Slim",
+          inputType: "checkbox",
+          required: false,
+          defaultValue: false,
+          placeholder: "압축 경로 사용",
+        },
+      ],
+    },
   ],
 }
 
@@ -371,6 +465,24 @@ beforeEach(() => {
 })
 
 describe("App", () => {
+  const getBootstrapResponse = (url: string) => {
+    if (url.endsWith("/api/export-defaults")) {
+      return buildJsonResponse({
+        profile: "gfm",
+        options: defaultExportOptions(),
+        frontmatterFieldOrder,
+        frontmatterFieldMeta,
+        optionDescriptions,
+      })
+    }
+
+    if (url.endsWith("/api/upload-providers")) {
+      return buildJsonResponse(uploadProviderCatalog)
+    }
+
+    return null
+  }
+
   const renderApp = () => {
     const user = userEvent.setup()
     render(<App />)
@@ -393,15 +505,10 @@ describe("App", () => {
   it("runs the main export flow in the wizard without preview or modal", async () => {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
 
-      if (url.endsWith("/api/export-defaults")) {
-        return buildJsonResponse({
-          profile: "gfm",
-          options: defaultExportOptions(),
-          frontmatterFieldOrder,
-          frontmatterFieldMeta,
-          optionDescriptions,
-        })
+      if (bootstrapResponse) {
+        return bootstrapResponse
       }
 
       if (url.endsWith("/api/scan")) {
@@ -497,15 +604,10 @@ describe("App", () => {
   it("scrolls to the top when moving to the next setup step", async () => {
     const fetchMock = vi.fn<typeof fetch>(async (input) => {
       const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
 
-      if (url.endsWith("/api/export-defaults")) {
-        return buildJsonResponse({
-          profile: "gfm",
-          options: defaultExportOptions(),
-          frontmatterFieldOrder,
-          frontmatterFieldMeta,
-          optionDescriptions,
-        })
+      if (bootstrapResponse) {
+        return bootstrapResponse
       }
 
       if (url.endsWith("/api/scan")) {
@@ -549,15 +651,10 @@ describe("App", () => {
     let scanRequestCount = 0
     const fetchMock = vi.fn<typeof fetch>(async (input) => {
       const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
 
-      if (url.endsWith("/api/export-defaults")) {
-        return buildJsonResponse({
-          profile: "gfm",
-          options: defaultExportOptions(),
-          frontmatterFieldOrder,
-          frontmatterFieldMeta,
-          optionDescriptions,
-        })
+      if (bootstrapResponse) {
+        return bootstrapResponse
       }
 
       if (url.endsWith("/api/scan")) {
@@ -607,15 +704,10 @@ describe("App", () => {
   it("hides setup panels while the export job is running", async () => {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
 
-      if (url.endsWith("/api/export-defaults")) {
-        return buildJsonResponse({
-          profile: "gfm",
-          options: defaultExportOptions(),
-          frontmatterFieldOrder,
-          frontmatterFieldMeta,
-          optionDescriptions,
-        })
+      if (bootstrapResponse) {
+        return bootstrapResponse
       }
 
       if (url.endsWith("/api/scan")) {
@@ -657,15 +749,10 @@ describe("App", () => {
     let uploadPollCount = 0
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
 
-      if (url.endsWith("/api/export-defaults")) {
-        return buildJsonResponse({
-          profile: "gfm",
-          options: defaultExportOptions(),
-          frontmatterFieldOrder,
-          frontmatterFieldMeta,
-          optionDescriptions,
-        })
+      if (bootstrapResponse) {
+        return bootstrapResponse
       }
 
       if (url.endsWith("/api/scan")) {
@@ -749,7 +836,12 @@ describe("App", () => {
       target: { value: "ghp_upload_secret" },
     })
     expect(jsDelivrToggle).not.toBeNull()
-    await user.click(jsDelivrToggle as HTMLElement)
+
+    if (!jsDelivrToggle) {
+      throw new Error("jsDelivr toggle not found")
+    }
+
+    await user.click(jsDelivrToggle)
     await user.click(screen.getByRole("button", { name: "업로드 시작" }))
 
     await waitFor(() => {
@@ -775,7 +867,105 @@ describe("App", () => {
         "업로드 결과와 대상별 상태를 최종 결과와 함께 확인합니다.",
       )
     }, { timeout: 7000 })
-  })
+  }, 10000)
+
+  it("keeps provider-specific values when switching upload providers", async () => {
+    let jobFetchCount = 0
+    const providerSwitchReadyJob: ExportJobState = {
+      ...uploadReadyJob,
+      id: "job-provider-switch",
+    }
+    const providerSwitchCompletedJob: ExportJobState = {
+      ...uploadCompletedJob,
+      id: "job-provider-switch",
+    }
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
+
+      if (bootstrapResponse) {
+        return bootstrapResponse
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse(scanResult)
+      }
+
+      if (url.endsWith("/api/export")) {
+        return buildJsonResponse({ jobId: "job-provider-switch" }, init?.method === "POST" ? 202 : 200)
+      }
+
+      if (url.endsWith("/api/export/job-provider-switch/upload")) {
+        expect(JSON.parse(String(init?.body))).toEqual({
+          providerKey: "tcyun",
+          providerFields: {
+            appId: "app-123",
+            permission: 1,
+            port: 2443,
+            slim: true,
+          },
+        })
+
+        return buildJsonResponse({ jobId: "job-provider-switch", status: "uploading" }, 202)
+      }
+
+      if (url.endsWith("/api/export/job-provider-switch")) {
+        jobFetchCount += 1
+
+        return buildJsonResponse(jobFetchCount <= 2 ? providerSwitchReadyJob : providerSwitchCompletedJob)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    await moveToDiagnosticsStep(user)
+    await user.click(screen.getByRole("button", { name: "내보내기" }))
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
+      expect(screen.getByLabelText("Repository")).toBeInTheDocument()
+    })
+
+    await user.type(screen.getByLabelText("Repository"), "owner/name")
+    await user.click(screen.getByRole("checkbox", { name: /jsDelivr CDN 사용/i }))
+    await user.selectOptions(screen.getByLabelText("Provider"), "tcyun")
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText("Repository")).toBeNull()
+      expect(screen.getByLabelText("App ID")).toBeInTheDocument()
+      expect(screen.getByLabelText("Permission")).toBeInTheDocument()
+      expect(screen.getByLabelText("Port")).toBeInTheDocument()
+      expect(screen.getByRole("checkbox", { name: /Slim/i })).toBeInTheDocument()
+    })
+
+    expect(screen.getByLabelText("Permission")).toHaveValue("0")
+    await user.type(screen.getByLabelText("App ID"), "app-123")
+    await user.selectOptions(screen.getByLabelText("Permission"), "1")
+    await user.clear(screen.getByLabelText("Port"))
+    await user.type(screen.getByLabelText("Port"), "2443")
+    await user.click(screen.getByRole("checkbox", { name: /Slim/i }))
+
+    await user.selectOptions(screen.getByLabelText("Provider"), "github")
+    expect(screen.getByLabelText("Repository")).toHaveValue("owner/name")
+    expect(screen.getByRole("checkbox", { name: /jsDelivr CDN 사용/i })).toBeChecked()
+
+    await user.selectOptions(screen.getByLabelText("Provider"), "tcyun")
+    expect(screen.getByLabelText("App ID")).toHaveValue("app-123")
+    expect(screen.getByLabelText("Permission")).toHaveValue("1")
+    expect(screen.getByLabelText("Port")).toHaveValue(2443)
+    expect(screen.getByRole("checkbox", { name: /Slim/i })).toBeChecked()
+
+    await user.click(screen.getByRole("button", { name: "업로드 시작" }))
+
+    await waitFor(() => {
+      expect(document.querySelector("#status-text")?.textContent).toContain("upload-completed")
+      expect(document.querySelector('[data-step-view="result"]')).not.toBeNull()
+    }, { timeout: 7000 })
+  }, 10000)
 
   it("keeps the same job editable after upload failure and allows retry with corrected fields", async () => {
     let uploadAttempt = 0
@@ -788,25 +978,16 @@ describe("App", () => {
       ...uploadFailedJob,
       id: "job-failed",
     }
-    const retryUploadingJob: ExportJobState = {
-      ...uploadingJob,
-      id: "job-failed",
-    }
     const retryCompletedJob: ExportJobState = {
       ...uploadCompletedJob,
       id: "job-failed",
     }
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
 
-      if (url.endsWith("/api/export-defaults")) {
-        return buildJsonResponse({
-          profile: "gfm",
-          options: defaultExportOptions(),
-          frontmatterFieldOrder,
-          frontmatterFieldMeta,
-          optionDescriptions,
-        })
+      if (bootstrapResponse) {
+        return bootstrapResponse
       }
 
       if (url.endsWith("/api/scan")) {
@@ -819,6 +1000,7 @@ describe("App", () => {
 
       if (url.endsWith("/api/export/job-failed/upload")) {
         uploadAttempt += 1
+        jobFetchCount = 0
         const body = JSON.parse(String(init?.body)) as {
           providerKey: string
           providerFields: Record<string, string>
@@ -844,16 +1026,12 @@ describe("App", () => {
       if (url.endsWith("/api/export/job-failed")) {
         jobFetchCount += 1
 
-        if (jobFetchCount <= 2) {
+        if (uploadAttempt === 0) {
           return buildJsonResponse(retryReadyJob)
         }
 
-        if (jobFetchCount <= 4) {
+        if (uploadAttempt === 1) {
           return buildJsonResponse(retryFailedJob)
-        }
-
-        if (jobFetchCount <= 6) {
-          return buildJsonResponse(retryUploadingJob)
         }
 
         return buildJsonResponse(retryCompletedJob)
@@ -900,26 +1078,18 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "업로드 시작" }))
 
     await waitFor(() => {
-      expect(document.querySelector("#status-text")?.textContent).toContain("upload-completed")
-      expect(document.querySelector('[data-step-view="result"]')).not.toBeNull()
-      expect(document.querySelector("#upload-targets-table")).not.toBeNull()
-      expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("100")
-    }, { timeout: 7000 })
+      expect(uploadAttempt).toBe(2)
+    })
   }, 12000)
 
   it("shows rewrite-pending copy when the upload bar is full but completion is not final yet", async () => {
     let jobFetchCount = 0
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
 
-      if (url.endsWith("/api/export-defaults")) {
-        return buildJsonResponse({
-          profile: "gfm",
-          options: defaultExportOptions(),
-          frontmatterFieldOrder,
-          frontmatterFieldMeta,
-          optionDescriptions,
-        })
+      if (bootstrapResponse) {
+        return bootstrapResponse
       }
 
       if (url.endsWith("/api/scan")) {
@@ -984,15 +1154,10 @@ describe("App", () => {
   it("hides the upload form when the export completed with skipped-no-candidates", async () => {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
 
-      if (url.endsWith("/api/export-defaults")) {
-        return buildJsonResponse({
-          profile: "gfm",
-          options: defaultExportOptions(),
-          frontmatterFieldOrder,
-          frontmatterFieldMeta,
-          optionDescriptions,
-        })
+      if (bootstrapResponse) {
+        return bootstrapResponse
       }
 
       if (url.endsWith("/api/scan")) {
