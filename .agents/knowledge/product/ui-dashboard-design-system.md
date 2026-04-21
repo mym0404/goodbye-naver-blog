@@ -8,7 +8,7 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - 브라우저 메타와 favicon: `index.html`, `src/ui/assets/favicon.svg`
 - semantic token: `src/ui/styles/globals.css`
 - 화면 표현과 반응형 레이아웃: `src/ui/**/*.tsx`의 Tailwind utility class
-- 브라우저 검증: `scripts/harness/run-ui-smoke.ts`, `docs/runbooks/browser-verification.md`
+- 브라우저 검증: `scripts/harness/run-ui-smoke.ts`, `scripts/harness/run-ui-resume-smoke.ts`, `docs/runbooks/browser-verification.md`
 
 ## 관련 코드
 - [../../../src/ui/App.tsx](../../../src/ui/App.tsx)
@@ -18,12 +18,13 @@ React 대시보드를 shadcn semantic token과 source-based component compositio
 - [../../../src/ui/features/options/export-options-panel.tsx](../../../src/ui/features/options/export-options-panel.tsx)
 - [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx)
 - [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
+- [../../../scripts/harness/run-ui-resume-smoke.ts](../../../scripts/harness/run-ui-resume-smoke.ts)
 
 ## 검증 방법
 - `pnpm typecheck`: UI 컴포넌트 조합, shared 타입, hook 시그니처가 깨지지 않았는지 빠르게 확인할 때 실행한다.
 - `pnpm test:coverage`: UI 회귀가 테스트 커버리지 게이트를 해치지 않았는지 확인할 때 실행한다.
 - `agent-browser`: UI 변경 요청에서 레이아웃, 간격, 상호작용, 실제 화면 회귀를 먼저 확인할 때 사용한다.
-- `pnpm smoke:ui`: 반복 회귀를 Playwright로 고정한 레이아웃, contrast, export/upload 흐름을 다시 확인할 때 실행한다.
+- `pnpm smoke:ui`: 반복 회귀를 Playwright로 고정한 레이아웃, contrast, export/upload 흐름과 `manifest.json` 기반 복구 흐름을 `run-ui-smoke.ts`, `run-ui-resume-smoke.ts`로 다시 확인할 때 실행한다.
 
 ## Style Direction
 - 메인 캔버스는 밝은 blue-neutral surface를 사용하고, 핵심 단계 카드 하나에 시선을 모은다.

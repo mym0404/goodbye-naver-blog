@@ -13,6 +13,7 @@
 - [../../../scripts/harness/verify-sample-exports.ts](../../../scripts/harness/verify-sample-exports.ts)
 - [../../../scripts/harness/refresh-sample-fixtures.ts](../../../scripts/harness/refresh-sample-fixtures.ts)
 - [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
+- [../../../scripts/harness/run-ui-resume-smoke.ts](../../../scripts/harness/run-ui-resume-smoke.ts)
 - [../../../scripts/harness/run-ui-live-upload.ts](../../../scripts/harness/run-ui-live-upload.ts)
 
 ## 검증 방법
@@ -35,7 +36,7 @@
   live HTML을 다시 받아 fixture를 갱신한다. 회귀 검증이 아니라 fixture 관리용이다.
 - Playwright smoke UI
   `pnpm smoke:ui`
-  mock 기반 scan/export/upload 결과 UI 흐름, contrast, 레이아웃 invariant를 확인한다.
+  mock 기반 scan/export/upload 결과 UI 흐름, 복구 Dialog/단계 복귀, contrast, 레이아웃 invariant를 확인한다.
 - Playwright live upload e2e
   `pnpm test:network:upload`
   실제 네트워크와 외부 업로드 상태를 포함한 검증이다.
@@ -55,13 +56,11 @@
 - `pnpm typecheck`: TypeScript 오류만 빠르게 다시 확인할 때 실행한다.
 - `pnpm test:offline`: 네트워크 없는 로컬 테스트만 다시 확인할 때 실행한다.
 - `pnpm test:coverage`: V8 coverage 리포트와 threshold를 다시 확인할 때 실행한다.
-- `pnpm parser:check`: capability catalog, parser fixture, sample fixture, 테스트, sample 대응이 맞는지 확인할 때 실행한다.
-- `pnpm parser:check`: capability catalog, sample fixture, parser fixture, blockType별 test hint 연결이 구조적으로 맞는지 확인할 때 실행한다.
-- `pnpm parser:check`: `parser-fixture` 분류 자체의 타당성을 자동 판정하지는 않는다. 이 판단은 capability catalog 관리 규칙으로 유지한다.
+- `pnpm parser:check`: capability catalog, parser fixture, sample fixture, 테스트/sample 연결이 구조적으로 맞는지 확인할 때 실행한다. `parser-fixture` 분류 자체의 타당성은 자동 판정하지 않는다.
 - `pnpm samples:verify`: 저장된 sample fixture가 parser -> review -> render 경로와 계속 맞는지 확인할 때 실행한다.
 - `pnpm samples:refresh -- --id <sampleId>`: 지정 sample 하나의 live HTML과 expected Markdown fixture를 갱신할 때 실행한다.
-- `pnpm smoke:ui`: Playwright로 고정한 mock 기반 scan -> category select -> export -> upload 결과 화면 회귀를 다시 확인할 때 실행한다.
-- `pnpm test:network:upload`: Playwright가 실제 브라우저 UI로 `mym0404` 공개 글 1건을 scan, scope 설정, export한 뒤 GitHub `mym0404/image-archive` `master` branch 루트 경로(`/`)로 `piclist` runtime 실업로드를 수행할 때 실행한다. 루트 `.env`에서 `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`를 읽는다.
+- `pnpm smoke:ui`: Playwright로 고정한 mock 기반 scan -> category select -> export -> upload 화면 회귀와 `manifest.json` 기반 단계 복구 회귀를 `run-ui-smoke.ts`, `run-ui-resume-smoke.ts`로 함께 확인할 때 실행한다.
+- `pnpm test:network:upload`: Playwright가 실제 브라우저 UI로 `mym0404` 공개 글 1건을 scan, scope 설정, export한 뒤 GitHub `mym0404/image-archive` `master` branch의 동적 prefix `farewell-live/<timestamp>` 아래로 `piclist` runtime 실업로드를 수행할 때 실행한다. 루트 `.env`에서 `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`를 읽는다.
 - `pnpm quality:report`: parser block fixture/test hint coverage와 capability/sample coverage generated 품질 리포트를 다시 만들 때 실행한다.
 
 ## 보장하지 않는 것
@@ -75,7 +74,7 @@
 ## Hook And CI
 - 로컬 git hook은 저장소 설정으로 관리하지 않는다.
 - PR CI는 `pnpm check:full`, `pnpm test:network:upload`, `pnpm test:coverage`를 실행하고 `coverage/lcov.info`를 Codecov로 업로드한다.
-- 실업로드 step은 GitHub `mym0404/image-archive` 저장소, `master` branch, 루트 경로(`/`)를 고정값으로 사용한다. GitHub Actions에서는 repository secret `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`로 `.env`를 만들어 실행한다.
+- 실업로드 step은 GitHub `mym0404/image-archive` 저장소와 `master` branch를 고정값으로 사용하고, path는 run마다 `farewell-live/<timestamp>` prefix를 만든다. GitHub Actions에서는 repository secret `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`로 `.env`를 만들어 실행한다.
 - fork PR에서는 기본 `pull_request` 보안 모델상 secret이 주입되지 않으므로 live upload step이 실패할 수 있다.
 
 ## Task Loops
