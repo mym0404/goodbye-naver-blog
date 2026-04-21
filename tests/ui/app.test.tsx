@@ -982,9 +982,6 @@ describe("App", () => {
       expect(document.querySelector("#job-file-tree")).not.toBeNull()
       expect(document.querySelector("#job-file-tree")?.textContent).toContain("NestJS/2026-04-11-1/index.md")
       expect(document.querySelector("#job-file-tree")?.textContent).toContain("업로드 상태")
-      expect(document.querySelector("#status-panel")?.textContent).toContain(
-        "내보내기 결과와 업로드 상태를 같은 표에서 확인한 뒤 업로드를 이어서 진행합니다.",
-      )
     })
 
     fireEvent.change(screen.getByLabelText(/^Repository\b/), {
@@ -1017,7 +1014,6 @@ describe("App", () => {
       expect(document.querySelector("#status-text")?.textContent).toContain("uploading")
       expect(document.querySelector('[data-step-view="upload"]')).not.toBeNull()
       expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("75")
-      expect(document.querySelector("#status-panel")?.textContent).toContain("업로드한 자산 수를 같은 작업에서 실시간으로 확인합니다.")
       expect(document.querySelector("#upload-form")).toBeNull()
       expect(document.querySelector('#job-file-tree [data-upload-row-id="NestJS/2026-04-11-1/index.md"]')?.getAttribute("data-upload-row-status")).toBe("complete")
       expect(document.querySelector('#job-file-tree [data-upload-row-id="React/2026-04-12-2/index.md"]')?.getAttribute("data-upload-row-status")).toBe("partial")
@@ -1045,9 +1041,6 @@ describe("App", () => {
       expect(secondUploadRow?.querySelectorAll("a")).toHaveLength(2)
       expect(document.querySelector('[data-job-item-id="NestJS/2026-04-11-1/index.md"]')?.textContent).toContain("2026-04-11-1")
       expect(document.querySelector("#job-file-tree")?.textContent).toContain("NestJS/2026-04-11-1/index.md")
-      expect(document.querySelector("#status-panel")?.textContent).toContain(
-        "업로드 결과와 대상별 상태를 최종 결과와 함께 확인합니다.",
-      )
     }, { timeout: 7000 })
   }, 10000)
 
@@ -1391,9 +1384,6 @@ describe("App", () => {
     await waitFor(() => {
       expect(document.querySelector("#status-text")?.textContent).toContain("uploading")
       expect(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow")).toBe("100")
-      expect(document.querySelector("#status-panel")?.textContent).toContain(
-        "자산 업로드는 끝났고 결과 파일에 URL을 반영하는 중입니다.",
-      )
       expect(document.querySelector("#upload-form")).toBeNull()
     })
   })

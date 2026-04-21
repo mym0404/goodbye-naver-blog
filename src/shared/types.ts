@@ -348,6 +348,7 @@ export type PostManifestEntry = {
   warnings: string[]
   warningCount: number
   error: string | null
+  externalPreviewUrl?: string | null
 }
 
 export type ExportJobItem = {

@@ -805,6 +805,13 @@ describe("http server", () => {
     expect(uploadPhaseRunner).toHaveBeenCalledTimes(1)
     expect(completedJob.upload.status).toBe("upload-completed")
     expect(completedJob.upload.uploadedCount).toBe(completedJob.upload.candidateCount)
+    expect(completedJob.items[0]?.upload.uploadedUrls).toHaveLength(1)
+    expect(completedJob.items[0]?.upload.uploadedUrls[0]).toMatch(
+      /^https:\/\/cdn\.example\.com\/public\/[a-f0-9]{64}\.png$/,
+    )
+    expect(completedJob.items[0]?.externalPreviewUrl).toMatch(
+      /^https:\/\/markdownviewer\.pages\.dev\/#share=/,
+    )
     expect(serializedJob).not.toContain("providerFields")
     expect(serializedJob).not.toContain("ghp_test_upload_token")
     expect(serializedJob).not.toContain("owner/name")

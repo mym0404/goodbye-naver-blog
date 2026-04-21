@@ -302,6 +302,7 @@ export class NaverBlogExporter {
             warnings: rendered.warnings,
             warningCount: warningCountForPost,
             error: null,
+            externalPreviewUrl: buildMarkdownViewerShareUrl(rendered.markdown),
           } satisfies PostManifestEntry
 
 	          pendingResults.set(index, {
@@ -344,6 +345,7 @@ export class NaverBlogExporter {
             warnings: [],
             warningCount: 0,
             error: toErrorMessage(error),
+            externalPreviewUrl: null,
           } satisfies PostManifestEntry
 
 	          pendingResults.set(index, {

@@ -361,13 +361,24 @@ describe("JobResultsPanel upload provider UX", () => {
     const resultsTable = document.querySelector("#job-file-tree table")
 
     expect(resultsTable).not.toBeNull()
-    expect(screen.getByText("완료된 결과를 먼저 확인하면서 업로드 대상 상태도 같은 표에서 이어서 봅니다.")).toBeInTheDocument()
     expect(within(resultsTable as HTMLElement).getByText("업로드 상태")).toBeInTheDocument()
     expect(
       document.querySelector('#job-file-tree [data-upload-row-id="posts/first/index.md"]')?.getAttribute(
         "data-upload-row-status",
       ),
     ).toBe("pending")
+  })
+
+  it("uses smaller table typography when upload columns are visible", () => {
+    renderPanel()
+
+    const resultsTable = document.querySelector("#job-file-tree table")
+    const firstHeader = document.querySelector("#job-file-tree thead th")
+    const firstBadge = document.querySelector('[data-upload-row-status-badge="pending"]')
+
+    expect(resultsTable).toHaveClass("text-[11px]", "min-w-[44rem]")
+    expect(firstHeader).toHaveClass("text-[10px]")
+    expect(firstBadge).toHaveClass("text-[10px]")
   })
 
   it("hides upload columns when the job did not request upload", () => {

@@ -123,15 +123,15 @@ const stepMeta: Record<
   },
   running: {
     title: "실행 중",
-    description: "현재 작업의 진행률과 로그를 확인합니다.",
+    description: "",
   },
   upload: {
     title: "이미지 업로드",
-    description: "업로드할 이미지와 진행 상태를 확인합니다.",
+    description: "",
   },
   result: {
     title: "결과",
-    description: "최종 요약과 생성된 파일을 확인합니다.",
+    description: "",
   },
 }
 
@@ -942,9 +942,11 @@ export const App = () => {
                   <h1 className="text-[clamp(1.7rem,2.5vw,2.4rem)] font-semibold leading-[1.04] tracking-[-0.05em] text-slate-900">
                     {stepMeta[currentStep].title}
                   </h1>
-                  <p className="panel-description max-w-3xl text-sm leading-6 text-slate-600">
-                    {stepMeta[currentStep].description}
-                  </p>
+                  {stepMeta[currentStep].description ? (
+                    <p className="panel-description max-w-3xl text-sm leading-6 text-slate-600">
+                      {stepMeta[currentStep].description}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 

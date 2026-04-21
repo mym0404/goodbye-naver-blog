@@ -598,9 +598,11 @@ const assertUploadRowStatus = async ({
 const assertUploadTargetsBounded = async ({
   page,
   label,
+  expectHorizontalScroll = false,
 }: {
   page: import("playwright").Page
   label: string
+  expectHorizontalScroll?: boolean
 }) => {
   const bounded = await page.evaluate(() => {
     const root = document.querySelector<HTMLElement>("#job-file-tree")
@@ -613,6 +615,7 @@ const assertUploadTargetsBounded = async ({
     }
 
     const rootStyles = window.getComputedStyle(root)
+    const rootRect = root.getBoundingClientRect()
     const tableRect = table.getBoundingClientRect()
     const sectionRect = section.getBoundingClientRect()
 
@@ -622,6 +625,8 @@ const assertUploadTargetsBounded = async ({
         rootStyles.maxHeight !== "0px" &&
         Number.parseFloat(rootStyles.maxHeight) > 0,
       viewportHasInternalOverflow: viewport.scrollHeight > viewport.clientHeight,
+      viewportHasHorizontalOverflow: table.scrollWidth > viewport.clientWidth + 1,
+      rootFitsPanel: rootRect.width <= sectionRect.width + 1,
       tableFitsPanel: tableRect.width <= sectionRect.width + 1,
     }
   })
@@ -634,8 +639,16 @@ const assertUploadTargetsBounded = async ({
     throw new Error(`${label} missing internal upload table overflow`)
   }
 
-  if (!bounded.tableFitsPanel) {
+  if (!bounded.rootFitsPanel) {
+    throw new Error(`${label} upload table container overflowed its panel`)
+  }
+
+  if (!expectHorizontalScroll && !bounded.tableFitsPanel) {
     throw new Error(`${label} upload table overflowed its panel`)
+  }
+
+  if (expectHorizontalScroll && !bounded.viewportHasHorizontalOverflow) {
+    throw new Error(`${label} should keep horizontal room for the upload table`)
   }
 }
 
@@ -1691,6 +1704,7 @@ const run = async () => {
     await assertUploadTargetsBounded({
       page,
       label: "mobile upload flow",
+      expectHorizontalScroll: true,
     })
 
     await page.setViewportSize(desktopViewport)
@@ -1716,12 +1730,7 @@ const run = async () => {
     }
 
     await page.waitForFunction(
-      () =>
-        document.querySelector("#status-text")?.textContent?.trim() === "uploading" &&
-        (document.querySelector("#status-panel")?.textContent?.includes(
-          "자산 업로드는 끝났고 결과 파일에 URL을 반영하는 중입니다.",
-        ) ??
-          false),
+      () => document.querySelector("#status-text")?.textContent?.trim() === "uploading",
       undefined,
       { timeout: 10_000 },
     )
@@ -1733,12 +1742,6 @@ const run = async () => {
 
     if (rewritePendingProgress < 95) {
       throw new Error("rewrite-pending state did not keep a full upload bar")
-    }
-
-    const rewritePendingText = await page.locator("#status-panel").textContent()
-
-    if (!rewritePendingText?.includes("자산 업로드는 끝났고 결과 파일에 URL을 반영하는 중입니다.")) {
-      throw new Error("rewrite-pending state did not expose the rewrite copy")
     }
 
     await waitForJobStatus({

@@ -186,15 +186,15 @@ const jobStatusClass = (status: string | undefined) =>
 const panelCopy: Record<JobResultsMode, { title: string; description: string }> = {
   running: {
     title: "실행 중",
-    description: "진행률과 작업 로그를 확인합니다.",
+    description: "",
   },
   upload: {
     title: "이미지 업로드",
-    description: "업로드할 이미지와 재시도 상태를 확인합니다.",
+    description: "",
   },
   result: {
     title: "결과",
-    description: "최종 요약과 생성된 파일을 확인합니다.",
+    description: "",
   },
 }
 
@@ -276,57 +276,9 @@ const shouldShowUploadColumns = (job: ExportJobState | null) =>
   job?.request.options.assets.imageHandlingMode === "download-and-upload" ||
   job?.upload.status !== "not-requested"
 
-const buildResultsPanelDescription = ({
-  mode,
-  showUploadColumns,
-}: {
-  mode: JobResultsMode
-  showUploadColumns: boolean
-}) => {
-  if (mode === "running") {
-    return showUploadColumns
-      ? "완료된 결과를 먼저 확인하면서 업로드 대상 상태도 같은 표에서 이어서 봅니다."
-      : "완료된 결과가 생기는 대로 같은 표에서 바로 확인합니다."
-  }
+const buildResultsPanelDescription = () => ""
 
-  if (mode === "upload") {
-    return showUploadColumns
-      ? "내보내기 결과와 업로드 상태를 같은 표에서 확인한 뒤 업로드를 이어서 진행합니다."
-      : "내보내기 결과를 먼저 확인한 뒤 업로드를 이어서 진행할 수 있습니다."
-  }
-
-  return showUploadColumns
-    ? "생성된 파일과 업로드 상태를 같은 표에서 확인합니다."
-    : "생성된 파일과 상태를 확인합니다."
-}
-
-const buildUploadPanelCopy = (job: ExportJobState | null) => {
-  if (!job) {
-    return "업로드 대상과 진행 상태를 같은 작업에서 이어서 확인합니다."
-  }
-
-  if (
-    job.status === "uploading" &&
-    job.upload.candidateCount > 0 &&
-    job.upload.uploadedCount === job.upload.candidateCount
-  ) {
-    return "자산 업로드는 끝났고 결과 파일에 URL을 반영하는 중입니다."
-  }
-
-  if (job.status === "uploading") {
-    return "업로드한 자산 수를 같은 작업에서 실시간으로 확인합니다."
-  }
-
-  if (job.status === "upload-failed") {
-    return "업로드한 자산 수는 유지한 채 실패 상태를 확인하고 다시 시도할 수 있습니다."
-  }
-
-  if (job.status === "upload-completed") {
-    return "업로드 결과와 대상별 상태를 최종 결과와 함께 확인합니다."
-  }
-
-  return "업로드 대상과 진행 상태를 같은 작업에서 이어서 확인합니다."
-}
+const buildUploadPanelCopy = () => ""
 
 const buildUploadedLinkMeta = (item: ExportJobState["items"][number]) =>
   (Array.isArray(item.upload.uploadedUrls) ? item.upload.uploadedUrls : []).reduce<
@@ -456,9 +408,11 @@ export const JobResultsPanel = ({
           <CardTitle className="section-title text-2xl font-semibold tracking-[-0.04em] text-slate-900">
             {panelCopy[mode].title}
           </CardTitle>
-          <CardDescription className="panel-description max-w-3xl text-sm leading-7 text-slate-600">
-            {panelCopy[mode].description}
-          </CardDescription>
+          {panelCopy[mode].description ? (
+            <CardDescription className="panel-description max-w-3xl text-sm leading-7 text-slate-600">
+              {panelCopy[mode].description}
+            </CardDescription>
+          ) : null}
         </div>
         <Badge className={jobStatusClass(job?.status)} data-status={job?.status ?? "idle"}>
           {job?.status ?? "Idle"}
@@ -496,11 +450,13 @@ export const JobResultsPanel = ({
         {showUploadPanel ? (
           <section className="upload-panel grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
             <div className="grid gap-3 lg:flex lg:items-start lg:justify-between">
-              <div>
-                <CardDescription className="text-sm leading-7 text-slate-600">
-                  {buildUploadPanelCopy(job)}
-                </CardDescription>
-              </div>
+              {buildUploadPanelCopy() ? (
+                <div>
+                  <CardDescription className="text-sm leading-7 text-slate-600">
+                    {buildUploadPanelCopy()}
+                  </CardDescription>
+                </div>
+              ) : null}
               <CompactMetrics
                 items={[
                   { label: "대상 글", value: String(job?.upload.eligiblePostCount ?? 0) },
@@ -926,14 +882,13 @@ export const JobResultsPanel = ({
         {showExportResults ? (
           <section className="job-results-panel grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
             <div className="job-results-header grid gap-4 lg:flex lg:items-start lg:justify-between">
-              <div>
-                <CardDescription className="results-description text-sm leading-7 text-slate-600">
-                  {buildResultsPanelDescription({
-                    mode,
-                    showUploadColumns,
-                  })}
-                </CardDescription>
-              </div>
+              {buildResultsPanelDescription() ? (
+                <div>
+                  <CardDescription className="results-description text-sm leading-7 text-slate-600">
+                    {buildResultsPanelDescription()}
+                  </CardDescription>
+                </div>
+              ) : null}
               <div
                 className="job-filter-group flex flex-wrap items-center gap-2"
                 role="tablist"
@@ -970,15 +925,20 @@ export const JobResultsPanel = ({
                 id="job-file-tree"
                 className="job-file-tree job-file-tree-scroll max-h-[min(32rem,62vh)] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white"
               >
-                <Table className="w-full table-fixed">
+                <Table
+                  className={cn(
+                    "w-full text-[11px] sm:text-xs",
+                    showUploadColumns ? "min-w-[44rem] table-auto" : "table-fixed",
+                  )}
+                >
                   <TableHeader className="sticky top-0 z-10">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className={showUploadColumns ? "w-[24%]" : "w-[36%]"}>파일</TableHead>
-                      <TableHead className={showUploadColumns ? "w-[24%]" : "w-[36%]"}>경로</TableHead>
-                      {showUploadColumns ? <TableHead className="w-[16%]">업로드</TableHead> : null}
-                      {showUploadColumns ? <TableHead className="w-[14%]">업로드 상태</TableHead> : null}
-                      <TableHead className="w-24">상태</TableHead>
-                      <TableHead className="w-16">경고</TableHead>
+                      <TableHead className={showUploadColumns ? "w-[11rem] text-[10px] sm:text-[11px]" : "w-[36%] text-[10px] sm:text-[11px]"}>파일</TableHead>
+                      <TableHead className={showUploadColumns ? "w-[12rem] text-[10px] sm:text-[11px]" : "w-[36%] text-[10px] sm:text-[11px]"}>경로</TableHead>
+                      {showUploadColumns ? <TableHead className="w-[6.5rem] text-[10px] sm:text-[11px]">업로드</TableHead> : null}
+                      {showUploadColumns ? <TableHead className="w-[5.5rem] text-[10px] sm:text-[11px]">업로드 상태</TableHead> : null}
+                      <TableHead className="w-20 text-[10px] sm:text-[11px]">상태</TableHead>
+                      <TableHead className="w-14 text-[10px] sm:text-[11px]">경고</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1015,12 +975,12 @@ export const JobResultsPanel = ({
                         >
                           <TableCell className="min-w-0 align-top">
                             <div
-                              className="job-results-row grid min-h-0 w-full min-w-0 whitespace-normal rounded-xl px-2 py-1.5 text-left"
+                              className="job-results-row grid min-h-0 w-full min-w-0 whitespace-normal rounded-xl px-1.5 py-1 text-left"
                               data-job-item-id={item.id}
                               data-severity={severity}
                             >
                               <span className="grid min-w-0 gap-0.5">
-                                <strong className="break-all text-sm font-semibold text-slate-900">
+                                <strong className="break-words text-[12px] font-semibold leading-5 text-slate-900 sm:text-sm">
                                   {pathMeta.fileLabel}
                                 </strong>
                                 {externalPreviewUrl ? (
@@ -1028,7 +988,7 @@ export const JobResultsPanel = ({
                                     href={externalPreviewUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex w-fit items-center gap-1 text-xs font-medium text-sky-700 underline underline-offset-2"
+                                    className="inline-flex w-fit items-center gap-1 text-[10px] font-medium text-sky-700 underline underline-offset-2 sm:text-xs"
                                     data-job-item-preview-link
                                     aria-label={`${item.title} 미리보기`}
                                   >
@@ -1036,31 +996,31 @@ export const JobResultsPanel = ({
                                     <span>미리보기</span>
                                   </a>
                                 ) : null}
-                                <span className="whitespace-normal break-words text-xs leading-5 text-slate-500">
+                                <span className="whitespace-normal break-words text-[11px] leading-5 text-slate-500 sm:text-xs">
                                   {item.title}
                                 </span>
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell className="align-top text-xs text-slate-600">
+                          <TableCell className="align-top text-[11px] text-slate-600 sm:text-xs">
                             <div className="grid gap-0.5">
-                              <span className="whitespace-normal break-all leading-5">
+                              <span className="whitespace-normal break-words leading-5">
                                 {pathMeta.directoryLabel}
                               </span>
-                              <span className="whitespace-normal break-all text-slate-400">
+                              <span className="whitespace-normal break-words text-slate-400">
                                 {pathMeta.outputLabel}
                               </span>
                             </div>
                           </TableCell>
                           {showUploadColumns ? (
-                            <TableCell className="align-top text-sm text-slate-700">
+                            <TableCell className="align-top text-[11px] text-slate-700 sm:text-xs">
                               {hasUploadCandidate ? (
                                 <div className="grid gap-1">
                                   <span>
                                     {item.upload.uploadedCount} / {item.upload.candidateCount}
                                   </span>
                                   {uploadedLinks.length > 0 ? (
-                                    <div className="flex flex-wrap gap-2 text-xs">
+                                    <div className="flex flex-wrap gap-1.5 text-[10px] sm:text-xs">
                                       {uploadedLinks.map((link) => (
                                         <a
                                           key={`${item.id}:${link.label}`}
@@ -1085,7 +1045,10 @@ export const JobResultsPanel = ({
                               {uploadRowStatus ? (
                                 <Badge
                                   variant="outline"
-                                  className={uploadRowBadgeClass(uploadRowStatus.key)}
+                                  className={cn(
+                                    "text-[10px] sm:text-[11px]",
+                                    uploadRowBadgeClass(uploadRowStatus.key),
+                                  )}
                                   data-upload-row-status-badge={uploadRowStatus.key}
                                 >
                                   {uploadRowStatus.label}
@@ -1097,13 +1060,13 @@ export const JobResultsPanel = ({
                           ) : null}
                           <TableCell className="align-top">
                             <Badge
-                              className="min-w-16 justify-center rounded-full px-2.5 py-0.5"
+                              className="min-w-14 justify-center rounded-full px-2 py-0.5 text-[10px] sm:min-w-16 sm:px-2.5 sm:text-[11px]"
                               variant={severity === "success" ? "secondary" : meta.badge}
                             >
                               {meta.label}
                             </Badge>
                           </TableCell>
-                          <TableCell className="align-top text-sm font-medium text-slate-700">
+                          <TableCell className="align-top text-[11px] font-medium text-slate-700 sm:text-xs">
                             {item.warningCount > 0 ? item.warningCount : "0"}
                           </TableCell>
                         </TableRow>

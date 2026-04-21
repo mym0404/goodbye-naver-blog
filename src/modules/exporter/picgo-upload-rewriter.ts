@@ -91,10 +91,12 @@ const buildUpdatedPost = ({
       uploadedUrls.push(matchedResult.uploadedUrl)
     }
 
+    const externalPreviewUrl = buildMarkdownViewerShareUrl(rewrittenMarkdown)
+
     return {
       markdownPath,
       rewrittenMarkdown,
-      externalPreviewUrl: buildMarkdownViewerShareUrl(rewrittenMarkdown),
+      externalPreviewUrl,
       post: {
         ...post,
         assetPaths: post.assetPaths.map((assetPath) => resultByReference.get(assetPath) ?? assetPath),
@@ -104,6 +106,7 @@ const buildUpdatedPost = ({
           failedCount: 0,
           uploadedUrls,
         },
+        externalPreviewUrl,
       } satisfies PostManifestEntry,
     }
   })

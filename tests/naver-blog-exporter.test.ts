@@ -221,6 +221,9 @@ describe("NaverBlogExporter", () => {
     expect(writtenManifest.successCount).toBe(1)
     expect(writtenManifest.posts[0]?.outputPath).toMatch(/index\.md$/)
     expect(writtenManifest.posts[0]?.upload.candidateCount).toBe(0)
+    expect(writtenManifest.posts[0]?.externalPreviewUrl).toMatch(
+      /^https:\/\/markdownviewer\.pages\.dev\/#share=/,
+    )
 
     await rm(outputDir, { recursive: true, force: true })
   })
@@ -627,6 +630,9 @@ describe("NaverBlogExporter", () => {
 	      expect(writtenManifest.upload.status).toBe("upload-completed")
 	      expect(writtenManifest.posts[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
 	      expect(writtenManifest.posts[0]?.upload.uploadedUrls).toEqual(["https://cdn.example.com/shared.png"])
+	      expect(writtenManifest.posts[0]?.externalPreviewUrl).toMatch(
+	        /^https:\/\/markdownviewer\.pages\.dev\/#share=/,
+	      )
 	      expect(rewritten.items[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
 	      expect(rewritten.items[0]?.upload.uploadedUrls).toEqual(["https://cdn.example.com/shared.png"])
 	      expect(rewritten.items[0]?.externalPreviewUrl).toMatch(
