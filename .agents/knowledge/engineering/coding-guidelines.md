@@ -25,6 +25,6 @@
 
 ## Documentation Discipline
 - evergreen 지식은 `.agents/knowledge/`가 기준이다.
-- `.agents/knowledge/reference/runbooks/`는 반복 가능한 운영 절차, `.agents/knowledge/reference/generated/`는 harness 산출물이다.
+- `.agents/knowledge/reference/runbooks/`는 반복 가능한 운영 절차, `.agents/knowledge/reference/plan-archive/`는 완료된 큰 변경 기록, `.agents/knowledge/reference/troubleshooting/`는 재발 방지 메모, `.agents/knowledge/reference/generated/`는 harness 산출물이다.
 - 코드 동작이 바뀌면 knowledge와 관련 docs를 같이 갱신한다.
 - `README.md`는 사용자 진입, `CONTRIBUTING.md`는 기여자 진입 문서로 유지한다.

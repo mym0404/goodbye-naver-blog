@@ -8,10 +8,14 @@
 - 디자인 기준 문서: [../DESIGN.md](../DESIGN.md)
 - 브라우저 수동 검증: [./runbooks/browser-verification.md](./runbooks/browser-verification.md)
 - 단건 글 수동 검증: [./runbooks/single-post-verification.md](./runbooks/single-post-verification.md)
+- 플랜 아카이브: [./plan-archive/index.md](./plan-archive/index.md)
+- 트러블슈팅: [./troubleshooting/index.md](./troubleshooting/index.md)
 
 ## 참고 자료
 - runbooks: `./runbooks/`
 - generated 보고서: `./generated/`
+- 플랜 아카이브: `./plan-archive/`
+- 트러블슈팅: `./troubleshooting/`
 - README 이미지 자산: `./assets/readme/`
 
 ## generated 출력

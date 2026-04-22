@@ -25,6 +25,7 @@
 - evergreen 프로젝트 지식은 라우터 트리 [.agents/knowledge/index.md](.agents/knowledge/index.md)에서 시작한다.
 - 실제 source of truth 우선순위는 사용자 지시와 이 문서, 코드/설정/테스트, evergreen knowledge, reference/generated 문서 순서다.
 - `.agents/knowledge/reference/`와 generated 보고서는 참고 자료다. 실제 제품 계약을 대신하지 않는다.
+- 큰 변경의 완료 기록은 `.agents/knowledge/reference/plan-archive/`에, 재발 방지 성격의 이슈 정리는 `.agents/knowledge/reference/troubleshooting/`에 남긴다.
 - 영속적인 UI 설정과 서버 파일 캐시는 작업 산출물 폴더가 아니라 `.cache/` 아래에 저장한다. 런타임 산출물만 저장한다.
 - 사용자용 HMR 개발 서버는 `pnpm dev`와 `4173` 포트를 기준으로 본다. AI agent, test, harness가 로컬 서버를 직접 띄울 때는 `pnpm dev`를 그대로 쓰지 않고, 공유 `.cache/export-ui-settings.json`을 피하는 별도 `FAREWELL_SETTINGS_PATH`, `FAREWELL_SCAN_CACHE_PATH`와 `4173`이 아닌 `PORT` 또는 `listen(0)` 기반 entry를 사용한다.
 - 저장소 파일을 수정한 턴에서는 범위와 무관하게 `pnpm check:local`을 항상 실행한다. 이 명령이 가장 기본 검사다.
@@ -56,4 +57,4 @@
 - capability 카탈로그, 모듈 경계, export/server 파이프라인은 [.agents/knowledge/architecture/index.md](.agents/knowledge/architecture/index.md)로 간다.
 - 도메인 제약, 출력 규약, sample corpus 운영은 [.agents/knowledge/product/index.md](.agents/knowledge/product/index.md)로 간다.
 - UI 규칙과 primitive/token 계약은 [.agents/knowledge/DESIGN.md](.agents/knowledge/DESIGN.md)에서 본다.
-- runbook, generated 보고서, README 자산은 [.agents/knowledge/reference/index.md](.agents/knowledge/reference/index.md)로 내려간다.
+- runbook, generated 보고서, 플랜 아카이브, 트러블슈팅, README 자산은 [.agents/knowledge/reference/index.md](.agents/knowledge/reference/index.md)로 내려간다.
