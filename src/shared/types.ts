@@ -99,6 +99,13 @@ export type UploadProviderCatalogResponse = {
   providers: UploadProviderDefinition[]
 }
 
+export type ExportJobPollingConfig = {
+  defaultPollMs: number
+  fastPollMs: number
+  uploadBurstPollMs: number
+  uploadBurstAttempts: number
+}
+
 export type UploadTerminalReason = "skipped-no-candidates"
 
 export type UploadRewriteStatus = "pending" | "completed" | "failed"

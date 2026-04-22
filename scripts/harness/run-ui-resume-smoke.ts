@@ -11,7 +11,9 @@ import {
   frontmatterFieldOrder,
   optionDescriptions,
 } from "../../src/shared/export-options.js"
+import { mapConcurrent } from "../../src/shared/utils.js"
 import type {
+  ExportJobPollingConfig,
   ExportJobItem,
   ExportJobState,
   ExportResumeSummary,
@@ -26,6 +28,20 @@ const desktopViewport = {
 } as const
 
 const responseTimeoutMs = 30_000
+const smokeFast = process.env.FAREWELL_SMOKE_FAST !== "0"
+const resumeScenarioConcurrency = Math.max(
+  1,
+  Number.parseInt(process.env.FAREWELL_RESUME_SMOKE_CONCURRENCY ?? "3", 10) || 3,
+)
+const resumeDialogSettledWaitMs = smokeFast ? 75 : 300
+const smokeJobPolling: ExportJobPollingConfig | undefined = smokeFast
+  ? {
+      defaultPollMs: 100,
+      fastPollMs: 50,
+      uploadBurstPollMs: 25,
+      uploadBurstAttempts: 8,
+    }
+  : undefined
 
 const buildJsonResponse = (body: unknown, status = 200) => ({
   status,
@@ -517,7 +533,7 @@ const closeDialog = async (page: import("playwright").Page) => {
 }
 
 const assertNoDialog = async (page: import("playwright").Page) => {
-  await page.waitForTimeout(300)
+  await page.waitForTimeout(resumeDialogSettledWaitMs)
   if (await page.getByRole("dialog").count()) {
     throw new Error("unexpected resume dialog")
   }
@@ -550,6 +566,7 @@ const createBootstrap = ({
   options: defaultExportOptions(),
   lastOutputDir,
   themePreference: "dark" as const,
+  jobPolling: smokeJobPolling,
   resumedJob,
   resumeSummary: resumedJob ? buildResumeSummary(resumedJob) : null,
   resumedScanResult: resumedJob ? resumedScanResult : null,
@@ -1125,21 +1142,25 @@ const run = async () => {
   ]
 
   try {
-    for (const scenario of scenarios) {
-      try {
-        await runScenario({
-          browser,
-          baseUrl,
-          scenario,
-        })
-      } catch (error) {
-        throw new Error(
-          `resume smoke failed: ${scenario.id}: ${error instanceof Error ? error.message : String(error)}`,
-        )
-      }
-    }
+    await mapConcurrent({
+      items: scenarios,
+      concurrency: resumeScenarioConcurrency,
+      mapper: async (scenario) => {
+        try {
+          await runScenario({
+            browser,
+            baseUrl,
+            scenario,
+          })
+        } catch (error) {
+          throw new Error(
+            `resume smoke failed: ${scenario.id}: ${error instanceof Error ? error.message : String(error)}`,
+          )
+        }
+      },
+    })
 
-    console.log(`resume smoke passed (${scenarios.length} scenarios)`)
+    console.log(`resume smoke passed (${scenarios.length} scenarios, concurrency=${resumeScenarioConcurrency})`)
   } finally {
     await browser.close()
     server.close()

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 
 import type {
+  ExportJobPollingConfig,
   ExportJobState,
   ExportOptions,
   ScanResult,
@@ -21,10 +22,39 @@ const terminalStatuses = new Set([
   "failed",
 ])
 const fastPollingStatuses = new Set(["uploading"])
-const defaultPollMs = 1000
-const fastPollMs = 250
-const uploadBurstPollMs = 200
-const uploadBurstAttempts = 12
+const defaultJobPollingConfig: ExportJobPollingConfig = {
+  defaultPollMs: 1000,
+  fastPollMs: 250,
+  uploadBurstPollMs: 200,
+  uploadBurstAttempts: 12,
+}
+let activeJobPollingConfig = defaultJobPollingConfig
+
+const normalizePositiveInteger = (value: unknown, fallback: number) => {
+  const parsed = Number(value)
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
+}
+
+export const setExportJobPollingConfig = (config?: Partial<ExportJobPollingConfig>) => {
+  if (!config) {
+    activeJobPollingConfig = defaultJobPollingConfig
+    return
+  }
+
+  activeJobPollingConfig = {
+    defaultPollMs: normalizePositiveInteger(config.defaultPollMs, defaultJobPollingConfig.defaultPollMs),
+    fastPollMs: normalizePositiveInteger(config.fastPollMs, defaultJobPollingConfig.fastPollMs),
+    uploadBurstPollMs: normalizePositiveInteger(
+      config.uploadBurstPollMs,
+      defaultJobPollingConfig.uploadBurstPollMs,
+    ),
+    uploadBurstAttempts: normalizePositiveInteger(
+      config.uploadBurstAttempts,
+      defaultJobPollingConfig.uploadBurstAttempts,
+    ),
+  }
+}
 
 const wait = (ms: number) =>
   new Promise<void>((resolve) => {
@@ -53,7 +83,9 @@ export const useExportJob = () => {
     restartPollingRef.current = false
 
     const scheduleNextLoad = (status: ExportJobState["status"] | null | undefined) => {
-      const nextDelay = fastPollingStatuses.has(status ?? "") ? fastPollMs : defaultPollMs
+      const nextDelay = fastPollingStatuses.has(status ?? "")
+        ? activeJobPollingConfig.fastPollMs
+        : activeJobPollingConfig.defaultPollMs
 
       timeoutId = window.setTimeout(() => {
         void load()
@@ -172,7 +204,7 @@ export const useExportJob = () => {
       setPollVersion((current) => current + 1)
       let nextJob: ExportJobState | null = null
 
-      for (let attempt = 0; attempt < uploadBurstAttempts; attempt += 1) {
+      for (let attempt = 0; attempt < activeJobPollingConfig.uploadBurstAttempts; attempt += 1) {
         nextJob = await fetchJson<ExportJobState>(`/api/export/${jobId}`)
         displayedJobRef.current = nextJob
         setJob(nextJob)
@@ -187,7 +219,7 @@ export const useExportJob = () => {
           break
         }
 
-        await wait(uploadBurstPollMs)
+        await wait(activeJobPollingConfig.uploadBurstPollMs)
       }
 
       return response

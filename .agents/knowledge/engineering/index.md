@@ -5,6 +5,7 @@
 - 구현 우선순위와 문서 경계: [coding-guidelines.md](./coding-guidelines.md)
 - 패키지 스크립트, 훅, CI, 재검증 루프: [validation.md](./validation.md)
 - capability/sample/UI harness 역할: [harness-engineering-notes.md](./harness-engineering-notes.md)
+- shadcn 설치 목록, 현재 사용처, chooser 기준: [shadcn-component-map.md](./shadcn-component-map.md)
 
 ## 대표 기준점
 - 저장소 명령과 검증 루프: [../../../package.json](../../../package.json)

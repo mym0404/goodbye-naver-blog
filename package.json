@@ -17,7 +17,7 @@
     "parser:check": "tsx scripts/harness/check-parser-capabilities.ts",
     "samples:verify": "tsx scripts/harness/verify-sample-exports.ts",
     "samples:refresh": "tsx scripts/harness/refresh-sample-fixtures.ts",
-    "smoke:ui": "pnpm build:ui && tsx scripts/harness/run-ui-smoke.ts && tsx scripts/harness/run-ui-resume-smoke.ts",
+    "smoke:ui": "pnpm build:ui && tsx scripts/harness/run-ui-smoke-suite.ts",
     "quality:report": "tsx scripts/harness/generate-quality-report.ts",
     "check:local": "pnpm typecheck && pnpm test:offline && pnpm parser:check",
     "check:quick": "pnpm check:local",

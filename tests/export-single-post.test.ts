@@ -141,7 +141,7 @@ describe("exportSinglePost", () => {
         outputDir,
         "Tech",
         "JavaScript",
-        "2024-01-02-single-post",
+        "2024-01-02-single_post",
         "index.md",
       )
 

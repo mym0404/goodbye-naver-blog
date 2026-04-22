@@ -1,4 +1,5 @@
 import type {
+  ExportJobPollingConfig,
   ExportJobState,
   ExportOptions,
   ExportResumeSummary,
@@ -15,6 +16,7 @@ export type ExportBootstrapResponse = {
   options: ExportOptions
   lastOutputDir: string
   themePreference: ThemePreference
+  jobPolling?: ExportJobPollingConfig
   resumedJob: ExportJobState | null
   resumeSummary: ExportResumeSummary | null
   resumedScanResult: ScanResult | null

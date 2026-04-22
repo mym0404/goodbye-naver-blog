@@ -12,9 +12,42 @@ import {
   frontmatterFieldOrder,
   optionDescriptions,
 } from "../../src/shared/export-options.js"
-import type { UploadProviderCatalogResponse, UploadProviderValue } from "../../src/shared/types.js"
+import type {
+  ExportJobPollingConfig,
+  UploadProviderCatalogResponse,
+  UploadProviderValue,
+} from "../../src/shared/types.js"
 
 const responseTimeoutMs = 90_000
+const smokeFast = process.env.FAREWELL_SMOKE_FAST !== "0"
+const smokeDebug = process.env.FAREWELL_SMOKE_DEBUG === "1"
+const debugLog = (...args: unknown[]) => {
+  if (!smokeDebug) {
+    return
+  }
+
+  console.log("[run-ui-smoke]", ...args)
+}
+const smokeJobPolling: ExportJobPollingConfig | undefined = smokeFast
+  ? {
+      defaultPollMs: 100,
+      fastPollMs: 50,
+      uploadBurstPollMs: 25,
+      uploadBurstAttempts: 8,
+    }
+  : undefined
+const smokeStatusPollMs = smokeFast ? 100 : 1000
+const smokeJobFetchLimits = smokeFast
+  ? {
+      exportRunningMax: 2,
+      uploadPartialMax: 3,
+      rewritePendingMax: 4,
+    }
+  : {
+      exportRunningMax: 8,
+      uploadPartialMax: 12,
+      rewritePendingMax: 20,
+    }
 const resolveBrowserMode = () => {
   if (process.argv.includes("--headed")) {
     return {
@@ -59,6 +92,30 @@ const buildJsonResponse = (body: unknown, status = 200) => ({
   contentType: "application/json",
   body: JSON.stringify(body),
 })
+
+const waitForExportSettingsSave = ({
+  page,
+  baseUrl,
+  expectedThemePreference,
+}: {
+  page: import("playwright").Page
+  baseUrl: string
+  expectedThemePreference: "dark" | "light"
+}) =>
+  page.waitForRequest(
+    (request) => {
+      if (request.url() !== `${baseUrl}/api/export-settings` || request.method() !== "POST") {
+        return false
+      }
+
+      const body = request.postDataJSON() as {
+        themePreference?: string
+      }
+
+      return body.themePreference === expectedThemePreference
+    },
+    { timeout: responseTimeoutMs },
+  )
 
 const uploadProviderCatalog: UploadProviderCatalogResponse = {
   defaultProviderKey: "github",
@@ -577,7 +634,7 @@ const waitForJobStatus = async ({
       throw new Error(`${timeoutLabel} failed with status ${status}`)
     }
 
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(smokeStatusPollMs)
   }
 
   throw new Error(`${timeoutLabel} timed out`)
@@ -720,6 +777,18 @@ const run = async () => {
   page.on("pageerror", (error) => {
     console.error(`page error: ${error.message}`)
   })
+  if (smokeDebug) {
+    page.on("request", (request) => {
+      if (request.url().includes("/api/")) {
+        debugLog("request", request.method(), request.url())
+      }
+    })
+    page.on("response", (response) => {
+      if (response.url().includes("/api/")) {
+        debugLog("response", response.status(), response.request().method(), response.url())
+      }
+    })
+  }
 
   const mockState: {
     scanRequestCount: number
@@ -750,6 +819,7 @@ const run = async () => {
           options: defaultExportOptions(),
           lastOutputDir: outputDir,
           themePreference: mockState.themePreference,
+          jobPolling: smokeJobPolling,
           resumedJob: null,
           resumeSummary: null,
           resumedScanResult: null,
@@ -808,7 +878,7 @@ const run = async () => {
 
       if (mockState.uploadAttempt === 0) {
         const nextJob =
-          mockState.jobFetchCount <= 8 ? createRunningJob() : createUploadReadyJob()
+          mockState.jobFetchCount <= smokeJobFetchLimits.exportRunningMax ? createRunningJob() : createUploadReadyJob()
 
         await route.fulfill(buildJsonResponse(applyCurrentOutputDir(nextJob, outputDir)))
         return
@@ -817,11 +887,15 @@ const run = async () => {
       const nextJob =
         mockState.uploadAttempt === 1
           ? applyCurrentOutputDir(
-              mockState.jobFetchCount <= 12 ? createPartialUploadingJob() : createUploadFailedJob(),
+              mockState.jobFetchCount <= smokeJobFetchLimits.uploadPartialMax
+                ? createPartialUploadingJob()
+                : createUploadFailedJob(),
               outputDir,
             )
           : applyCurrentOutputDir(
-              mockState.jobFetchCount <= 20 ? createRewritePendingJob() : createUploadCompletedJob(),
+              mockState.jobFetchCount <= smokeJobFetchLimits.rewritePendingMax
+                ? createRewritePendingJob()
+                : createUploadCompletedJob(),
               outputDir,
             )
 
@@ -900,34 +974,30 @@ const run = async () => {
       page,
       step: "blog-input",
     })
-    const initialTheme = await page.locator("html").evaluate((element) =>
-      element.classList.contains("dark") ? "dark" : element.classList.contains("light") ? "light" : "none",
-    )
+    const darkThemeButton = page.getByRole("button", { name: "다크" })
+    const lightThemeButton = page.getByRole("button", { name: "라이트" })
 
-    if (initialTheme !== "dark") {
-      throw new Error(`expected default theme to be dark, got ${initialTheme}`)
+    if ((await darkThemeButton.getAttribute("data-state")) !== "on") {
+      throw new Error("expected dark theme button to be selected by default")
     }
 
-    const themePersistPromise = page.waitForResponse(
-      (response) =>
-        response.url() === `${baseUrl}/api/export-settings` &&
-        response.request().method() === "POST",
-      { timeout: responseTimeoutMs },
-    )
+    debugLog("waitForRequest", "themePersistPromise", "light")
+    const themePersistPromise = waitForExportSettingsSave({
+      page,
+      baseUrl,
+      expectedThemePreference: "light",
+    })
 
-    await page.getByRole("button", { name: "라이트" }).click()
+    await lightThemeButton.click()
     await themePersistPromise
 
-    const lightTheme = await page.locator("html").evaluate((element) =>
-      element.classList.contains("light") ? "light" : element.classList.contains("dark") ? "dark" : "none",
-    )
-
-    if (lightTheme !== "light" || mockState.themePreference !== "light") {
-      throw new Error(`expected theme toggle to persist light mode, got dom=${lightTheme} state=${mockState.themePreference}`)
+    if ((await lightThemeButton.getAttribute("data-state")) !== "on" || mockState.themePreference !== "light") {
+      throw new Error(`expected theme toggle to persist light mode, got state=${mockState.themePreference}`)
     }
 
     await page.fill("#blogIdOrUrl", "mym0404")
 
+    debugLog("waitForResponse", "scanResponsePromise")
     const scanResponsePromise = page.waitForResponse(
       (response) =>
         response.url() === `${baseUrl}/api/scan` &&
@@ -973,6 +1043,7 @@ const run = async () => {
       throw new Error(`expected force scan tooltip to be cache invalidation, got ${forceScanTooltip ?? "null"}`)
     }
 
+    debugLog("waitForResponse", "forcedScanResponsePromise")
     const forcedScanResponsePromise = page.waitForResponse(
       (response) =>
         response.url() === `${baseUrl}/api/scan` &&
@@ -998,6 +1069,7 @@ const run = async () => {
     })
     await page.fill("#blogIdOrUrl", "another-blog")
 
+    debugLog("waitForResponse", "secondScanResponsePromise")
     const secondScanResponsePromise = page.waitForResponse(
       (response) =>
         response.url() === `${baseUrl}/api/scan` &&
@@ -1058,22 +1130,22 @@ const run = async () => {
       throw new Error("frontmatter alias collision was not shown")
     }
 
-    const darkThemePersistPromise = page.waitForResponse(
-      (response) =>
-        response.url() === `${baseUrl}/api/export-settings` &&
-        response.request().method() === "POST",
-      { timeout: responseTimeoutMs },
-    )
+    debugLog("waitForRequest", "darkThemePersistPromise", "dark")
+    const darkThemePersistPromise = waitForExportSettingsSave({
+      page,
+      baseUrl,
+      expectedThemePreference: "dark",
+    })
 
     await page.getByRole("button", { name: "다크" }).click()
     await darkThemePersistPromise
 
-    const restoreLightThemePromise = page.waitForResponse(
-      (response) =>
-        response.url() === `${baseUrl}/api/export-settings` &&
-        response.request().method() === "POST",
-      { timeout: responseTimeoutMs },
-    )
+    debugLog("waitForRequest", "restoreLightThemePromise", "light")
+    const restoreLightThemePromise = waitForExportSettingsSave({
+      page,
+      baseUrl,
+      expectedThemePreference: "light",
+    })
 
     await page.getByRole("button", { name: "라이트" }).click()
     await restoreLightThemePromise
@@ -1174,18 +1246,31 @@ const run = async () => {
       trigger: "#assets-imageHandlingMode",
       value: "remote",
     })
+    await page.waitForFunction(() => {
+      const imageHandlingMode = document.querySelector<HTMLElement>("#assets-imageHandlingMode")
+      const compression = document.querySelector<HTMLElement>("#assets-compressionEnabled")
+      const downloadImages = document.querySelector<HTMLElement>("#assets-downloadImages")
+      const downloadThumbnails = document.querySelector<HTMLElement>("#assets-downloadThumbnails")
+
+      return (
+        imageHandlingMode?.getAttribute("data-value") === "remote" &&
+        compression?.matches(":disabled") === true &&
+        downloadImages?.matches(":disabled") === true &&
+        downloadThumbnails?.matches(":disabled") === true
+      )
+    })
 
     const remoteModeState = await page.evaluate(() => {
       const imageHandlingMode = document.querySelector<HTMLElement>("#assets-imageHandlingMode")
-      const compression = document.querySelector<HTMLInputElement>("#assets-compressionEnabled")
-      const downloadImages = document.querySelector<HTMLInputElement>("#assets-downloadImages")
-      const downloadThumbnails = document.querySelector<HTMLInputElement>("#assets-downloadThumbnails")
+      const compression = document.querySelector<HTMLElement>("#assets-compressionEnabled")
+      const downloadImages = document.querySelector<HTMLElement>("#assets-downloadImages")
+      const downloadThumbnails = document.querySelector<HTMLElement>("#assets-downloadThumbnails")
 
       return {
         imageHandlingMode: imageHandlingMode?.getAttribute("data-value") ?? null,
-        compressionDisabled: compression?.disabled ?? null,
-        downloadImagesDisabled: downloadImages?.disabled ?? null,
-        downloadThumbnailsDisabled: downloadThumbnails?.disabled ?? null,
+        compressionDisabled: compression?.matches(":disabled") ?? null,
+        downloadImagesDisabled: downloadImages?.matches(":disabled") ?? null,
+        downloadThumbnailsDisabled: downloadThumbnails?.matches(":disabled") ?? null,
       }
     })
 
@@ -1203,16 +1288,27 @@ const run = async () => {
       trigger: "#assets-imageHandlingMode",
       value: "download-and-upload",
     })
+    await page.waitForFunction(() => {
+      const imageHandlingMode = document.querySelector<HTMLElement>("#assets-imageHandlingMode")
+      const downloadImages = document.querySelector<HTMLElement>("#assets-downloadImages")
+      const downloadThumbnails = document.querySelector<HTMLElement>("#assets-downloadThumbnails")
+
+      return (
+        imageHandlingMode?.getAttribute("data-value") === "download-and-upload" &&
+        downloadImages?.getAttribute("data-state") === "checked" &&
+        downloadThumbnails?.getAttribute("data-state") === "checked"
+      )
+    })
 
     const uploadModeState = await page.evaluate(() => {
       const imageHandlingMode = document.querySelector<HTMLElement>("#assets-imageHandlingMode")
-      const downloadImages = document.querySelector<HTMLInputElement>("#assets-downloadImages")
-      const downloadThumbnails = document.querySelector<HTMLInputElement>("#assets-downloadThumbnails")
+      const downloadImages = document.querySelector<HTMLElement>("#assets-downloadImages")
+      const downloadThumbnails = document.querySelector<HTMLElement>("#assets-downloadThumbnails")
 
       return {
         imageHandlingMode: imageHandlingMode?.getAttribute("data-value") ?? null,
-        downloadImagesChecked: downloadImages?.checked ?? null,
-        downloadThumbnailsChecked: downloadThumbnails?.checked ?? null,
+        downloadImagesChecked: downloadImages?.getAttribute("data-state") === "checked",
+        downloadThumbnailsChecked: downloadThumbnails?.getAttribute("data-state") === "checked",
       }
     })
 
@@ -1250,6 +1346,7 @@ const run = async () => {
       step: "diagnostics-options",
     })
 
+    debugLog("waitForResponse", "exportResponsePromise")
     const exportResponsePromise = page.waitForResponse(
       (response) =>
         response.url() === `${baseUrl}/api/export` &&
@@ -1336,6 +1433,7 @@ const run = async () => {
     await page.fill("#upload-providerField-repo", "owner/name")
     await page.fill("#upload-providerField-token", "placeholder-invalid-token")
 
+    debugLog("waitForResponse", "uploadResponsePromise")
     const uploadResponsePromise = page.waitForResponse(
       (response) =>
         response.url() === `${baseUrl}/api/export/${jobId}/upload` &&
@@ -1427,6 +1525,7 @@ const run = async () => {
     await page.waitForTimeout(150)
     await page.fill("#upload-providerField-token", "placeholder-fixed-token")
 
+    debugLog("waitForResponse", "retryUploadResponsePromise")
     const retryUploadResponsePromise = page.waitForResponse(
       (response) =>
         response.url() === `${baseUrl}/api/export/${jobId}/upload` &&
@@ -1450,6 +1549,11 @@ const run = async () => {
       undefined,
       { timeout: 10_000 },
     )
+    await page.waitForFunction(() => {
+      const progress = Number(document.querySelector("#upload-progress")?.getAttribute("aria-valuenow") ?? "0")
+
+      return progress >= 95
+    })
 
     const rewritePendingProgress = await readProgressValue({
       page,

@@ -30,7 +30,7 @@
 - `refresh-sample-fixtures.ts`
   지정 sample의 live HTML을 다시 받아 `source.html`, `expected.md`를 갱신한다.
 - `run-ui-smoke.ts`
-  mock 기반 scan, category 선택, export, upload 결과 패널, contrast/layout invariant를 브라우저에서 확인한다.
+  mock 기반 scan, category 선택, export, upload 결과 패널, 테마 저장, 복구 흐름 같은 사용자 경로를 브라우저에서 확인한다.
 - `run-ui-resume-smoke.ts`
   마지막 `outputDir`의 `manifest.json`을 기준으로 빈 output, export 중간, upload 중간, 실패, 완료 상태가 각 단계로 복구되는지 확인한다.
 - `generate-quality-report.ts`

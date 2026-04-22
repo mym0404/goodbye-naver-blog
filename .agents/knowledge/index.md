@@ -2,6 +2,7 @@
 
 ## 시작점
 - 스택, 검증 명령, 구현 규칙: [engineering/index.md](./engineering/index.md)
+- shadcn chooser와 primitive 지도: [engineering/shadcn-component-map.md](./engineering/shadcn-component-map.md)
 - 모듈 경계, 파이프라인, parser 지원 범위: [architecture/index.md](./architecture/index.md)
 - 도메인 제약, 사용자 흐름, UI 규약: [product/index.md](./product/index.md)
 - 디자인 가이드, 컴포넌트 규칙, 색상 토큰: [DESIGN.md](./DESIGN.md)

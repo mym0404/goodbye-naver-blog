@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
   defaultExportOptions,
+  type PartialExportOptions,
   frontmatterFieldMeta,
   frontmatterFieldOrder,
   optionDescriptions,
@@ -54,7 +55,7 @@ import {
   type ExportOptionsStep,
 } from "./features/options/export-options-panel.js"
 import { JobResultsPanel } from "./features/job-results/job-results-panel.js"
-import { useExportJob } from "./hooks/use-export-job.js"
+import { setExportJobPollingConfig, useExportJob } from "./hooks/use-export-job.js"
 import type {
   ExportBootstrapResponse,
   UploadProvidersResponse,
@@ -258,7 +259,7 @@ const getPersistedUiStateSignature = ({
   options,
   themePreference,
 }: {
-  options: ExportOptions
+  options: ExportOptions | PartialExportOptions
   themePreference: ThemePreference
 }) =>
   JSON.stringify({
@@ -460,6 +461,7 @@ export const App = () => {
 
         latestPersistedOptionsRef.current = nextPersistedOptions
         latestThemePreferenceRef.current = nextDefaults.themePreference
+        setExportJobPollingConfig(nextDefaults.jobPolling)
         persistedUiStateSignatureRef.current = getPersistedUiStateSignature({
           options: nextDefaults.options,
           themePreference: nextDefaults.themePreference,
@@ -475,6 +477,7 @@ export const App = () => {
 
         latestPersistedOptionsRef.current = nextPersistedOptions
         latestThemePreferenceRef.current = fallbackDefaults.themePreference
+        setExportJobPollingConfig(fallbackDefaults.jobPolling)
         persistedUiStateSignatureRef.current = getPersistedUiStateSignature({
           options: fallbackDefaults.options,
           themePreference: fallbackDefaults.themePreference,
@@ -507,16 +510,23 @@ export const App = () => {
 
     let cancelled = false
     const timeoutId = window.setTimeout(() => {
+      const nextThemePreference = latestThemePreferenceRef.current
+      const nextOptions = latestPersistedOptionsRef.current
+      const nextPersistedSignature = getPersistedUiStateSignature({
+        options: nextOptions,
+        themePreference: nextThemePreference,
+      })
+
       void postJsonNoContent("/api/export-settings", {
-        options: latestPersistedOptionsRef.current,
-        themePreference: latestThemePreferenceRef.current,
+        options: nextOptions,
+        themePreference: nextThemePreference,
       })
         .then(() => {
           if (cancelled) {
             return
           }
 
-          persistedUiStateSignatureRef.current = persistedUiStateSignature
+          persistedUiStateSignatureRef.current = nextPersistedSignature
         })
         .catch(() => {})
     }, exportSettingsSaveDelayMs)
