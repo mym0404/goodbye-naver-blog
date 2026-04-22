@@ -468,6 +468,51 @@ describe("ExportOptionsPanel", () => {
     expect(query<HTMLElement>('[data-block-output-card="code"] pre').textContent).toContain("~~~ts")
   })
 
+  it("restores viewport scroll after opening a select in the markdown step", async () => {
+    const user = userEvent.setup()
+    let scrollY = 640
+    const scrollTo = vi.fn()
+
+    Object.defineProperty(window, "scrollX", {
+      configurable: true,
+      get: () => 0,
+    })
+    Object.defineProperty(window, "scrollY", {
+      configurable: true,
+      get: () => scrollY,
+    })
+    vi.stubGlobal(
+      "requestAnimationFrame",
+      vi.fn((callback: FrameRequestCallback) => {
+        scrollY = 0
+        callback(0)
+        return 1
+      }),
+    )
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      value: scrollTo,
+    })
+
+    render(
+      <ExportOptionsPanel
+        step="markdown"
+        outputDir={testOutputDir}
+        options={defaultExportOptions()}
+        optionDescriptions={optionDescriptions}
+        frontmatterFieldOrder={frontmatterFieldOrder}
+        frontmatterFieldMeta={frontmatterFieldMeta}
+        frontmatterValidationErrors={[]}
+        onOutputDirChange={vi.fn()}
+        onOptionsChange={vi.fn()}
+      />,
+    )
+
+    await user.click(query<HTMLElement>("#markdown-linkStyle"))
+
+    expect(scrollTo).toHaveBeenCalledWith(0, 640)
+  })
+
   it("renders image preview with local asset paths unless remote mode is selected", () => {
     const options = defaultExportOptions()
 

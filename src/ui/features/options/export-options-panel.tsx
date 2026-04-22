@@ -331,6 +331,24 @@ type SelectOption = {
   label: string
 }
 
+const preserveViewportScroll = () => {
+  if (typeof window === "undefined") {
+    return
+  }
+
+  const { scrollX, scrollY } = window
+  const restore = () => {
+    if (window.scrollX !== scrollX || window.scrollY !== scrollY) {
+      window.scrollTo(scrollX, scrollY)
+    }
+  }
+
+  requestAnimationFrame(() => {
+    restore()
+    requestAnimationFrame(restore)
+  })
+}
+
 const OptionField = ({
   optionKey,
   labelFor,
@@ -380,6 +398,14 @@ const OptionSelectField = <T extends string,>({
       data-value={value}
       aria-describedby={describedBy}
       aria-invalid={ariaInvalid || undefined}
+      onPointerDown={() => {
+        preserveViewportScroll()
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown" || event.key === "ArrowUp") {
+          preserveViewportScroll()
+        }
+      }}
     >
       <SelectValue placeholder={placeholder} />
     </SelectTrigger>
