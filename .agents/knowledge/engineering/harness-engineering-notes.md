@@ -5,6 +5,7 @@
 
 ## Source Of Truth
 - 실제 harness 동작은 `package.json`, `scripts/harness/*`, generated 보고서 출력 경로가 기준이다.
+- 사용자 수동 개발 서버는 `pnpm dev`의 `4173` 포트를 기준으로 보고, harness가 띄우는 서버는 이 포트와 겹치지 않게 `listen(0)` 또는 별도 포트를 사용한다.
 
 ## 관련 코드
 - [../../../package.json](../../../package.json)
@@ -18,7 +19,7 @@
 - [../reference/generated/sample-coverage.md](../reference/generated/sample-coverage.md)
 
 ## 검증 방법
-- `pnpm check:local`: harness와 맞물린 기본 타입·오프라인·parser 계약이 그대로 유지되는지 확인할 때 실행한다.
+- `pnpm check:local`: harness와 맞물린 기본 타입·오프라인·parser·sample fixture 계약이 그대로 유지되는지 확인할 때 실행한다.
 - `pnpm samples:verify`: sample fixture 회귀를 확인할 때 실행한다.
 - `pnpm quality:report`: capability/sample coverage generated 문서를 다시 만들 때 실행한다.
 
@@ -33,8 +34,10 @@
   mock 기반 scan, category 선택, export, upload 결과 패널, 테마 저장, 복구 흐름 같은 사용자 경로를 브라우저에서 확인한다.
 - `run-ui-resume-smoke.ts`
   마지막 `outputDir`의 `manifest.json`을 기준으로 빈 output, export 중간, upload 중간, 실패, 완료 상태가 각 단계로 복구되는지 확인한다.
+- `run-live-server.ts`, live UI harness들
+  격리된 settings/cache 경로와 임시 포트를 사용해 사용자 `pnpm dev` 서버, 다른 harness 실행과 충돌하지 않게 서버를 띄운다.
 - `generate-quality-report.ts`
-  parser block fixture/test hint coverage, `sample-fixture` capability coverage, `parser-fixture` capability 목록을 `.agents/knowledge/reference/generated/quality-score.md`, `.agents/knowledge/reference/generated/sample-coverage.md`로 다시 계산한다.
+  parser block fixture coverage, parser capability test mapping coverage, `sample-fixture` capability coverage, `parser-fixture` capability 목록을 `.agents/knowledge/reference/generated/quality-score.md`, `.agents/knowledge/reference/generated/sample-coverage.md`로 다시 계산한다.
 
 ## Fixture 운영 규칙
 - sample fixture는 `tests/fixtures/samples/<sampleId>/source.html`, `expected.md` 구조를 사용한다.

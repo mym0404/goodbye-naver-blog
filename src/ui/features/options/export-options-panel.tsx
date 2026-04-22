@@ -652,14 +652,6 @@ export const ExportOptionsPanel = ({
 
   const structureSection = (
     <>
-      <div className="control-bar grid">
-        <label className="field-card control-field grid min-h-0 gap-2 rounded-2xl px-4 py-4">
-          <span className="text-sm font-semibold text-foreground">출력 경로</span>
-          <Input id="outputDir" value={outputDir} required onChange={(event) => onOutputDirChange(event.target.value)} />
-          <small className="field-help text-sm leading-6">결과를 저장할 위치입니다.</small>
-        </label>
-      </div>
-
       <OptionSection title="구조" note="출력 폴더와 파일 이름 규칙">
         <CheckField
           inputId="structure-groupByCategory"

@@ -947,6 +947,11 @@ describe("App", () => {
     await waitForAutosave()
     expect(savedPayloads).toEqual([])
 
+    await user.clear(screen.getByRole("textbox", { name: /출력 경로/ }))
+    await user.type(screen.getByRole("textbox", { name: /출력 경로/ }), "/tmp/custom-output")
+    await waitForAutosave()
+    expect(savedPayloads).toEqual([])
+
     await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
     await waitFor(() => {
       expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
@@ -961,11 +966,6 @@ describe("App", () => {
     expect(savedPayloads).toEqual([])
 
     await user.click(screen.getByRole("button", { name: "구조 설정" }))
-    await user.clear(screen.getByRole("textbox", { name: /출력 경로/ }))
-    await user.type(screen.getByRole("textbox", { name: /출력 경로/ }), "/tmp/custom-output")
-    await waitForAutosave()
-    expect(savedPayloads).toEqual([])
-
     await user.click(screen.getByRole("checkbox", { name: /카테고리 폴더 유지/ }))
 
     await waitFor(() => {
@@ -974,6 +974,43 @@ describe("App", () => {
 
     expect(savedPayloads[0]?.options?.scope?.categoryIds).toBeUndefined()
     expect(savedPayloads[0]?.options?.structure?.groupByCategory).toBe(false)
+  })
+
+  it("shows the output path input in the blog step and hides it in the structure step", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
+
+      if (bootstrapResponse) {
+        return bootstrapResponse
+      }
+
+      if (url.endsWith("/api/scan")) {
+        return buildJsonResponse(scanResult)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    expect(document.querySelector('[data-step-view="blog-input"] #outputDir')).not.toBeNull()
+
+    await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
+    await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
+    })
+
+    await user.click(screen.getByRole("button", { name: "구조 설정" }))
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="structure-options"]')).not.toBeNull()
+    })
+
+    expect(document.querySelector('[data-step-view="structure-options"] #outputDir')).toBeNull()
   })
 
   it("runs the main export flow in the wizard without preview or modal", async () => {

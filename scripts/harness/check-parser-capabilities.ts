@@ -8,9 +8,10 @@ const run = async () => {
     ...parserStatus.missingParserFixtureBlockTypes.map(
       (blockType) => `missing parser fixture: ${blockType}`,
     ),
-    ...parserStatus.missingTestBlockTypes.map(
-      (blockType) => `missing test coverage hint: ${blockType}`,
+    ...parserStatus.missingCapabilityTestMappings.map(
+      (capabilityId) => `missing parser test mapping: ${capabilityId}`,
     ),
+    ...parserStatus.invalidCapabilityTestFileLinks,
     ...parserStatus.invalidSampleLinks,
     ...parserStatus.invalidExpectedCapabilityIds,
     ...parserStatus.missingSampleSourceFixtures.map(

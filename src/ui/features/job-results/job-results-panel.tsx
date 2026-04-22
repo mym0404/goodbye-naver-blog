@@ -47,7 +47,7 @@ import {
   TooltipTrigger,
 } from "../../components/ui/tooltip.js"
 import { cn } from "../../lib/cn.js"
-import { postSameOriginJsonNoContent } from "../../lib/api.js"
+import { postSameOriginJson, postSameOriginJsonNoContent } from "../../lib/api.js"
 import {
   buildInitialProviderUiState,
   getUploadProviderFieldRule,
@@ -391,6 +391,7 @@ export const JobResultsPanel = ({
   const [providerUiStateMap, setProviderUiStateMap] = useState<Record<string, ProviderUiState>>(() =>
     buildInitialProviderUiStateMap(uploadProviders),
   )
+  const [previewPendingIds, setPreviewPendingIds] = useState<string[]>([])
   const jobItems = getJobItems(job).filter((item) => {
     const severity = buildJobItemSeverity(item)
 
@@ -458,6 +459,35 @@ export const JobResultsPanel = ({
       toast.error("파일을 열지 못했습니다.", {
         description: `${title}: ${error instanceof Error ? error.message : String(error)}`,
       })
+    }
+  }
+
+  const handleOpenPreviewLink = async ({
+    itemId,
+    outputPath,
+    title,
+  }: {
+    itemId: string
+    outputPath: string
+    title: string
+  }) => {
+    setPreviewPendingIds((current) => (current.includes(itemId) ? current : [...current, itemId]))
+
+    try {
+      const response = await postSameOriginJson<{
+        previewUrl: string
+      }>("/api/local-file/preview-link", {
+        outputDir: job?.request.outputDir ?? "",
+        outputPath,
+      })
+
+      window.open(response.previewUrl, "_blank", "noopener,noreferrer")
+    } catch (error) {
+      toast.error("미리보기를 열지 못했습니다.", {
+        description: `${title}: ${error instanceof Error ? error.message : String(error)}`,
+      })
+    } finally {
+      setPreviewPendingIds((current) => current.filter((currentId) => currentId !== itemId))
     }
   }
 
@@ -1077,11 +1107,12 @@ export const JobResultsPanel = ({
                       const severity = buildJobItemSeverity(item)
                       const pathMeta = buildJobItemPathMeta(item)
                       const meta = severityMeta[severity]
-                      const externalPreviewUrl = item.externalPreviewUrl?.trim()
                       const localOutputPath = buildLocalOutputPath({
                         outputDir: job?.request.outputDir ?? "",
                         outputPath: item.outputPath,
                       })
+                      const previewPending = previewPendingIds.includes(item.id)
+                      const canOpenPreview = Boolean(item.outputPath)
                       const hasUploadCandidate = item.upload.candidateCount > 0
                       const uploadRowStatus =
                         showUploadColumns && hasUploadCandidate
@@ -1200,32 +1231,35 @@ export const JobResultsPanel = ({
                             <div className="inline-flex items-center rounded-full border border-border bg-card p-1 shadow-[var(--panel-shadow-border)]">
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  {externalPreviewUrl ? (
-                                    <a
-                                      href={externalPreviewUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      aria-label={`${item.title} 외부 미리보기`}
-                                      className={jobActionButtonClassName}
-                                      data-job-item-preview-link
-                                    >
-                                      <RiExternalLinkLine data-icon="inline-start" aria-hidden="true" />
-                                    </a>
-                                  ) : (
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className={jobActionButtonClassName}
-                                      aria-label={`${item.title} 외부 미리보기`}
-                                      disabled
-                                    >
-                                      <RiExternalLinkLine data-icon="inline-start" aria-hidden="true" />
-                                    </Button>
-                                  )}
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className={jobActionButtonClassName}
+                                    aria-label={`${item.title} 외부 미리보기`}
+                                    data-job-item-preview-link
+                                    disabled={!canOpenPreview || previewPending}
+                                    onClick={() => {
+                                      if (!item.outputPath) {
+                                        return
+                                      }
+
+                                      void handleOpenPreviewLink({
+                                        itemId: item.id,
+                                        outputPath: item.outputPath,
+                                        title: item.title,
+                                      })
+                                    }}
+                                  >
+                                    <RiExternalLinkLine data-icon="inline-start" aria-hidden="true" />
+                                  </Button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top" sideOffset={8}>
-                                  {externalPreviewUrl ? "외부 미리보기" : "미리보기 없음"}
+                                  {previewPending
+                                    ? "미리보기 링크 생성 중"
+                                    : canOpenPreview
+                                      ? "외부 미리보기"
+                                      : "미리보기 없음"}
                                 </TooltipContent>
                               </Tooltip>
                               <Tooltip>

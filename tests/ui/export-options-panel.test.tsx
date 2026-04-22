@@ -80,10 +80,6 @@ describe("ExportOptionsPanel", () => {
   it("wires option updaters across all option steps", async () => {
     const user = userEvent.setup()
     let latestOptions: ExportOptions = defaultExportOptions()
-    let latestOutputDir = "./output"
-    const onOutputDirChange = vi.fn((value: string) => {
-      latestOutputDir = value
-    })
     const onOptionsChange = vi.fn((updater: (current: ExportOptions) => ExportOptions) => {
       latestOptions = updater(latestOptions)
     })
@@ -97,16 +93,11 @@ describe("ExportOptionsPanel", () => {
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={['title와 source가 같은 alias "shared"를 사용할 수 없습니다.']}
-        onOutputDirChange={onOutputDirChange}
+        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
 
-    fireEvent.change(query<HTMLInputElement>("#outputDir"), {
-      target: {
-        value: "/tmp/export",
-      },
-    })
     await user.click(query<HTMLInputElement>("#structure-groupByCategory"))
     await user.click(query<HTMLInputElement>("#structure-includeDateInPostFolderName"))
     await user.click(query<HTMLInputElement>("#structure-includeLogNoInPostFolderName"))
@@ -119,13 +110,13 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="frontmatter"
-        outputDir={latestOutputDir}
+        outputDir="./output"
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={['title와 source가 같은 alias "shared"를 사용할 수 없습니다.']}
-        onOutputDirChange={onOutputDirChange}
+        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -148,13 +139,13 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="markdown"
-        outputDir={latestOutputDir}
+        outputDir="./output"
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={onOutputDirChange}
+        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -195,13 +186,13 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="assets"
-        outputDir={latestOutputDir}
+        outputDir="./output"
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={onOutputDirChange}
+        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -218,13 +209,13 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="links"
-        outputDir={latestOutputDir}
+        outputDir="./output"
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={onOutputDirChange}
+        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -236,13 +227,13 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="links"
-        outputDir={latestOutputDir}
+        outputDir="./output"
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={onOutputDirChange}
+        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -258,13 +249,13 @@ describe("ExportOptionsPanel", () => {
     render(
       <ExportOptionsPanel
         step="structure"
-        outputDir={latestOutputDir}
+        outputDir="./output"
         options={latestOptions}
         optionDescriptions={optionDescriptions}
         frontmatterFieldOrder={frontmatterFieldOrder}
         frontmatterFieldMeta={frontmatterFieldMeta}
         frontmatterValidationErrors={[]}
-        onOutputDirChange={onOutputDirChange}
+        onOutputDirChange={vi.fn()}
         onOptionsChange={onOptionsChange}
       />,
     )
@@ -275,7 +266,6 @@ describe("ExportOptionsPanel", () => {
       },
     })
 
-    expect(latestOutputDir).toBe("/tmp/export")
     expect(onOptionsChange).toHaveBeenCalled()
 
     expect(latestOptions.structure.groupByCategory).toBe(false)

@@ -15,6 +15,26 @@ const getJobItemId = ({
   logNo: string
 }) => outputPath ?? `failed:${logNo}`
 
+const buildJobItemFromPost = (
+  post: ExportManifest["posts"][number],
+  updatedAt: string,
+): ExportJobItem => ({
+  id: getJobItemId(post),
+  logNo: post.logNo,
+  title: post.title,
+  source: post.source,
+  category: post.category,
+  editorVersion: post.editorVersion,
+  status: post.status,
+  outputPath: post.outputPath,
+  assetPaths: post.assetPaths,
+  upload: post.upload,
+  warnings: post.warnings,
+  warningCount: post.warningCount,
+  error: post.error,
+  updatedAt,
+})
+
 const countUploadedCandidates = ({
   item,
   uploadedLocalPaths,
@@ -47,7 +67,6 @@ const syncManifestPostsFromItems = ({
       ...post,
       assetPaths: item.assetPaths,
       upload: item.upload,
-      externalPreviewUrl: item.externalPreviewUrl,
     }
   })
 }
@@ -100,13 +119,13 @@ export class JobStore {
       request: manifest.job.request,
       status: manifest.job.status,
       resumeAvailable: manifest.job.status === "running" || manifest.job.status === "uploading",
-      logs: manifest.job.logs,
+      logs: [],
       createdAt: manifest.job.createdAt,
       startedAt: manifest.job.startedAt,
       finishedAt: manifest.job.finishedAt,
       progress: manifest.job.progress,
       upload: manifest.job.upload,
-      items: manifest.job.items,
+      items: manifest.posts.map((post) => buildJobItemFromPost(post, manifest.job!.updatedAt)),
       manifest,
       error: manifest.job.error,
     }
@@ -183,23 +202,7 @@ export class JobStore {
       warnings: manifest.warningCount,
     }
     job.upload = manifest.upload
-    job.items = job.items.length > 0 ? job.items : manifest.posts.map((post) => ({
-      id: getJobItemId(post),
-      logNo: post.logNo,
-      title: post.title,
-      source: post.source,
-      category: post.category,
-      editorVersion: post.editorVersion,
-      status: post.status,
-      outputPath: post.outputPath,
-      assetPaths: post.assetPaths,
-      upload: post.upload,
-      warnings: post.warnings,
-      warningCount: post.warningCount,
-      error: post.error,
-      externalPreviewUrl: post.externalPreviewUrl ?? null,
-      updatedAt: new Date().toISOString(),
-    }))
+    job.items = job.items.length > 0 ? job.items : manifest.posts.map((post) => buildJobItemFromPost(post, new Date().toISOString()))
 
     if (manifest.upload.status === "upload-ready") {
       job.status = "upload-ready"

@@ -24,7 +24,7 @@
 - `pnpm test:coverage`: 커버리지 게이트나 CI 동작을 다시 확인해야 할 때 실행한다.
 
 ## Verification Bundles
-- `package.json` 기준으로 `pnpm check:local`은 `pnpm typecheck && pnpm test:offline && pnpm parser:check`를 실행한다.
+- `package.json` 기준으로 `pnpm check:local`은 `pnpm typecheck && pnpm test:offline && pnpm parser:check && pnpm samples:verify`를 실행한다.
 - `package.json` 기준으로 `pnpm check:full`은 `pnpm quality:report && pnpm typecheck && pnpm test:offline && pnpm parser:check && pnpm samples:verify && pnpm smoke:ui`를 실행한다.
 
 ## 테스트 종류
@@ -54,11 +54,11 @@
   V8 coverage threshold를 확인한다.
 
 ## Primary Commands
-- `pnpm check:local`: 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다. 타입, 오프라인 테스트, parser 구조 계약까지 포함한 기본 회귀를 확인할 때 실행한다.
+- `pnpm check:local`: 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다. 타입, 오프라인 테스트, parser 구조 계약, sample fixture 회귀까지 포함한 기본 회귀를 확인할 때 실행한다.
 - `pnpm check:full`: generated 품질 보고서, sample fixture, Playwright smoke UI까지 묶은 전체 기본 회귀를 확인할 때 실행한다.
 
 ## Focused Commands
-- `pnpm dev`: `tsx watch`와 Vite HMR이 붙은 개발 서버를 `http://localhost:4173`에 띄울 때 실행한다.
+- `pnpm dev`: `tsx watch`와 Vite HMR이 붙은 사용자용 개발 서버를 `http://localhost:4173`에 띄울 때 실행한다. AI agent, test, harness는 이 명령을 그대로 쓰지 않고 별도 `FAREWELL_SETTINGS_PATH`, `FAREWELL_SCAN_CACHE_PATH`, `PORT`를 준 `pnpm exec tsx src/server.ts`나 `listen(0)` 기반 harness entry로 분리한다.
 - `pnpm start`: `pnpm build:ui` 뒤 `dist/client` 산출물을 같은 서버에서 확인할 때 실행한다.
 - `pnpm typecheck`: TypeScript 오류만 빠르게 다시 확인할 때 실행한다.
 - `pnpm test:offline`: 네트워크 없는 로컬 테스트만 다시 확인할 때 실행한다.
@@ -70,7 +70,7 @@
 - `pnpm test:network:resume-export`: 개발 서버에서 실제 네이버 공개 글 범위를 export하다가 중간 종료한 뒤, 같은 `output/` 하위 경로의 `manifest.json`을 읽어 resume export를 끝까지 확인할 때 실행한다. 범위는 환경변수로 바꿀 수 있고, 외부 업로드는 하지 않는다.
 - `pnpm test:network:resume-export:se2-table`: `blogpeople`의 SE2 표 본문이 포함된 `2013-06-26`~`2013-06-27`, category `21` 범위를 export하다가 중간 종료한 뒤 resume export를 끝까지 확인할 때 실행한다.
 - `pnpm test:network:upload`: Playwright가 실제 브라우저 UI로 `mym0404` 공개 글 1건을 scan, scope 설정, export한 뒤 GitHub `mym0404/image-archive` `master` branch의 동적 prefix `farewell-live/<timestamp>` 아래로 `piclist` runtime 실업로드를 수행할 때 실행한다. 루트 `.env`에서 `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`를 읽는다.
-- `pnpm quality:report`: parser block fixture/test hint coverage와 capability/sample coverage generated 품질 리포트를 다시 만들 때 실행한다.
+- `pnpm quality:report`: parser block fixture coverage, parser capability test mapping coverage, capability/sample coverage generated 품질 리포트를 다시 만들 때 실행한다.
 
 ## 보장하지 않는 것
 - `pnpm test:offline`은 live 네이버 HTML drift를 보장하지 않는다.
@@ -89,10 +89,12 @@
 
 ## Task Loops
 - 모든 저장소 파일 변경 턴은 `pnpm check:local`로 시작한다. 더 큰 검증이 필요하면 그 위에 focused command나 broader regression을 추가한다.
+- 코어 기능, 사용자 흐름, 상태 전이, 결과/복구 구조를 바꾸는 변경 뒤에는 Playwright smoke 경로를 직접 건드렸는지와 무관하게 최소 `pnpm smoke:ui`를 실행한다.
 - capability/sample/harness 변경 뒤에는 `pnpm typecheck`, `pnpm test:offline`, `pnpm parser:check`, `pnpm samples:verify`, `pnpm quality:report`를 우선 본다.
 - capability catalog를 바꿀 때는 `sample-fixture`와 `parser-fixture` 분류를 함께 검토한다. 공개 글을 끝내 확보하지 못한 capability를 억지로 sample gap으로 남기지 않는다.
 - renderer/exporter 결과 변경 뒤에는 위 전부에 `pnpm smoke:ui`, `pnpm test:coverage`를 추가한다.
-- UI/API 변경 뒤에는 먼저 `agent-browser`로 실제 화면을 확인하고, 이미 Playwright smoke로 고정된 흐름이 바뀌었으면 `pnpm smoke:ui`를 함께 돌린다.
+- UI/API 변경 뒤에는 먼저 `agent-browser`로 실제 화면을 확인하고, 그 변경이 코어 기능이나 사용자 경로까지 건드리면 `pnpm smoke:ui`를 함께 돌린다.
+- AI agent나 ad-hoc harness가 로컬 서버를 직접 띄울 때는 사용자 `pnpm dev`와 포트가 겹치지 않게 `4173`을 피한다. 수동 디버그는 비기본 포트를 명시하고, 자동 harness는 가능하면 `listen(0)`으로 임시 포트를 받는다.
 - UI 테스트와 smoke는 CSS class, computed style, query selector 기반 레이아웃 숫자 검증보다 사용자 행동 계약을 우선한다.
 - 스타일 검증이 꼭 필요하면 광범위한 자동 assert 대신 `agent-browser` 같은 실제 브라우저 확인을 우선하고, 자동화에는 접근성/상태/텍스트처럼 제품 계약만 남긴다.
 - export/upload 흐름, 복구 시나리오, 업로더 연동처럼 사용자 경로를 크게 바꾸는 변경 뒤에는 `pnpm smoke:ui`, `pnpm test:network:upload`를 둘 다 실행한다.

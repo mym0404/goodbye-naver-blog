@@ -6,6 +6,7 @@ import type {
   ExportJobItem,
   ExportJobState,
   ExportManifest,
+  ExportManifestScanResult,
   ExportResumePhase,
   PostManifestEntry,
   ScanResult,
@@ -35,23 +36,17 @@ const buildPostManifestEntryFromItem = (item: ExportJobItem): PostManifestEntry 
   warnings: item.warnings,
   warningCount: item.warningCount,
   error: item.error,
-  externalPreviewUrl: item.externalPreviewUrl ?? null,
 })
 
-const buildPersistedJobItem = (item: ExportJobItem): ExportJobItem => ({
-  ...item,
-  warnings: [],
-  externalPreviewUrl: null,
-})
-
-const buildPersistedScanResult = (scanResult: ScanResult | null) => {
+const buildPersistedScanResult = (scanResult: ScanResult | null): ExportManifestScanResult | null => {
   if (!scanResult) {
     return null
   }
 
-  const { posts: _posts, ...scanResultWithoutPosts } = scanResult
-
-  return scanResultWithoutPosts
+  return {
+    blogId: scanResult.blogId,
+    totalPostCount: scanResult.totalPostCount,
+  }
 }
 
 const mergeManifestPosts = ({
@@ -149,7 +144,6 @@ export const buildResumableExportManifest = ({
     job,
     scanResult,
   })
-  const persistedJobItems = job.items.map((item) => buildPersistedJobItem(item))
   const persistedScanResult = buildPersistedScanResult(scanResult)
   const mergedPosts = mergeManifestPosts({
     manifest: baseManifest,
@@ -176,14 +170,12 @@ export const buildResumableExportManifest = ({
       phase: resolveExportResumePhase(job.status),
       request: job.request,
       status: job.status,
-      logs: job.logs,
       createdAt: job.createdAt,
       startedAt: job.startedAt,
       finishedAt: job.finishedAt,
       updatedAt: new Date().toISOString(),
       progress: job.progress,
       upload: job.upload,
-      items: persistedJobItems,
       error: job.error,
       scanResult: persistedScanResult,
       summary: {

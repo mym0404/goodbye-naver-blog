@@ -15,6 +15,7 @@ import {
   rewriteImageUploadPost,
   writeImageUploadManifestSnapshot,
 } from "../modules/exporter/image-upload-rewriter.js"
+import { buildMarkdownViewerShareUrl } from "../modules/exporter/markdown-viewer-share-url.js"
 import {
   ImageUploadPhaseError,
   runImageUploadPhase,
@@ -34,6 +35,7 @@ import type {
   ExportJobItem,
   ExportJobState,
   ExportManifest,
+  ExportManifestScanResult,
   ExportRequest,
   ScanResult,
   ThemePreference,
@@ -228,6 +230,43 @@ const isPathInsideRoot = ({
   return relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath))
 }
 
+const resolveLocalOutputTargetPath = ({
+  outputDir,
+  outputPath,
+}: {
+  outputDir: string
+  outputPath: string
+}) => {
+  const outputRoot = resolveRepoPath(outputDir.trim())
+  const targetPath = path.resolve(outputRoot, outputPath.trim())
+
+  return {
+    outputRoot,
+    targetPath,
+  }
+}
+
+const isTemporaryResumeOutputDir = (outputDir: string) => {
+  const trimmedOutputDir = outputDir.trim()
+
+  if (!trimmedOutputDir) {
+    return false
+  }
+
+  const resolvedOutputDir = path.resolve(trimmedOutputDir)
+
+  return (
+    isPathInsideRoot({
+      rootPath: "/tmp",
+      targetPath: resolvedOutputDir,
+    }) ||
+    isPathInsideRoot({
+      rootPath: "/private/tmp",
+      targetPath: resolvedOutputDir,
+    })
+  )
+}
+
 const openLocalPathWithSystem = async (targetPath: string) => {
   await new Promise<void>((resolve, reject) => {
     const [command, args]: [string, string[]] =
@@ -413,35 +452,37 @@ const sanitizeUploadProviderCatalogError = (error: unknown) => {
 }
 
 const resolveResumedScanResult = ({
+  manifestBlogId,
+  manifestCategories,
+  manifestTotalPosts,
   manifestScanResult,
   cachedScans,
 }: {
-  manifestScanResult: ScanResult | null
+  manifestBlogId: string
+  manifestCategories: ScanResult["categories"]
+  manifestTotalPosts: number
+  manifestScanResult: ExportManifestScanResult | null
   cachedScans: Record<string, ScanResult>
 }) => {
-  if (!manifestScanResult) {
-    return null
+  const blogId = manifestScanResult?.blogId ?? manifestBlogId
+  const totalPostCount = manifestScanResult?.totalPostCount || manifestTotalPosts
+  const minimalScanResult: ScanResult = {
+    blogId,
+    totalPostCount,
+    categories: manifestCategories,
   }
 
-  const cachedScanResult = cachedScans[manifestScanResult.blogId]
+  const cachedScanResult = cachedScans[blogId]
 
   if (!cachedScanResult) {
-    return manifestScanResult
+    return minimalScanResult
   }
 
   return {
     ...cachedScanResult,
-    ...manifestScanResult,
-    categories:
-      manifestScanResult.categories.length > 0
-        ? manifestScanResult.categories
-        : cachedScanResult.categories,
-    totalPostCount: manifestScanResult.totalPostCount || cachedScanResult.totalPostCount,
-    ...(manifestScanResult.posts
-      ? { posts: manifestScanResult.posts }
-      : cachedScanResult.posts
-        ? { posts: cachedScanResult.posts }
-        : {}),
+    blogId,
+    totalPostCount: totalPostCount || cachedScanResult.totalPostCount,
+    categories: cachedScanResult.categories.length > 0 ? cachedScanResult.categories : manifestCategories,
   } satisfies ScanResult
 }
 
@@ -501,7 +542,6 @@ const syncManifestUploadProgress = ({
           uploadedLocalPaths,
         }),
       },
-      externalPreviewUrl: item.externalPreviewUrl,
     }
   })
 }
@@ -738,6 +778,10 @@ export const createHttpServer = ({
     outputDir: string
     cachedScans: Record<string, ScanResult>
   }) => {
+    if (isTemporaryResumeOutputDir(outputDir)) {
+      return null
+    }
+
     const manifest = await readExportManifest(outputDir)
 
     if (!manifest?.job) {
@@ -745,6 +789,9 @@ export const createHttpServer = ({
     }
 
     const resumedScanResult = resolveResumedScanResult({
+      manifestBlogId: manifest.blogId,
+      manifestCategories: manifest.categories,
+      manifestTotalPosts: manifest.totalPosts,
       manifestScanResult: manifest.job.scanResult,
       cachedScans,
     })
@@ -1392,8 +1439,10 @@ export const createHttpServer = ({
           return
         }
 
-        const outputRoot = resolveRepoPath(payload.outputDir.trim())
-        const targetPath = path.resolve(outputRoot, payload.outputPath.trim())
+        const { outputRoot, targetPath } = resolveLocalOutputTargetPath({
+          outputDir: payload.outputDir,
+          outputPath: payload.outputPath,
+        })
 
         if (!isPathInsideRoot({ rootPath: outputRoot, targetPath })) {
           sendJson({
@@ -1421,6 +1470,102 @@ export const createHttpServer = ({
 
         response.writeHead(204)
         response.end()
+        return
+      }
+
+      if (method === "POST" && url.pathname === "/api/local-file/preview-link") {
+        if (!hasJsonContentType(request)) {
+          sendJson({
+            response,
+            statusCode: 415,
+            body: {
+              error: "application/json 요청만 허용합니다.",
+            },
+          })
+          return
+        }
+
+        if (!isSameOriginUploadRequest(request)) {
+          sendJson({
+            response,
+            statusCode: 403,
+            body: {
+              error: "same-origin XHR 요청만 허용합니다.",
+            },
+          })
+          return
+        }
+
+        const payload = await parseJsonBody<{
+          outputDir?: unknown
+          outputPath?: unknown
+        }>(request)
+
+        if (
+          !isPlainObject(payload) ||
+          typeof payload.outputDir !== "string" ||
+          !payload.outputDir.trim() ||
+          typeof payload.outputPath !== "string" ||
+          !payload.outputPath.trim()
+        ) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: "outputDir와 outputPath는 필수입니다.",
+            },
+          })
+          return
+        }
+
+        const { outputRoot, targetPath } = resolveLocalOutputTargetPath({
+          outputDir: payload.outputDir,
+          outputPath: payload.outputPath,
+        })
+
+        if (!isPathInsideRoot({ rootPath: outputRoot, targetPath })) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: "허용되지 않은 파일 경로입니다.",
+            },
+          })
+          return
+        }
+
+        if (!(await fileExists(targetPath))) {
+          sendJson({
+            response,
+            statusCode: 404,
+            body: {
+              error: "파일을 찾을 수 없습니다.",
+            },
+          })
+          return
+        }
+
+        const markdown = await readFile(targetPath, "utf8")
+        const previewUrl = buildMarkdownViewerShareUrl(markdown)
+
+        if (!previewUrl) {
+          sendJson({
+            response,
+            statusCode: 422,
+            body: {
+              error: "미리보기 링크를 만들 수 없습니다.",
+            },
+          })
+          return
+        }
+
+        sendJson({
+          response,
+          statusCode: 200,
+          body: {
+            previewUrl,
+          },
+        })
         return
       }
 

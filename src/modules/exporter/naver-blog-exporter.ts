@@ -25,7 +25,6 @@ import { parsePostHtml } from "../parser/post-parser.js"
 import { reviewParsedPost } from "../reviewer/post-reviewer.js"
 import { AssetStore } from "./asset-store.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "./export-paths.js"
-import { buildMarkdownViewerShareUrl } from "./markdown-viewer-share-url.js"
 import { buildPostLinkTargets, createSameBlogPostLinkResolver } from "./post-link-rewriter.js"
 import { dedupeUploadCandidatesByLocalPath } from "./upload-candidate-utils.js"
 
@@ -350,7 +349,6 @@ export class NaverBlogExporter {
             warnings: rendered.warnings,
             warningCount: warningCountForPost,
             error: null,
-            externalPreviewUrl: buildMarkdownViewerShareUrl(rendered.markdown),
           } satisfies PostManifestEntry
 
 	          pendingResults.set(index, {
@@ -365,13 +363,12 @@ export class NaverBlogExporter {
 	              status: "success",
 	              outputPath: manifestEntry.outputPath,
 	              assetPaths,
-	              upload,
-	              warnings: rendered.warnings,
-	              warningCount: warningCountForPost,
-	              error: null,
-	              externalPreviewUrl: buildMarkdownViewerShareUrl(rendered.markdown),
-	              updatedAt: new Date().toISOString(),
-	            },
+		              upload,
+		              warnings: rendered.warnings,
+		              warningCount: warningCountForPost,
+		              error: null,
+		              updatedAt: new Date().toISOString(),
+		            },
 	            warningCount: warningCountForPost,
 	            uploadCandidateLocalPaths: uploadCandidates.map((candidate) => candidate.localPath),
 	            uploadEligible: upload.eligible,
@@ -398,7 +395,6 @@ export class NaverBlogExporter {
             warnings: [],
             warningCount: 0,
             error: toErrorMessage(error),
-            externalPreviewUrl: null,
           } satisfies PostManifestEntry
 
 	          pendingResults.set(index, {
@@ -413,13 +409,12 @@ export class NaverBlogExporter {
 		              status: "failed",
 		              outputPath: null,
 	              assetPaths: [],
-	              upload: emptyPostUploadSummary(),
-	              warnings: [],
-	              warningCount: 0,
-	              error: manifestEntry.error,
-	              externalPreviewUrl: null,
-	              updatedAt: new Date().toISOString(),
-	            },
+		              upload: emptyPostUploadSummary(),
+		              warnings: [],
+		              warningCount: 0,
+		              error: manifestEntry.error,
+		              updatedAt: new Date().toISOString(),
+		            },
 	            warningCount: 0,
 	            uploadCandidateLocalPaths: [],
 	            uploadEligible: false,

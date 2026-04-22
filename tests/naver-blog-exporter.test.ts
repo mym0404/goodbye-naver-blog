@@ -205,9 +205,6 @@ describe("NaverBlogExporter", () => {
 	    expect(onItem.mock.calls[0]?.[0]).toMatchObject({
 	      status: "success",
 	      warningCount: expect.any(Number),
-	      externalPreviewUrl: expect.stringMatching(
-	        /^https:\/\/markdownviewer\.pages\.dev\/#share=/,
-	      ),
 	      upload: {
 	        eligible: false,
 	        candidateCount: 0,
@@ -216,16 +213,15 @@ describe("NaverBlogExporter", () => {
 	        candidates: [],
 	      },
 	    })
+	    expect(onItem.mock.calls[0]?.[0]).not.toHaveProperty("externalPreviewUrl")
 
     const manifestPath = path.join(outputDir, "manifest.json")
     const writtenManifest = JSON.parse(await readFile(manifestPath, "utf8")) as typeof manifest
 
-    expect(writtenManifest.successCount).toBe(1)
-    expect(writtenManifest.posts[0]?.outputPath).toMatch(/index\.md$/)
-    expect(writtenManifest.posts[0]?.upload.candidateCount).toBe(0)
-    expect(writtenManifest.posts[0]?.externalPreviewUrl).toMatch(
-      /^https:\/\/markdownviewer\.pages\.dev\/#share=/,
-    )
+	    expect(writtenManifest.successCount).toBe(1)
+	    expect(writtenManifest.posts[0]?.outputPath).toMatch(/index\.md$/)
+	    expect(writtenManifest.posts[0]?.upload.candidateCount).toBe(0)
+	    expect(writtenManifest.posts[0]).not.toHaveProperty("externalPreviewUrl")
 
     await rm(outputDir, { recursive: true, force: true })
   })
@@ -634,14 +630,10 @@ describe("NaverBlogExporter", () => {
 	      expect(writtenManifest.upload.status).toBe("upload-completed")
 	      expect(writtenManifest.posts[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
 	      expect(writtenManifest.posts[0]?.upload.uploadedUrls).toEqual(["https://cdn.example.com/shared.png"])
-	      expect(writtenManifest.posts[0]?.externalPreviewUrl).toMatch(
-	        /^https:\/\/markdownviewer\.pages\.dev\/#share=/,
-	      )
+	      expect(writtenManifest.posts[0]).not.toHaveProperty("externalPreviewUrl")
 	      expect(rewritten.items[0]?.assetPaths).toEqual(["https://cdn.example.com/shared.png"])
 	      expect(rewritten.items[0]?.upload.uploadedUrls).toEqual(["https://cdn.example.com/shared.png"])
-	      expect(rewritten.items[0]?.externalPreviewUrl).toMatch(
-	        /^https:\/\/markdownviewer\.pages\.dev\/#share=/,
-	      )
+	      expect(rewritten.items[0]).not.toHaveProperty("externalPreviewUrl")
 	    } finally {
       await rm(outputDir, { recursive: true, force: true })
     }

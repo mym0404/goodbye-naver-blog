@@ -88,6 +88,27 @@ export const postSameOriginJsonNoContent = async (input: RequestInfo | URL, body
   }
 }
 
+export const postSameOriginJson = async <T>(input: RequestInfo | URL, body: unknown): Promise<T> => {
+  const response = await fetch(input, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-requested-with": "XMLHttpRequest",
+    },
+    body: JSON.stringify(body),
+  })
+
+  const responseBody = (await response.json()) as T & {
+    error?: string
+  }
+
+  if (!response.ok) {
+    throw new Error(responseBody.error ?? `request failed: ${response.status}`)
+  }
+
+  return responseBody
+}
+
 export const postUploadJson = <T>(input: RequestInfo | URL, body: unknown) =>
   fetchJson<T>(input, {
     method: "POST",

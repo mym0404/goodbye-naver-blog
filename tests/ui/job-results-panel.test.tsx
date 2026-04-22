@@ -291,13 +291,12 @@ const uploadReadyJob: ExportJobState = {
 		        rewriteStatus: "pending",
 		        rewrittenAt: null,
 		      },
-	      warnings: [],
-	      warningCount: 0,
-	      error: null,
-	      externalPreviewUrl: "https://markdownviewer.pages.dev/#share=test",
-	      updatedAt: "2026-04-21T00:00:02.000Z",
-	    },
-	  ],
+		      warnings: [],
+		      warningCount: 0,
+		      error: null,
+		      updatedAt: "2026-04-21T00:00:02.000Z",
+		    },
+		  ],
   manifest: null,
   error: null,
 }
@@ -532,25 +531,51 @@ describe("JobResultsPanel upload provider UX", () => {
 
   it("renders action buttons for preview and local file open", async () => {
     const user = userEvent.setup()
-    const fetchMock = vi.fn<typeof fetch>(async () => new Response(null, { status: 204 }))
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      if (input === "/api/local-file/preview-link") {
+        return new Response(JSON.stringify({ previewUrl: "https://markdownviewer.pages.dev/#share=test" }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        })
+      }
+
+      return new Response(null, { status: 204 })
+    })
+    const openMock = vi.fn()
     vi.stubGlobal("fetch", fetchMock)
+    vi.stubGlobal("open", openMock)
     renderPanel()
 
     expect(
-      screen.getByRole("link", {
+      screen.getByRole("button", {
         name: "첫 글 외부 미리보기",
       }),
-    ).toHaveAttribute("href", "https://markdownviewer.pages.dev/#share=test")
-    expect(
-      screen.getByRole("link", {
-        name: "첫 글 외부 미리보기",
-      }).className,
-    ).toContain("text-muted-foreground")
+    ).toHaveAttribute("data-job-item-preview-link")
     expect(screen.getByRole("button", { name: "첫 글 파일 열기" }).className).toContain("text-muted-foreground")
 
     await user.hover(screen.getByText("first"))
 
     expect((await screen.findAllByText("./output/posts/first/index.md")).length).toBeGreaterThan(0)
+
+    await user.click(screen.getByRole("button", { name: "첫 글 외부 미리보기" }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/local-file/preview-link",
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-requested-with": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          outputDir: "./output",
+          outputPath: "posts/first/index.md",
+        }),
+      }),
+    )
+    expect(openMock).toHaveBeenCalledWith("https://markdownviewer.pages.dev/#share=test", "_blank", "noopener,noreferrer")
 
     await user.click(screen.getByRole("button", { name: "첫 글 파일 열기" }))
 

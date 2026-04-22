@@ -21,7 +21,7 @@
     "samples:refresh": "tsx scripts/harness/refresh-sample-fixtures.ts",
     "smoke:ui": "pnpm build:ui && tsx scripts/harness/run-ui-smoke-suite.ts",
     "quality:report": "tsx scripts/harness/generate-quality-report.ts",
-    "check:local": "pnpm typecheck && pnpm test:offline && pnpm parser:check",
+    "check:local": "pnpm typecheck && pnpm test:offline && pnpm parser:check && pnpm samples:verify",
     "check:full": "pnpm quality:report && pnpm typecheck && pnpm test:offline && pnpm parser:check && pnpm samples:verify && pnpm smoke:ui"
   },
   "dependencies": {

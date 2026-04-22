@@ -3,9 +3,7 @@ import path from "node:path"
 import { parserCapabilities } from "../../../src/shared/parser-capabilities.js"
 import { sampleCorpus } from "../../../src/shared/sample-corpus.js"
 import type { BlockType, EditorVersion, ParserCapabilityId } from "../../../src/shared/types.js"
-import { pathExists, readUtf8, repoPath, walkFiles } from "./paths.js"
-
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+import { pathExists, repoPath, walkFiles } from "./paths.js"
 
 export const collectParserStatus = async () => {
   const parserFixtureDir = repoPath("tests", "fixtures", "parser")
@@ -16,10 +14,6 @@ export const collectParserStatus = async () => {
   const parserFixtureBlockTypes = new Set(
     parserFixtureFiles.map((filePath) => path.basename(filePath, ".html")),
   )
-  const testFiles = (await walkFiles(repoPath("tests")))
-    .filter((filePath) => filePath.endsWith(".test.ts"))
-    .sort()
-  const testContent = (await Promise.all(testFiles.map((filePath) => readUtf8(filePath)))).join("\n")
   const sampleById = new Map(sampleCorpus.map((sample) => [sample.id, sample]))
   const capabilityIdSet = new Set(parserCapabilities.map((capability) => capability.id))
   const sampleFixtureCapabilities = parserCapabilities.filter(
@@ -32,28 +26,41 @@ export const collectParserStatus = async () => {
     new Set(parserCapabilities.map((capability) => capability.blockType)),
   ) as BlockType[]
   const missingParserFixtureBlockTypes: BlockType[] = []
-  const missingTestBlockTypes: BlockType[] = []
+  const missingCapabilityTestMappings: ParserCapabilityId[] = []
   const sampleGapCapabilityIds: ParserCapabilityId[] = []
+  const invalidCapabilityTestFileLinks: string[] = []
   const invalidSampleLinks: string[] = []
   const invalidExpectedCapabilityIds: string[] = []
   const missingSampleSourceFixtures: string[] = []
   const missingSampleExpectedFixtures: string[] = []
+  const coveredCapabilityTestIds = new Set<ParserCapabilityId>()
 
   for (const blockType of blockTypes) {
     if (!parserFixtureBlockTypes.has(blockType)) {
       missingParserFixtureBlockTypes.push(blockType)
-    }
-
-    const testPattern = new RegExp(`type:\\s*"${escapeRegex(blockType)}"`)
-
-    if (!testPattern.test(testContent)) {
-      missingTestBlockTypes.push(blockType)
     }
   }
 
   for (const capability of parserCapabilities) {
     if (capability.verificationMode === "sample-fixture" && capability.sampleIds.length === 0) {
       sampleGapCapabilityIds.push(capability.id)
+    }
+
+    if (capability.testFilePaths.length === 0) {
+      missingCapabilityTestMappings.push(capability.id)
+    }
+
+    let hasOnlyExistingTestFiles = capability.testFilePaths.length > 0
+
+    for (const testFilePath of capability.testFilePaths) {
+      if (!(await pathExists(repoPath(...testFilePath.split("/"))))) {
+        invalidCapabilityTestFileLinks.push(`${capability.id}: missing test file ${testFilePath}`)
+        hasOnlyExistingTestFiles = false
+      }
+    }
+
+    if (hasOnlyExistingTestFiles) {
+      coveredCapabilityTestIds.add(capability.id)
     }
 
     for (const sampleId of capability.sampleIds) {
@@ -102,8 +109,9 @@ export const collectParserStatus = async () => {
 
   return {
     missingParserFixtureBlockTypes,
-    missingTestBlockTypes,
+    missingCapabilityTestMappings,
     sampleGapCapabilityIds,
+    invalidCapabilityTestFileLinks,
     invalidSampleLinks,
     invalidExpectedCapabilityIds,
     missingSampleSourceFixtures,
@@ -112,8 +120,9 @@ export const collectParserStatus = async () => {
     capabilityCoverageBySample,
     parserFixtureOnlyCapabilityIds,
     parserBlockFixtureCoverageCount: blockTypes.length - missingParserFixtureBlockTypes.length,
-    parserBlockTestCoverageCount: blockTypes.length - missingTestBlockTypes.length,
     parserBlockTotal: blockTypes.length,
+    parserCapabilityTestCoverageCount: coveredCapabilityTestIds.size,
+    parserCapabilityTestTotal: parserCapabilities.length,
     parserCapabilitySampleCoverageCount: sampleFixtureCapabilities.length - sampleGapCapabilityIds.length,
     parserCapabilitySampleTotal: sampleFixtureCapabilities.length,
   }

@@ -1,7 +1,7 @@
 # Quality Score
 
 ## 목적
-이 문서는 parser fixture, parser test hint, 실샘플 coverage를 요약하는 generated 품질 리포트다.
+이 문서는 parser fixture, parser test mapping, 실샘플 coverage를 요약하는 generated 품질 리포트다.
 
 ## Source Of Truth
 이 문서는 `src/shared/parser-capabilities.ts`, `src/shared/sample-corpus.ts`, `tests/fixtures/`, `tests/*.test.ts`를 바탕으로 자동 생성된다.
@@ -20,7 +20,7 @@
 | metric | coverage |
 | --- | --- |
 | parser block fixture coverage | 12/12 (100%) |
-| parser block test hint coverage | 12/12 (100%) |
+| parser capability test mapping coverage | 27/27 (100%) |
 | sample-fixture capability coverage | 22/22 (100%) |
 | parser-fixture only capabilities | 5 |
 | sample corpus size | 13 |

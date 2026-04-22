@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { NaverBlogFetcher } from "../src/modules/blog-fetcher/naver-blog-fetcher.js"
 import { NaverBlogExporter } from "../src/modules/exporter/naver-blog-exporter.js"
+import { buildMarkdownViewerShareUrl } from "../src/modules/exporter/markdown-viewer-share-url.js"
 import { defaultExportOptions } from "../src/shared/export-options.js"
 import type {
   ExportManifest,
@@ -501,12 +502,6 @@ describe("http server", () => {
                 options: defaultExportOptions(),
               },
               status: "running",
-              logs: [
-                {
-                  timestamp: "2026-04-11T04:00:00.000Z",
-                  message: "이전 진행 상태를 복구했습니다.",
-                },
-              ],
               createdAt: "2026-04-11T04:00:00.000Z",
               startedAt: "2026-04-11T04:00:01.000Z",
               finishedAt: null,
@@ -525,9 +520,11 @@ describe("http server", () => {
                 failedCount: 0,
                 terminalReason: null,
               },
-              items: [],
               error: null,
-              scanResult: baseScanResult,
+              scanResult: {
+                blogId: baseScanResult.blogId,
+                totalPostCount: baseScanResult.totalPostCount,
+              },
               summary: {
                 status: "running",
                 outputDir,
@@ -563,10 +560,124 @@ describe("http server", () => {
       expect(response.ok).toBe(true)
       expect(body.resumedJob?.id).toBe("job-resume")
       expect(body.resumedJob?.status).toBe("running")
+      expect(body.resumedJob?.logs).toEqual([])
       expect(body.resumedJob?.request.outputDir).toBe(outputDir)
       expect(body.resumeSummary?.outputDir).toBe(outputDir)
       expect(body.resumedScanResult?.blogId).toBe(baseScanResult.blogId)
     } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("does not hydrate resumed jobs from temporary output directories", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "export-manifest-temp-resume-"))
+    const settingsPath = path.join(rootDir, "export-ui-settings.json")
+    const outputDir = "/tmp/farewell-temp-resume-output"
+
+    try {
+      await mkdir(outputDir, { recursive: true })
+      await writeFile(
+        settingsPath,
+        JSON.stringify({
+          lastOutputDir: outputDir,
+        }),
+      )
+      await writeFile(
+        path.join(outputDir, "manifest.json"),
+        JSON.stringify(
+          {
+            blogId: "mym0404",
+            profile: "gfm",
+            options: defaultExportOptions(),
+            selectedCategoryIds: [84],
+            startedAt: "2026-04-11T04:00:00.000Z",
+            finishedAt: null,
+            totalPosts: 3,
+            successCount: 1,
+            failureCount: 0,
+            warningCount: 0,
+            upload: {
+              status: "not-requested",
+              eligiblePostCount: 0,
+              candidateCount: 0,
+              uploadedCount: 0,
+              failedCount: 0,
+              terminalReason: null,
+            },
+            categories: baseScanResult.categories,
+            posts: [],
+            job: {
+              id: "job-temp-resume",
+              phase: "export",
+              request: {
+                blogIdOrUrl: "mym0404",
+                outputDir,
+                profile: "gfm",
+                options: defaultExportOptions(),
+              },
+              status: "running",
+              createdAt: "2026-04-11T04:00:00.000Z",
+              startedAt: "2026-04-11T04:00:01.000Z",
+              finishedAt: null,
+              updatedAt: "2026-04-11T04:00:02.000Z",
+              progress: {
+                total: 3,
+                completed: 1,
+                failed: 0,
+                warnings: 0,
+              },
+              upload: {
+                status: "not-requested",
+                eligiblePostCount: 0,
+                candidateCount: 0,
+                uploadedCount: 0,
+                failedCount: 0,
+                terminalReason: null,
+              },
+              error: null,
+              scanResult: {
+                blogId: baseScanResult.blogId,
+                totalPostCount: baseScanResult.totalPostCount,
+              },
+              summary: {
+                status: "running",
+                outputDir,
+                totalPosts: 3,
+                completedCount: 1,
+                failedCount: 0,
+                uploadCandidateCount: 0,
+                uploadedCount: 0,
+              },
+            },
+          } satisfies ExportManifest,
+          null,
+          2,
+        ),
+        "utf8",
+      )
+
+      activeServer = createTestHttpServer({
+        settingsPath,
+      })
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/export-defaults`)
+      const body = (await response.json()) as {
+        lastOutputDir: string
+        resumedJob: ExportJobState | null
+        resumeSummary: {
+          outputDir: string
+        } | null
+        resumedScanResult: ScanResult | null
+      }
+
+      expect(response.ok).toBe(true)
+      expect(body.lastOutputDir).toBe(outputDir)
+      expect(body.resumedJob).toBeNull()
+      expect(body.resumeSummary).toBeNull()
+      expect(body.resumedScanResult).toBeNull()
+    } finally {
+      await rm(outputDir, { recursive: true, force: true })
       await rm(rootDir, { recursive: true, force: true })
     }
   })
@@ -631,7 +742,6 @@ describe("http server", () => {
                 options: defaultExportOptions(),
               },
               status: "running",
-              logs: [],
               createdAt: "2026-04-11T04:00:00.000Z",
               startedAt: "2026-04-11T04:00:01.000Z",
               finishedAt: null,
@@ -650,12 +760,10 @@ describe("http server", () => {
                 failedCount: 0,
                 terminalReason: null,
               },
-              items: [],
               error: null,
               scanResult: {
                 blogId: cachedScanResult.blogId,
                 totalPostCount: cachedScanResult.totalPostCount,
-                categories: cachedScanResult.categories,
               },
               summary: {
                 status: "running",
@@ -739,7 +847,6 @@ describe("http server", () => {
                 options: defaultExportOptions(),
               },
               status: "running",
-              logs: [],
               createdAt: "2026-04-11T04:00:00.000Z",
               startedAt: "2026-04-11T04:00:01.000Z",
               finishedAt: null,
@@ -758,9 +865,11 @@ describe("http server", () => {
                 failedCount: 0,
                 terminalReason: null,
               },
-              items: [],
               error: null,
-              scanResult: baseScanResult,
+              scanResult: {
+                blogId: baseScanResult.blogId,
+                totalPostCount: baseScanResult.totalPostCount,
+              },
               summary: {
                 status: "running",
                 outputDir,
@@ -947,12 +1056,6 @@ describe("http server", () => {
           options: defaultExportOptions(),
         },
         status: "running" as const,
-        logs: [
-          {
-            timestamp: "2026-04-11T04:00:00.000Z",
-            message: "이전 진행 상태를 복구했습니다.",
-          },
-        ],
         createdAt: "2026-04-11T04:00:00.000Z",
         startedAt: "2026-04-11T04:00:01.000Z",
         finishedAt: null,
@@ -971,9 +1074,11 @@ describe("http server", () => {
           failedCount: 0,
           terminalReason: null,
         },
-        items: [],
         error: null,
-        scanResult: baseScanResult,
+        scanResult: {
+          blogId: baseScanResult.blogId,
+          totalPostCount: baseScanResult.totalPostCount,
+        },
         summary: {
           status: "running" as const,
           outputDir,
@@ -1386,6 +1491,131 @@ describe("http server", () => {
     }
   })
 
+  it("builds a preview link from the current markdown file through the action api", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "preview-local-file-"))
+    const targetPath = path.join(rootDir, "posts", "first", "index.md")
+
+    try {
+      await mkdir(path.dirname(targetPath), { recursive: true })
+      await writeFile(targetPath, "# hello")
+
+      activeServer = createTestHttpServer()
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/local-file/preview-link`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: baseUrl,
+          "x-requested-with": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          outputDir: rootDir,
+          outputPath: "posts/first/index.md",
+        }),
+      })
+      const body = (await response.json()) as {
+        previewUrl: string
+      }
+
+      expect(response.status).toBe(200)
+      expect(body.previewUrl).toMatch(/^https:\/\/markdownviewer\.pages\.dev\/#share=/)
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("rejects preview-link requests for missing files", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "preview-local-file-missing-"))
+
+    try {
+      activeServer = createTestHttpServer()
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/local-file/preview-link`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: baseUrl,
+          "x-requested-with": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          outputDir: rootDir,
+          outputPath: "posts/first/index.md",
+        }),
+      })
+
+      expect(response.status).toBe(404)
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("rejects preview-link requests that escape the output root", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "preview-local-file-escape-"))
+
+    try {
+      activeServer = createTestHttpServer()
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/local-file/preview-link`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: baseUrl,
+          "x-requested-with": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          outputDir: rootDir,
+          outputPath: "../outside.md",
+        }),
+      })
+
+      expect(response.status).toBe(400)
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  it("returns 422 when a preview link cannot be generated", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "preview-local-file-too-large-"))
+    const targetPath = path.join(rootDir, "posts", "first", "index.md")
+    let markdown = ""
+    let index = 0
+
+    while (buildMarkdownViewerShareUrl(markdown) !== null && index < 20000) {
+      markdown += `- item ${index}: ${index.toString(36)} ${Math.imul(index + 1, 2654435761) >>> 0}\n`
+      index += 1
+    }
+
+    expect(buildMarkdownViewerShareUrl(markdown)).toBeNull()
+
+    try {
+      await mkdir(path.dirname(targetPath), { recursive: true })
+      await writeFile(targetPath, markdown, "utf8")
+
+      activeServer = createTestHttpServer()
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/local-file/preview-link`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: baseUrl,
+          "x-requested-with": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          outputDir: rootDir,
+          outputPath: "posts/first/index.md",
+        }),
+      })
+
+      expect(response.status).toBe(422)
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
   it("persists scan results to a json file and reuses them after app reloads", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "scan-cache-"))
     const scanCachePath = path.join(rootDir, "scan-cache.json")
@@ -1556,9 +1786,7 @@ describe("http server", () => {
     expect(completedJob.items[0]?.upload.uploadedUrls[0]).toMatch(
       /^https:\/\/cdn\.example\.com\/public\/[a-f0-9]{64}\.png$/,
     )
-    expect(completedJob.items[0]?.externalPreviewUrl).toMatch(
-      /^https:\/\/markdownviewer\.pages\.dev\/#share=/,
-    )
+    expect(completedJob.items[0]).not.toHaveProperty("externalPreviewUrl")
     expect(serializedJob).not.toContain("providerFields")
     expect(serializedJob).not.toContain("ghp_test_upload_token")
     expect(serializedJob).not.toContain("owner/name")
@@ -2263,11 +2491,8 @@ describe("http server", () => {
           return matched.uploadedUrl
         })
         const completedAt = rewrittenAt ?? "2026-04-21T00:00:03.000Z"
-        const externalPreviewUrl = `https://markdownviewer.pages.dev/#share=${item.logNo}`
-
         return {
           markdownPath: `/tmp/${post.outputPath}`,
-          externalPreviewUrl,
           post: {
             ...post,
             assetPaths: uploadedUrls,
@@ -2279,7 +2504,6 @@ describe("http server", () => {
               rewriteStatus: "completed" as const,
               rewrittenAt: completedAt,
             },
-            externalPreviewUrl,
           },
           item: {
             ...item,
@@ -2292,7 +2516,6 @@ describe("http server", () => {
               rewriteStatus: "completed" as const,
               rewrittenAt: completedAt,
             },
-            externalPreviewUrl,
             updatedAt: completedAt,
           },
         }

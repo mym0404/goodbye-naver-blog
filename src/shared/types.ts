@@ -315,6 +315,7 @@ export type ParserCapability = {
   fallbackPolicy: ParserFallbackPolicy
   verificationMode: ParserCapabilityVerificationMode
   sampleIds: string[]
+  testFilePaths: string[]
 }
 
 export type SampleCorpusEntry = {
@@ -370,7 +371,6 @@ export type PostManifestEntry = {
   warnings: string[]
   warningCount: number
   error: string | null
-  externalPreviewUrl?: string | null
 }
 
 export type ExportJobItem = {
@@ -391,7 +391,6 @@ export type ExportJobItem = {
   warnings: string[]
   warningCount: number
   error: string | null
-  externalPreviewUrl?: string | null
   updatedAt: string
 }
 
@@ -435,21 +434,21 @@ export type ExportResumeSummary = {
   uploadedCount: number
 }
 
+export type ExportManifestScanResult = Pick<ScanResult, "blogId" | "totalPostCount">
+
 export type ExportManifestJobState = {
   id: string
   phase: ExportResumePhase
   request: ExportRequest
   status: JobStatus
-  logs: JobLog[]
   createdAt: string
   startedAt: string | null
   finishedAt: string | null
   updatedAt: string
   progress: ExportJobState["progress"]
   upload: UploadSummary
-  items: ExportJobItem[]
   error: string | null
-  scanResult: ScanResult | null
+  scanResult: ExportManifestScanResult | null
   summary: ExportResumeSummary
 }
 

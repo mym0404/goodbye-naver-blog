@@ -106,7 +106,6 @@ const job: ExportJobState = {
       warnings: ["warn-1"],
       warningCount: 1,
       error: null,
-      externalPreviewUrl: "https://markdownviewer.pages.dev/#share=test",
       updatedAt: "2026-04-22T07:43:23.550Z",
     },
   ],
@@ -122,9 +121,12 @@ describe("buildResumableExportManifest", () => {
     })
 
     expect(manifest.posts[0]?.warnings).toEqual(["warn-1"])
-    expect(manifest.posts[0]?.externalPreviewUrl).toBe("https://markdownviewer.pages.dev/#share=test")
-    expect(manifest.job?.items[0]?.warnings).toEqual([])
-    expect(manifest.job?.items[0]?.externalPreviewUrl).toBeNull()
-    expect(manifest.job?.scanResult?.posts).toBeUndefined()
+    expect(manifest.posts[0]).not.toHaveProperty("externalPreviewUrl")
+    expect(manifest.job).not.toHaveProperty("logs")
+    expect(manifest.job).not.toHaveProperty("items")
+    expect(manifest.job?.scanResult).toEqual({
+      blogId: scanResult.blogId,
+      totalPostCount: scanResult.totalPostCount,
+    })
   })
 })

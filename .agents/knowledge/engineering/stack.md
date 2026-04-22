@@ -19,7 +19,8 @@
 - Node.js 기반 ESM 저장소다.
 - 패키지 매니저는 `pnpm`이다.
 - 실행 엔트리는 `tsx`를 사용한다.
-- `pnpm dev`는 `tsx watch`와 Vite middleware를 함께 써서 `http://localhost:4173`에서 HMR 개발 서버를 띄운다.
+- `pnpm dev`는 `tsx watch`와 Vite middleware를 함께 써서 `http://localhost:4173`에서 사용자용 HMR 개발 서버를 띄운다.
+- AI agent, test, harness가 직접 서버를 띄울 때는 `pnpm dev`를 재사용하지 않고, 격리된 `FAREWELL_SETTINGS_PATH`, `FAREWELL_SCAN_CACHE_PATH`, 비기본 `PORT` 또는 `listen(0)` 기반 entry를 사용해 사용자 개발 서버와 분리한다.
 - `pnpm start`는 `pnpm build:ui` 뒤 `dist/client` 빌드 산출물을 서빙한다.
 
 ## Core Libraries

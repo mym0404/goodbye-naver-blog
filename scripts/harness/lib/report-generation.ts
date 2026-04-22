@@ -15,15 +15,17 @@ export const buildGeneratedDocs = async () => {
   const parserTotal = parserStatus.parserCapabilitySampleTotal
   const parserBlockTotal = parserStatus.parserBlockTotal
   const parserFixtureCovered = parserStatus.parserBlockFixtureCoverageCount
-  const parserTestCovered = parserStatus.parserBlockTestCoverageCount
+  const parserTestCovered = parserStatus.parserCapabilityTestCoverageCount
+  const parserTestTotal = parserStatus.parserCapabilityTestTotal
   const parserSampleCovered = parserStatus.parserCapabilitySampleCoverageCount
   const openRisks = [
     ...parserStatus.missingParserFixtureBlockTypes.map(
       (blockType) => `parser fixture missing for blockType: ${blockType}`,
     ),
-    ...parserStatus.missingTestBlockTypes.map(
-      (blockType) => `parser test reference missing for blockType: ${blockType}`,
+    ...parserStatus.missingCapabilityTestMappings.map(
+      (capabilityId) => `parser test mapping missing for capability: ${capabilityId}`,
     ),
+    ...parserStatus.invalidCapabilityTestFileLinks,
     ...parserStatus.sampleGapCapabilityIds.map(
       (capabilityId) => `실샘플이 없는 capability: ${capabilityId}`,
     ),
@@ -43,7 +45,7 @@ export const buildGeneratedDocs = async () => {
   const qualityScore = `# Quality Score
 
 ## 목적
-이 문서는 parser fixture, parser test hint, 실샘플 coverage를 요약하는 generated 품질 리포트다.
+이 문서는 parser fixture, parser test mapping, 실샘플 coverage를 요약하는 generated 품질 리포트다.
 
 ## Source Of Truth
 이 문서는 \`src/shared/parser-capabilities.ts\`, \`src/shared/sample-corpus.ts\`, \`tests/fixtures/\`, \`tests/*.test.ts\`를 바탕으로 자동 생성된다.
@@ -62,7 +64,7 @@ export const buildGeneratedDocs = async () => {
 | metric | coverage |
 | --- | --- |
 | parser block fixture coverage | ${ratio({ total: parserBlockTotal, covered: parserFixtureCovered })} |
-| parser block test hint coverage | ${ratio({ total: parserBlockTotal, covered: parserTestCovered })} |
+| parser capability test mapping coverage | ${ratio({ total: parserTestTotal, covered: parserTestCovered })} |
 | sample-fixture capability coverage | ${ratio({ total: parserTotal, covered: parserSampleCovered })} |
 | parser-fixture only capabilities | ${parserStatus.parserFixtureOnlyCapabilityIds.length} |
 | sample corpus size | ${sampleCorpus.length} |

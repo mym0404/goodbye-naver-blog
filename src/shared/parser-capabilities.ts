@@ -13,12 +13,17 @@ export const getParserCapabilityId = ({
   blockType: BlockType
 }): ParserCapabilityId => `se${editorVersion}-${blockType}`
 
+const se2ParserTestFilePaths = ["tests/parser/se2-parser.test.ts"]
+const se3ParserTestFilePaths = ["tests/parser/se3-parser.test.ts"]
+const se4ParserTestFilePaths = ["tests/parser/se4-parser.test.ts"]
+
 const createCapability = ({
   editorVersion,
   blockType,
   fallbackPolicy,
   verificationMode,
   sampleIds,
+  testFilePaths,
 }: Omit<ParserCapability, "id">): ParserCapability => ({
   id: getParserCapabilityId({
     editorVersion,
@@ -29,6 +34,7 @@ const createCapability = ({
   fallbackPolicy,
   verificationMode,
   sampleIds,
+  testFilePaths,
 })
 
 export const parserCapabilities: ParserCapability[] = [
@@ -38,6 +44,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "best-effort",
     verificationMode: "sample-fixture",
     sampleIds: ["se2-legacy", "se2-code-image-autolayout", "se2-table-rawhtml-navigation"],
+    testFilePaths: se2ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 3,
@@ -45,6 +52,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "best-effort",
     verificationMode: "sample-fixture",
     sampleIds: ["se3-legacy", "se3-quote-imagegroup-note9", "se3-quote-table-vita"],
+    testFilePaths: se3ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 4,
@@ -52,6 +60,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "best-effort",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-formula-code-linkcard"],
+    testFilePaths: se4ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 2,
@@ -59,6 +68,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "parser-fixture",
     sampleIds: [],
+    testFilePaths: se2ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 4,
@@ -66,6 +76,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-heading-itinerary"],
+    testFilePaths: se4ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 2,
@@ -73,6 +84,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "parser-fixture",
     sampleIds: [],
+    testFilePaths: se2ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 3,
@@ -80,6 +92,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se3-quote-imagegroup-note9", "se3-quote-table-vita"],
+    testFilePaths: se3ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 4,
@@ -87,6 +100,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-quote-formula-code"],
+    testFilePaths: se4ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 2,
@@ -94,6 +108,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "structured",
     verificationMode: "parser-fixture",
     sampleIds: [],
+    testFilePaths: se2ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 4,
@@ -101,6 +116,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "structured",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-formula-code-linkcard", "se4-image-group"],
+    testFilePaths: se4ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 2,
@@ -108,6 +124,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se2-code-image-autolayout"],
+    testFilePaths: se2ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 3,
@@ -115,6 +132,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "parser-fixture",
     sampleIds: [],
+    testFilePaths: se3ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 4,
@@ -122,6 +140,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-formula-code-linkcard", "se4-quote-formula-code"],
+    testFilePaths: se4ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 4,
@@ -129,6 +148,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "skip",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-formula-code-linkcard", "se4-quote-formula-code"],
+    testFilePaths: se4ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 2,
@@ -136,6 +156,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se2-code-image-autolayout", "se2-table-rawhtml-navigation"],
+    testFilePaths: se2ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 3,
@@ -143,6 +164,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se3-quote-imagegroup-note9", "se3-quote-table-vita"],
+    testFilePaths: se3ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 4,
@@ -150,6 +172,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-video-table", "se4-image-legacy-link", "se4-quote-formula-code"],
+    testFilePaths: se4ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 2,
@@ -157,6 +180,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se2-thumburl-image-group"],
+    testFilePaths: se2ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 3,
@@ -164,6 +188,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se3-quote-imagegroup-note9"],
+    testFilePaths: se3ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 4,
@@ -171,6 +196,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-image-group"],
+    testFilePaths: se4ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 4,
@@ -178,6 +204,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "skip",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-video-table"],
+    testFilePaths: se4ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 4,
@@ -185,6 +212,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "markdown-paragraph",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-formula-code-linkcard", "se4-quote-formula-code"],
+    testFilePaths: se4ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 2,
@@ -192,6 +220,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "raw-html",
     verificationMode: "sample-fixture",
     sampleIds: ["se2-table-rawhtml-navigation"],
+    testFilePaths: se2ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 3,
@@ -199,6 +228,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "raw-html",
     verificationMode: "sample-fixture",
     sampleIds: ["se3-quote-table-vita"],
+    testFilePaths: se3ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 4,
@@ -206,6 +236,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "raw-html",
     verificationMode: "sample-fixture",
     sampleIds: ["se4-video-table"],
+    testFilePaths: se4ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 2,
@@ -213,6 +244,7 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "raw-html",
     verificationMode: "sample-fixture",
     sampleIds: ["se2-table-rawhtml-navigation"],
+    testFilePaths: se2ParserTestFilePaths,
   }),
   createCapability({
     editorVersion: 4,
@@ -220,5 +252,6 @@ export const parserCapabilities: ParserCapability[] = [
     fallbackPolicy: "raw-html",
     verificationMode: "parser-fixture",
     sampleIds: [],
+    testFilePaths: se4ParserTestFilePaths,
   }),
 ]

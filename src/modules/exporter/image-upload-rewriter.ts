@@ -3,14 +3,12 @@ import * as fs from "node:fs/promises"
 import path from "node:path"
 
 import type { ExportJobItem, ExportManifest, PostManifestEntry } from "../../shared/types.js"
-import { buildMarkdownViewerShareUrl } from "./markdown-viewer-share-url.js"
 import type { ImageUploadResult } from "./image-upload-phase.js"
 
 type FileOps = Pick<typeof fs, "readFile" | "writeFile" | "rename" | "rm">
 
 type RewrittenPostResult = {
   markdownPath: string
-  externalPreviewUrl: string | null
   post: PostManifestEntry
   item: ExportJobItem
 }
@@ -136,8 +134,6 @@ export const rewriteImageUploadPost = async ({
     uploadedUrls.push(matchedResult.uploadedUrl)
   }
 
-  const externalPreviewUrl = buildMarkdownViewerShareUrl(rewrittenMarkdown)
-
   await writeFileAtomically({
     finalPath: markdownPath,
     content: rewrittenMarkdown,
@@ -146,7 +142,6 @@ export const rewriteImageUploadPost = async ({
 
   return {
     markdownPath,
-    externalPreviewUrl,
     post: {
       ...post,
       assetPaths: post.assetPaths.map((assetPath) => resultByReference.get(assetPath) ?? assetPath),
@@ -158,7 +153,6 @@ export const rewriteImageUploadPost = async ({
         rewriteStatus: "completed",
         rewrittenAt,
       },
-      externalPreviewUrl,
     },
     item: {
       ...item,
@@ -171,7 +165,6 @@ export const rewriteImageUploadPost = async ({
         rewriteStatus: "completed",
         rewrittenAt,
       },
-      externalPreviewUrl,
       updatedAt: rewrittenAt,
     },
   }
@@ -223,7 +216,6 @@ export const rewriteUploadedAssets = async ({
           warnings: post.warnings,
           warningCount: post.warningCount,
           error: post.error,
-          externalPreviewUrl: post.externalPreviewUrl ?? null,
           updatedAt: new Date().toISOString(),
         }))
   let nextManifest = {

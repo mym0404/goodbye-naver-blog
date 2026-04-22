@@ -58,20 +58,60 @@ const manifest: ExportManifest = {
       warnings: [],
       warningCount: 0,
       error: null,
-      externalPreviewUrl: "https://markdownviewer.pages.dev/#share=test",
     },
   ],
+  job: {
+    id: "job-resume",
+    phase: "result",
+    request,
+    status: "completed",
+    createdAt: "2026-04-21T00:00:00.000Z",
+    startedAt: "2026-04-21T00:00:01.000Z",
+    finishedAt: "2026-04-21T00:00:05.000Z",
+    updatedAt: "2026-04-21T00:00:06.000Z",
+    progress: {
+      total: 1,
+      completed: 1,
+      failed: 0,
+      warnings: 0,
+    },
+    upload: {
+      status: "not-requested",
+      eligiblePostCount: 0,
+      candidateCount: 0,
+      uploadedCount: 0,
+      failedCount: 0,
+      terminalReason: null,
+    },
+    error: null,
+    scanResult: {
+      blogId: "mym0404",
+      totalPostCount: 1,
+    },
+    summary: {
+      status: "completed",
+      outputDir: "./output",
+      totalPosts: 1,
+      completedCount: 1,
+      failedCount: 0,
+      uploadCandidateCount: 0,
+      uploadedCount: 0,
+    },
+  },
 }
 
 describe("JobStore", () => {
-  it("preserves externalPreviewUrl when rebuilding items from manifest posts", () => {
+  it("hydrates runtime items from manifest posts and resets persisted logs", () => {
     const store = new JobStore()
-    const job = store.create(request)
 
-    store.completeExport(job.id, manifest)
+    const hydrated = store.hydrate(manifest)
 
-    expect(store.get(job.id)?.items[0]?.externalPreviewUrl).toBe(
-      "https://markdownviewer.pages.dev/#share=test",
-    )
+    expect(hydrated.logs).toEqual([])
+    expect(hydrated.items).toHaveLength(1)
+    expect(hydrated.items[0]).toMatchObject({
+      id: "posts/first/index.md",
+      outputPath: "posts/first/index.md",
+      updatedAt: "2026-04-21T00:00:06.000Z",
+    })
   })
 })

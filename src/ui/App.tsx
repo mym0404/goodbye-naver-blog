@@ -145,7 +145,7 @@ const stepMeta: Record<
 > = {
   "blog-input": {
     title: "블로그 입력",
-    description: "블로그 ID나 URL을 입력하고 카테고리를 불러옵니다.",
+    description: "블로그 ID와 출력 경로를 정한 뒤 카테고리를 불러옵니다.",
   },
   "category-selection": {
     title: "카테고리 선택",
@@ -153,7 +153,7 @@ const stepMeta: Record<
   },
   "structure-options": {
     title: "구조 설정",
-    description: "출력 경로와 폴더 구조를 정합니다.",
+    description: "폴더 구조와 파일 이름 규칙을 정합니다.",
   },
   "frontmatter-options": {
     title: "Frontmatter 설정",
@@ -1053,7 +1053,7 @@ export const App = () => {
                 블로그 ID 또는 URL
               </CardTitle>
               <CardDescription className="panel-description max-w-3xl text-sm leading-7">
-                네이버 블로그 ID나 주소를 입력하면 카테고리를 불러옵니다.
+                네이버 블로그 ID나 주소와 결과를 저장할 경로를 먼저 정합니다.
               </CardDescription>
             </div>
           </CardHeader>
@@ -1075,6 +1075,18 @@ export const App = () => {
                 }
                 onChange={(event) => handleBlogInputChange(event.target.value)}
               />
+            </label>
+            <label className="grid gap-2">
+              <span className="text-sm font-semibold text-foreground">출력 경로</span>
+              <Input
+                id="outputDir"
+                value={outputDir}
+                required
+                onChange={(event) => setOutputDir(event.target.value)}
+              />
+              <small className="text-sm leading-6 text-muted-foreground">
+                결과를 저장할 위치입니다.
+              </small>
             </label>
             <p
               id="scan-status"
