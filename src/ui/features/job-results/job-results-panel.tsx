@@ -1,4 +1,4 @@
-import { RiExternalLinkLine, RiFolderOpenLine } from "@remixicon/react"
+import { RiExternalLinkLine, RiFileTextLine, RiFolderOpenLine } from "@remixicon/react"
 import { useEffect, useRef, useState } from "react"
 
 import type {
@@ -487,6 +487,14 @@ export const JobResultsPanel = ({
     } finally {
       setPreviewPendingIds((current) => current.filter((currentId) => currentId !== itemId))
     }
+  }
+
+  const handleOpenSourceLink = ({
+    source,
+  }: {
+    source: string
+  }) => {
+    window.open(source, "_blank", "noopener,noreferrer")
   }
 
   useEffect(() => {
@@ -1245,7 +1253,29 @@ export const JobResultsPanel = ({
                                     variant="ghost"
                                     size="icon"
                                     className={jobActionButtonClassName}
-                                    aria-label={`${item.title} 외부 미리보기`}
+                                    aria-label={`${item.title} 네이버 원문 보기`}
+                                    data-job-item-source-link
+                                    onClick={() => {
+                                      handleOpenSourceLink({
+                                        source: item.source,
+                                      })
+                                    }}
+                                  >
+                                    <RiExternalLinkLine data-icon="inline-start" aria-hidden="true" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" sideOffset={8}>
+                                  네이버 원문 보기
+                                </TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className={jobActionButtonClassName}
+                                    aria-label={`${item.title} 마크다운 미리보기`}
                                     data-job-item-preview-link
                                     disabled={!canOpenPreview || previewPending}
                                     onClick={() => {
@@ -1260,14 +1290,14 @@ export const JobResultsPanel = ({
                                       })
                                     }}
                                   >
-                                    <RiExternalLinkLine data-icon="inline-start" aria-hidden="true" />
+                                    <RiFileTextLine data-icon="inline-start" aria-hidden="true" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top" sideOffset={8}>
                                   {previewPending
                                     ? "미리보기 링크 생성 중"
                                     : canOpenPreview
-                                      ? "외부 미리보기"
+                                      ? "마크다운 미리보기"
                                       : "미리보기 없음"}
                                 </TooltipContent>
                               </Tooltip>
