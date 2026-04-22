@@ -541,6 +541,12 @@ describe("JobResultsPanel upload provider UX", () => {
         name: "첫 글 외부 미리보기",
       }),
     ).toHaveAttribute("href", "https://markdownviewer.pages.dev/#share=test")
+    expect(
+      screen.getByRole("link", {
+        name: "첫 글 외부 미리보기",
+      }).className,
+    ).toContain("text-muted-foreground")
+    expect(screen.getByRole("button", { name: "첫 글 파일 열기" }).className).toContain("text-muted-foreground")
 
     await user.hover(screen.getByText("first"))
 

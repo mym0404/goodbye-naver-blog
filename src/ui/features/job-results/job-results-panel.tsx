@@ -9,7 +9,7 @@ import type {
 } from "../../../shared/types.js"
 
 import { Badge } from "../../components/ui/badge.js"
-import { Button } from "../../components/ui/button.js"
+import { Button, buttonVariants } from "../../components/ui/button.js"
 import {
   Card,
   CardContent,
@@ -348,6 +348,14 @@ const buildUploadedLinkMeta = (item: ExportJobState["items"][number]) =>
     })
     return entries
   }, [])
+
+const jobActionButtonClassName = cn(
+  buttonVariants({
+    variant: "ghost",
+    size: "icon",
+  }),
+  "size-8 rounded-full text-muted-foreground",
+)
 
 export const JobResultsPanel = ({
   mode,
@@ -1193,28 +1201,22 @@ export const JobResultsPanel = ({
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   {externalPreviewUrl ? (
-                                    <Button
-                                      asChild
-                                      variant="ghost"
-                                      size="icon"
-                                      className="size-8 rounded-full"
+                                    <a
+                                      href={externalPreviewUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      aria-label={`${item.title} 외부 미리보기`}
+                                      className={jobActionButtonClassName}
+                                      data-job-item-preview-link
                                     >
-                                      <a
-                                        href={externalPreviewUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        aria-label={`${item.title} 외부 미리보기`}
-                                        data-job-item-preview-link
-                                      >
-                                        <RiExternalLinkLine data-icon="inline-start" aria-hidden="true" />
-                                      </a>
-                                    </Button>
+                                      <RiExternalLinkLine data-icon="inline-start" aria-hidden="true" />
+                                    </a>
                                   ) : (
                                     <Button
                                       type="button"
                                       variant="ghost"
                                       size="icon"
-                                      className="size-8 rounded-full"
+                                      className={jobActionButtonClassName}
                                       aria-label={`${item.title} 외부 미리보기`}
                                       disabled
                                     >
@@ -1232,7 +1234,7 @@ export const JobResultsPanel = ({
                                     type="button"
                                     variant="ghost"
                                     size="icon"
-                                    className="size-8 rounded-full"
+                                    className={jobActionButtonClassName}
                                     aria-label={`${item.title} 파일 열기`}
                                     disabled={!item.outputPath}
                                     onClick={() => {
