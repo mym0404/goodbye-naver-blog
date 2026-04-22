@@ -16,5 +16,5 @@
     "ui": "@/components/ui",
     "hooks": "@/hooks"
   },
-  "iconLibrary": "lucide"
+  "iconLibrary": "remix"
 }

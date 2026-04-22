@@ -1,3 +1,4 @@
+import { RiCheckDoubleLine, RiEraserLine } from "@remixicon/react"
 import { getCategoryCheckboxState, orderCategoriesHierarchically } from "./category-selection.js"
 import type { ScanResult } from "../../../shared/types.js"
 
@@ -73,24 +74,25 @@ export const CategoryPanel = ({
 
   return (
     <Card
-      className="board-card overflow-hidden border-white/80 bg-white/90 shadow-[0_24px_60px_rgba(22,33,50,0.08)] backdrop-blur"
+      variant="panel"
+      className="board-card overflow-hidden"
       id="category-panel"
     >
-      <CardHeader className="panel-header gap-4 border-b border-slate-200/70 bg-white/70 p-6 sm:flex sm:items-start sm:justify-between">
+      <CardHeader className="panel-header gap-4 p-6 sm:flex sm:items-start sm:justify-between">
         <div className="panel-heading space-y-2">
-          <CardTitle className="section-title text-2xl font-semibold tracking-[-0.04em] text-slate-900">
+          <CardTitle className="section-title text-2xl">
             카테고리 선택
           </CardTitle>
         </div>
-        <CardDescription id="category-status" className="panel-description max-w-2xl text-sm leading-7 text-slate-600">
+        <CardDescription id="category-status" className="panel-description max-w-2xl text-sm leading-7">
           {categoryStatus}
         </CardDescription>
       </CardHeader>
 
       <CardContent className="panel-body grid gap-5 p-6">
         <div className="grid gap-4 xl:grid-cols-3">
-          <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]">
-            <span className="text-sm font-semibold text-slate-900">카테고리 포함 범위</span>
+          <label className="field-card grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+            <span className="text-sm font-semibold text-foreground">카테고리 포함 범위</span>
             <select
               id="scope-categoryMode"
               value={categoryMode}
@@ -104,8 +106,8 @@ export const CategoryPanel = ({
             </select>
           </label>
 
-          <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]">
-            <span className="text-sm font-semibold text-slate-900">시작일</span>
+          <label className="field-card grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+            <span className="text-sm font-semibold text-foreground">시작일</span>
             <Input
               id="scope-dateFrom"
               type="date"
@@ -115,8 +117,8 @@ export const CategoryPanel = ({
             />
           </label>
 
-          <label className="field grid min-h-0 gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_12px_30px_rgba(22,33,50,0.04)]">
-            <span className="text-sm font-semibold text-slate-900">종료일</span>
+          <label className="field-card grid min-h-0 gap-2 rounded-2xl px-4 py-4">
+            <span className="text-sm font-semibold text-foreground">종료일</span>
             <Input
               id="scope-dateTo"
               type="date"
@@ -129,7 +131,7 @@ export const CategoryPanel = ({
 
         <div className="toolbar category-toolbar grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <label className="input-stack toolbar-search grid gap-2">
-            <span className="toolbar-label text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">검색</span>
+            <span className="toolbar-label wizard-kicker">검색</span>
             <Input
               id="category-search"
               placeholder="카테고리 이름 또는 경로 검색"
@@ -142,13 +144,13 @@ export const CategoryPanel = ({
           <div className="toolbar-actions flex flex-wrap items-center gap-3">
             <Button
               type="button"
-              variant="outline"
+              variant="surface"
               id="select-all-categories"
               disabled={!scanResult}
-              className="min-h-10 rounded-xl border-slate-300 bg-white px-4"
+              className="min-h-10 rounded-xl px-4"
               onClick={onSelectAll}
             >
-              <i className="ri-check-double-line" aria-hidden="true" />
+              <RiCheckDoubleLine className="size-4" aria-hidden="true" />
               전체 선택
             </Button>
             <Button
@@ -156,16 +158,16 @@ export const CategoryPanel = ({
               variant="ghost"
               id="clear-all-categories"
               disabled={!scanResult}
-              className="ghost-button min-h-10 rounded-xl px-4 text-slate-600"
+              className="ghost-button min-h-10 rounded-xl px-4"
               onClick={onClearAll}
             >
-              <i className="ri-eraser-line" aria-hidden="true" />
+              <RiEraserLine className="size-4" aria-hidden="true" />
               전체 해제
             </Button>
           </div>
         </div>
 
-        <div className="selection-summary flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+        <div className="selection-summary flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <div className="grid gap-1">
             <span id="selected-category-count">
               선택한 카테고리 {selectedCount}개 / {categories.length}개
@@ -175,7 +177,7 @@ export const CategoryPanel = ({
             </span>
           </div>
           <Badge
-            variant={selectedCount > 0 ? "secondary" : "outline"}
+            variant={selectedCount > 0 ? "success" : "idle"}
             className="w-fit rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
           >
             {selectedCount > 0 ? "선택됨" : "미선택"}
@@ -185,19 +187,19 @@ export const CategoryPanel = ({
         {!scanResult ? (
           <div
             id="category-list"
-            className="category-list empty grid min-h-24 place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-6 text-center text-sm text-slate-500"
+            className="category-list empty-state-surface grid min-h-24 place-items-center rounded-2xl px-4 py-6 text-center text-sm"
           >
             스캔을 진행하면 카테고리가 여기에 표시됩니다.
           </div>
         ) : filteredCategories.length === 0 ? (
           <div
             id="category-list"
-            className="category-list empty grid min-h-24 place-items-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-6 text-center text-sm text-slate-500"
+            className="category-list empty-state-surface grid min-h-24 place-items-center rounded-2xl px-4 py-6 text-center text-sm"
           >
             검색 결과가 없습니다.
           </div>
         ) : (
-          <div id="category-list" className="category-list overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          <div id="category-list" className="section-card category-list overflow-hidden rounded-2xl">
             <ScrollArea className="h-[min(28rem,52vh)] overflow-hidden">
               <Table className="min-w-[42rem]">
                 <TableHeader className="sticky top-0 z-10">
@@ -243,17 +245,17 @@ export const CategoryPanel = ({
                                 aria-hidden="true"
                                 className="mb-1 inline-flex items-center"
                               >
-                                <span className="h-px w-4 bg-slate-300" />
+                                <span className="h-px w-4 bg-border" />
                               </span>
                             ) : null}
-                            <span className="font-semibold text-slate-900">{category.name}</span>
-                            <span className="text-sm text-slate-500">{categoryPath}</span>
+                            <span className="font-semibold text-foreground">{category.name}</span>
+                            <span className="text-sm text-muted-foreground">{categoryPath}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-slate-600">{categoryPath}</TableCell>
-                        <TableCell className="text-sm font-medium text-slate-700">{category.depth}</TableCell>
+                        <TableCell className="text-muted-foreground">{categoryPath}</TableCell>
+                        <TableCell className="text-sm font-medium text-foreground">{category.depth}</TableCell>
                         <TableCell>
-                          <Badge className="category-count min-w-10 justify-center rounded-full border-slate-300 px-2.5 py-0.5" variant="outline">
+                          <Badge className="category-count min-w-10 justify-center rounded-full px-2.5 py-0.5" variant="idle">
                             {category.postCount}
                           </Badge>
                         </TableCell>

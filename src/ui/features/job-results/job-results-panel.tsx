@@ -1,3 +1,4 @@
+import { RiExternalLinkLine } from "@remixicon/react"
 import { useEffect, useRef, useState } from "react"
 
 import type {
@@ -173,14 +174,14 @@ const jobStatusClass = (status: string | undefined) =>
   cn(
     "status-pill rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
     status === "completed" || status === "upload-completed" || status === "ready"
-      ? "bg-emerald-100 text-emerald-800"
-      : status === "running" || status === "queued" || status === "uploading"
-        ? "bg-amber-100 text-amber-800"
-        : status === "failed" || status === "upload-failed"
-          ? "bg-rose-100 text-rose-800"
-          : status === "upload-ready"
-            ? "bg-sky-100 text-sky-800"
-            : "bg-slate-100 text-slate-600",
+      ? "status-pill--success"
+      : status === "upload-ready"
+        ? "status-pill--ready"
+        : status === "running" || status === "queued" || status === "uploading"
+          ? "status-pill--running"
+          : status === "failed" || status === "upload-failed"
+            ? "status-pill--error"
+            : "status-pill--idle",
   )
 
 const panelCopy: Record<JobResultsMode, { title: string; description: string }> = {
@@ -210,7 +211,7 @@ const CompactMetrics = ({
 }) => (
   <div
     className={cn(
-      "flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1.5 text-sm leading-6 text-slate-600",
+      "flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1.5 text-sm leading-6 text-muted-foreground",
       className,
     )}
   >
@@ -219,8 +220,8 @@ const CompactMetrics = ({
         key={item.label}
         className="inline-flex min-w-0 max-w-full flex-wrap items-baseline gap-x-1.5 gap-y-0.5"
       >
-        <span className="shrink-0 text-slate-500">{item.label}</span>
-        <strong className="min-w-0 break-all font-semibold text-slate-900">{item.value}</strong>
+        <span className="shrink-0 text-muted-foreground">{item.label}</span>
+        <strong className="metric-value min-w-0 break-all font-semibold">{item.value}</strong>
       </span>
     ))}
   </div>
@@ -271,12 +272,12 @@ const uploadRowBadgeClass = (status: "pending" | "partial" | "complete" | "faile
   cn(
     "rounded-full border px-2.5 py-0.5",
     status === "pending"
-      ? "border-slate-300 bg-slate-100 text-slate-700"
+      ? "upload-badge--pending"
       : status === "partial"
-        ? "border-amber-200 bg-amber-50 text-amber-800"
+        ? "upload-badge--partial"
         : status === "complete"
-          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-          : "border-rose-200 bg-rose-50 text-rose-800",
+          ? "upload-badge--complete"
+          : "upload-badge--failed",
   )
 
 const shouldShowUploadColumns = (job: ExportJobState | null) =>
@@ -415,16 +416,17 @@ export const JobResultsPanel = ({
 
   return (
     <Card
-      className="board-card overflow-hidden border-white/80 bg-white/90 shadow-[0_24px_60px_rgba(22,33,50,0.08)] backdrop-blur"
+      variant="panel"
+      className="board-card overflow-hidden"
       id="status-panel"
     >
-      <CardHeader className="panel-header gap-4 border-b border-slate-200/70 bg-white/70 p-6 sm:flex sm:items-start sm:justify-between">
+      <CardHeader className="panel-header gap-4 p-6 sm:flex sm:items-start sm:justify-between">
         <div className="panel-heading space-y-2">
-          <CardTitle className="section-title text-2xl font-semibold tracking-[-0.04em] text-slate-900">
+          <CardTitle className="section-title text-2xl">
             {panelCopy[mode].title}
           </CardTitle>
           {panelCopy[mode].description ? (
-            <CardDescription className="panel-description max-w-3xl text-sm leading-7 text-slate-600">
+            <CardDescription className="panel-description max-w-3xl text-sm leading-7">
               {panelCopy[mode].description}
             </CardDescription>
           ) : null}
@@ -436,18 +438,18 @@ export const JobResultsPanel = ({
 
       <CardContent className="status-layout grid gap-5 p-6">
         {mode === "running" ? (
-          <section className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
-            <div className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-4">
+          <section className="subtle-panel grid gap-4 rounded-[1.5rem] p-4">
+            <div className="field-card grid gap-2 rounded-2xl p-4">
               <div className="flex items-center justify-between gap-3">
-                <strong className="text-sm font-semibold text-slate-900">수집 진행률</strong>
-                <span className="text-sm text-slate-600">
+                <strong className="text-sm font-semibold text-foreground">수집 진행률</strong>
+                <span className="text-sm text-muted-foreground">
                   {job?.progress.completed ?? 0} / {job?.progress.total ?? 0}
                 </span>
               </div>
               <Progress
                 id="running-progress"
                 value={runningProgressValue}
-                indicatorClassName="bg-sky-600"
+                indicatorClassName="bg-[var(--status-running-fg)]"
               />
             </div>
             <CompactMetrics
@@ -457,11 +459,11 @@ export const JobResultsPanel = ({
                 { label: "경고", value: String(job?.progress.warnings ?? 0) },
                 { label: "실패", value: String(job?.progress.failed ?? 0) },
               ]}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3"
+              className="field-card rounded-2xl px-4 py-3"
             />
             {showResumeExportButton ? (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
-                <p className="text-sm leading-6 text-sky-900">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color-mix(in_srgb,var(--status-running-fg)_25%,transparent)] bg-[var(--status-running-bg)] px-4 py-3">
+                <p className="info-copy text-sm leading-6">
                   이전 export 상태를 복구했습니다. 남은 글만 이어서 처리합니다.
                 </p>
                 <Button
@@ -481,11 +483,11 @@ export const JobResultsPanel = ({
         ) : null}
 
         {showUploadPanel ? (
-          <section className="upload-panel grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
+          <section className="upload-panel subtle-panel grid gap-4 rounded-[1.5rem] p-4">
             <div className="grid gap-3 lg:flex lg:items-start lg:justify-between">
               {buildUploadPanelCopy() ? (
                 <div>
-                  <CardDescription className="text-sm leading-7 text-slate-600">
+                  <CardDescription className="text-sm leading-7 text-muted-foreground">
                     {buildUploadPanelCopy()}
                   </CardDescription>
                 </div>
@@ -497,33 +499,33 @@ export const JobResultsPanel = ({
                   { label: "업로드 완료", value: String(job?.upload.uploadedCount ?? 0) },
                   { label: "실패", value: String(job?.upload.failedCount ?? 0) },
                 ]}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 lg:max-w-[32rem] lg:justify-end"
+                className="field-card rounded-2xl px-4 py-3 lg:max-w-[32rem] lg:justify-end"
               />
             </div>
 
-            <div className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="field-card grid gap-2 rounded-2xl p-4">
               <div className="flex items-center justify-between gap-3">
-                <strong className="text-sm font-semibold text-slate-900">업로드 진행률</strong>
-                <span className="text-sm text-slate-600">
+                <strong className="text-sm font-semibold text-foreground">업로드 진행률</strong>
+                <span className="text-sm text-muted-foreground">
                   {job?.upload.uploadedCount ?? 0} / {job?.upload.candidateCount ?? 0}
                 </span>
               </div>
               <Progress
                 id="upload-progress"
                 value={uploadProgressValue}
-                indicatorClassName="bg-emerald-600"
+                indicatorClassName="bg-[var(--status-ready-fg)]"
               />
             </div>
 
             {showUploadForm ? (
               uploadProviderError ? (
-                <p className="text-sm leading-7 text-rose-600">{uploadProviderError}</p>
+                <p className="danger-copy text-sm leading-7">{uploadProviderError}</p>
               ) : uploadProviders.providers.length === 0 || !activeProviderDefinition ? (
-                <p className="text-sm leading-7 text-slate-600">업로드 설정을 불러오지 못했습니다.</p>
+                <p className="text-sm leading-7 text-muted-foreground">업로드 설정을 불러오지 못했습니다.</p>
               ) : (
                 <form
                   id="upload-form"
-                  className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-4"
+                  className="field-card grid gap-4 rounded-[1.5rem] p-4"
                   onSubmit={async (event) => {
                     event.preventDefault()
                     const normalizedProviderFields = trimProviderFieldsForSubmit({
@@ -549,13 +551,13 @@ export const JobResultsPanel = ({
                     <div className="grid gap-2">
                       <label
                         htmlFor="upload-providerKey"
-                        className="text-sm font-semibold text-slate-900"
+                        className="text-sm font-semibold text-foreground"
                       >
                         Provider
                       </label>
                       <select
                         id="upload-providerKey"
-                        className="h-10 rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                        className="h-10 rounded-xl px-3 text-sm"
                         aria-describedby="upload-providerKey-description"
                         value={providerKey}
                         onChange={(event) => {
@@ -591,20 +593,20 @@ export const JobResultsPanel = ({
                       </select>
                       <p
                         id="upload-providerKey-description"
-                        className="text-sm leading-6 text-slate-500"
+                        className="text-sm leading-6 text-muted-foreground"
                       >
                         {activeProviderDefinition.description}
                       </p>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {providerKey === "alistplist" ? (
-                        <div className="grid gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 sm:col-span-2">
-                          <span className="text-sm font-semibold text-slate-900">Authentication</span>
-                          <span className="text-sm leading-6 text-slate-500">
+                        <div className="subtle-panel grid gap-2 rounded-2xl px-4 py-3 sm:col-span-2">
+                          <span className="text-sm font-semibold text-foreground">Authentication</span>
+                          <span className="text-sm leading-6 text-muted-foreground">
                             AList는 Token 또는 계정 인증 중 하나만 사용합니다.
                           </span>
                           <div className="flex flex-wrap gap-3">
-                            <label className="flex items-center gap-2 text-sm text-slate-700">
+                            <label className="flex items-center gap-2 text-sm text-foreground">
                               <input
                                 type="radio"
                                 name="upload-alist-auth-mode"
@@ -621,7 +623,7 @@ export const JobResultsPanel = ({
                               />
                               Token
                             </label>
-                            <label className="flex items-center gap-2 text-sm text-slate-700">
+                            <label className="flex items-center gap-2 text-sm text-foreground">
                               <input
                                 type="radio"
                                 name="upload-alist-auth-mode"
@@ -659,7 +661,7 @@ export const JobResultsPanel = ({
                           return (
                             <div
                               key={`${providerKey}:${field.key}`}
-                              className={`flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 sm:col-span-2 ${rule.disabled ? "opacity-70" : ""}`}
+                              className={`subtle-panel flex items-center gap-3 rounded-2xl px-4 py-3 sm:col-span-2 ${rule.disabled ? "opacity-70" : ""}`}
                             >
                               <input
                                 id={fieldInputId}
@@ -682,25 +684,25 @@ export const JobResultsPanel = ({
                               <span className="grid gap-1">
                                 <label
                                   htmlFor={fieldInputId}
-                                  className="text-sm font-semibold text-slate-900"
+                                  className="text-sm font-semibold text-foreground"
                                 >
                                   {field.label}
                                 </label>
                                 <span
                                   id={fieldDescriptionId}
-                                  className="text-sm leading-6 text-slate-500"
+                                  className="text-sm leading-6 text-muted-foreground"
                                 >
                                   {rule.description}
                                 </span>
                                 {rule.disabledReason ? (
                                   <span
                                     id={fieldDisabledReasonId}
-                                    className="text-sm leading-6 text-amber-700"
+                                    className="warning-copy text-sm leading-6"
                                   >
                                     {rule.disabledReason}
                                   </span>
                                 ) : field.placeholder ? (
-                                  <span className="text-sm leading-6 text-slate-500">
+                                  <span className="text-sm leading-6 text-muted-foreground">
                                     {field.placeholder}
                                   </span>
                                 ) : null}
@@ -712,15 +714,15 @@ export const JobResultsPanel = ({
                         if (field.inputType === "select") {
                           return (
                             <div key={`${providerKey}:${field.key}`} className="grid gap-2">
-                              <label htmlFor={fieldInputId} className="text-sm font-semibold text-slate-900">
+                              <label htmlFor={fieldInputId} className="text-sm font-semibold text-foreground">
                                 {field.label}
                               </label>
-                              <span id={fieldDescriptionId} className="text-sm leading-6 text-slate-500">
+                              <span id={fieldDescriptionId} className="text-sm leading-6 text-muted-foreground">
                                 {rule.description}
                               </span>
                               <select
                                 id={fieldInputId}
-                                className="h-10 rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none focus:border-slate-400"
+                                className="h-10 rounded-xl px-3 text-sm"
                                 value={String(activeProviderFields[field.key] ?? "")}
                                 disabled={rule.disabled}
                                 aria-describedby={fieldDescribedBy}
@@ -745,7 +747,7 @@ export const JobResultsPanel = ({
                               {rule.disabledReason ? (
                                 <span
                                   id={fieldDisabledReasonId}
-                                  className="text-sm leading-6 text-amber-700"
+                                  className="warning-copy text-sm leading-6"
                                 >
                                   {rule.disabledReason}
                                 </span>
@@ -756,10 +758,10 @@ export const JobResultsPanel = ({
 
                         return (
                           <div key={`${providerKey}:${field.key}`} className="grid gap-2">
-                            <label htmlFor={fieldInputId} className="text-sm font-semibold text-slate-900">
+                            <label htmlFor={fieldInputId} className="text-sm font-semibold text-foreground">
                               {field.label}
                             </label>
-                            <span id={fieldDescriptionId} className="text-sm leading-6 text-slate-500">
+                            <span id={fieldDescriptionId} className="text-sm leading-6 text-muted-foreground">
                               {rule.description}
                             </span>
                             <Input
@@ -783,7 +785,7 @@ export const JobResultsPanel = ({
                             {rule.disabledReason ? (
                               <span
                                 id={fieldDisabledReasonId}
-                                className="text-sm leading-6 text-amber-700"
+                                className="warning-copy text-sm leading-6"
                               >
                                 {rule.disabledReason}
                               </span>
@@ -795,7 +797,7 @@ export const JobResultsPanel = ({
                   </div>
                   {providerKey === "github" ? (
                     <div
-                      className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                      className="subtle-panel flex items-center gap-3 rounded-2xl px-4 py-3"
                     >
                       <input
                         id="upload-github-use-jsdelivr"
@@ -816,13 +818,13 @@ export const JobResultsPanel = ({
                       <span className="grid gap-1">
                         <label
                           htmlFor="upload-github-use-jsdelivr"
-                          className="text-sm font-semibold text-slate-900"
+                          className="text-sm font-semibold text-foreground"
                         >
                           jsDelivr CDN 사용
                         </label>
                         <span
                           id="upload-github-use-jsdelivr-description"
-                          className="text-sm leading-6 text-slate-500"
+                          className="text-sm leading-6 text-muted-foreground"
                         >
                           {githubUseJsDelivr
                             ? githubJsDelivrUrl || "Repository를 입력하면 jsDelivr 주소를 만듭니다."
@@ -835,7 +837,7 @@ export const JobResultsPanel = ({
                     <div className="grid gap-2">
                       <label
                         htmlFor="upload-github-jsdelivr-preview"
-                        className="text-sm font-semibold text-slate-900"
+                        className="text-sm font-semibold text-foreground"
                       >
                         자동 Custom URL
                       </label>
@@ -848,7 +850,7 @@ export const JobResultsPanel = ({
                       />
                       <span
                         id="upload-github-jsdelivr-preview-description"
-                        className="text-sm leading-6 text-slate-500"
+                        className="text-sm leading-6 text-muted-foreground"
                       >
                         jsDelivr 주소는 제출 시 Custom URL로 자동 적용됩니다.
                       </span>
@@ -880,19 +882,19 @@ export const JobResultsPanel = ({
             ) : null}
 
             {job?.upload.status === "skipped" ? (
-              <p className="text-sm leading-7 text-slate-600">
+              <p className="text-sm leading-7 text-muted-foreground">
                 업로드할 로컬 이미지가 없어 내보내기만 완료되었습니다.
               </p>
             ) : null}
 
             {job?.status === "upload-failed" && job.error ? (
-              <p className="text-sm leading-7 text-rose-600">{job.error}</p>
+              <p className="danger-copy text-sm leading-7">{job.error}</p>
             ) : null}
           </section>
         ) : null}
 
         {showExportSummary ? (
-          <section className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
+          <section className="subtle-panel grid gap-4 rounded-[1.5rem] p-4">
             <CompactMetrics
               items={[
                 { label: "총 글", value: String(job?.progress.total ?? 0) },
@@ -901,15 +903,15 @@ export const JobResultsPanel = ({
                 { label: "실패", value: String(job?.progress.failed ?? 0) },
                 { label: "업로드", value: String(job?.upload.uploadedCount ?? 0) },
               ]}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3"
+              className="field-card rounded-2xl px-4 py-3"
             />
 
             {job?.status === "failed" && job.error ? (
-              <p className="text-sm leading-7 text-rose-600">{job.error}</p>
+              <p className="danger-copy text-sm leading-7">{job.error}</p>
             ) : null}
 
             {job?.upload.status === "skipped" ? (
-              <p className="text-sm leading-7 text-slate-600">
+              <p className="text-sm leading-7 text-muted-foreground">
                 업로드할 로컬 이미지가 없어 내보내기만 완료되었습니다.
               </p>
             ) : null}
@@ -1029,7 +1031,7 @@ export const JobResultsPanel = ({
                                     data-job-item-preview-link
                                     aria-label={`${item.title} 미리보기`}
                                   >
-                                    <i className="ri-external-link-line text-[0.9rem]" aria-hidden="true" />
+                                    <RiExternalLinkLine className="size-[0.9rem]" aria-hidden="true" />
                                     <span>미리보기</span>
                                   </a>
                                 ) : null}

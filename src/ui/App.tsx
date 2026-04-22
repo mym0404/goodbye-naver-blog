@@ -1,3 +1,9 @@
+import {
+  RiArrowRightLine,
+  RiDownload2Line,
+  RiLoader4Line,
+  RiRadarLine,
+} from "@remixicon/react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
@@ -14,6 +20,7 @@ import type {
   ExportOptions,
   ExportResumeSummary,
   ScanResult,
+  ThemePreference,
   UploadProviderCatalogResponse,
   UploadProviderValue,
 } from "../shared/types.js"
@@ -36,7 +43,8 @@ import {
   DialogTitle,
 } from "./components/ui/dialog.js"
 import { Input } from "./components/ui/input.js"
-import { toast } from "./components/ui/sonner.js"
+import { Toaster, toast } from "./components/ui/sonner.js"
+import { ToggleGroup, ToggleGroupItem } from "./components/ui/toggle-group.js"
 import { toggleCategorySelection } from "./features/scan/category-selection.js"
 import { CategoryPanel } from "./features/scan/category-panel.js"
 import {
@@ -56,6 +64,7 @@ const fallbackDefaults: ExportBootstrapResponse = {
   profile: "gfm",
   options: defaultExportOptions(),
   lastOutputDir: "./output",
+  themePreference: "dark",
   resumedJob: null,
   resumeSummary: null,
   resumedScanResult: null,
@@ -85,6 +94,34 @@ const setupSteps = [
 
 type SetupStep = (typeof setupSteps)[number]
 type WizardStep = SetupStep | "running" | "upload" | "result"
+
+const NextActionIcon = ({
+  setupStep,
+  scanPending,
+  submitting,
+}: {
+  setupStep: SetupStep
+  scanPending: boolean
+  submitting: boolean
+}) => {
+  if (setupStep === "blog-input") {
+    return scanPending ? (
+      <RiLoader4Line className="size-4 motion-safe:animate-spin" aria-hidden="true" />
+    ) : (
+      <RiRadarLine className="size-4" aria-hidden="true" />
+    )
+  }
+
+  if (setupStep === "diagnostics-options") {
+    return submitting ? (
+      <RiLoader4Line className="size-4 motion-safe:animate-spin" aria-hidden="true" />
+    ) : (
+      <RiDownload2Line className="size-4" aria-hidden="true" />
+    )
+  }
+
+  return <RiArrowRightLine className="size-4" aria-hidden="true" />
+}
 
 const optionStepMap: Record<Extract<SetupStep, `${string}-options`>, ExportOptionsStep> = {
   "structure-options": "structure",
@@ -187,17 +224,17 @@ const createErrorJobState = (
 
 const statusPillClass = (status: string) =>
   cn(
-    "rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
+    "status-pill rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
     status === "completed" || status === "upload-completed" || status === "ready"
-      ? "bg-emerald-100 text-emerald-800"
-      : status === "running" || status === "queued" || status === "success" || status === "uploading"
-        ? "bg-amber-100 text-amber-800"
-        : status === "failed" || status === "upload-failed"
-          ? "bg-rose-100 text-rose-800"
-          : status === "upload-ready"
-            ? "bg-sky-100 text-sky-800"
-            : "bg-slate-100 text-slate-600",
-	  )
+      ? "status-pill--success"
+      : status === "upload-ready"
+        ? "status-pill--ready"
+        : status === "running" || status === "queued" || status === "success" || status === "uploading"
+          ? "status-pill--running"
+          : status === "failed" || status === "upload-failed"
+            ? "status-pill--error"
+            : "status-pill--idle",
+  )
 
 const resolveScopedCategoryIds = ({
   categories,
@@ -215,8 +252,17 @@ const resolveScopedCategoryIds = ({
     : categories.map((category) => category.id)
 }
 
-const getPersistedOptionsSignature = (options: ExportOptions) =>
-  JSON.stringify(sanitizePersistedExportOptions(options))
+const getPersistedUiStateSignature = ({
+  options,
+  themePreference,
+}: {
+  options: ExportOptions
+  themePreference: ThemePreference
+}) =>
+  JSON.stringify({
+    options: sanitizePersistedExportOptions(options),
+    themePreference,
+  })
 
 export const App = () => {
   const [defaults, setDefaults] = useState(fallbackDefaults)
@@ -227,6 +273,9 @@ export const App = () => {
   const [outputDir, setOutputDir] = useState("./output")
   const [resumeDialog, setResumeDialog] = useState<ExportResumeSummary | null>(null)
   const [scanCache, setScanCache] = useState<Record<string, ScanResult>>({})
+  const [themePreference, setThemePreference] = useState<ThemePreference>(
+    fallbackDefaults.themePreference,
+  )
   const [options, setOptions] = useState<ExportOptions>(
     fallbackDefaults.options,
   )
@@ -255,14 +304,16 @@ export const App = () => {
   const lastNotifiedJobKeyRef = useRef<string | null>(null)
   const stepViewRef = useRef<HTMLElement | null>(null)
   const previousStepRef = useRef<WizardStep | null>(null)
-  const persistedOptionsSignatureRef = useRef<string | null>(null)
+  const persistedUiStateSignatureRef = useRef<string | null>(null)
   const hasLoadedDefaultsRef = useRef(false)
   const latestPersistedOptionsRef = useRef(sanitizePersistedExportOptions(fallbackDefaults.options))
+  const latestThemePreferenceRef = useRef<ThemePreference>(fallbackDefaults.themePreference)
 
   const applyBootstrapState = (nextDefaults: ExportBootstrapResponse) => {
     setDefaults(nextDefaults)
     setOptions(nextDefaults.resumedJob?.request.options ?? nextDefaults.options)
     setOutputDir(nextDefaults.resumedJob?.request.outputDir ?? nextDefaults.lastOutputDir)
+    setThemePreference(nextDefaults.themePreference)
     setBlogIdOrUrl(nextDefaults.resumedJob?.request.blogIdOrUrl ?? "")
     setCategorySearch("")
     setSetupStep("blog-input")
@@ -322,9 +373,13 @@ export const App = () => {
     job?.status === "upload-failed" ||
     (job?.status === "uploading" && job.resumeAvailable)
   const persistedOptions = useMemo(() => sanitizePersistedExportOptions(options), [options])
-  const persistedOptionsSignature = useMemo(
-    () => JSON.stringify(persistedOptions),
-    [persistedOptions],
+  const persistedUiStateSignature = useMemo(
+    () =>
+      JSON.stringify({
+        options: persistedOptions,
+        themePreference,
+      }),
+    [persistedOptions, themePreference],
   )
 
   const currentStep: WizardStep = useMemo(() => {
@@ -355,6 +410,14 @@ export const App = () => {
   const isSetupStep = currentStep === setupStep
 
   useEffect(() => {
+    const root = document.documentElement
+    root.classList.remove("dark", "light")
+    root.classList.add(themePreference)
+    root.style.colorScheme = themePreference
+    latestThemePreferenceRef.current = themePreference
+  }, [themePreference])
+
+  useEffect(() => {
     const previousStep = previousStepRef.current
     previousStepRef.current = currentStep
 
@@ -383,7 +446,11 @@ export const App = () => {
         const nextPersistedOptions = sanitizePersistedExportOptions(nextDefaults.options)
 
         latestPersistedOptionsRef.current = nextPersistedOptions
-        persistedOptionsSignatureRef.current = getPersistedOptionsSignature(nextDefaults.options)
+        latestThemePreferenceRef.current = nextDefaults.themePreference
+        persistedUiStateSignatureRef.current = getPersistedUiStateSignature({
+          options: nextDefaults.options,
+          themePreference: nextDefaults.themePreference,
+        })
         hasLoadedDefaultsRef.current = true
         applyBootstrapState(nextDefaults)
       } catch (error) {
@@ -394,7 +461,11 @@ export const App = () => {
         const nextPersistedOptions = sanitizePersistedExportOptions(fallbackDefaults.options)
 
         latestPersistedOptionsRef.current = nextPersistedOptions
-        persistedOptionsSignatureRef.current = getPersistedOptionsSignature(fallbackDefaults.options)
+        latestThemePreferenceRef.current = fallbackDefaults.themePreference
+        persistedUiStateSignatureRef.current = getPersistedUiStateSignature({
+          options: fallbackDefaults.options,
+          themePreference: fallbackDefaults.themePreference,
+        })
         hasLoadedDefaultsRef.current = true
         applyBootstrapState(fallbackDefaults)
         setScanStatus(error instanceof Error ? error.message : String(error))
@@ -417,7 +488,7 @@ export const App = () => {
       return
     }
 
-    if (persistedOptionsSignature === persistedOptionsSignatureRef.current) {
+    if (persistedUiStateSignature === persistedUiStateSignatureRef.current) {
       return
     }
 
@@ -425,13 +496,14 @@ export const App = () => {
     const timeoutId = window.setTimeout(() => {
       void postJsonNoContent("/api/export-settings", {
         options: latestPersistedOptionsRef.current,
+        themePreference: latestThemePreferenceRef.current,
       })
         .then(() => {
           if (cancelled) {
             return
           }
 
-          persistedOptionsSignatureRef.current = persistedOptionsSignature
+          persistedUiStateSignatureRef.current = persistedUiStateSignature
         })
         .catch(() => {})
     }, exportSettingsSaveDelayMs)
@@ -440,7 +512,7 @@ export const App = () => {
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [persistedOptionsSignature])
+  }, [persistedUiStateSignature])
 
   useEffect(() => {
     setUploadProviders(fallbackUploadProviders)
@@ -791,7 +863,11 @@ export const App = () => {
       const nextPersistedOptions = sanitizePersistedExportOptions(nextDefaults.options)
 
       latestPersistedOptionsRef.current = nextPersistedOptions
-      persistedOptionsSignatureRef.current = getPersistedOptionsSignature(nextDefaults.options)
+      latestThemePreferenceRef.current = nextDefaults.themePreference
+      persistedUiStateSignatureRef.current = getPersistedUiStateSignature({
+        options: nextDefaults.options,
+        themePreference: nextDefaults.themePreference,
+      })
       applyBootstrapState(nextDefaults)
       toast.success("이전 작업을 초기화했습니다.", {
         description: `${resumeDialog.outputDir} 작업내역을 삭제했습니다.`,
@@ -943,20 +1019,20 @@ export const App = () => {
 
     if (currentStep === "blog-input") {
       return (
-        <Card className="hero-panel overflow-hidden border-white/80 bg-white/90 shadow-[0_24px_60px_rgba(22,33,50,0.08)] backdrop-blur">
-          <CardHeader className="gap-4 border-b border-slate-200/70 bg-white/70 p-6">
+        <Card variant="panel" className="hero-panel overflow-hidden">
+          <CardHeader className="panel-header gap-4 p-6">
             <div className="space-y-2">
-              <CardTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-900">
+              <CardTitle className="section-title text-2xl">
                 블로그 ID 또는 URL
               </CardTitle>
-              <CardDescription className="panel-description max-w-3xl text-sm leading-7 text-slate-600">
+              <CardDescription className="panel-description max-w-3xl text-sm leading-7">
                 네이버 블로그 ID나 주소를 입력하면 카테고리를 불러옵니다.
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="grid gap-4 p-6">
             <label className="grid gap-2">
-              <span className="text-sm font-semibold text-slate-900">
+              <span className="text-sm font-semibold text-foreground">
                 블로그 ID 또는 URL
               </span>
               <Input
@@ -967,7 +1043,7 @@ export const App = () => {
                 onChange={(event) => handleBlogInputChange(event.target.value)}
               />
             </label>
-            <p id="scan-status" className="scan-status-note text-sm leading-7 text-slate-600">
+            <p id="scan-status" className="scan-status-note text-sm leading-7">
               {scanStatus}
             </p>
           </CardContent>
@@ -1040,7 +1116,7 @@ export const App = () => {
   }
 
   return (
-    <main className="dashboard-shell relative min-h-screen w-full overflow-x-clip">
+    <main className={cn("dashboard-shell relative min-h-screen w-full overflow-x-clip", themePreference)}>
       <Dialog open={Boolean(resumeDialog)} onOpenChange={(open) => (!open ? setResumeDialog(null) : null)}>
         <DialogContent showCloseButton>
           <DialogHeader>
@@ -1050,18 +1126,18 @@ export const App = () => {
             </DialogDescription>
           </DialogHeader>
           {resumeDialog ? (
-            <div className="grid gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+            <div className="subtle-panel grid gap-2 rounded-[var(--radius-lg)] px-4 py-4 text-sm text-foreground">
               <p>
-                <strong className="font-semibold text-slate-900">상태</strong> {resumeDialog.status}
+                <strong className="font-semibold text-foreground">상태</strong> {resumeDialog.status}
               </p>
               <p>
-                <strong className="font-semibold text-slate-900">출력 경로</strong> {resumeDialog.outputDir}
+                <strong className="font-semibold text-foreground">출력 경로</strong> {resumeDialog.outputDir}
               </p>
               <p>
-                <strong className="font-semibold text-slate-900">진행</strong> 총 {resumeDialog.totalPosts} / 완료 {resumeDialog.completedCount} / 실패 {resumeDialog.failedCount}
+                <strong className="font-semibold text-foreground">진행</strong> 총 {resumeDialog.totalPosts} / 완료 {resumeDialog.completedCount} / 실패 {resumeDialog.failedCount}
               </p>
               <p>
-                <strong className="font-semibold text-slate-900">업로드</strong> {resumeDialog.uploadedCount} / {resumeDialog.uploadCandidateCount}
+                <strong className="font-semibold text-foreground">업로드</strong> {resumeDialog.uploadedCount} / {resumeDialog.uploadCandidateCount}
               </p>
             </div>
           ) : null}
@@ -1075,31 +1151,47 @@ export const App = () => {
 
       <div
         id="dashboard-backdrop"
-        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,rgba(51,102,255,0.16),transparent_22%),radial-gradient(circle_at_bottom_left,rgba(79,140,255,0.08),transparent_28%),linear-gradient(180deg,#f8fbff_0%,var(--background)_100%)]"
+        className="shell-backdrop pointer-events-none fixed inset-0 -z-10"
         aria-hidden="true"
       />
 
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-5 px-4 py-5 xl:px-6 xl:py-6">
-        <Card className="overflow-hidden border-white/80 bg-white/92 shadow-[0_24px_60px_rgba(22,33,50,0.08)] backdrop-blur">
+        <Card variant="panel" className="overflow-hidden">
           <CardContent className="grid gap-4 p-5">
             <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
               <div className="wizard-heading grid gap-1.5">
-                <span className="wizard-step-label text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <span className="wizard-step-label wizard-kicker">
                   {isSetupStep ? `단계 ${setupStepIndex + 1} / ${setupSteps.length}` : "현재 단계"}
                 </span>
                 <div className="grid gap-1.5">
-                  <h1 className="text-[clamp(1.7rem,2.5vw,2.4rem)] font-semibold leading-[1.04] tracking-[-0.05em] text-slate-900">
+                  <h1 className="wizard-title text-[clamp(1.7rem,2.5vw,2.4rem)] leading-[1.04]">
                     {stepMeta[currentStep].title}
                   </h1>
                   {stepMeta[currentStep].description ? (
-                    <p className="panel-description max-w-3xl text-sm leading-6 text-slate-600">
+                    <p className="panel-description max-w-3xl text-sm leading-6">
                       {stepMeta[currentStep].description}
                     </p>
                   ) : null}
                 </div>
               </div>
 
-              <div className="flex items-center justify-start gap-3 lg:justify-end">
+              <div className="flex flex-wrap items-center justify-start gap-3 lg:justify-end">
+                <ToggleGroup
+                  className="theme-toggle rounded-full p-1"
+                  value={themePreference}
+                  onValueChange={(value) => {
+                    if (value === "dark" || value === "light") {
+                      setThemePreference(value)
+                    }
+                  }}
+                >
+                  <ToggleGroupItem className="theme-toggle-item px-3 text-xs font-medium" value="dark">
+                    다크
+                  </ToggleGroupItem>
+                  <ToggleGroupItem className="theme-toggle-item px-3 text-xs font-medium" value="light">
+                    라이트
+                  </ToggleGroupItem>
+                </ToggleGroup>
                 <Badge
                   id="status-text"
                   className={statusPillClass(headerStatus)}
@@ -1112,7 +1204,7 @@ export const App = () => {
 
             <div
               id="summary"
-              className="wizard-summary-stats flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-slate-200/70 pt-2.5 text-sm text-slate-600"
+              className="wizard-summary-stats flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border pt-2.5 text-sm text-muted-foreground"
               aria-live="polite"
             >
               {summaryCards.map((card) => (
@@ -1120,8 +1212,8 @@ export const App = () => {
                   key={card.label}
                   className="wizard-summary-metric inline-flex min-w-0 max-w-full flex-wrap items-baseline gap-x-1.5 gap-y-0.5"
                 >
-                  <span className="shrink-0 text-slate-500">{card.label}</span>
-                  <strong className="min-w-0 break-all font-semibold text-slate-900">
+                  <span className="shrink-0 text-muted-foreground">{card.label}</span>
+                  <strong className="metric-value min-w-0 break-all font-semibold">
                     {card.value}
                   </strong>
                 </span>
@@ -1146,12 +1238,12 @@ export const App = () => {
       {isSetupStep ? (
         <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4 sm:pb-5 xl:px-6">
           <div className="mx-auto flex w-full max-w-6xl justify-center">
-            <div className="flex min-h-16 w-full max-w-fit flex-wrap items-center justify-end gap-2.5 rounded-[1.4rem] border border-white/90 bg-white/78 px-3 py-3 shadow-[0_20px_50px_rgba(22,33,50,0.18)] ring-1 ring-slate-900/5 backdrop-blur-xl supports-[backdrop-filter]:bg-white/72">
+            <div className="floating-dock flex min-h-16 w-full max-w-fit flex-wrap items-center justify-end gap-2.5 rounded-[1.4rem] px-3 py-3">
               {setupStepIndex > 0 ? (
                 <Button
                   type="button"
-                  variant="secondary"
-                  className="h-10 rounded-xl border border-slate-200/80 bg-white px-4 shadow-[0_1px_2px_rgba(22,33,50,0.06)]"
+                  variant="surface"
+                  className="h-10 rounded-xl px-4"
                   onClick={goToPreviousStep}
                 >
                   이전
@@ -1162,8 +1254,8 @@ export const App = () => {
                 <Button
                   type="button"
                   id="force-scan-button"
-                  variant="secondary"
-                  className="h-10 rounded-xl border border-slate-200/80 bg-white px-4 shadow-[0_1px_2px_rgba(22,33,50,0.06)]"
+                  variant="surface"
+                  className="h-10 rounded-xl px-4"
                   title="캐시 무효화"
                   disabled={!currentScanTarget || scanPending}
                   onClick={() => {
@@ -1183,7 +1275,7 @@ export const App = () => {
                       ? "export-button"
                       : undefined
                 }
-                className="h-10 rounded-xl px-4 shadow-[0_10px_24px_rgba(51,102,255,0.24)]"
+                className="h-10 rounded-xl px-4"
                 disabled={
                   setupStep === "blog-input"
                     ? scanPending
@@ -1195,19 +1287,10 @@ export const App = () => {
                   void goToNextStep()
                 }}
               >
-                <i
-                  className={cn(
-                    setupStep === "blog-input"
-                      ? scanPending
-                        ? "ri-loader-4-line motion-safe:animate-spin"
-                        : "ri-radar-line"
-                      : setupStep === "diagnostics-options"
-                        ? submitting
-                          ? "ri-loader-4-line motion-safe:animate-spin"
-                          : "ri-download-2-line"
-                        : "ri-arrow-right-line",
-                  )}
-                  aria-hidden="true"
+                <NextActionIcon
+                  setupStep={setupStep}
+                  scanPending={scanPending}
+                  submitting={submitting}
                 />
                 <span>{nextButtonLabel}</span>
               </Button>
@@ -1215,6 +1298,7 @@ export const App = () => {
           </div>
         </div>
       ) : null}
+      <Toaster theme={themePreference} />
     </main>
   )
 }
