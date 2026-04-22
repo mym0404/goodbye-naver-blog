@@ -1,0 +1,12 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Goodbye Naver Blog favicon</title>
+  <rect width="64" height="64" rx="18" fill="#050A08" />
+  <rect x="17" y="13" width="6" height="18" rx="3" fill="#03C75A" />
+  <rect x="25" y="10" width="6" height="21" rx="3" fill="#03C75A" />
+  <rect x="33" y="12" width="6" height="19" rx="3" fill="#03C75A" />
+  <rect x="41" y="16" width="6" height="15" rx="3" fill="#03C75A" />
+  <rect x="19" y="27" width="28" height="22" rx="9" fill="#03C75A" />
+  <rect x="12" y="31" width="17" height="6" rx="3" transform="rotate(-32 12 31)" fill="#03C75A" />
+  <path d="M49 22C52 24 54 27 54 31" stroke="#03C75A" stroke-width="2.5" stroke-linecap="round" opacity="0.5" />
+  <path d="M53 19C56 22 58 26 58 31" stroke="#03C75A" stroke-width="2" stroke-linecap="round" opacity="0.25" />
+</svg>

@@ -64,10 +64,14 @@ import type {
 import { fetchJson, postJson, postJsonNoContent } from "./lib/api.js"
 import { cn } from "./lib/cn.js"
 
+const defaultOutputDir = "./output"
+
+const normalizeOutputDir = (value: string) => value.trim() || defaultOutputDir
+
 const fallbackDefaults: ExportBootstrapResponse = {
   profile: "gfm",
   options: defaultExportOptions(),
-  lastOutputDir: "./output",
+  lastOutputDir: defaultOutputDir,
   themePreference: "dark",
   resumedJob: null,
   resumeSummary: null,
@@ -275,7 +279,7 @@ export const App = () => {
   const [uploadProviderError, setUploadProviderError] = useState<string | null>(null)
   const [resettingResume, setResettingResume] = useState(false)
   const [blogIdOrUrl, setBlogIdOrUrl] = useState("")
-  const [outputDir, setOutputDir] = useState("./output")
+  const [outputDir, setOutputDir] = useState(defaultOutputDir)
   const [resumeDialog, setResumeDialog] = useState<ExportResumeSummary | null>(null)
   const [scanCache, setScanCache] = useState<Record<string, ScanResult>>({})
   const [themePreference, setThemePreference] = useState<ThemePreference>(
@@ -328,7 +332,7 @@ export const App = () => {
   const applyBootstrapState = (nextDefaults: ExportBootstrapResponse) => {
     setDefaults(nextDefaults)
     setOptions(nextDefaults.resumedJob?.request.options ?? nextDefaults.options)
-    setOutputDir(nextDefaults.resumedJob?.request.outputDir ?? nextDefaults.lastOutputDir)
+    setOutputDir(normalizeOutputDir(nextDefaults.resumedJob?.request.outputDir ?? nextDefaults.lastOutputDir))
     setThemePreference(nextDefaults.themePreference)
     setBlogIdOrUrl(nextDefaults.resumedJob?.request.blogIdOrUrl ?? "")
     setCategorySearch("")
@@ -740,6 +744,10 @@ export const App = () => {
     }))
   }
 
+  const handleOutputDirBlur = () => {
+    setOutputDir((current) => normalizeOutputDir(current))
+  }
+
   const handleCategoryToggle = (categoryId: number, checked: boolean) => {
     if (!activeScanResult) {
       return
@@ -808,7 +816,7 @@ export const App = () => {
     try {
       const jobId = await startJob({
         blogIdOrUrl: currentScanTarget,
-        outputDir: outputDir.trim(),
+        outputDir: normalizeOutputDir(outputDir),
         options,
         scanResult: activeScanResult,
       })
@@ -820,7 +828,7 @@ export const App = () => {
       setJob(
         createErrorJobState(message, {
           blogIdOrUrl: currentScanTarget,
-          outputDir: outputDir.trim(),
+          outputDir: normalizeOutputDir(outputDir),
           options,
         }),
       )
@@ -951,7 +959,7 @@ export const App = () => {
       { label: "대상 글", value: String(scopedPostCount) },
       { label: "카테고리", value: String(activeScanResult?.categories.length ?? 0) },
       { label: "선택", value: String(selectedCount) },
-      { label: "출력", value: outputDir.trim() || "./output" },
+      { label: "출력", value: normalizeOutputDir(outputDir) },
     ]
   })()
 
@@ -1083,6 +1091,7 @@ export const App = () => {
                 value={outputDir}
                 required
                 onChange={(event) => setOutputDir(event.target.value)}
+                onBlur={handleOutputDirBlur}
               />
               <small className="text-sm leading-6 text-muted-foreground">
                 결과를 저장할 위치입니다.
@@ -1249,9 +1258,21 @@ export const App = () => {
           <CardContent className="grid gap-4 p-5">
             <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
               <div className="wizard-heading grid gap-1.5">
-                <span className="wizard-step-label wizard-kicker">
-                  {isSetupStep ? `단계 ${setupStepIndex + 1} / ${setupSteps.length}` : "현재 단계"}
-                </span>
+                <div className="flex flex-wrap items-center gap-3">
+                  <img
+                    src="/brand/logo.svg"
+                    alt="Goodbye Naver Blog"
+                    className="h-10 w-auto shrink-0"
+                  />
+                  <div className="grid gap-0.5">
+                    <span className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                      Goodbye Naver Blog
+                    </span>
+                    <span className="wizard-step-label wizard-kicker">
+                      {isSetupStep ? `단계 ${setupStepIndex + 1} / ${setupSteps.length}` : "현재 단계"}
+                    </span>
+                  </div>
+                </div>
                 <div className="grid gap-1.5">
                   <h1 className="wizard-title text-[clamp(1.7rem,2.5vw,2.4rem)] leading-[1.04]">
                     {stepMeta[currentStep].title}

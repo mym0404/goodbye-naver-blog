@@ -1,0 +1,74 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Goodbye Naver Blog Open Graph image</title>
+  <defs>
+    <radialGradient id="bg-glow-left" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(240 168) rotate(90) scale(260 320)">
+      <stop stop-color="#03C75A" stop-opacity="0.24" />
+      <stop offset="1" stop-color="#03C75A" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="bg-glow-right" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1010 112) rotate(90) scale(180 260)">
+      <stop stop-color="#22C55E" stop-opacity="0.12" />
+      <stop offset="1" stop-color="#22C55E" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="panel-stroke" x1="108" y1="76" x2="1128" y2="566" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#203329" />
+      <stop offset="1" stop-color="#112019" />
+    </linearGradient>
+    <filter id="noise" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="grain" />
+      <feColorMatrix
+        in="grain"
+        type="matrix"
+        values="1 0 0 0 0
+                1 0 0 0 0
+                1 0 0 0 0
+                0 0 0 0.055 0"
+      />
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="#050A08" />
+  <rect width="1200" height="630" fill="url(#bg-glow-left)" />
+  <rect width="1200" height="630" fill="url(#bg-glow-right)" />
+  <rect x="72" y="72" width="1056" height="486" rx="36" fill="#08100D" stroke="url(#panel-stroke)" stroke-width="2" />
+  <rect width="1200" height="630" fill="#E6FFF0" filter="url(#noise)" opacity="0.26" />
+
+  <g transform="translate(122 96)">
+    <rect x="0" y="0" width="290" height="290" rx="44" fill="#09110D" stroke="#173523" stroke-width="2" />
+    <rect x="64" y="58" width="24" height="110" rx="12" fill="#03C75A" />
+    <rect x="98" y="44" width="24" height="124" rx="12" fill="#03C75A" />
+    <rect x="132" y="54" width="24" height="114" rx="12" fill="#03C75A" />
+    <rect x="166" y="76" width="24" height="92" rx="12" fill="#03C75A" />
+    <rect x="68" y="144" width="122" height="102" rx="42" fill="#03C75A" />
+    <rect x="36" y="170" width="78" height="28" rx="14" transform="rotate(-32 36 170)" fill="#03C75A" />
+    <path d="M210 110C228 122 238 140 238 162" stroke="#03C75A" stroke-width="12" stroke-linecap="round" opacity="0.45" />
+    <path d="M230 84C258 104 274 132 274 166" stroke="#03C75A" stroke-width="9" stroke-linecap="round" opacity="0.22" />
+  </g>
+
+  <text x="462" y="204" fill="#ECFFF2" font-size="30" font-weight="600" font-family="Public Sans, Inter, Arial, sans-serif">
+    Goodbye Naver Blog
+  </text>
+  <text fill="#03C75A" font-size="62" font-weight="800" letter-spacing="-2" font-family="Public Sans, Inter, Arial, sans-serif">
+    <tspan x="462" y="280">Export before</tspan>
+    <tspan x="462" y="346">you leave.</tspan>
+  </text>
+  <text x="462" y="402" fill="#A8B7AF" font-size="22" font-weight="500" font-family="Public Sans, Inter, Arial, sans-serif">
+    Export public posts to Markdown and local assets.
+  </text>
+
+  <rect x="462" y="426" width="154" height="52" rx="26" fill="#0D1D15" stroke="#1A3A27" />
+  <circle cx="490" cy="452" r="10" fill="#03C75A" />
+  <text x="514" y="461" fill="#DDFBE8" font-size="22" font-weight="600" font-family="Public Sans, Inter, Arial, sans-serif">
+    Markdown
+  </text>
+
+  <rect x="632" y="426" width="180" height="52" rx="26" fill="#0D1D15" stroke="#1A3A27" />
+  <circle cx="660" cy="452" r="10" fill="#03C75A" />
+  <text x="684" y="461" fill="#DDFBE8" font-size="22" font-weight="600" font-family="Public Sans, Inter, Arial, sans-serif">
+    Frontmatter
+  </text>
+
+  <rect x="828" y="426" width="156" height="52" rx="26" fill="#0D1D15" stroke="#1A3A27" />
+  <circle cx="856" cy="452" r="10" fill="#03C75A" />
+  <text x="880" y="461" fill="#DDFBE8" font-size="22" font-weight="600" font-family="Public Sans, Inter, Arial, sans-serif">
+    Assets
+  </text>
+</svg>

@@ -1013,6 +1013,27 @@ describe("App", () => {
     expect(document.querySelector('[data-step-view="structure-options"] #outputDir')).toBeNull()
   })
 
+  it("restores the default output path when the field is left empty", async () => {
+    vi.stubGlobal("fetch", vi.fn<typeof fetch>(async (input) => {
+      const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
+
+      if (bootstrapResponse) {
+        return bootstrapResponse
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    }))
+
+    const user = renderApp()
+    const outputDirInput = screen.getByRole("textbox", { name: /출력 경로/ })
+
+    await user.clear(outputDirInput)
+    fireEvent.blur(outputDirInput)
+
+    expect(outputDirInput).toHaveValue("./output")
+  })
+
   it("runs the main export flow in the wizard without preview or modal", async () => {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()

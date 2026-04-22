@@ -1005,6 +1005,7 @@ const run = async () => {
       { timeout: responseTimeoutMs },
     )
 
+    await page.fill("#outputDir", outputDir)
     await page.click("#scan-button")
     await scanResponsePromise
     await waitForStepView({
@@ -1105,7 +1106,6 @@ const run = async () => {
       step: "structure-options",
     })
 
-    await page.fill("#outputDir", outputDir)
     await page.click("#structure-groupByCategory")
     await page.click('button:has-text("Frontmatter 설정")')
     await waitForStepView({

@@ -500,6 +500,7 @@ const run = async () => {
     })
 
     await page.fill("#blogIdOrUrl", blogId)
+    await page.fill("#outputDir", outputDir)
 
     const scanResponsePromise = page.waitForResponse(
       (response) =>
@@ -566,8 +567,6 @@ const run = async () => {
       page,
       step: "structure-options",
     })
-
-    await page.fill("#outputDir", outputDir)
 
     for (const nextStep of ["frontmatter-options", "markdown-options", "assets-options"] as const) {
       await clickWizardButton({
