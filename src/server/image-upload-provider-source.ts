@@ -8,41 +8,42 @@ import type {
   UploadProviderOptionValue,
   UploadProviderValue,
 } from "../shared/types.js"
+import { DEFAULT_UPLOAD_PROVIDER_KEY, UPLOAD_PROVIDER_KEYS } from "../shared/upload-provider-keys.js"
 
 const providerLabelMap: Record<string, string> = {
-  advancedplist: "Advanced Custom",
-  alistplist: "AList",
-  aliyun: "Aliyun OSS",
-  "aws-s3-plist": "AWS S3",
-  github: "GitHub",
-  imgur: "Imgur",
-  local: "Local",
-  lskyplist: "Lsky Pro",
-  piclist: "Runtime Server",
-  qiniu: "Qiniu",
-  sftpplist: "Built-in SFTP",
-  smms: "SM.MS",
-  tcyun: "Tencent COS",
-  upyun: "Upyun",
-  webdavplist: "WebDAV",
+  [UPLOAD_PROVIDER_KEYS.ADVANCED]: "Advanced Custom",
+  [UPLOAD_PROVIDER_KEYS.ALIST]: "AList",
+  [UPLOAD_PROVIDER_KEYS.ALIYUN]: "Aliyun OSS",
+  [UPLOAD_PROVIDER_KEYS.AWS_S3]: "AWS S3",
+  [UPLOAD_PROVIDER_KEYS.GITHUB]: "GitHub",
+  [UPLOAD_PROVIDER_KEYS.IMGUR]: "Imgur",
+  [UPLOAD_PROVIDER_KEYS.LOCAL]: "Local",
+  [UPLOAD_PROVIDER_KEYS.LSKY]: "Lsky Pro",
+  [UPLOAD_PROVIDER_KEYS.PICLIST]: "Runtime Server",
+  [UPLOAD_PROVIDER_KEYS.QINIU]: "Qiniu",
+  [UPLOAD_PROVIDER_KEYS.SFTP]: "Built-in SFTP",
+  [UPLOAD_PROVIDER_KEYS.SMMS]: "SM.MS",
+  [UPLOAD_PROVIDER_KEYS.TCYUN]: "Tencent COS",
+  [UPLOAD_PROVIDER_KEYS.UPYUN]: "Upyun",
+  [UPLOAD_PROVIDER_KEYS.WEBDAV]: "WebDAV",
 }
 
 const providerDescriptionMap: Record<string, string> = {
-  advancedplist: "커스텀 HTTP 업로드 스크립트로 이미지를 전송합니다.",
-  alistplist: "AList 스토리지 경로로 이미지를 업로드합니다.",
-  aliyun: "Aliyun OSS 버킷에 이미지를 업로드합니다.",
-  "aws-s3-plist": "S3 호환 버킷에 이미지를 업로드합니다.",
-  github: "리포지토리에 이미지를 커밋하고 URL로 사용합니다.",
-  imgur: "Imgur 계정 또는 익명 업로드로 이미지를 보관합니다.",
-  local: "현재 머신의 로컬 경로에 이미지를 저장합니다.",
-  lskyplist: "Lsky Pro 이미지 호스팅 서버로 업로드합니다.",
-  piclist: "실행 중인 업로드 서버에 요청을 보냅니다.",
-  qiniu: "Qiniu 버킷과 CDN 주소를 사용해 업로드합니다.",
-  sftpplist: "SFTP 서버 경로에 이미지를 전송합니다.",
-  smms: "SM.MS 토큰으로 이미지를 업로드합니다.",
-  tcyun: "Tencent COS 버킷에 이미지를 업로드합니다.",
-  upyun: "Upyun 버킷과 가속 도메인을 사용해 업로드합니다.",
-  webdavplist: "WebDAV 서버 경로에 이미지를 업로드합니다.",
+  [UPLOAD_PROVIDER_KEYS.ADVANCED]: "커스텀 HTTP 업로드 스크립트로 이미지를 전송합니다.",
+  [UPLOAD_PROVIDER_KEYS.ALIST]: "AList 스토리지 경로로 이미지를 업로드합니다.",
+  [UPLOAD_PROVIDER_KEYS.ALIYUN]: "Aliyun OSS 버킷에 이미지를 업로드합니다.",
+  [UPLOAD_PROVIDER_KEYS.AWS_S3]: "S3 호환 버킷에 이미지를 업로드합니다.",
+  [UPLOAD_PROVIDER_KEYS.GITHUB]: "리포지토리에 이미지를 커밋하고 URL로 사용합니다.",
+  [UPLOAD_PROVIDER_KEYS.IMGUR]: "Imgur 계정 또는 익명 업로드로 이미지를 보관합니다.",
+  [UPLOAD_PROVIDER_KEYS.LOCAL]: "현재 머신의 로컬 경로에 이미지를 저장합니다.",
+  [UPLOAD_PROVIDER_KEYS.LSKY]: "Lsky Pro 이미지 호스팅 서버로 업로드합니다.",
+  [UPLOAD_PROVIDER_KEYS.PICLIST]: "실행 중인 업로드 서버에 요청을 보냅니다.",
+  [UPLOAD_PROVIDER_KEYS.QINIU]: "Qiniu 버킷과 CDN 주소를 사용해 업로드합니다.",
+  [UPLOAD_PROVIDER_KEYS.SFTP]: "SFTP 서버 경로에 이미지를 전송합니다.",
+  [UPLOAD_PROVIDER_KEYS.SMMS]: "SM.MS 토큰으로 이미지를 업로드합니다.",
+  [UPLOAD_PROVIDER_KEYS.TCYUN]: "Tencent COS 버킷에 이미지를 업로드합니다.",
+  [UPLOAD_PROVIDER_KEYS.UPYUN]: "Upyun 버킷과 가속 도메인을 사용해 업로드합니다.",
+  [UPLOAD_PROVIDER_KEYS.WEBDAV]: "WebDAV 서버 경로에 이미지를 업로드합니다.",
 }
 
 type UploadFieldMetadata = Partial<
@@ -227,7 +228,7 @@ const commonFieldMetadata: Record<string, UploadFieldMetadata> = {
   picbed: {
     label: "PicBed",
     description: "업로드 서버에서 사용할 업로더 이름입니다.",
-    placeholder: "github",
+    placeholder: DEFAULT_UPLOAD_PROVIDER_KEY,
   },
   port: {
     label: "Port",
@@ -343,12 +344,12 @@ const commonFieldMetadata: Record<string, UploadFieldMetadata> = {
 }
 
 const providerFieldMetadataMap: Record<string, Record<string, UploadFieldMetadata>> = {
-  "advancedplist": {
+  [UPLOAD_PROVIDER_KEYS.ADVANCED]: {
     endpoint: {
       placeholder: "https://example.com/upload",
     },
   },
-  "alistplist": {
+  [UPLOAD_PROVIDER_KEYS.ALIST]: {
     url: {
       label: "Server URL",
       description: "AList 서버 주소입니다.",
@@ -365,7 +366,7 @@ const providerFieldMetadataMap: Record<string, Record<string, UploadFieldMetadat
       description: "계정 인증을 사용할 때 비밀번호를 입력합니다.",
     },
   },
-  "aws-s3-plist": {
+  [UPLOAD_PROVIDER_KEYS.AWS_S3]: {
     uploadPath: {
       placeholder: "{year}/{month}/{md5}.{extName}",
     },
@@ -373,7 +374,7 @@ const providerFieldMetadataMap: Record<string, Record<string, UploadFieldMetadat
       placeholder: "cacheControl=max-age=31536000",
     },
   },
-  github: {
+  [UPLOAD_PROVIDER_KEYS.GITHUB]: {
     branch: {
       placeholder: "main",
     },
@@ -381,12 +382,12 @@ const providerFieldMetadataMap: Record<string, Record<string, UploadFieldMetadat
       placeholder: "ghp_xxx",
     },
   },
-  lskyplist: {
+  [UPLOAD_PROVIDER_KEYS.LSKY]: {
     version: {
       description: "Lsky Pro 서버 버전을 선택합니다.",
     },
   },
-  piclist: {
+  [UPLOAD_PROVIDER_KEYS.PICLIST]: {
     host: {
       placeholder: "127.0.0.1",
     },
@@ -394,12 +395,12 @@ const providerFieldMetadataMap: Record<string, Record<string, UploadFieldMetadat
       placeholder: "36677",
     },
   },
-  sftpplist: {
+  [UPLOAD_PROVIDER_KEYS.SFTP]: {
     host: {
       placeholder: "sftp.example.com",
     },
   },
-  tcyun: {
+  [UPLOAD_PROVIDER_KEYS.TCYUN]: {
     version: {
       label: "COS Version",
       description: "Tencent COS SDK 버전을 선택합니다.",
@@ -769,7 +770,7 @@ const createCatalogFromRuntime = (runtimeCatalog: RuntimeCatalogLike): UploadPro
     })
 
   const defaultProviderKey =
-    providers.find((provider) => provider.key === "github")?.key ??
+    providers.find((provider) => provider.key === DEFAULT_UPLOAD_PROVIDER_KEY)?.key ??
     providers[0]?.key ??
     null
 

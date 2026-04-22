@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react"
 import type {
   ExportJobState,
   UploadProviderCatalogResponse,
-  UploadProviderDefinition,
   UploadProviderValue,
 } from "../../../shared/types.js"
+import { EMPTY_SELECT_VALUE, UPLOAD_PROVIDER_KEYS } from "../../../shared/upload-provider-keys.js"
 
 import { Badge } from "../../components/ui/badge.js"
 import { Button, buttonVariants } from "../../components/ui/button.js"
@@ -49,196 +49,27 @@ import {
 import { cn } from "../../lib/cn.js"
 import { postSameOriginJson, postSameOriginJsonNoContent } from "../../lib/api.js"
 import {
-  buildInitialProviderUiState,
   getUploadProviderFieldRule,
   hasMissingRequiredUploadProviderField,
   trimProviderFieldsForSubmit,
-  type ProviderFormState,
-  type ProviderUiState,
 } from "./upload-provider-form-rules.js"
-
-type JobFilter = "all" | "warnings" | "errors"
-type JobResultsMode = "running" | "upload" | "result"
-
-const INDEX_MARKDOWN_FILE = "index.md"
-const EMPTY_SELECT_VALUE = "__none__"
-
-const getPreferredDefaultProviderKey = (catalog: UploadProviderCatalogResponse) =>
-  catalog.providers.find((provider) => provider.key === "github")?.key ??
-  catalog.defaultProviderKey ??
-  catalog.providers[0]?.key ??
-  ""
-
-const buildInitialProviderFields = (provider: UploadProviderDefinition | null): ProviderFormState =>
-  Object.fromEntries(
-    (provider?.fields ?? []).map((field) => {
-      if (field.inputType === "checkbox") {
-        return [field.key, field.defaultValue === true]
-      }
-
-      if (
-        field.inputType === "select" &&
-        field.required &&
-        (field.defaultValue === null || field.defaultValue === undefined)
-      ) {
-        return [field.key, String(field.options?.[0]?.value ?? "")]
-      }
-
-      if (field.defaultValue === null || field.defaultValue === undefined) {
-        return [field.key, ""]
-      }
-
-      return [field.key, String(field.defaultValue)]
-    }),
-  )
-
-const buildInitialProviderFieldMap = (catalog: UploadProviderCatalogResponse) =>
-  Object.fromEntries(
-    catalog.providers.map((provider) => [provider.key, buildInitialProviderFields(provider)]),
-  ) as Record<string, ProviderFormState>
-
-const buildInitialProviderUiStateMap = (catalog: UploadProviderCatalogResponse) =>
-  Object.fromEntries(
-    catalog.providers.map((provider) => [provider.key, buildInitialProviderUiState()]),
-  ) as Record<string, ProviderUiState>
-
-const buildGitHubJsDelivrCustomUrl = ({
-  repo,
-  branch,
-}: {
-  repo: string
-  branch: string
-}) => {
-  const normalizedRepo = repo
-    .trim()
-    .replace(/^\/+|\/+$/g, "")
-  const normalizedBranch = branch.trim()
-
-  if (!normalizedRepo) {
-    return ""
-  }
-
-  return `https://cdn.jsdelivr.net/gh/${normalizedRepo}${normalizedBranch ? `@${normalizedBranch}` : ""}`
-}
-
-const buildJobItemSeverity = (item: ExportJobState["items"][number]) => {
-  if (item.status === "failed" || item.error) {
-    return "error"
-  }
-
-  if (item.warningCount > 0) {
-    return "warning"
-  }
-
-  return "success"
-}
-
-const getJobItems = (job: ExportJobState | null) => {
-  if (!job || !Array.isArray(job.items)) {
-    return []
-  }
-
-  return job.items
-}
-
-const splitOutputPath = (outputPath: string | null) => {
-  if (!outputPath) {
-    return []
-  }
-
-  return outputPath.split("/").filter(Boolean)
-}
-
-const buildJobItemPathMeta = (
-  item: Pick<ExportJobState["items"][number], "logNo" | "outputPath">,
-) => {
-  const pathSegments = splitOutputPath(item.outputPath)
-
-  if (pathSegments.length === 0) {
-    return {
-      fileLabel: `${item.logNo}.diagnostics`,
-    }
-  }
-
-  const fileName = pathSegments.at(-1) ?? `${item.logNo}.diagnostics`
-  const isIndexMarkdown = fileName === INDEX_MARKDOWN_FILE
-  const postFolderName = isIndexMarkdown ? pathSegments.at(-2) : null
-
-  return {
-    fileLabel: postFolderName || fileName,
-  }
-}
-
-const normalizeLocalPath = (value: string) =>
-  value.replace(/\\/g, "/").replace(/\/{2,}/g, "/")
-
-const buildLocalOutputPath = ({
-  outputDir,
-  outputPath,
-}: {
-  outputDir: string
-  outputPath: string | null
-}) => {
-  if (!outputPath) {
-    return null
-  }
-
-  const normalizedOutputDir = normalizeLocalPath(outputDir.trim()).replace(/\/$/, "")
-  const normalizedOutputPath = normalizeLocalPath(outputPath).replace(/^\.\//, "")
-
-  if (!normalizedOutputDir) {
-    return normalizedOutputPath
-  }
-
-  return normalizeLocalPath(`${normalizedOutputDir}/${normalizedOutputPath}`)
-}
-
-const severityMeta = {
-  success: {
-    badge: "secondary" as const,
-    label: "정상",
-  },
-  warning: {
-    badge: "outline" as const,
-    label: "경고",
-  },
-  error: {
-    badge: "destructive" as const,
-    label: "에러",
-  },
-}
-
-const jobStatusClass = (status: string | undefined) =>
-  cn(
-    "status-pill rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
-    status === "completed" || status === "upload-completed" || status === "ready"
-      ? "status-pill--success"
-      : status === "upload-ready"
-        ? "status-pill--ready"
-        : status === "running" || status === "queued" || status === "uploading"
-          ? "status-pill--running"
-          : status === "failed" || status === "upload-failed"
-            ? "status-pill--error"
-            : "status-pill--idle",
-  )
-
-const panelCopy: Record<JobResultsMode, { title: string; description: string }> = {
-  running: {
-    title: "실행 중",
-    description: "",
-  },
-  upload: {
-    title: "Image Upload",
-    description: "",
-  },
-  result: {
-    title: "결과",
-    description: "",
-  },
-}
-
-const toProgressValue = (completed: number, total: number) =>
-  total > 0 ? Math.round((completed / total) * 100) : 0
+import {
+  buildJobItemPathMeta,
+  buildJobItemSeverity,
+  buildLocalOutputPath,
+  buildUploadRowStatus,
+  buildUploadedLinkMeta,
+  getJobItems,
+  isAListProvider,
+  panelCopy,
+  severityMeta,
+  shouldShowUploadColumns,
+  toProgressValue,
+  type JobFilter,
+  type JobResultsMode,
+} from "./job-results-helpers.js"
+import { useUploadProviderForm } from "./use-upload-provider-form.js"
+import { getStatusPillClassName } from "../../lib/status-pill.js"
 
 const CompactMetrics = ({
   items,
@@ -265,47 +96,6 @@ const CompactMetrics = ({
   </div>
 )
 
-const buildUploadRowStatus = ({
-  jobStatus,
-  item,
-}: {
-  jobStatus: ExportJobState["status"] | undefined
-  item: ExportJobState["items"][number]
-}) => {
-  if (item.upload.rewriteStatus === "completed") {
-    return {
-      key: "complete",
-      label: "완료",
-    } as const
-  }
-
-  if (item.upload.rewriteStatus === "failed" || jobStatus === "upload-failed") {
-    return {
-      key: "failed",
-      label: "실패",
-    } as const
-  }
-
-  if (item.upload.uploadedCount <= 0) {
-    return {
-      key: "pending",
-      label: "대기",
-    } as const
-  }
-
-  if (item.upload.uploadedCount < item.upload.candidateCount) {
-    return {
-      key: "partial",
-      label: "부분 완료",
-    } as const
-  }
-
-  return {
-    key: "partial",
-    label: "부분 완료",
-  } as const
-}
-
 const uploadRowBadgeClass = (status: "pending" | "partial" | "complete" | "failed") =>
   cn(
     "rounded-full border px-2.5 py-0.5",
@@ -317,35 +107,6 @@ const uploadRowBadgeClass = (status: "pending" | "partial" | "complete" | "faile
           ? "upload-badge--complete"
           : "upload-badge--failed",
   )
-
-const shouldShowUploadColumns = (job: ExportJobState | null) =>
-  job?.request.options.assets.imageHandlingMode === "download-and-upload" ||
-  job?.upload.status !== "not-requested"
-
-const buildResultsPanelDescription = () => ""
-
-const buildUploadPanelCopy = () => ""
-
-const buildUploadedLinkMeta = (item: ExportJobState["items"][number]) =>
-  (Array.isArray(item.upload.uploadedUrls) ? item.upload.uploadedUrls : []).reduce<
-    Array<{ label: string; url: string }>
-  >((entries, url, index) => {
-    try {
-      const parsed = new URL(url)
-
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-        return entries
-      }
-    } catch {
-      return entries
-    }
-
-    entries.push({
-      label: `#${index + 1}`,
-      url,
-    })
-    return entries
-  }, [])
 
 const jobActionButtonClassName = cn(
   buttonVariants({
@@ -382,14 +143,21 @@ export const JobResultsPanel = ({
   }) => Promise<void> | void
 }) => {
   const logsScrollAreaRef = useRef<HTMLDivElement | null>(null)
-  const [providerKey, setProviderKey] = useState(() => getPreferredDefaultProviderKey(uploadProviders))
-  const [providerFieldMap, setProviderFieldMap] = useState<Record<string, ProviderFormState>>(() =>
-    buildInitialProviderFieldMap(uploadProviders),
-  )
-  const [providerUiStateMap, setProviderUiStateMap] = useState<Record<string, ProviderUiState>>(() =>
-    buildInitialProviderUiStateMap(uploadProviders),
-  )
   const [previewPendingIds, setPreviewPendingIds] = useState<string[]>([])
+  const {
+    providerKey,
+    activeProviderDefinition,
+    activeProviderFields,
+    activeProviderUiState,
+    githubUseJsDelivr,
+    githubJsDelivrUrl,
+    selectProvider,
+    updateProviderField,
+    updateProviderUiState,
+  } = useUploadProviderForm({
+    jobId: job?.id,
+    uploadProviders,
+  })
   const allJobItems = getJobItems(job)
   const jobFilterCounts = allJobItems.reduce(
     (counts, item) => {
@@ -425,17 +193,6 @@ export const JobResultsPanel = ({
     }
 
     return true
-  })
-  const activeProviderDefinition =
-    uploadProviders.providers.find((provider) => provider.key === providerKey) ?? null
-  const activeProviderFields =
-    providerFieldMap[providerKey] ?? buildInitialProviderFields(activeProviderDefinition)
-  const activeProviderUiState =
-    providerUiStateMap[providerKey] ?? buildInitialProviderUiState()
-  const githubUseJsDelivr = activeProviderUiState.githubUseJsDelivr
-  const githubJsDelivrUrl = buildGitHubJsDelivrCustomUrl({
-    repo: String(activeProviderFields.repo ?? ""),
-    branch: String(activeProviderFields.branch ?? ""),
   })
   const showUploadColumns = shouldShowUploadColumns(job)
   const showUploadPanel =
@@ -530,16 +287,6 @@ export const JobResultsPanel = ({
     viewport.scrollTop = viewport.scrollHeight
   }, [latestLogSignature])
 
-  useEffect(() => {
-    if (!job?.id) {
-      return
-    }
-
-    setProviderKey(getPreferredDefaultProviderKey(uploadProviders))
-    setProviderFieldMap(buildInitialProviderFieldMap(uploadProviders))
-    setProviderUiStateMap(buildInitialProviderUiStateMap(uploadProviders))
-  }, [job?.id, uploadProviders])
-
   return (
     <TooltipProvider>
       <Card
@@ -558,9 +305,9 @@ export const JobResultsPanel = ({
             </CardDescription>
           ) : null}
         </div>
-        <Badge className={jobStatusClass(job?.status)} data-status={job?.status ?? "idle"}>
-          {job?.status ?? "Idle"}
-        </Badge>
+                <Badge className={getStatusPillClassName(job?.status)} data-status={job?.status ?? "idle"}>
+                  {job?.status ?? "Idle"}
+                </Badge>
       </CardHeader>
 
         <CardContent className="status-layout grid gap-5 p-6">
@@ -612,10 +359,10 @@ export const JobResultsPanel = ({
         {showUploadPanel ? (
           <section className="upload-panel subtle-panel grid gap-4 rounded-[1.5rem] p-4">
             <div className="grid gap-3 lg:flex lg:items-start lg:justify-between">
-              {buildUploadPanelCopy() ? (
+              {panelCopy[mode].description ? (
                 <div>
                   <CardDescription className="text-sm leading-7 text-muted-foreground">
-                    {buildUploadPanelCopy()}
+                    {panelCopy[mode].description}
                   </CardDescription>
                 </div>
               ) : null}
@@ -665,7 +412,7 @@ export const JobResultsPanel = ({
                       providerKey,
                       providerFields: {
                         ...normalizedProviderFields,
-                        ...(providerKey === "github" && githubUseJsDelivr
+                        ...(providerKey === UPLOAD_PROVIDER_KEYS.GITHUB && githubUseJsDelivr
                           ? {
                               customUrl: githubJsDelivrUrl,
                             }
@@ -682,30 +429,7 @@ export const JobResultsPanel = ({
                       >
                         Provider
                       </label>
-                      <Select value={providerKey} onValueChange={(nextProviderKey) => {
-                          setProviderKey(nextProviderKey)
-                          setProviderFieldMap((current) =>
-                            current[nextProviderKey]
-                              ? current
-                              : {
-                                  ...current,
-                                  [nextProviderKey]: buildInitialProviderFields(
-                                    uploadProviders.providers.find(
-                                      (provider) => provider.key === nextProviderKey,
-                                    ) ?? null,
-                                  ),
-                                },
-                          )
-                          setProviderUiStateMap((current) =>
-                            current[nextProviderKey]
-                              ? current
-                              : {
-                                  ...current,
-                                  [nextProviderKey]: buildInitialProviderUiState(),
-                                },
-                          )
-                        }}
-                      >
+                      <Select value={providerKey} onValueChange={selectProvider}>
                         <SelectTrigger
                           id="upload-providerKey"
                           data-value={providerKey}
@@ -731,7 +455,7 @@ export const JobResultsPanel = ({
                       </p>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      {providerKey === "alistplist" ? (
+                      {isAListProvider(providerKey) ? (
                         <div className="subtle-panel grid gap-2 rounded-2xl px-4 py-3 sm:col-span-2">
                           <span className="text-sm font-semibold text-foreground">Authentication</span>
                           <span className="text-sm leading-6 text-muted-foreground">
@@ -747,13 +471,9 @@ export const JobResultsPanel = ({
                                 return
                               }
 
-                              setProviderUiStateMap((current) => ({
-                                ...current,
-                                [providerKey]: {
-                                  ...activeProviderUiState,
-                                  alistAuthMode: nextMode as ProviderUiState["alistAuthMode"],
-                                },
-                              }))
+                              updateProviderUiState({
+                                alistAuthMode: nextMode as typeof activeProviderUiState.alistAuthMode,
+                              })
                             }}
                           >
                             <ToggleGroupItem
@@ -800,14 +520,7 @@ export const JobResultsPanel = ({
                                 className="shrink-0"
                                 aria-describedby={fieldDescribedBy}
                                 onCheckedChange={(next) =>
-                                  setProviderFieldMap((current) => ({
-                                    ...current,
-                                    [providerKey]: {
-                                      ...(current[providerKey] ??
-                                        buildInitialProviderFields(activeProviderDefinition)),
-                                      [field.key]: next === true,
-                                    },
-                                  }))
+                                  updateProviderField(field.key, next === true)
                                 }
                               />
                               <span className="grid gap-1">
@@ -857,14 +570,10 @@ export const JobResultsPanel = ({
                                 }
                                 disabled={rule.disabled}
                                 onValueChange={(nextValue) =>
-                                  setProviderFieldMap((current) => ({
-                                    ...current,
-                                    [providerKey]: {
-                                      ...(current[providerKey] ??
-                                        buildInitialProviderFields(activeProviderDefinition)),
-                                      [field.key]: nextValue === EMPTY_SELECT_VALUE ? "" : nextValue,
-                                    },
-                                  }))
+                                  updateProviderField(
+                                    field.key,
+                                    nextValue === EMPTY_SELECT_VALUE ? "" : nextValue,
+                                  )
                                 }
                               >
                                 <SelectTrigger
@@ -911,18 +620,9 @@ export const JobResultsPanel = ({
                               value={String(activeProviderFields[field.key] ?? "")}
                               disabled={rule.disabled}
                               aria-describedby={fieldDescribedBy}
-                              onChange={(event) =>
-                                setProviderFieldMap((current) => ({
-                                  ...current,
-                                  [providerKey]: {
-                                    ...(current[providerKey] ??
-                                      buildInitialProviderFields(activeProviderDefinition)),
-                                    [field.key]: event.target.value,
-                                  },
-                                }))
-                              }
-                              placeholder={field.placeholder}
-                            />
+                                onChange={(event) => updateProviderField(field.key, event.target.value)}
+                                placeholder={field.placeholder}
+                              />
                             {rule.disabledReason ? (
                               <span
                                 id={fieldDisabledReasonId}
@@ -936,7 +636,7 @@ export const JobResultsPanel = ({
                       })}
                     </div>
                   </div>
-                  {providerKey === "github" ? (
+                  {providerKey === UPLOAD_PROVIDER_KEYS.GITHUB ? (
                     <div
                       className="subtle-panel flex items-center gap-3 rounded-2xl px-4 py-3"
                     >
@@ -946,13 +646,9 @@ export const JobResultsPanel = ({
                         className="shrink-0"
                         aria-describedby="upload-github-use-jsdelivr-description"
                         onCheckedChange={(next) =>
-                          setProviderUiStateMap((current) => ({
-                            ...current,
-                            [providerKey]: {
-                              ...activeProviderUiState,
-                              githubUseJsDelivr: next === true,
-                            },
-                          }))
+                          updateProviderUiState({
+                            githubUseJsDelivr: next === true,
+                          })
                         }
                       />
                       <span className="grid gap-1">
@@ -973,7 +669,7 @@ export const JobResultsPanel = ({
                       </span>
                     </div>
                   ) : null}
-                  {providerKey === "github" && githubUseJsDelivr ? (
+                  {providerKey === UPLOAD_PROVIDER_KEYS.GITHUB && githubUseJsDelivr ? (
                     <div className="grid gap-2">
                       <label
                         htmlFor="upload-github-jsdelivr-preview"
@@ -1061,13 +757,6 @@ export const JobResultsPanel = ({
         {showExportResults ? (
           <section className="job-results-panel subtle-panel grid gap-4 rounded-[1.5rem] p-4">
             <div className="job-results-header grid gap-4 lg:flex lg:items-start lg:justify-between">
-              {buildResultsPanelDescription() ? (
-                <div>
-                  <CardDescription className="results-description text-sm leading-7">
-                    {buildResultsPanelDescription()}
-                  </CardDescription>
-                </div>
-              ) : null}
               <div
                 className="job-filter-group flex flex-wrap items-center gap-2"
                 role="tablist"

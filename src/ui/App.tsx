@@ -29,7 +29,6 @@ import type {
 } from "../shared/types.js"
 
 import { Badge } from "./components/ui/badge.js"
-import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert.js"
 import { Button } from "./components/ui/button.js"
 import {
   Card,
@@ -38,15 +37,10 @@ import {
   CardHeader,
   CardTitle,
 } from "./components/ui/card.js"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./components/ui/dialog.js"
 import { Input } from "./components/ui/input.js"
+import { ResumeDialogPanel } from "./components/resume-dialog-panel.js"
+import { WizardDock } from "./components/wizard-dock.js"
+import { WizardHeader } from "./components/wizard-header.js"
 import { Toaster, toast } from "./components/ui/sonner.js"
 import { ToggleGroup, ToggleGroupItem } from "./components/ui/toggle-group.js"
 import { toggleCategorySelection } from "./features/scan/category-selection.js"
@@ -60,14 +54,24 @@ import { setExportJobPollingConfig, useExportJob } from "./hooks/use-export-job.
 import type {
   ExportBootstrapResponse,
   ExportResumeLookupResponse,
-  UploadProvidersResponse,
 } from "./lib/api.js"
 import { fetchJson, postJson, postJsonNoContent } from "./lib/api.js"
 import { cn } from "./lib/cn.js"
-
-const defaultOutputDir = "./output"
-
-const normalizeOutputDir = (value: string) => value.trim() || defaultOutputDir
+import {
+  buildSummaryCards,
+  createResumeDialogState,
+  defaultOutputDir,
+  getHeaderStatus,
+  getNextButtonLabel,
+  getPersistedUiStateSignature,
+  normalizeOutputDir,
+  resolveScopedCategoryIds,
+  resolveWizardStep,
+  shouldLoadUploadProviders,
+  type ResumeDialogState,
+} from "./app-helpers.js"
+import { getStatusPillClassName } from "./lib/status-pill.js"
+import { useUploadProvidersCatalog } from "./hooks/use-upload-providers-catalog.js"
 
 const fallbackDefaults: ExportBootstrapResponse = {
   profile: "gfm",
@@ -82,12 +86,6 @@ const fallbackDefaults: ExportBootstrapResponse = {
   optionDescriptions,
 }
 
-const fallbackUploadProviders: UploadProviderCatalogResponse = {
-  defaultProviderKey: null,
-  providers: [],
-}
-
-const uploadProviderLoadErrorMessage = "업로드 설정을 불러오지 못했습니다."
 const exportSettingsSaveDelayMs = 300
 
 const setupSteps = [
@@ -231,60 +229,9 @@ const createErrorJobState = (
     error,
   }) satisfies ExportJobState
 
-const statusPillClass = (status: string) =>
-  cn(
-    "status-pill rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
-    status === "completed" || status === "upload-completed" || status === "ready"
-      ? "status-pill--success"
-      : status === "upload-ready"
-        ? "status-pill--ready"
-        : status === "running" || status === "queued" || status === "success" || status === "uploading"
-          ? "status-pill--running"
-          : status === "failed" || status === "upload-failed"
-            ? "status-pill--error"
-            : "status-pill--idle",
-  )
-
-const resolveScopedCategoryIds = ({
-  categories,
-  currentCategoryIds,
-}: {
-  categories: ScanResult["categories"]
-  currentCategoryIds: number[]
-}) => {
-  const validCategoryIds = currentCategoryIds.filter((categoryId) =>
-    categories.some((category) => category.id === categoryId),
-  )
-
-  return validCategoryIds.length > 0
-    ? validCategoryIds
-    : categories.map((category) => category.id)
-}
-
-const getPersistedUiStateSignature = ({
-  options,
-  themePreference,
-}: {
-  options: ExportOptions | PartialExportOptions
-  themePreference: ThemePreference
-}) =>
-  JSON.stringify({
-    options: sanitizePersistedExportOptions(options),
-    themePreference,
-  })
-
-type ResumeDialogState = {
-  source: "bootstrap" | "before-scan"
-  resumedJob: ExportJobState
-  resumeSummary: ExportResumeSummary
-  resumedScanResult: ScanResult | null
-}
-
 export const App = () => {
   const [defaults, setDefaults] = useState(fallbackDefaults)
   const [bootstrapping, setBootstrapping] = useState(true)
-  const [uploadProviders, setUploadProviders] = useState(fallbackUploadProviders)
-  const [uploadProviderError, setUploadProviderError] = useState<string | null>(null)
   const [resettingResume, setResettingResume] = useState(false)
   const [restoringResume, setRestoringResume] = useState(false)
   const [blogIdOrUrl, setBlogIdOrUrl] = useState("")
@@ -336,28 +283,6 @@ export const App = () => {
   const setErrorScanStatus = (message: string) => {
     setScanStatus(message)
     setScanStatusTone("error")
-  }
-  const createResumeDialogState = ({
-    source,
-    resumedJob,
-    resumeSummary,
-    resumedScanResult,
-  }: {
-    source: ResumeDialogState["source"]
-    resumedJob: ExportJobState | null
-    resumeSummary: ExportResumeSummary | null
-    resumedScanResult: ScanResult | null
-  }) => {
-    if (!resumedJob || !resumeSummary) {
-      return null
-    }
-
-    return {
-      source,
-      resumedJob,
-      resumeSummary,
-      resumedScanResult,
-    } satisfies ResumeDialogState
   }
   const applyResumedState = ({
     source,
@@ -474,10 +399,6 @@ export const App = () => {
   const selectedCount = activeScanResult ? selectedCategoryIds.length : 0
   const exportDisabled = !activeScanResult || frontmatterValidationErrors.length > 0
   const setupStepIndex = setupSteps.indexOf(setupStep)
-  const shouldLoadUploadProviders =
-    job?.status === "upload-ready" ||
-    job?.status === "upload-failed" ||
-    (job?.status === "uploading" && job.resumeAvailable)
   const persistedOptions = useMemo(() => sanitizePersistedExportOptions(options), [options])
   const persistedUiStateSignature = useMemo(
     () =>
@@ -495,32 +416,22 @@ export const App = () => {
       activeScanResult !== null ||
       Boolean(job))
 
-  const currentStep: WizardStep = useMemo(() => {
-    if (submitting || job?.status === "queued" || job?.status === "running") {
-      return "running"
-    }
-
-    if (
-      uploadSubmitting ||
-      job?.status === "upload-ready" ||
-      job?.status === "uploading" ||
-      job?.status === "upload-failed"
-    ) {
-      return "upload"
-    }
-
-    if (
-      job?.status === "completed" ||
-      job?.status === "failed" ||
-      job?.status === "upload-completed"
-    ) {
-      return "result"
-    }
-
-    return setupStep
-  }, [job?.status, setupStep, submitting, uploadSubmitting])
+  const currentStep = useMemo(
+    () =>
+      resolveWizardStep({
+        setupStep,
+        jobStatus: job?.status,
+        submitting,
+        uploadSubmitting,
+      }) as WizardStep,
+    [job?.status, setupStep, submitting, uploadSubmitting],
+  )
 
   const isSetupStep = currentStep === setupStep
+  const { uploadProviders, uploadProviderError } = useUploadProvidersCatalog({
+    jobId: job?.id,
+    shouldLoad: shouldLoadUploadProviders(job),
+  })
 
   useEffect(() => {
     const root = document.documentElement
@@ -674,45 +585,6 @@ export const App = () => {
       window.clearTimeout(timeoutId)
     }
   }, [persistedUiStateSignature])
-
-  useEffect(() => {
-    setUploadProviders(fallbackUploadProviders)
-    setUploadProviderError(null)
-  }, [job?.id])
-
-  useEffect(() => {
-    if (!shouldLoadUploadProviders || uploadProviders.providers.length > 0 || uploadProviderError) {
-      return
-    }
-
-    let cancelled = false
-
-    const loadUploadProviders = async () => {
-      try {
-        const nextCatalog = await fetchJson<UploadProvidersResponse>("/api/upload-providers")
-
-        if (cancelled) {
-          return
-        }
-
-        setUploadProviders(nextCatalog)
-        setUploadProviderError(null)
-      } catch (error) {
-        if (cancelled) {
-          return
-        }
-
-        setUploadProviders(fallbackUploadProviders)
-        setUploadProviderError(uploadProviderLoadErrorMessage)
-      }
-    }
-
-    void loadUploadProviders()
-
-    return () => {
-      cancelled = true
-    }
-  }, [shouldLoadUploadProviders, uploadProviderError, uploadProviders.providers.length])
 
   useEffect(() => {
     if (!job) {
@@ -1171,102 +1043,30 @@ export const App = () => {
     setSetupStep(setupSteps[setupStepIndex + 1] ?? setupStep)
   }
 
-  const summaryCards = (() => {
-    if (currentStep === "running" || currentStep === "upload" || currentStep === "result") {
-      const total = job?.progress.total ?? scopedPostCount
-
-      return [
-        { label: "총 글", value: String(total) },
-        { label: "완료", value: String(job?.progress.completed ?? 0) },
-        { label: "실패", value: String(job?.progress.failed ?? 0) },
-        { label: "업로드", value: String(job?.upload.uploadedCount ?? 0) },
-      ]
-    }
-
-    return [
-      { label: "대상 글", value: String(scopedPostCount) },
-      { label: "카테고리", value: String(activeScanResult?.categories.length ?? 0) },
-      { label: "선택", value: String(selectedCount) },
-      { label: "출력", value: normalizeOutputDir(outputDir) },
-    ]
-  })()
-
-  const headerStatus = (() => {
-    if (job?.status) {
-      return job.status
-    }
-
-    if (scanPending) {
-      return "running"
-    }
-
-    if (activeScanResult) {
-      return "ready"
-    }
-
-    return "idle"
-  })()
-
-  const nextButtonLabel = (() => {
-    switch (setupStep) {
-      case "blog-input":
-        return scanPending ? "스캔 중" : "카테고리 불러오기"
-      case "category-selection":
-        return "구조 설정"
-      case "structure-options":
-        return "Frontmatter 설정"
-      case "frontmatter-options":
-        return "Markdown 설정"
-      case "markdown-options":
-        return "Assets 설정"
-      case "assets-options":
-        return "Link 처리"
-      case "links-options":
-        return "진단 설정"
-      case "diagnostics-options":
-        return submitting ? "작업 등록 중" : "내보내기"
-    }
-  })()
+  const summaryCards = buildSummaryCards({
+    currentStep,
+    job,
+    scopedPostCount,
+    activeCategoryCount: activeScanResult?.categories.length ?? 0,
+    selectedCount,
+    outputDir,
+  })
+  const headerStatus = getHeaderStatus({
+    job,
+    scanPending,
+    activeScanResult,
+  })
+  const nextButtonLabel = getNextButtonLabel({
+    setupStep,
+    scanPending,
+    submitting,
+  })
 
   const renderCurrentStep = () => {
-    if (currentStep === "running") {
+    if (currentStep === "running" || currentStep === "upload" || currentStep === "result") {
       return (
         <JobResultsPanel
-          mode="running"
-          job={job}
-          activeJobFilter={activeJobFilter}
-          resumeSubmitting={submitting}
-          uploadSubmitting={uploadSubmitting}
-          uploadProviders={uploadProviders}
-          uploadProviderError={uploadProviderError}
-          onFilterChange={setActiveJobFilter}
-          onResumeExport={handleResumeExport}
-          onUploadStart={handleUpload}
-        />
-      )
-    }
-
-    if (currentStep === "upload") {
-      return (
-        <JobResultsPanel
-          mode="upload"
-          job={job}
-          activeJobFilter={activeJobFilter}
-          resumeSubmitting={submitting}
-          uploadSubmitting={uploadSubmitting}
-          uploadProviders={uploadProviders}
-          uploadProviderError={uploadProviderError}
-          onFilterChange={setActiveJobFilter}
-          onResumeExport={handleResumeExport}
-          onUploadStart={handleUpload}
-        />
-      )
-    }
-
-    if (currentStep === "result") {
-      return (
-        <JobResultsPanel
-          mode="result"
+          mode={currentStep}
           job={job}
           activeJobFilter={activeJobFilter}
           resumeSubmitting={submitting}
@@ -1408,59 +1208,13 @@ export const App = () => {
       className={cn("dashboard-shell relative min-h-screen w-full overflow-x-clip", themePreference)}
       aria-busy={bootstrapping || undefined}
     >
-      <Dialog open={Boolean(resumeDialog)} onOpenChange={() => null}>
-        <DialogContent
-          showCloseButton={false}
-          onEscapeKeyDown={(event) => event.preventDefault()}
-          onInteractOutside={(event) => event.preventDefault()}
-          onPointerDownOutside={(event) => event.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle>
-              {resumeDialog?.source === "before-scan"
-                ? "진행 중인 작업이 있습니다."
-                : "이전 작업을 다시 불러왔습니다."}
-            </DialogTitle>
-            <DialogDescription>
-              {resumeDialog?.source === "before-scan"
-                ? "이 경로에는 다시 불러올 수 있는 작업 상태가 남아 있습니다."
-                : "output 상태를 읽어 마지막 작업 화면으로 복구했습니다."}
-            </DialogDescription>
-          </DialogHeader>
-          {resumeDialog ? (
-            <div className="grid gap-3">
-              <div className="subtle-panel grid gap-2 rounded-[var(--radius-lg)] px-4 py-4 text-sm text-foreground">
-                <p>
-                  <strong className="font-semibold text-foreground">상태</strong> {resumeDialog.resumeSummary.status}
-                </p>
-                <p>
-                  <strong className="font-semibold text-foreground">출력 경로</strong> {resumeDialog.resumeSummary.outputDir}
-                </p>
-                <p>
-                  <strong className="font-semibold text-foreground">진행</strong> 총 {resumeDialog.resumeSummary.totalPosts} / 완료 {resumeDialog.resumeSummary.completedCount} / 실패 {resumeDialog.resumeSummary.failedCount}
-                </p>
-                <p>
-                  <strong className="font-semibold text-foreground">업로드</strong> {resumeDialog.resumeSummary.uploadedCount} / {resumeDialog.resumeSummary.uploadCandidateCount}
-                </p>
-              </div>
-              <Alert variant="destructive">
-                <AlertTitle>초기화 경고</AlertTitle>
-                <AlertDescription>
-                  작업 초기화를 실행하면 <strong>{resumeDialog.resumeSummary.outputDir}</strong> 경로의 작업내역과 output 파일을 함께 삭제합니다.
-                </AlertDescription>
-              </Alert>
-            </div>
-          ) : null}
-          <DialogFooter>
-            <Button variant="destructive" onClick={() => void handleResetResume()} disabled={resettingResume}>
-              {resettingResume ? "초기화 중" : "작업 초기화"}
-            </Button>
-            <Button onClick={() => void handleRestoreResume()} disabled={restoringResume || resettingResume}>
-              {restoringResume ? "불러오는 중" : "불러오기"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ResumeDialogPanel
+        resumeDialog={resumeDialog}
+        resettingResume={resettingResume}
+        restoringResume={restoringResume}
+        onReset={() => void handleResetResume()}
+        onRestore={() => void handleRestoreResume()}
+      />
 
       <div
         id="dashboard-backdrop"
@@ -1499,85 +1253,17 @@ export const App = () => {
       ) : null}
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-5 px-4 py-5 xl:px-6 xl:py-6">
-        <Card variant="panel" className="overflow-hidden">
-          <CardContent className="grid gap-4 p-5">
-            <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-              <div className="wizard-heading grid gap-1.5">
-                <span className="wizard-step-label wizard-kicker">
-                  {isSetupStep ? `단계 ${setupStepIndex + 1} / ${setupSteps.length}` : "현재 단계"}
-                </span>
-                <div className="grid gap-1.5">
-                  <h1 className="wizard-title text-[clamp(1.7rem,2.5vw,2.4rem)] leading-[1.04]">
-                    {stepMeta[currentStep].title}
-                  </h1>
-                  {stepMeta[currentStep].description ? (
-                    <p className="panel-description max-w-3xl text-sm leading-6">
-                      {stepMeta[currentStep].description}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-start gap-3 lg:justify-end">
-                <ToggleGroup
-                  className="theme-toggle rounded-full p-1"
-                  aria-label="테마 선택"
-                  value={themePreference}
-                  onValueChange={(value) => {
-                    if (value === "dark" || value === "light") {
-                      setThemePreference(value)
-                    }
-                  }}
-                >
-                  <ToggleGroupItem
-                    aria-label="다크"
-                    className="theme-toggle-item size-8 p-0"
-                    title="다크"
-                    value="dark"
-                  >
-                    <RiMoonClearLine data-theme-icon aria-hidden="true" />
-                    <span className="sr-only">다크</span>
-                  </ToggleGroupItem>
-                  <ToggleGroupItem
-                    aria-label="라이트"
-                    className="theme-toggle-item size-8 p-0"
-                    title="라이트"
-                    value="light"
-                  >
-                    <RiSunLine data-theme-icon aria-hidden="true" />
-                    <span className="sr-only">라이트</span>
-                  </ToggleGroupItem>
-                </ToggleGroup>
-                <Badge
-                  id="status-text"
-                  className={statusPillClass(headerStatus)}
-                  data-status={headerStatus}
-                >
-                  {headerStatus}
-                </Badge>
-              </div>
-            </div>
-
-            <div
-              id="summary"
-              className="wizard-summary-stats flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border pt-2.5 text-sm text-muted-foreground"
-              aria-live="polite"
-            >
-              {summaryCards.map((card) => (
-                <span
-                  key={card.label}
-                  className="wizard-summary-metric inline-flex min-w-0 max-w-full flex-wrap items-baseline gap-x-1.5 gap-y-0.5"
-                >
-                  <span className="shrink-0 text-muted-foreground">{card.label}</span>
-                  <strong className="metric-value min-w-0 break-all font-semibold">
-                    {card.value}
-                  </strong>
-                </span>
-              ))}
-            </div>
-
-          </CardContent>
-        </Card>
+        <WizardHeader
+          isSetupStep={isSetupStep}
+          setupStepIndex={setupStepIndex}
+          setupStepCount={setupSteps.length}
+          title={stepMeta[currentStep].title}
+          description={stepMeta[currentStep].description}
+          themePreference={themePreference}
+          headerStatus={headerStatus}
+          summaryCards={summaryCards}
+          onThemeChange={setThemePreference}
+        />
 
         <section
           ref={stepViewRef}
@@ -1591,69 +1277,30 @@ export const App = () => {
         </section>
       </div>
 
-      {isSetupStep ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4 sm:pb-5 xl:px-6">
-          <div className="mx-auto flex w-full max-w-6xl justify-center">
-            <div className="floating-dock flex min-h-16 w-full max-w-fit flex-wrap items-center justify-end gap-2.5 rounded-[1.4rem] px-3 py-3">
-              {setupStepIndex > 0 ? (
-                <Button
-                  type="button"
-                  variant="surface"
-                  className="h-10 rounded-xl px-4"
-                  onClick={goToPreviousStep}
-                >
-                  이전
-                </Button>
-              ) : null}
-
-              {setupStep === "blog-input" ? (
-                <Button
-                  type="button"
-                  id="force-scan-button"
-                  variant="surface"
-                  className="h-10 rounded-xl px-4"
-                  title="캐시 무효화"
-                  disabled={!currentScanTarget || scanPending}
-                  onClick={() => {
-                    void ensureScanResult({ forceRefresh: true })
-                  }}
-                >
-                  강제로 불러오기
-                </Button>
-              ) : null}
-
-              <Button
-                type="button"
-                id={
-                  setupStep === "blog-input"
-                    ? "scan-button"
-                    : setupStep === "diagnostics-options"
-                      ? "export-button"
-                      : undefined
-                }
-                className="h-10 rounded-xl px-4"
-                disabled={
-                  setupStep === "blog-input"
-                    ? scanPending
-                    : setupStep === "diagnostics-options"
-                      ? exportDisabled || submitting
-                      : false
-                }
-                onClick={() => {
-                  void goToNextStep()
-                }}
-              >
-                <NextActionIcon
-                  setupStep={setupStep}
-                  scanPending={scanPending}
-                  submitting={submitting}
-                />
-                <span>{nextButtonLabel}</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <WizardDock
+        isSetupStep={isSetupStep}
+        setupStep={setupStep}
+        setupStepIndex={setupStepIndex}
+        currentScanTarget={currentScanTarget}
+        scanPending={scanPending}
+        exportDisabled={exportDisabled}
+        submitting={submitting}
+        nextButtonLabel={nextButtonLabel}
+        nextActionIcon={
+          <NextActionIcon
+            setupStep={setupStep}
+            scanPending={scanPending}
+            submitting={submitting}
+          />
+        }
+        onPrevious={goToPreviousStep}
+        onForceScan={() => {
+          void ensureScanResult({ forceRefresh: true })
+        }}
+        onNext={() => {
+          void goToNextStep()
+        }}
+      />
       <Toaster theme={themePreference} />
     </main>
   )
