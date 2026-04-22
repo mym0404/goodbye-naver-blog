@@ -852,6 +852,17 @@ const run = async () => {
       return
     }
 
+    if (pathname === "/api/export-resume/lookup" && request.method() === "POST") {
+      await route.fulfill(
+        buildJsonResponse({
+          resumedJob: null,
+          resumeSummary: null,
+          resumedScanResult: null,
+        }),
+      )
+      return
+    }
+
     if (pathname === "/api/scan" && request.method() === "POST") {
       mockState.scanRequestCount += 1
       await route.fulfill(buildJsonResponse(scanResult))
