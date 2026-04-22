@@ -557,6 +557,14 @@ describe("App", () => {
       })
     }
 
+    if (url.endsWith("/api/export-resume/lookup")) {
+      return buildJsonResponse({
+        resumedJob: null,
+        resumeSummary: null,
+        resumedScanResult: null,
+      })
+    }
+
     if (url.endsWith("/api/upload-providers")) {
       return buildJsonResponse(uploadProviderCatalog)
     }
@@ -808,7 +816,8 @@ describe("App", () => {
       within(dialog).getByText((_, element) => element?.textContent === "출력 경로 ./resume-output"),
     ).toBeInTheDocument()
     expect(document.querySelector('[data-step-view="running"]')).not.toBeNull()
-    await user.click(within(dialog).getAllByRole("button", { name: "확인" })[0]!)
+    expect(within(dialog).queryByRole("button", { name: "닫기" })).toBeNull()
+    await user.click(within(dialog).getByRole("button", { name: "불러오기" }))
     expect(screen.getByRole("button", { name: "남은 작업 계속" })).toBeInTheDocument()
   })
 
@@ -830,8 +839,6 @@ describe("App", () => {
         warnings: 1,
       },
     }
-
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true)
 
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = typeof input === "string" ? input : input.toString()
@@ -891,15 +898,209 @@ describe("App", () => {
     await user.click(within(dialog).getByRole("button", { name: "작업 초기화" }))
 
     await waitFor(() => {
-      expect(confirmSpy).toHaveBeenCalledWith(
-        "./resume-output 경로의 작업내역과 output 파일을 모두 삭제하고 초기화할까요?",
-      )
       expect(document.querySelector('[role="dialog"]')).toBeNull()
       expect(document.querySelector('[data-step-view="blog-input"]')).not.toBeNull()
     })
 
     expect(screen.getByLabelText("블로그 ID 또는 URL")).toHaveValue("")
     expect(screen.queryByRole("button", { name: "남은 작업 계속" })).not.toBeInTheDocument()
+  })
+
+  it("asks whether to restore a resumable path before scanning categories", async () => {
+    const resumedJob: ExportJobState = {
+      ...runningJob,
+      id: "job-existing-output",
+      resumeAvailable: true,
+      request: {
+        ...runningJob.request,
+        outputDir: "./resume-output",
+      },
+    }
+
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-resume/lookup")) {
+        expect(init?.method).toBe("POST")
+        expect(init?.body).toBe(JSON.stringify({ outputDir: "./resume-output" }))
+        return buildJsonResponse({
+          resumedJob,
+          resumeSummary: {
+            status: "running",
+            outputDir: "./resume-output",
+            totalPosts: 5,
+            completedCount: 2,
+            failedCount: 0,
+            uploadCandidateCount: 0,
+            uploadedCount: 0,
+          },
+          resumedScanResult: scanResult,
+        })
+      }
+
+      const bootstrapResponse = getBootstrapResponse(url)
+
+      if (bootstrapResponse) {
+        return bootstrapResponse
+      }
+
+      if (url.endsWith("/api/export-resume/restore")) {
+        expect(init?.method).toBe("POST")
+        expect(init?.body).toBe(JSON.stringify({ outputDir: "./resume-output" }))
+        return buildJsonResponse({
+          resumedJob,
+          resumeSummary: {
+            status: "running",
+            outputDir: "./resume-output",
+            totalPosts: 5,
+            completedCount: 2,
+            failedCount: 0,
+            uploadCandidateCount: 0,
+            uploadedCount: 0,
+          },
+          resumedScanResult: scanResult,
+        })
+      }
+
+      if (url.endsWith("/api/scan")) {
+        throw new Error("scan should not start before the user chooses")
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
+    await user.clear(screen.getByRole("textbox", { name: /출력 경로/ }))
+    await user.type(screen.getByRole("textbox", { name: /출력 경로/ }), "./resume-output")
+    await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
+
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByText("진행 중인 작업이 있습니다.")).toBeInTheDocument()
+    expect(within(dialog).queryByRole("button", { name: "닫기" })).toBeNull()
+
+    await user.click(within(dialog).getByRole("button", { name: "불러오기" }))
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "남은 작업 계속" })).toBeInTheDocument()
+    })
+  })
+
+  it("resets a resumable path and continues category scan from the first screen", async () => {
+    const resumedJob: ExportJobState = {
+      ...runningJob,
+      id: "job-existing-output",
+      resumeAvailable: true,
+      request: {
+        ...runningJob.request,
+        outputDir: "./resume-output",
+      },
+    }
+
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const url = typeof input === "string" ? input : input.toString()
+
+      if (url.endsWith("/api/export-resume/lookup")) {
+        return buildJsonResponse({
+          resumedJob,
+          resumeSummary: {
+            status: "running",
+            outputDir: "./resume-output",
+            totalPosts: 5,
+            completedCount: 2,
+            failedCount: 0,
+            uploadCandidateCount: 0,
+            uploadedCount: 0,
+          },
+          resumedScanResult: scanResult,
+        })
+      }
+
+      const bootstrapResponse = getBootstrapResponse(url)
+
+      if (bootstrapResponse) {
+        return bootstrapResponse
+      }
+
+      if (url.endsWith("/api/export-reset")) {
+        expect(init?.method).toBe("POST")
+        expect(init?.body).toBe(
+          JSON.stringify({
+            outputDir: "./resume-output",
+            jobId: "job-existing-output",
+          }),
+        )
+
+        return buildJsonResponse({
+          profile: "gfm",
+          options: defaultExportOptions(),
+          lastOutputDir: "./output",
+          resumedJob: null,
+          resumeSummary: null,
+          resumedScanResult: null,
+          frontmatterFieldOrder,
+          frontmatterFieldMeta,
+          optionDescriptions,
+        })
+      }
+
+      if (url.endsWith("/api/scan")) {
+        expect(init?.method).toBe("POST")
+        return buildJsonResponse(scanResult)
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
+    await user.clear(screen.getByRole("textbox", { name: /출력 경로/ }))
+    await user.type(screen.getByRole("textbox", { name: /출력 경로/ }), "./resume-output")
+    await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
+
+    const dialog = await screen.findByRole("dialog")
+    await user.click(within(dialog).getByRole("button", { name: "작업 초기화" }))
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-step-view="category-selection"]')).not.toBeNull()
+    })
+  })
+
+  it("warns before leaving the page when the user has started entering values", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = typeof input === "string" ? input : input.toString()
+      const bootstrapResponse = getBootstrapResponse(url)
+
+      if (bootstrapResponse) {
+        return bootstrapResponse
+      }
+
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = renderApp()
+
+    await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
+
+    const event = new Event("beforeunload", { cancelable: true })
+    Object.defineProperty(event, "returnValue", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    })
+
+    window.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(true)
+    expect((event as Event & { returnValue?: string }).returnValue).toBe("")
   })
 
   it("autosaves sanitized options and ignores blog, output, and category-only changes", async () => {

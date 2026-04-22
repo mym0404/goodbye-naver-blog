@@ -239,15 +239,18 @@ export const useExportJob = () => {
       throw new Error("재개할 작업이 없습니다.")
     }
 
-    setSubmitting(true)
-    setJob((current) =>
-      current
+    const previousJob = displayedJobRef.current
+    const resumedJob =
+      previousJob
         ? {
-            ...current,
+            ...previousJob,
             resumeAvailable: false,
           }
-        : current,
-    )
+        : previousJob
+
+    setSubmitting(true)
+    displayedJobRef.current = resumedJob
+    setJob(resumedJob)
 
     try {
       const response = await postJson<{ jobId: string; status: string }>(`/api/export/${jobId}/resume`, {})

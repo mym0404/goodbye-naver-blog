@@ -25,6 +25,12 @@ export type ExportBootstrapResponse = {
   optionDescriptions: OptionDescriptionMap
 }
 
+export type ExportResumeLookupResponse = {
+  resumedJob: ExportJobState | null
+  resumeSummary: ExportResumeSummary | null
+  resumedScanResult: ScanResult | null
+}
+
 export const fetchJson = async <T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> => {
   const response = await fetch(input, init)
   const body = (await response.json()) as T & {

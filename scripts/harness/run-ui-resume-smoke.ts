@@ -528,7 +528,7 @@ const waitForDialog = async ({
 
 const closeDialog = async (page: import("playwright").Page) => {
   const dialog = page.getByRole("dialog")
-  await dialog.getByRole("button", { name: "닫기" }).first().click()
+  await dialog.getByRole("button", { name: "불러오기" }).first().click()
   await dialog.waitFor({ state: "hidden", timeout: responseTimeoutMs })
 }
 
@@ -706,10 +706,23 @@ const run = async () => {
     outputDir: runningOutputDir,
     resumeAvailable: true,
   })
-  const runningActiveJob = buildExportRunningJob({
-    outputDir: runningOutputDir,
-    resumeAvailable: false,
-  })
+  const runningActiveJob: ExportJobState = {
+    ...buildExportRunningJob({
+      outputDir: runningOutputDir,
+      resumeAvailable: false,
+    }),
+    logs: [
+      ...runningResumableJob.logs,
+      {
+        timestamp: timestamps.finishedAt,
+        message: "남은 글 처리를 다시 시작했습니다.",
+      },
+    ],
+    progress: {
+      ...runningResumableJob.progress,
+      completed: 3,
+    },
+  }
   const uploadReadyJob = buildUploadJob({
     jobId: "job-upload-ready",
     status: "upload-ready",
@@ -794,7 +807,7 @@ const run = async () => {
       },
     },
     {
-      id: "running-resume-restores-running-step-and-waits-for-manual-resume",
+      id: "running-resume-manual-continue-refreshes-progress-without-reload",
       step: "running",
       bootstrap: createBootstrap({
         lastOutputDir: runningOutputDir,
@@ -833,6 +846,16 @@ const run = async () => {
           state: "hidden",
           timeout: responseTimeoutMs,
         })
+        await page.waitForFunction(
+          () => {
+            const statusPanelText = document.querySelector("#status-panel")?.textContent?.replace(/\s+/g, " ").trim() ?? ""
+            const logsText = document.querySelector("#logs")?.textContent?.replace(/\s+/g, " ").trim() ?? ""
+
+            return statusPanelText.includes("3 / 5") && logsText.includes("남은 글 처리를 다시 시작했습니다.")
+          },
+          undefined,
+          { timeout: responseTimeoutMs },
+        )
 
         if (state.resumeRequestCount !== 1) {
           throw new Error(`expected one manual resume request, got ${state.resumeRequestCount}`)

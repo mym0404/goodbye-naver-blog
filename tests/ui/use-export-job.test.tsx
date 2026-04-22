@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { defaultExportOptions } from "../../src/shared/export-options.js"
-import type { ScanResult } from "../../src/shared/types.js"
+import type { ExportJobState, ScanResult } from "../../src/shared/types.js"
 import { useExportJob } from "../../src/ui/hooks/use-export-job.js"
 import { fetchJson, postJson, postUploadJson } from "../../src/ui/lib/api.js"
 
@@ -590,5 +590,90 @@ describe("useExportJob", () => {
     })
 
     expect(result.current.job?.status).toBe("uploading")
+  })
+
+  it("restarts polling after resuming a hydrated job", async () => {
+    const resumableJob = {
+      id: "job-resume",
+      request: {
+        blogIdOrUrl: "mym0404",
+        outputDir: "./output",
+        profile: "gfm" as const,
+        options: defaultExportOptions(),
+      },
+      status: "running" as const,
+      resumeAvailable: true,
+      logs: [],
+      createdAt: "2026-04-11T04:00:00.000Z",
+      startedAt: "2026-04-11T04:00:00.000Z",
+      finishedAt: null,
+      progress: {
+        total: 3,
+        completed: 1,
+        failed: 0,
+        warnings: 0,
+      },
+      upload: {
+        status: "not-requested" as const,
+        eligiblePostCount: 0,
+        candidateCount: 0,
+        uploadedCount: 0,
+        failedCount: 0,
+        terminalReason: null,
+      },
+      items: [],
+      manifest: null,
+      error: null,
+    } satisfies ExportJobState
+
+    mockedPostJson.mockResolvedValue({
+      jobId: "job-resume",
+      status: "running",
+    })
+    mockedFetchJson
+      .mockResolvedValueOnce({
+        ...resumableJob,
+        resumeAvailable: false,
+        progress: {
+          ...resumableJob.progress,
+          completed: 2,
+        },
+      })
+      .mockResolvedValueOnce({
+        ...resumableJob,
+        status: "completed",
+        resumeAvailable: false,
+        finishedAt: "2026-04-11T04:00:05.000Z",
+        progress: {
+          ...resumableJob.progress,
+          completed: 3,
+        },
+      })
+
+    vi.spyOn(window, "setTimeout").mockImplementation((handler: TimerHandler) => {
+      void Promise.resolve().then(() => {
+        if (typeof handler === "function") {
+          handler()
+        }
+      })
+
+      return 1 as unknown as ReturnType<typeof window.setTimeout>
+    })
+
+    const { result } = renderHook(() => useExportJob())
+
+    act(() => {
+      result.current.hydrateJob(resumableJob)
+    })
+
+    await act(async () => {
+      await result.current.resumeJob()
+    })
+
+    await waitFor(() => {
+      expect(mockedFetchJson).toHaveBeenCalledWith("/api/export/job-resume")
+    })
+    expect(result.current.job?.resumeAvailable).toBe(false)
+    expect(result.current.job?.progress.completed).toBe(3)
   })
 })

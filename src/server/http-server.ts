@@ -833,6 +833,35 @@ export const createHttpServer = ({
     }
   }
 
+  const buildResumeLookupResponse = async ({
+    outputDir,
+    persistLastOutputDir = false,
+  }: {
+    outputDir: string
+    persistLastOutputDir?: boolean
+  }) => {
+    const cachedScans = await ensureScanCache()
+    const resumed = await loadResumedJob({
+      outputDir,
+      cachedScans,
+    })
+
+    if (persistLastOutputDir && resumed?.job) {
+      await writePersistedUiState({
+        settingsPath,
+        input: {
+          lastOutputDir: outputDir,
+        },
+      })
+    }
+
+    return {
+      resumedJob: resumed?.job ?? null,
+      resumeSummary: resumed?.summary ?? null,
+      resumedScanResult: resumed?.scanResult ?? null,
+    }
+  }
+
   const sendBrowserApp = async ({
     request,
     response,
@@ -1390,6 +1419,94 @@ export const createHttpServer = ({
           response,
           statusCode: 200,
           body: await buildBootstrapResponse(),
+        })
+        return
+      }
+
+      if (method === "POST" && url.pathname === "/api/export-resume/lookup") {
+        if (!hasJsonContentType(request)) {
+          sendJson({
+            response,
+            statusCode: 415,
+            body: {
+              error: "application/json 요청만 허용합니다.",
+            },
+          })
+          return
+        }
+
+        const payload = await parseJsonBody<{
+          outputDir?: unknown
+        }>(request)
+
+        if (!isPlainObject(payload) || typeof payload.outputDir !== "string" || !payload.outputDir.trim()) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: "outputDir는 필수입니다.",
+            },
+          })
+          return
+        }
+
+        sendJson({
+          response,
+          statusCode: 200,
+          body: await buildResumeLookupResponse({
+            outputDir: payload.outputDir.trim(),
+          }),
+        })
+        return
+      }
+
+      if (method === "POST" && url.pathname === "/api/export-resume/restore") {
+        if (!hasJsonContentType(request)) {
+          sendJson({
+            response,
+            statusCode: 415,
+            body: {
+              error: "application/json 요청만 허용합니다.",
+            },
+          })
+          return
+        }
+
+        const payload = await parseJsonBody<{
+          outputDir?: unknown
+        }>(request)
+
+        if (!isPlainObject(payload) || typeof payload.outputDir !== "string" || !payload.outputDir.trim()) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: "outputDir는 필수입니다.",
+            },
+          })
+          return
+        }
+
+        const resumed = await buildResumeLookupResponse({
+          outputDir: payload.outputDir.trim(),
+          persistLastOutputDir: true,
+        })
+
+        if (!resumed.resumedJob || !resumed.resumeSummary) {
+          sendJson({
+            response,
+            statusCode: 404,
+            body: {
+              error: "불러올 수 있는 작업 상태를 찾지 못했습니다.",
+            },
+          })
+          return
+        }
+
+        sendJson({
+          response,
+          statusCode: 200,
+          body: resumed,
         })
         return
       }

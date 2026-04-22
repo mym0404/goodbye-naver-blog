@@ -59,6 +59,7 @@ import { JobResultsPanel } from "./features/job-results/job-results-panel.js"
 import { setExportJobPollingConfig, useExportJob } from "./hooks/use-export-job.js"
 import type {
   ExportBootstrapResponse,
+  ExportResumeLookupResponse,
   UploadProvidersResponse,
 } from "./lib/api.js"
 import { fetchJson, postJson, postJsonNoContent } from "./lib/api.js"
@@ -272,15 +273,23 @@ const getPersistedUiStateSignature = ({
     themePreference,
   })
 
+type ResumeDialogState = {
+  source: "bootstrap" | "before-scan"
+  resumedJob: ExportJobState
+  resumeSummary: ExportResumeSummary
+  resumedScanResult: ScanResult | null
+}
+
 export const App = () => {
   const [defaults, setDefaults] = useState(fallbackDefaults)
   const [bootstrapping, setBootstrapping] = useState(true)
   const [uploadProviders, setUploadProviders] = useState(fallbackUploadProviders)
   const [uploadProviderError, setUploadProviderError] = useState<string | null>(null)
   const [resettingResume, setResettingResume] = useState(false)
+  const [restoringResume, setRestoringResume] = useState(false)
   const [blogIdOrUrl, setBlogIdOrUrl] = useState("")
   const [outputDir, setOutputDir] = useState(defaultOutputDir)
-  const [resumeDialog, setResumeDialog] = useState<ExportResumeSummary | null>(null)
+  const [resumeDialog, setResumeDialog] = useState<ResumeDialogState | null>(null)
   const [scanCache, setScanCache] = useState<Record<string, ScanResult>>({})
   const [themePreference, setThemePreference] = useState<ThemePreference>(
     fallbackDefaults.themePreference,
@@ -328,6 +337,80 @@ export const App = () => {
     setScanStatus(message)
     setScanStatusTone("error")
   }
+  const createResumeDialogState = ({
+    source,
+    resumedJob,
+    resumeSummary,
+    resumedScanResult,
+  }: {
+    source: ResumeDialogState["source"]
+    resumedJob: ExportJobState | null
+    resumeSummary: ExportResumeSummary | null
+    resumedScanResult: ScanResult | null
+  }) => {
+    if (!resumedJob || !resumeSummary) {
+      return null
+    }
+
+    return {
+      source,
+      resumedJob,
+      resumeSummary,
+      resumedScanResult,
+    } satisfies ResumeDialogState
+  }
+  const applyResumedState = ({
+    source,
+    resumedJob,
+    resumeSummary,
+    resumedScanResult,
+  }: {
+    source: ResumeDialogState["source"]
+    resumedJob: ExportJobState
+    resumeSummary: ExportResumeSummary
+    resumedScanResult: ScanResult | null
+  }) => {
+    setDefaults((current) => ({
+      ...current,
+      lastOutputDir: resumedJob.request.outputDir,
+      resumedJob,
+      resumeSummary,
+      resumedScanResult,
+    }))
+    setOptions(resumedJob.request.options)
+    setOutputDir(normalizeOutputDir(resumedJob.request.outputDir))
+    setBlogIdOrUrl(resumedJob.request.blogIdOrUrl)
+    setCategorySearch("")
+    setSetupStep("blog-input")
+    setActiveJobFilter("all")
+    setScanPending(false)
+
+    if (resumedScanResult) {
+      setScanCache((current) => ({
+        ...current,
+        [resumedScanResult.blogId]: resumedScanResult,
+      }))
+      setNeutralScanStatus(`${resumedScanResult.blogId} 스캔 결과 재개`)
+      setCategoryStatus("이전 작업 상태를 복구했습니다.")
+    } else {
+      setScanCache({})
+      setNeutralScanStatus("이전 작업 상태를 복구했습니다.")
+      setCategoryStatus("복구된 작업 상태를 확인하세요.")
+    }
+
+    lastNotifiedJobKeyRef.current = `${resumedJob.id}:${resumedJob.status}:${resumedJob.finishedAt ?? ""}`
+    hydrateJob(resumedJob)
+    setResumeDialog(
+      source === "bootstrap"
+        ? createResumeDialogState({
+            source,
+            resumedJob,
+            resumeSummary,
+            resumedScanResult,
+          })
+        : null,
+    )
+  }
 
   const applyBootstrapState = (nextDefaults: ExportBootstrapResponse) => {
     setDefaults(nextDefaults)
@@ -352,10 +435,13 @@ export const App = () => {
       setCategoryStatus("스캔 후 카테고리를 선택할 수 있습니다.")
     }
 
-    if (nextDefaults.resumedJob) {
-      lastNotifiedJobKeyRef.current = `${nextDefaults.resumedJob.id}:${nextDefaults.resumedJob.status}:${nextDefaults.resumedJob.finishedAt ?? ""}`
-      hydrateJob(nextDefaults.resumedJob)
-      setResumeDialog(nextDefaults.resumeSummary)
+    if (nextDefaults.resumedJob && nextDefaults.resumeSummary) {
+      applyResumedState({
+        source: "bootstrap",
+        resumedJob: nextDefaults.resumedJob,
+        resumeSummary: nextDefaults.resumeSummary,
+        resumedScanResult: nextDefaults.resumedScanResult,
+      })
       return
     }
 
@@ -401,6 +487,13 @@ export const App = () => {
       }),
     [persistedOptions, themePreference],
   )
+  const outputDirBaseline = normalizeOutputDir(defaults.resumedJob?.request.outputDir ?? defaults.lastOutputDir)
+  const shouldWarnBeforeUnload =
+    !bootstrapping &&
+    (blogIdOrUrl.trim().length > 0 ||
+      normalizeOutputDir(outputDir) !== outputDirBaseline ||
+      activeScanResult !== null ||
+      Boolean(job))
 
   const currentStep: WizardStep = useMemo(() => {
     if (submitting || job?.status === "queued" || job?.status === "running") {
@@ -633,6 +726,23 @@ export const App = () => {
     }
   }, [job])
 
+  useEffect(() => {
+    if (!shouldWarnBeforeUnload) {
+      return
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ""
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+    }
+  }, [shouldWarnBeforeUnload])
+
   const updateOptions = (
     updater: (current: ExportOptions) => ExportOptions,
   ) => {
@@ -641,12 +751,51 @@ export const App = () => {
 
   const ensureScanResult = async ({
     forceRefresh = false,
+    skipResumeLookup = false,
   }: {
     forceRefresh?: boolean
+    skipResumeLookup?: boolean
   } = {}) => {
     if (!currentScanTarget) {
       setErrorScanStatus("블로그 ID 또는 URL을 입력하세요.")
       return false
+    }
+
+    const normalizedOutputDir = normalizeOutputDir(outputDir)
+
+    if (!forceRefresh && !skipResumeLookup) {
+      setScanPending(true)
+      setNeutralScanStatus("기존 작업 상태를 확인하는 중입니다.")
+      setCategoryStatus("출력 경로의 manifest.json 상태를 확인하는 중입니다.")
+
+      try {
+        const resumed = await postJson<ExportResumeLookupResponse>("/api/export-resume/lookup", {
+          outputDir: normalizedOutputDir,
+        })
+        const nextResumeDialog = createResumeDialogState({
+          source: "before-scan",
+          resumedJob: resumed.resumedJob,
+          resumeSummary: resumed.resumeSummary,
+          resumedScanResult: resumed.resumedScanResult,
+        })
+
+        if (nextResumeDialog) {
+          setResumeDialog(nextResumeDialog)
+          setNeutralScanStatus("이 경로에서 이어서 불러올 작업을 찾았습니다.")
+          setCategoryStatus("작업 초기화 또는 불러오기 중 하나를 선택하세요.")
+          return false
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        setErrorScanStatus(message)
+        setCategoryStatus("작업 상태 확인에 실패했습니다. 다시 시도하세요.")
+        toast.error("작업 상태 확인에 실패했습니다.", {
+          description: message,
+        })
+        return false
+      } finally {
+        setScanPending(false)
+      }
     }
 
     if (activeScanResult && !forceRefresh) {
@@ -861,6 +1010,46 @@ export const App = () => {
     }
   }
 
+  const handleRestoreResume = async () => {
+    if (!resumeDialog) {
+      return
+    }
+
+    if (resumeDialog.source === "bootstrap") {
+      setResumeDialog(null)
+      return
+    }
+
+    setRestoringResume(true)
+
+    try {
+      const restored = await postJson<ExportResumeLookupResponse>("/api/export-resume/restore", {
+        outputDir: resumeDialog.resumeSummary.outputDir,
+      })
+
+      if (!restored.resumedJob || !restored.resumeSummary) {
+        throw new Error("불러올 수 있는 작업 상태를 찾지 못했습니다.")
+      }
+
+      applyResumedState({
+        source: "before-scan",
+        resumedJob: restored.resumedJob,
+        resumeSummary: restored.resumeSummary,
+        resumedScanResult: restored.resumedScanResult,
+      })
+      toast.success("이전 작업을 다시 불러왔습니다.", {
+        description: `${restored.resumeSummary.outputDir} 작업 상태를 복구했습니다.`,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      toast.error("이전 작업을 불러오지 못했습니다.", {
+        description: message,
+      })
+    } finally {
+      setRestoringResume(false)
+    }
+  }
+
   const handleResumeExport = async () => {
     try {
       await resumeJob()
@@ -880,32 +1069,34 @@ export const App = () => {
       return
     }
 
-    const confirmed = window.confirm(
-      `${resumeDialog.outputDir} 경로의 작업내역과 output 파일을 모두 삭제하고 초기화할까요?`,
-    )
-
-    if (!confirmed) {
-      return
-    }
-
     setResettingResume(true)
 
     try {
       const nextDefaults = await postJson<ExportBootstrapResponse>("/api/export-reset", {
-        outputDir: resumeDialog.outputDir,
-        jobId: job?.id ?? null,
+        outputDir: resumeDialog.resumeSummary.outputDir,
+        jobId: resumeDialog.resumedJob.id,
       })
-      const nextPersistedOptions = sanitizePersistedExportOptions(nextDefaults.options)
 
-      latestPersistedOptionsRef.current = nextPersistedOptions
-      latestThemePreferenceRef.current = nextDefaults.themePreference
-      persistedUiStateSignatureRef.current = getPersistedUiStateSignature({
-        options: nextDefaults.options,
-        themePreference: nextDefaults.themePreference,
-      })
-      applyBootstrapState(nextDefaults)
+      if (resumeDialog.source === "bootstrap") {
+        const nextPersistedOptions = sanitizePersistedExportOptions(nextDefaults.options)
+
+        latestPersistedOptionsRef.current = nextPersistedOptions
+        latestThemePreferenceRef.current = nextDefaults.themePreference
+        persistedUiStateSignatureRef.current = getPersistedUiStateSignature({
+          options: nextDefaults.options,
+          themePreference: nextDefaults.themePreference,
+        })
+        applyBootstrapState(nextDefaults)
+      } else {
+        setResumeDialog(null)
+        hydrateJob(null)
+        await ensureScanResult({
+          skipResumeLookup: true,
+        })
+      }
+
       toast.success("이전 작업을 초기화했습니다.", {
-        description: `${resumeDialog.outputDir} 작업내역을 삭제했습니다.`,
+        description: `${resumeDialog.resumeSummary.outputDir} 작업내역을 삭제했습니다.`,
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -1180,41 +1371,55 @@ export const App = () => {
       className={cn("dashboard-shell relative min-h-screen w-full overflow-x-clip", themePreference)}
       aria-busy={bootstrapping || undefined}
     >
-      <Dialog open={Boolean(resumeDialog)} onOpenChange={(open) => (!open ? setResumeDialog(null) : null)}>
-        <DialogContent showCloseButton>
+      <Dialog open={Boolean(resumeDialog)} onOpenChange={() => null}>
+        <DialogContent
+          showCloseButton={false}
+          onEscapeKeyDown={(event) => event.preventDefault()}
+          onInteractOutside={(event) => event.preventDefault()}
+          onPointerDownOutside={(event) => event.preventDefault()}
+        >
           <DialogHeader>
-            <DialogTitle>이전 작업을 다시 불러왔습니다.</DialogTitle>
+            <DialogTitle>
+              {resumeDialog?.source === "before-scan"
+                ? "진행 중인 작업이 있습니다."
+                : "이전 작업을 다시 불러왔습니다."}
+            </DialogTitle>
             <DialogDescription>
-              output 상태를 읽어 마지막 작업 화면으로 복구했습니다.
+              {resumeDialog?.source === "before-scan"
+                ? "이 경로에는 다시 불러올 수 있는 작업 상태가 남아 있습니다."
+                : "output 상태를 읽어 마지막 작업 화면으로 복구했습니다."}
             </DialogDescription>
           </DialogHeader>
           {resumeDialog ? (
             <div className="grid gap-3">
               <div className="subtle-panel grid gap-2 rounded-[var(--radius-lg)] px-4 py-4 text-sm text-foreground">
                 <p>
-                  <strong className="font-semibold text-foreground">상태</strong> {resumeDialog.status}
+                  <strong className="font-semibold text-foreground">상태</strong> {resumeDialog.resumeSummary.status}
                 </p>
                 <p>
-                  <strong className="font-semibold text-foreground">출력 경로</strong> {resumeDialog.outputDir}
+                  <strong className="font-semibold text-foreground">출력 경로</strong> {resumeDialog.resumeSummary.outputDir}
                 </p>
                 <p>
-                  <strong className="font-semibold text-foreground">진행</strong> 총 {resumeDialog.totalPosts} / 완료 {resumeDialog.completedCount} / 실패 {resumeDialog.failedCount}
+                  <strong className="font-semibold text-foreground">진행</strong> 총 {resumeDialog.resumeSummary.totalPosts} / 완료 {resumeDialog.resumeSummary.completedCount} / 실패 {resumeDialog.resumeSummary.failedCount}
                 </p>
                 <p>
-                  <strong className="font-semibold text-foreground">업로드</strong> {resumeDialog.uploadedCount} / {resumeDialog.uploadCandidateCount}
+                  <strong className="font-semibold text-foreground">업로드</strong> {resumeDialog.resumeSummary.uploadedCount} / {resumeDialog.resumeSummary.uploadCandidateCount}
                 </p>
               </div>
               <Alert variant="destructive">
                 <AlertTitle>초기화 경고</AlertTitle>
                 <AlertDescription>
-                  작업 초기화를 실행하면 <strong>{resumeDialog.outputDir}</strong> 경로의 작업내역과 output 파일을 함께 삭제합니다.
+                  작업 초기화를 실행하면 <strong>{resumeDialog.resumeSummary.outputDir}</strong> 경로의 작업내역과 output 파일을 함께 삭제합니다.
                 </AlertDescription>
               </Alert>
             </div>
           ) : null}
-          <DialogFooter showCloseButton closeButtonLabel="확인">
+          <DialogFooter>
             <Button variant="destructive" onClick={() => void handleResetResume()} disabled={resettingResume}>
               {resettingResume ? "초기화 중" : "작업 초기화"}
+            </Button>
+            <Button onClick={() => void handleRestoreResume()} disabled={restoringResume || resettingResume}>
+              {restoringResume ? "불러오는 중" : "불러오기"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1258,21 +1463,9 @@ export const App = () => {
           <CardContent className="grid gap-4 p-5">
             <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
               <div className="wizard-heading grid gap-1.5">
-                <div className="flex flex-wrap items-center gap-3">
-                  <img
-                    src="/brand/logo.svg"
-                    alt="Goodbye Naver Blog"
-                    className="h-10 w-auto shrink-0"
-                  />
-                  <div className="grid gap-0.5">
-                    <span className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                      Goodbye Naver Blog
-                    </span>
-                    <span className="wizard-step-label wizard-kicker">
-                      {isSetupStep ? `단계 ${setupStepIndex + 1} / ${setupSteps.length}` : "현재 단계"}
-                    </span>
-                  </div>
-                </div>
+                <span className="wizard-step-label wizard-kicker">
+                  {isSetupStep ? `단계 ${setupStepIndex + 1} / ${setupSteps.length}` : "현재 단계"}
+                </span>
                 <div className="grid gap-1.5">
                   <h1 className="wizard-title text-[clamp(1.7rem,2.5vw,2.4rem)] leading-[1.04]">
                     {stepMeta[currentStep].title}
