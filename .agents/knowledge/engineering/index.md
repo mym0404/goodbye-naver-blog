@@ -19,5 +19,5 @@
 - 훅, CI, smoke, fixture-based sample verification 연결 지점을 찾아야 할 때
 
 ## 검증
-- `pnpm check:quick`: 현재 `check:local` 별칭이다. 작은 수정 뒤 같은 로컬 기준선을 다시 확인할 때 실행한다.
+- `pnpm check:quick`: 현재 `check:local` 별칭이다. 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다.
 - `pnpm quality:report`: parser coverage나 sample 품질 지표가 달라질 수 있는 변경 뒤 generated 보고서를 갱신할 때 실행한다.

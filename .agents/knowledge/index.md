@@ -28,6 +28,7 @@
 - export 후 upload 상태 전이나 결과 패널을 바꾸면 [product/domain.md](./product/domain.md), [product/product-outline.md](./product/product-outline.md), `src/server/http-server.ts`를 함께 본다.
 
 ## 검증
+- `pnpm check:quick`: 현재 `check:local` 별칭이다. 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다.
 - `pnpm quality:report`: parser capability나 sample corpus 변경으로 generated 품질 보고서가 달라질 때 실행한다.
 - 수정한 링크와 코드 기준점 수동 spot-check: knowledge 문서를 바꾼 뒤 라우팅과 앵커가 여전히 맞는지 확인할 때 실행한다.
 

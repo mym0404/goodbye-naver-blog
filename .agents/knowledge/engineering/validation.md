@@ -17,7 +17,7 @@
 - [../../../scripts/harness/run-ui-live-upload.ts](../../../scripts/harness/run-ui-live-upload.ts)
 
 ## 검증 방법
-- `pnpm check:quick`: 현재 `check:local` 별칭이다. 작은 로컬 수정 뒤 같은 로컬 기준선(`typecheck + test:offline + parser:check`)을 다시 확인할 때 실행한다.
+- `pnpm check:quick`: 현재 `check:local` 별칭이다. 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다. 같은 로컬 기준선(`typecheck + test:offline + parser:check`)을 다시 확인한다.
 - `pnpm check:full`: fixture-based sample regression, generated coverage, Playwright smoke UI까지 포함한 전체 기본 회귀가 필요할 때 실행한다.
 - `pnpm test:coverage`: 커버리지 게이트나 CI 동작을 다시 확인해야 할 때 실행한다.
 
@@ -45,7 +45,7 @@
   V8 coverage threshold를 확인한다.
 
 ## Primary Commands
-- `pnpm check:quick`: 현재 `pnpm check:local` 별칭이다. 작은 코드 수정 뒤 같은 로컬 기준선을 바로 확인할 때 실행한다.
+- `pnpm check:quick`: 현재 `pnpm check:local` 별칭이다. 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다.
 - `pnpm check:local`: `typecheck + test:offline + parser:check` 기본 회귀를 확인할 때 실행한다.
 - `pnpm check:full`: `quality:report + check:local + samples:verify + smoke:ui` 전체 기본 회귀를 확인할 때 실행한다.
 - `pnpm check`: `check:full`을 그대로 부를 때 실행한다.
@@ -78,6 +78,7 @@
 - fork PR에서는 기본 `pull_request` 보안 모델상 secret이 주입되지 않으므로 live upload step이 실패할 수 있다.
 
 ## Task Loops
+- 모든 저장소 파일 변경 턴은 `pnpm check:quick`으로 시작한다. 더 큰 검증이 필요하면 그 위에 focused command나 broader regression을 추가한다.
 - capability/sample/harness 변경 뒤에는 `pnpm typecheck`, `pnpm test:offline`, `pnpm parser:check`, `pnpm samples:verify`, `pnpm quality:report`를 우선 본다.
 - capability catalog를 바꿀 때는 `sample-fixture`와 `parser-fixture` 분류를 함께 검토한다. 공개 글을 끝내 확보하지 못한 capability를 억지로 sample gap으로 남기지 않는다.
 - renderer/exporter 결과 변경 뒤에는 위 전부에 `pnpm smoke:ui`, `pnpm test:coverage`를 추가한다.
@@ -87,4 +88,4 @@
 - export/upload 흐름, 복구 시나리오, 업로더 연동처럼 사용자 경로를 크게 바꾸는 변경 뒤에는 `pnpm smoke:ui`, `pnpm test:network:upload`를 둘 다 실행한다.
 - fixture 자체를 갱신해야 할 때만 `pnpm samples:refresh -- --id <sampleId>`를 실행한다.
 - 실업로드 검증이 필요하면 `pnpm test:network:upload`를 별도로 실행한다. 이 명령은 외부 상태를 만들 수 있으므로 `check:full`에는 포함하지 않는다.
-- knowledge만 변경했을 때는 수정한 링크와 코드 기준점을 수동 점검하고, generated 보고서 축을 건드렸다면 `pnpm quality:report`를 실행한다.
+- knowledge만 변경했을 때도 `pnpm check:quick`은 기본으로 실행하고, 수정한 링크와 코드 기준점을 수동 점검한다. generated 보고서 축을 건드렸다면 `pnpm quality:report`를 추가한다.
