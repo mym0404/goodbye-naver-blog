@@ -1193,8 +1193,7 @@ const run = async () => {
       trigger: "#markdown-linkStyle",
       value: "referenced",
     })
-    await page.fill("#blockOutputs-defaults-formula-inlineOpen", "\\(")
-    await page.fill("#blockOutputs-defaults-formula-inlineClose", "\\)")
+    await page.fill("#blockOutputs-defaults-formula-inlineWrapper", "\\(...\\)")
     await page.click('button:has-text("Assets 설정")')
     await waitForStepView({
       page,

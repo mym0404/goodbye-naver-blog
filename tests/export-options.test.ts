@@ -30,8 +30,8 @@ describe("export options", () => {
     expect(options.links.sameBlogPostMode).toBe("keep-source")
     expect(options.links.sameBlogPostCustomUrlTemplate).toBe("")
     expect(options.markdown.linkStyle).toBe("inlined")
-    expect(options.blockOutputs.defaults.formula?.params?.inlineOpen).toBe("$")
-    expect(options.blockOutputs.defaults.formula?.params?.blockOpen).toBe("$$")
+    expect(options.blockOutputs.defaults.formula?.params?.inlineWrapper).toBe("$")
+    expect(options.blockOutputs.defaults.formula?.params?.blockWrapper).toBe("$$")
     expect(options.structure.groupByCategory).toBe(true)
     expect(options.structure.includeDateInPostFolderName).toBe(true)
     expect(options.structure.includeLogNoInPostFolderName).toBe(false)
@@ -72,8 +72,7 @@ describe("export options", () => {
           formula: {
             variant: "math-fence",
             params: {
-              inlineOpen: "\\(",
-              inlineClose: "\\)",
+              inlineWrapper: "\\(...\\)",
             },
           },
         },
@@ -81,8 +80,7 @@ describe("export options", () => {
           "se4-formula": {
             variant: "wrapper",
             params: {
-              blockOpen: "\\[",
-              blockClose: "\\]",
+              blockWrapper: "\\[...\\]",
             },
           },
         },
@@ -91,13 +89,13 @@ describe("export options", () => {
 
     expect(options.blockOutputs.defaults.code?.variant).toBe("tilde-fence")
     expect(options.blockOutputs.defaults.formula?.variant).toBe("math-fence")
-    expect(options.blockOutputs.defaults.formula?.params?.inlineOpen).toBe("\\(")
+    expect(options.blockOutputs.defaults.formula?.params?.inlineWrapper).toBe("\\(...\\)")
     expect(options.blockOutputs.overrides["se4-formula"]?.variant).toBe("wrapper")
-    expect(options.blockOutputs.overrides["se4-formula"]?.params?.inlineOpen).toBe("\\(")
-    expect(options.blockOutputs.overrides["se4-formula"]?.params?.blockOpen).toBe("\\[")
+    expect(options.blockOutputs.overrides["se4-formula"]?.params?.inlineWrapper).toBe("\\(...\\)")
+    expect(options.blockOutputs.overrides["se4-formula"]?.params?.blockWrapper).toBe("\\[...\\]")
   })
 
-  it("keeps built-in block output params when only part of them are overridden", () => {
+  it("normalizes legacy formula open/close params into wrapper params", () => {
     const options = cloneExportOptions({
       blockOutputs: {
         defaults: {
@@ -105,6 +103,7 @@ describe("export options", () => {
             variant: "wrapper",
             params: {
               inlineOpen: "\\(",
+              inlineClose: "\\)",
             },
           },
         },
@@ -116,10 +115,8 @@ describe("export options", () => {
       blockOutputs: options.blockOutputs,
     })
 
-    expect(selection.params?.inlineOpen).toBe("\\(")
-    expect(selection.params?.inlineClose).toBe("$")
-    expect(selection.params?.blockOpen).toBe("$$")
-    expect(selection.params?.blockClose).toBe("$$")
+    expect(selection.params?.inlineWrapper).toBe("\\(...\\)")
+    expect(selection.params?.blockWrapper).toBe("$$")
   })
 
   it("returns field name when alias is blank", () => {

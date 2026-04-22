@@ -155,24 +155,14 @@ describe("ExportOptionsPanel", () => {
     )
 
     await selectOption({ user, trigger: "#markdown-linkStyle", value: "referenced" })
-    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-formula-inlineOpen"), {
+    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-formula-inlineWrapper"), {
       target: {
-        value: "\\(",
+        value: "\\(...\\)",
       },
     })
-    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-formula-inlineClose"), {
+    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-formula-blockWrapper"), {
       target: {
-        value: "\\)",
-      },
-    })
-    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-formula-blockOpen"), {
-      target: {
-        value: "\\[",
-      },
-    })
-    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-formula-blockClose"), {
-      target: {
-        value: "\\]",
+        value: "\\[...\\]",
       },
     })
     await selectOption({ user, trigger: "#blockOutputs-defaults-image-variant", value: "linked-image" })
@@ -283,10 +273,8 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.frontmatter.fields.title).toBe(false)
     expect(latestOptions.frontmatter.aliases.title).toBe("headline")
     expect(latestOptions.markdown.linkStyle).toBe("referenced")
-    expect(latestOptions.blockOutputs.defaults.formula?.params?.inlineOpen).toBe("\\(")
-    expect(latestOptions.blockOutputs.defaults.formula?.params?.inlineClose).toBe("\\)")
-    expect(latestOptions.blockOutputs.defaults.formula?.params?.blockOpen).toBe("\\[")
-    expect(latestOptions.blockOutputs.defaults.formula?.params?.blockClose).toBe("\\]")
+    expect(latestOptions.blockOutputs.defaults.formula?.params?.inlineWrapper).toBe("\\(...\\)")
+    expect(latestOptions.blockOutputs.defaults.formula?.params?.blockWrapper).toBe("\\[...\\]")
     expect(latestOptions.blockOutputs.defaults.image?.variant).toBe("linked-image")
     expect(latestOptions.blockOutputs.defaults.divider?.variant).toBe("asterisk-rule")
     expect(latestOptions.blockOutputs.defaults.code?.variant).toBe("tilde-fence")
@@ -468,32 +456,7 @@ describe("ExportOptionsPanel", () => {
     expect(query<HTMLElement>('[data-block-output-card="code"] pre').textContent).toContain("~~~ts")
   })
 
-  it("restores viewport scroll after opening a select in the markdown step", async () => {
-    const user = userEvent.setup()
-    let scrollY = 640
-    const scrollTo = vi.fn()
-
-    Object.defineProperty(window, "scrollX", {
-      configurable: true,
-      get: () => 0,
-    })
-    Object.defineProperty(window, "scrollY", {
-      configurable: true,
-      get: () => scrollY,
-    })
-    vi.stubGlobal(
-      "requestAnimationFrame",
-      vi.fn((callback: FrameRequestCallback) => {
-        scrollY = 0
-        callback(0)
-        return 1
-      }),
-    )
-    Object.defineProperty(window, "scrollTo", {
-      configurable: true,
-      value: scrollTo,
-    })
-
+  it("keeps block output controls top-aligned next to the preview", () => {
     render(
       <ExportOptionsPanel
         step="markdown"
@@ -508,9 +471,14 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    await user.click(query<HTMLElement>("#markdown-linkStyle"))
+    const blockCard = query<HTMLElement>('[data-block-output-card="se2-rawHtml"]')
+    const twoColumnLayout = blockCard.querySelector(".lg\\:grid-cols-\\[minmax\\(0\\,0\\.8fr\\)_minmax\\(0\\,1fr\\)\\]")
+    const optionField = blockCard.querySelector('[data-option-key="blockOutputs-overrides-se2-rawHtml-variant"]')
+    const preview = blockCard.querySelector("pre")
 
-    expect(scrollTo).toHaveBeenCalledWith(0, 640)
+    expect(twoColumnLayout).toHaveClass("items-start")
+    expect(optionField).toHaveClass("content-start", "self-start")
+    expect(preview?.parentElement).toHaveClass("content-start", "self-start")
   })
 
   it("renders image preview with local asset paths unless remote mode is selected", () => {

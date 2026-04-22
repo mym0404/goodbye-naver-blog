@@ -5,6 +5,7 @@ import type {
   ImageData,
   MarkdownLinkStyle,
 } from "./types.js"
+import { splitFormulaWrapper } from "./formula-wrapper.js"
 
 const markdownLineWhitespacePattern = /[^\S\n]+/g
 
@@ -139,14 +140,17 @@ export const renderFormula = ({
   display: boolean
   selection: BlockOutputSelection
 }) => {
-  const inlineOpen = String(selection.params?.inlineOpen ?? "$")
-  const inlineClose = String(selection.params?.inlineClose ?? "$")
+  const inline = splitFormulaWrapper({
+    wrapper: String(selection.params?.inlineWrapper ?? "$"),
+    fallbackOpen: "$",
+    fallbackClose: "$",
+  })
 
   if (!display) {
     return renderWrappedFormula({
       formula,
-      open: inlineOpen,
-      close: inlineClose,
+      open: inline.open,
+      close: inline.close,
       display: false,
     })
   }
@@ -155,10 +159,16 @@ export const renderFormula = ({
     return `\`\`\`math\n${formula}\n\`\`\``
   }
 
+  const block = splitFormulaWrapper({
+    wrapper: String(selection.params?.blockWrapper ?? "$$"),
+    fallbackOpen: "$$",
+    fallbackClose: "$$",
+  })
+
   return renderWrappedFormula({
     formula,
-    open: String(selection.params?.blockOpen ?? "$$"),
-    close: String(selection.params?.blockClose ?? "$$"),
+    open: block.open,
+    close: block.close,
     display: true,
   })
 }

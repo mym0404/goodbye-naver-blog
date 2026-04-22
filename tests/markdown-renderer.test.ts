@@ -193,10 +193,8 @@ describe("renderMarkdownPost", () => {
     options.blockOutputs.defaults.formula = {
       variant: "wrapper",
       params: {
-        inlineOpen: "\\(",
-        inlineClose: "\\)",
-        blockOpen: "\\[",
-        blockClose: "\\]",
+        inlineWrapper: "\\(...\\)",
+        blockWrapper: "\\[...\\]",
       },
     }
 
@@ -385,8 +383,7 @@ describe("renderMarkdownPost", () => {
     options.blockOutputs.defaults.formula = {
       variant: "math-fence",
       params: {
-        inlineOpen: "$",
-        inlineClose: "$",
+        inlineWrapper: "$",
       },
     }
     options.blockOutputs.defaults.code = {

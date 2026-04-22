@@ -323,30 +323,12 @@ export type ExportOptionsStep =
   | "links"
   | "diagnostics"
 
-const optionFieldClass = "field-card grid min-h-[7.75rem] gap-2 rounded-2xl px-4 py-4"
+const optionFieldClass = "field-card grid min-h-[7.75rem] content-start gap-2 self-start rounded-2xl px-4 py-4"
 const checkFieldClass = "field-card flex flex-col rounded-2xl px-4 py-4"
 const optionSectionClass = "option-section subtle-panel grid gap-4 rounded-[1.5rem] p-4"
 type SelectOption = {
   value: string
   label: string
-}
-
-const preserveViewportScroll = () => {
-  if (typeof window === "undefined") {
-    return
-  }
-
-  const { scrollX, scrollY } = window
-  const restore = () => {
-    if (window.scrollX !== scrollX || window.scrollY !== scrollY) {
-      window.scrollTo(scrollX, scrollY)
-    }
-  }
-
-  requestAnimationFrame(() => {
-    restore()
-    requestAnimationFrame(restore)
-  })
 }
 
 const OptionField = ({
@@ -393,20 +375,7 @@ const OptionSelectField = <T extends string,>({
   onValueChange: (value: T) => void
 }) => (
   <Select value={value} disabled={disabled} onValueChange={(nextValue) => onValueChange(nextValue as T)}>
-    <SelectTrigger
-      id={inputId}
-      data-value={value}
-      aria-describedby={describedBy}
-      aria-invalid={ariaInvalid || undefined}
-      onPointerDown={() => {
-        preserveViewportScroll()
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown" || event.key === "ArrowUp") {
-          preserveViewportScroll()
-        }
-      }}
-    >
+    <SelectTrigger id={inputId} data-value={value} aria-describedby={describedBy} aria-invalid={ariaInvalid || undefined}>
       <SelectValue placeholder={placeholder} />
     </SelectTrigger>
     <SelectContent>
@@ -515,7 +484,7 @@ const OptionSection = ({
         <p className="mt-1 text-sm leading-6 text-muted-foreground">{note}</p>
       </div>
     </div>
-    <div className="option-grid grid gap-4 xl:grid-cols-2">{children}</div>
+    <div className="option-grid grid items-start gap-4 xl:grid-cols-2">{children}</div>
   </section>
 )
 
@@ -534,7 +503,7 @@ const BlockOutputPreview = ({
 }: {
   snippet: string
 }) => (
-  <div className="grid gap-2">
+  <div className="grid content-start gap-2 self-start">
     <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Preview</span>
     <pre className="code-surface overflow-x-auto whitespace-pre-wrap rounded-2xl px-3 py-3 font-mono text-[0.8125rem] leading-6 text-foreground">
       {snippet}
@@ -625,9 +594,9 @@ const BlockOutputCard = ({
           {overrideCapabilityId ? <Badge variant="secondary">{overrideCapabilityId}</Badge> : <Badge variant="outline">{family.blockType}</Badge>}
         </div>
       </CardHeader>
-      <CardContent className="grid gap-4 px-0 pb-0">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
-          <div className="grid gap-4">
+      <CardContent className="grid content-start gap-4 px-0 pb-0">
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
+          <div className="grid content-start gap-4 self-start">
             {family.variants.length > 1 ? (
               <OptionField
                 optionKey={`${optionKeyPrefix}-variant`}

@@ -8,6 +8,7 @@ import type {
   ParserFallbackPolicy,
   ParserCapabilityVerificationMode,
 } from "./types.js"
+import { normalizeFormulaWrapperParams } from "./formula-wrapper.js"
 
 export const getParserCapabilityId = ({
   editorVersion,
@@ -335,10 +336,8 @@ export const defaultBlockOutputSelections: Record<BlockType, BlockOutputSelectio
   formula: {
     variant: "wrapper",
     params: {
-      inlineOpen: "$",
-      inlineClose: "$",
-      blockOpen: "$$",
-      blockClose: "$$",
+      inlineWrapper: "$",
+      blockWrapper: "$$",
     },
   },
   image: { variant: "markdown-image" },
@@ -436,28 +435,15 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
     ],
     params: [
       {
-        key: "inlineOpen",
-        label: "인라인 시작 문자열",
-        description: "인라인 수식 앞에 붙는 문자열입니다.",
+        key: "inlineWrapper",
+        label: "인라인 wrapper",
+        description: "예: `$`, `\\(...\\)`",
         input: "text",
       },
       {
-        key: "inlineClose",
-        label: "인라인 끝 문자열",
-        description: "인라인 수식 뒤에 붙는 문자열입니다.",
-        input: "text",
-      },
-      {
-        key: "blockOpen",
-        label: "블록 시작 문자열",
-        description: "블록 수식 앞에 붙는 문자열입니다.",
-        input: "text",
-        whenVariants: ["wrapper"],
-      },
-      {
-        key: "blockClose",
-        label: "블록 끝 문자열",
-        description: "블록 수식 뒤에 붙는 문자열입니다.",
+        key: "blockWrapper",
+        label: "블록 wrapper",
+        description: "예: `$$`, `\\[...\\]`",
         input: "text",
         whenVariants: ["wrapper"],
       },
@@ -621,6 +607,48 @@ const mergeBlockOutputSelection = ({
   }
 }
 
+const formulaParamKeys = new Set([
+  "inlineWrapper",
+  "blockWrapper",
+  "inlineOpen",
+  "inlineClose",
+  "blockOpen",
+  "blockClose",
+])
+
+const mergeFormulaBlockOutputSelection = ({
+  baseSelection,
+  nextSelection,
+}: {
+  baseSelection: BlockOutputSelection
+  nextSelection?: BlockOutputSelection
+}): BlockOutputSelection => {
+  const baseParams = normalizeFormulaWrapperParams({
+    params: baseSelection.params,
+  })
+  const nextParams = nextSelection?.params
+  const normalizedFormulaParams = normalizeFormulaWrapperParams({
+    params: nextParams,
+    fallbackInlineWrapper: baseParams.inlineWrapper,
+    fallbackBlockWrapper: baseParams.blockWrapper,
+  })
+  const extraParams = Object.fromEntries(
+    Object.entries({
+      ...(baseSelection.params ?? {}),
+      ...(nextParams ?? {}),
+    }).filter(([key]) => !formulaParamKeys.has(key)),
+  )
+  const params = {
+    ...extraParams,
+    ...normalizedFormulaParams,
+  }
+
+  return {
+    variant: nextSelection?.variant ?? baseSelection.variant,
+    ...(Object.keys(params).length > 0 ? { params } : {}),
+  }
+}
+
 export const resolveBlockOutputSelection = ({
   blockType,
   capabilityId,
@@ -633,10 +661,15 @@ export const resolveBlockOutputSelection = ({
     overrides?: Partial<Record<ParserCapabilityId, BlockOutputSelection>>
   }
 }) => {
-  const baseSelection = mergeBlockOutputSelection({
-    baseSelection: defaultBlockOutputSelections[blockType],
-    nextSelection: blockOutputs?.defaults?.[blockType],
-  })
+  const baseSelection = blockType === "formula"
+    ? mergeFormulaBlockOutputSelection({
+        baseSelection: defaultBlockOutputSelections[blockType],
+        nextSelection: blockOutputs?.defaults?.[blockType],
+      })
+    : mergeBlockOutputSelection({
+        baseSelection: defaultBlockOutputSelections[blockType],
+        nextSelection: blockOutputs?.defaults?.[blockType],
+      })
 
   if (!capabilityId) {
     return baseSelection
@@ -648,8 +681,13 @@ export const resolveBlockOutputSelection = ({
     return baseSelection
   }
 
-  return mergeBlockOutputSelection({
-    baseSelection,
-    nextSelection: overrideSelection,
-  })
+  return blockType === "formula"
+    ? mergeFormulaBlockOutputSelection({
+        baseSelection,
+        nextSelection: overrideSelection,
+      })
+    : mergeBlockOutputSelection({
+        baseSelection,
+        nextSelection: overrideSelection,
+      })
 }
