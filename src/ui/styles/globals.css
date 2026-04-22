@@ -115,7 +115,7 @@
     radial-gradient(circle at bottom left, rgba(3, 199, 90, 0.06), transparent 28%),
     linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
   --brand-mark-scroll-scale: 1;
-  --brand-mark-opacity: 0.08;
+  --brand-mark-opacity: 0.14;
   --brand-mark-glow: rgba(3, 199, 90, 0.16);
 }
 
@@ -181,7 +181,7 @@
     radial-gradient(circle at 20% 80%, rgba(3, 199, 90, 0.12), transparent 28%),
     radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.05), transparent 22%),
     linear-gradient(180deg, #050505 0%, #0a0a0a 100%);
-  --brand-mark-opacity: 0.12;
+  --brand-mark-opacity: 0.18;
   --brand-mark-glow: rgba(3, 199, 90, 0.24);
 }
 
@@ -320,7 +320,7 @@ pre,
   flex: none;
   user-select: none;
   opacity: var(--brand-mark-opacity);
-  filter: blur(16px) drop-shadow(0 0 84px var(--brand-mark-glow));
+  filter: blur(10px) drop-shadow(0 0 72px var(--brand-mark-glow));
   transform: translateY(22%) scale(calc(1.12 * var(--brand-mark-scroll-scale)));
   transform-origin: center bottom;
 }
@@ -413,7 +413,7 @@ pre,
 
   .dashboard-brand-mark img {
     width: min(94vw, 24rem);
-    filter: blur(12px) drop-shadow(0 0 48px var(--brand-mark-glow));
+    filter: blur(8px) drop-shadow(0 0 40px var(--brand-mark-glow));
     transform: translateY(26%) scale(calc(1.04 * var(--brand-mark-scroll-scale)));
   }
 }
