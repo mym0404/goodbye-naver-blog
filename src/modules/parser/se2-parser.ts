@@ -7,6 +7,8 @@ import { compactText, normalizeAssetUrl, unique } from "../../shared/utils.js"
 import { parseHtmlTable } from "./table-parser.js"
 
 const standaloneImageSelector = "img, [thumburl]"
+const nestedBlockContainerTags = new Set(["div", "span", "font"])
+const spacerContainerTags = new Set(["p", "div", "span", "font", "b", "strong", "i", "em", "u"])
 const nestedBlockTags = new Set([
   "p",
   "div",
@@ -69,7 +71,7 @@ const shouldTraverseNestedBlocks = ({
   element: ReturnType<CheerioAPI>
   tagName: string
 }) => {
-  if (tagName !== "div") {
+  if (!nestedBlockContainerTags.has(tagName)) {
     return false
   }
 
@@ -94,7 +96,7 @@ const isSpacerBlock = ({
   element: ReturnType<CheerioAPI>
   tagName: string
 }) => {
-  if (tagName !== "p" && tagName !== "div") {
+  if (!spacerContainerTags.has(tagName)) {
     return false
   }
 

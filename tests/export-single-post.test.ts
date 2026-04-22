@@ -139,8 +139,8 @@ describe("exportSinglePost", () => {
 
       const expectedMarkdownFilePath = path.join(
         outputDir,
-        "Tech",
-        "JavaScript",
+        "tech",
+        "javascript",
         "2024-01-02-single_post",
         "index.md",
       )

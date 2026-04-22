@@ -1,5 +1,10 @@
 import type { ExportOptions, PostSummary } from "./types.js"
-import { formatTitleSegment, getDateSlug, sanitizePathSegment } from "./path-format.js"
+import {
+  formatCategorySegment,
+  formatTitleSegment,
+  getDateSlug,
+  sanitizePathSegment,
+} from "./path-format.js"
 
 export const postTemplateKeys = [
   "slug",
@@ -47,7 +52,11 @@ export const buildPostTemplateValues = ({
       slugStyle: options.structure.slugStyle,
       slugWhitespace: options.structure.slugWhitespace,
     }),
-    category: toReadablePathToken(post.categoryName?.trim() || "uncategorized"),
+    category: formatCategorySegment({
+      value: post.categoryName?.trim() || "uncategorized",
+      slugStyle: options.structure.slugStyle,
+      slugWhitespace: options.structure.slugWhitespace,
+    }),
     title: toReadablePathToken(post.title),
     logNo: post.logNo,
     blogId: post.blogId,

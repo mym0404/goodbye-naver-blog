@@ -79,7 +79,7 @@ describe("post-link-rewriter", () => {
     })
     const resolveLinkUrl = createSameBlogPostLinkResolver({
       blogId: "mym0404",
-      markdownFilePath: "/tmp/export/NestJS/2026-04-11-첫_글/index.md",
+      markdownFilePath: "/tmp/export/nestjs/2026-04-11-첫_글/index.md",
       options: {
         links: {
           sameBlogPostMode: "relative-filepath",
@@ -103,7 +103,7 @@ describe("post-link-rewriter", () => {
     })
     const resolveLinkUrl = createSameBlogPostLinkResolver({
       blogId: "mym0404",
-      markdownFilePath: "/tmp/export/NestJS/2026-04-11-first/index.md",
+      markdownFilePath: "/tmp/export/nestjs/2026-04-11-first/index.md",
       options: {
         links: {
           sameBlogPostMode: "custom-url",
@@ -114,7 +114,7 @@ describe("post-link-rewriter", () => {
     })
 
     expect(resolveLinkUrl("https://blog.naver.com/mym0404/223034929698")).toBe(
-      "https://myblog/NestJS/둘째-글/2026/04/12/26/4/12/mym0404/223034929698/둘째_글",
+      "https://myblog/nestjs/둘째-글/2026/04/12/26/4/12/mym0404/223034929698/둘째_글",
     )
     expect(resolveLinkUrl("https://blog.naver.com/mym0404/999999999999")).toBe(
       "https://blog.naver.com/mym0404/999999999999",
@@ -135,7 +135,7 @@ describe("post-link-rewriter", () => {
     })
     const resolveLinkUrl = createSameBlogPostLinkResolver({
       blogId: "mym0404",
-      markdownFilePath: "/tmp/export/NestJS/2026_04_223034929697_첫_글/index.md",
+      markdownFilePath: "/tmp/export/nestjs/2026_04_223034929697_첫_글/index.md",
       options: {
         links: {
           sameBlogPostMode: "relative-filepath",

@@ -52,6 +52,7 @@ import {
   readExportManifest,
   writeExportManifest,
 } from "./export-job-manifest.js"
+import { createCoalescedTaskRunner } from "./coalesced-task-runner.js"
 import { JobStore } from "./job-store.js"
 import {
   createImageUploadProviderSource,
@@ -411,6 +412,39 @@ const sanitizeUploadProviderCatalogError = (error: unknown) => {
   return "업로드 설정을 불러오지 못했습니다."
 }
 
+const resolveResumedScanResult = ({
+  manifestScanResult,
+  cachedScans,
+}: {
+  manifestScanResult: ScanResult | null
+  cachedScans: Record<string, ScanResult>
+}) => {
+  if (!manifestScanResult) {
+    return null
+  }
+
+  const cachedScanResult = cachedScans[manifestScanResult.blogId]
+
+  if (!cachedScanResult) {
+    return manifestScanResult
+  }
+
+  return {
+    ...cachedScanResult,
+    ...manifestScanResult,
+    categories:
+      manifestScanResult.categories.length > 0
+        ? manifestScanResult.categories
+        : cachedScanResult.categories,
+    totalPostCount: manifestScanResult.totalPostCount || cachedScanResult.totalPostCount,
+    ...(manifestScanResult.posts
+      ? { posts: manifestScanResult.posts }
+      : cachedScanResult.posts
+        ? { posts: cachedScanResult.posts }
+        : {}),
+  } satisfies ScanResult
+}
+
 const getJobItemId = ({
   outputPath,
   logNo,
@@ -556,7 +590,6 @@ export const createHttpServer = ({
   let viteDevServerPromise: Promise<ViteDevServer> | null = null
   let scanCachePromise: Promise<Record<string, ScanResult>> | null = null
   const jobScanResults = new Map<string, ScanResult | null>()
-  const manifestPersistQueue = new Map<string, Promise<void>>()
   const activeJobTasks = new Map<
     string,
     {
@@ -647,7 +680,13 @@ export const createHttpServer = ({
     } catch {}
   }
 
-  const hydrateJobFromManifest = (manifest: ExportManifest) => {
+  const hydrateJobFromManifest = ({
+    manifest,
+    scanResult,
+  }: {
+    manifest: ExportManifest
+    scanResult: ScanResult | null
+  }) => {
     if (!manifest.job) {
       return null
     }
@@ -658,57 +697,61 @@ export const createHttpServer = ({
       return existingJob
     }
 
-    jobScanResults.set(manifest.job.id, manifest.job.scanResult)
+    jobScanResults.set(manifest.job.id, scanResult)
     return jobStore.hydrate(manifest)
   }
 
-  const persistJobManifest = (jobId: string) => {
-    const previousTask = manifestPersistQueue.get(jobId) ?? Promise.resolve()
-    const nextTask = previousTask
-      .catch(() => {})
-      .then(async () => {
-        const job = jobStore.get(jobId)
+  const persistJobManifest = async (jobId: string) => {
+    const job = jobStore.get(jobId)
 
-        if (!job) {
-          return
-        }
+    if (!job) {
+      return
+    }
 
-        const manifest = buildResumableExportManifest({
-          job,
-          scanResult: jobScanResults.get(jobId) ?? null,
-        })
+    const manifest = buildResumableExportManifest({
+      job,
+      scanResult: jobScanResults.get(jobId) ?? null,
+    })
 
-        job.manifest = manifest
+    job.manifest = manifest
 
-        await writeExportManifest({
-          outputDir: job.request.outputDir,
-          manifest,
-        })
-      })
-
-    manifestPersistQueue.set(jobId, nextTask)
-
-    return nextTask.finally(() => {
-      if (manifestPersistQueue.get(jobId) === nextTask) {
-        manifestPersistQueue.delete(jobId)
-      }
+    await writeExportManifest({
+      outputDir: job.request.outputDir,
+      manifest,
     })
   }
 
+  const manifestPersistRunner = createCoalescedTaskRunner({
+    run: persistJobManifest,
+  })
+
   const scheduleJobManifestPersist = (jobId: string) => {
-    void persistJobManifest(jobId).catch((error) => {
+    void manifestPersistRunner.schedule(jobId).catch((error) => {
       console.error(`failed to persist manifest for ${jobId}:`, error)
     })
   }
 
-  const loadResumedJob = async (outputDir: string) => {
+  const loadResumedJob = async ({
+    outputDir,
+    cachedScans,
+  }: {
+    outputDir: string
+    cachedScans: Record<string, ScanResult>
+  }) => {
     const manifest = await readExportManifest(outputDir)
 
     if (!manifest?.job) {
       return null
     }
 
-    const resumedJob = hydrateJobFromManifest(manifest)
+    const resumedScanResult = resolveResumedScanResult({
+      manifestScanResult: manifest.job.scanResult,
+      cachedScans,
+    })
+    const resumedJob = hydrateJobFromManifest({
+      manifest,
+      scanResult: resumedScanResult,
+    })
 
     if (!resumedJob) {
       return null
@@ -717,13 +760,17 @@ export const createHttpServer = ({
     return {
       job: resumedJob,
       summary: manifest.job.summary,
-      scanResult: manifest.job.scanResult,
+      scanResult: resumedScanResult,
     }
   }
 
   const buildBootstrapResponse = async () => {
     const persistedUiState = await readPersistedUiState(settingsPath)
-    const resumed = await loadResumedJob(persistedUiState.lastOutputDir)
+    const cachedScans = await ensureScanCache()
+    const resumed = await loadResumedJob({
+      outputDir: persistedUiState.lastOutputDir,
+      cachedScans,
+    })
 
     return {
       profile: "gfm" as const,
@@ -834,7 +881,7 @@ export const createHttpServer = ({
     } else {
       jobStore.start(jobId)
     }
-    await persistJobManifest(jobId)
+    await manifestPersistRunner.flush(jobId)
 
     try {
       const exporter = new NaverBlogExporter({
@@ -865,14 +912,14 @@ export const createHttpServer = ({
       throwIfAborted(signal)
 
       jobStore.completeExport(jobId, manifest)
-      await persistJobManifest(jobId)
+      await manifestPersistRunner.flush(jobId)
     } catch (error) {
       const message = isAbortOperationError(error)
         ? "작업이 초기화되어 중단되었습니다."
         : toErrorMessage(error)
       jobStore.appendLog(jobId, message)
       jobStore.fail(jobId, message)
-      await persistJobManifest(jobId)
+      await manifestPersistRunner.flush(jobId)
     }
   }
 
@@ -1021,7 +1068,7 @@ export const createHttpServer = ({
 
     jobStore.startUpload(jobId, uploadedLocalPaths)
     jobStore.appendLog(jobId, "Image Upload를 시작했습니다.")
-    await persistJobManifest(jobId)
+    await manifestPersistRunner.flush(jobId)
 
     try {
       await rewriteReadyPosts({
@@ -1063,14 +1110,14 @@ export const createHttpServer = ({
             jobId,
             uploadedLocalPaths,
           })
-          await persistJobManifest(jobId)
+          await manifestPersistRunner.flush(jobId)
           await rewriteReadyPosts({
             jobId,
             uploadedLocalPaths,
             uploadResults,
             signal,
           })
-          await persistJobManifest(jobId)
+          await manifestPersistRunner.flush(jobId)
         },
       })
 
@@ -1088,14 +1135,14 @@ export const createHttpServer = ({
         jobId,
         uploadedLocalPaths,
       })
-      await persistJobManifest(jobId)
+      await manifestPersistRunner.flush(jobId)
       await rewriteReadyPosts({
         jobId,
         uploadedLocalPaths,
         uploadResults,
         signal,
       })
-      await persistJobManifest(jobId)
+      await manifestPersistRunner.flush(jobId)
       throwIfAborted(signal)
 
       const completedJob = jobStore.get(jobId)
@@ -1125,7 +1172,7 @@ export const createHttpServer = ({
         items: completedJob.items,
       })
       jobStore.appendLog(jobId, "Image Upload와 결과 치환이 완료되었습니다.")
-      await persistJobManifest(jobId)
+      await manifestPersistRunner.flush(jobId)
     } catch (error) {
       if (error instanceof ImageUploadPhaseError) {
         syncJobUploadProgress({
@@ -1136,7 +1183,7 @@ export const createHttpServer = ({
             ...error.uploadedResults.map((result) => result.candidate.localPath),
           ]),
         })
-        await persistJobManifest(jobId)
+        await manifestPersistRunner.flush(jobId)
       }
 
       const message = isAbortOperationError(error)
@@ -1152,7 +1199,7 @@ export const createHttpServer = ({
 
       jobStore.appendLog(jobId, message)
       jobStore.failUpload(jobId, message)
-      await persistJobManifest(jobId)
+      await manifestPersistRunner.flush(jobId)
     }
   }
 
@@ -1283,7 +1330,6 @@ export const createHttpServer = ({
         if (jobId) {
           jobStore.delete(jobId)
           jobScanResults.delete(jobId)
-          manifestPersistQueue.delete(jobId)
         }
 
         await writePersistedUiState({

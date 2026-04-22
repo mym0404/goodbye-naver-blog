@@ -57,4 +57,19 @@ export const formatTitleSegment = ({
   return applySlugWhitespace(normalized, slugWhitespace) || (slugStyle === "keep-title" ? "untitled" : "post")
 }
 
+export const formatCategorySegment = ({
+  value,
+  slugStyle,
+  slugWhitespace,
+}: {
+  value: string
+  slugStyle: SlugStyle
+  slugWhitespace: SlugWhitespace
+}) =>
+  formatTitleSegment({
+    value: value.trim() || "uncategorized",
+    slugStyle,
+    slugWhitespace,
+  })
+
 export const getDateSlug = (isoDateTime: string) => isoDateTime.slice(0, 10)

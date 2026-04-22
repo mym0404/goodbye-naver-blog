@@ -26,7 +26,7 @@ describe("post-path-template", () => {
       }),
     ).toEqual({
       slug: "첫_글",
-      category: "React",
+      category: "react",
       title: "첫-글",
       logNo: "223034929697",
       blogId: "mym0404",
@@ -92,6 +92,6 @@ describe("post-path-template", () => {
           options: defaultExportOptions(),
         }),
       }),
-    ).toBe("React/2026/04/11/26/4/11/첫_글")
+    ).toBe("react/2026/04/11/26/4/11/첫_글")
   })
 })

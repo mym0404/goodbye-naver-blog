@@ -330,9 +330,9 @@ describe("ExportOptionsPanel", () => {
     const preview = query<HTMLElement>("#structure-file-tree-preview")
 
     expect(preview.textContent).toContain("./output")
-    expect(preview.textContent).toContain("개발 메모")
-    expect(preview.textContent).toContain("React")
-    expect(preview.textContent).toContain("TypeScript")
+    expect(preview.textContent).toContain("개발_메모")
+    expect(preview.textContent).toContain("react")
+    expect(preview.textContent).toContain("typescript")
     expect(preview.textContent).toContain("2026-04-11-첫_글")
     expect(preview.textContent).toContain("2026-04-12-둘째_글")
     expect(preview.textContent).toContain("2026-04-14-세_번째_정리")
@@ -396,6 +396,7 @@ describe("ExportOptionsPanel", () => {
 
     expect(screen.getAllByText("{slug}").length).toBeGreaterThan(0)
     expect(screen.getByText("제목을 현재 slug 규칙에 맞춰 바꾼 값입니다.")).toBeInTheDocument()
+    expect(screen.getByText("카테고리 이름을 현재 slug 규칙에 맞춰 바꾼 값입니다.")).toBeInTheDocument()
     expect(screen.getAllByText("{logNo}").length).toBeGreaterThan(0)
     expect(screen.getByText("네이버 글 번호를 그대로 넣습니다.")).toBeInTheDocument()
     expect(screen.getAllByText("{YYYY}").length).toBeGreaterThan(0)
@@ -561,7 +562,7 @@ describe("ExportOptionsPanel", () => {
     expect(screen.getAllByText("{slug}").length).toBeGreaterThan(0)
     expect(screen.getByText("제목을 현재 slug 규칙에 맞춰 바꾼 값입니다.")).toBeInTheDocument()
     expect(screen.getAllByText("{category}").length).toBeGreaterThan(0)
-    expect(screen.getByText("카테고리 이름만 path-safe 값으로 넣습니다.")).toBeInTheDocument()
+    expect(screen.getByText("카테고리 이름을 현재 slug 규칙에 맞춰 바꾼 값입니다.")).toBeInTheDocument()
     expect(screen.getAllByText("{title}").length).toBeGreaterThan(0)
     expect(screen.getByText("제목만 path-safe 값으로 넣습니다.")).toBeInTheDocument()
     expect(screen.getAllByText("{date}").length).toBeGreaterThan(0)
@@ -571,7 +572,7 @@ describe("ExportOptionsPanel", () => {
     expect(screen.getAllByText("{D}").length).toBeGreaterThan(0)
     expect(screen.getByText("발행 일을 1~31 숫자로 넣습니다.")).toBeInTheDocument()
     expect(query<HTMLElement>("#links-sameBlogPostCustomUrlPreview").textContent).toBe(
-      "https://myblog/NestJS/첫-글/2026/04/11/26/4/11/223034929697/첫_글",
+      "https://myblog/nestjs/첫-글/2026/04/11/26/4/11/223034929697/첫_글",
     )
   })
 })

@@ -15,6 +15,7 @@
 - [../../../scripts/harness/refresh-sample-fixtures.ts](../../../scripts/harness/refresh-sample-fixtures.ts)
 - [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
 - [../../../scripts/harness/run-ui-resume-smoke.ts](../../../scripts/harness/run-ui-resume-smoke.ts)
+- [../../../scripts/harness/run-ui-live-resume-export.ts](../../../scripts/harness/run-ui-live-resume-export.ts)
 - [../../../scripts/harness/run-ui-live-upload.ts](../../../scripts/harness/run-ui-live-upload.ts)
 
 ## 검증 방법
@@ -45,6 +46,9 @@
 - Playwright live upload e2e
   `pnpm test:network:upload`
   실제 네트워크와 외부 업로드 상태를 포함한 검증이다.
+- live resume export e2e
+  `pnpm test:network:resume-export`
+  실제 네이버 네트워크로 export를 시작한 뒤 중간 종료 후 `manifest.json` 기반 resume export를 다시 끝까지 확인한다.
 - coverage gate
   `pnpm test:coverage`
   V8 coverage threshold를 확인한다.
@@ -63,6 +67,8 @@
 - `pnpm samples:verify`: 저장된 sample fixture가 parser -> review -> render 경로와 계속 맞는지 확인할 때 실행한다.
 - `pnpm samples:refresh -- --id <sampleId>`: 지정 sample 하나의 live HTML과 expected Markdown fixture를 갱신할 때 실행한다.
 - `pnpm smoke:ui`: Playwright로 고정한 mock 기반 scan -> category select -> export -> upload 화면 회귀와 `manifest.json` 기반 단계 복구 회귀를 `run-ui-smoke.ts`, `run-ui-resume-smoke.ts`로 함께 확인할 때 실행한다.
+- `pnpm test:network:resume-export`: 개발 서버에서 실제 네이버 공개 글 범위를 export하다가 중간 종료한 뒤, 같은 `output/` 하위 경로의 `manifest.json`을 읽어 resume export를 끝까지 확인할 때 실행한다. 범위는 환경변수로 바꿀 수 있고, 외부 업로드는 하지 않는다.
+- `pnpm test:network:resume-export:se2-table`: `blogpeople`의 SE2 표 본문이 포함된 `2013-06-26`~`2013-06-27`, category `21` 범위를 export하다가 중간 종료한 뒤 resume export를 끝까지 확인할 때 실행한다.
 - `pnpm test:network:upload`: Playwright가 실제 브라우저 UI로 `mym0404` 공개 글 1건을 scan, scope 설정, export한 뒤 GitHub `mym0404/image-archive` `master` branch의 동적 prefix `farewell-live/<timestamp>` 아래로 `piclist` runtime 실업로드를 수행할 때 실행한다. 루트 `.env`에서 `FAREWELL_UPLOAD_E2E=1`, `FAREWELL_UPLOAD_E2E_GITHUB_TOKEN`를 읽는다.
 - `pnpm quality:report`: parser block fixture/test hint coverage와 capability/sample coverage generated 품질 리포트를 다시 만들 때 실행한다.
 
@@ -71,6 +77,7 @@
 - `pnpm samples:verify`는 저장된 fixture와 현재 코드의 일치만 보장한다. fixture가 오래됐는지는 보장하지 않는다.
 - `pnpm samples:verify`는 `parser-fixture` capability를 보장하지 않는다. 이 범위는 parser unit test와 parser fixture가 맡는다.
 - `pnpm smoke:ui`는 실제 네이버 live fetch가 아니라 mock 기반 UI 계약만 보장한다.
+- `pnpm test:network:resume-export`는 실제 네이버 fetch와 resume export까지만 보장하고, 외부 업로드 상태는 보장하지 않는다.
 - upload provider catalog 자체는 설치된 `piclist` runtime이 등록한 uploader config를 따른다. live e2e는 그중 GitHub 경로만 검증한다.
 - `pnpm test:network:upload`만이 외부 업로드 상태까지 포함한다. 이 명령은 remote state를 만든다.
 
@@ -89,6 +96,7 @@
 - UI 테스트와 smoke는 CSS class, computed style, query selector 기반 레이아웃 숫자 검증보다 사용자 행동 계약을 우선한다.
 - 스타일 검증이 꼭 필요하면 광범위한 자동 assert 대신 `agent-browser` 같은 실제 브라우저 확인을 우선하고, 자동화에는 접근성/상태/텍스트처럼 제품 계약만 남긴다.
 - export/upload 흐름, 복구 시나리오, 업로더 연동처럼 사용자 경로를 크게 바꾸는 변경 뒤에는 `pnpm smoke:ui`, `pnpm test:network:upload`를 둘 다 실행한다.
+- export resume 경로나 `manifest.json` 직렬화/복구 규칙을 바꿨다면 `pnpm smoke:ui`, `pnpm test:network:resume-export`를 함께 본다.
 - fixture 자체를 갱신해야 할 때만 `pnpm samples:refresh -- --id <sampleId>`를 실행한다.
 - 실업로드 검증이 필요하면 `pnpm test:network:upload`를 별도로 실행한다. 이 명령은 외부 상태를 만들 수 있으므로 `check:full`에는 포함하지 않는다.
 - knowledge만 변경했을 때도 `pnpm check:local`은 기본으로 실행하고, 수정한 링크와 코드 기준점을 수동 점검한다. generated 보고서 축을 건드렸다면 `pnpm quality:report`를 추가한다.

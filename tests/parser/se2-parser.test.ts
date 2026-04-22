@@ -383,6 +383,17 @@ console.log(oldSchool)
     expect(parsed.warnings).toEqual([])
   })
 
+  it("skips empty inline spacer wrappers instead of keeping rawHtml", () => {
+    const parsed = parseSe2Fixture(`
+      <span style="" _foo="font-family: 나눔고딕, NanumGothic, sans-serif;"> </span>
+      <span style="" _foo="font-family: 나눔고딕, NanumGothic, sans-serif;"><b> </b></span>
+      <font><br /></font>
+    `)
+
+    expect(parsed.blocks).toEqual([])
+    expect(parsed.warnings).toEqual([])
+  })
+
   it("flattens single-column layout tables into paragraph blocks", () => {
     const parsed = parseSe2Fixture(`
       <table>
@@ -395,5 +406,20 @@ console.log(oldSchool)
       { type: "paragraph", text: "첫 줄  \n둘째 줄" },
       { type: "paragraph", text: "셋째 줄" },
     ])
+  })
+
+  it("traverses malformed inline wrappers that only contain nested block nodes", () => {
+    const parsed = parseSe2Fixture(`
+      <span>
+        <div><p>첫 문단</p></div>
+        <div><p>둘째 문단</p></div>
+      </span>
+    `)
+
+    expect(parsed.blocks).toEqual([
+      { type: "paragraph", text: "첫 문단" },
+      { type: "paragraph", text: "둘째 문단" },
+    ])
+    expect(parsed.warnings).toEqual([])
   })
 })

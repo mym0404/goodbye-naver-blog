@@ -38,6 +38,22 @@ const buildPostManifestEntryFromItem = (item: ExportJobItem): PostManifestEntry 
   externalPreviewUrl: item.externalPreviewUrl ?? null,
 })
 
+const buildPersistedJobItem = (item: ExportJobItem): ExportJobItem => ({
+  ...item,
+  warnings: [],
+  externalPreviewUrl: null,
+})
+
+const buildPersistedScanResult = (scanResult: ScanResult | null) => {
+  if (!scanResult) {
+    return null
+  }
+
+  const { posts: _posts, ...scanResultWithoutPosts } = scanResult
+
+  return scanResultWithoutPosts
+}
+
 const mergeManifestPosts = ({
   manifest,
   items,
@@ -133,6 +149,8 @@ export const buildResumableExportManifest = ({
     job,
     scanResult,
   })
+  const persistedJobItems = job.items.map((item) => buildPersistedJobItem(item))
+  const persistedScanResult = buildPersistedScanResult(scanResult)
   const mergedPosts = mergeManifestPosts({
     manifest: baseManifest,
     items: job.items,
@@ -165,9 +183,9 @@ export const buildResumableExportManifest = ({
       updatedAt: new Date().toISOString(),
       progress: job.progress,
       upload: job.upload,
-      items: job.items,
+      items: persistedJobItems,
       error: job.error,
-      scanResult,
+      scanResult: persistedScanResult,
       summary: {
         status: job.status,
         outputDir: job.request.outputDir,

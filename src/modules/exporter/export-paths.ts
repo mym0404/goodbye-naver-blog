@@ -3,8 +3,8 @@ import path from "node:path"
 import type { CategoryInfo, ExportOptions, PostSummary } from "../../shared/types.js"
 import { buildPostFolderName } from "../../shared/post-path-template.js"
 import {
+  formatCategorySegment,
   sanitizeCategoryName,
-  sanitizePathSegment,
 } from "../../shared/utils.js"
 
 export const getCategoryForPost = ({
@@ -51,7 +51,12 @@ export const buildMarkdownFilePath = ({
 
   if (options.structure.groupByCategory) {
     const categorySegments = (category.path.length > 0 ? category.path : [category.name]).map(
-      sanitizePathSegment,
+      (segment) =>
+        formatCategorySegment({
+          value: segment,
+          slugStyle: options.structure.slugStyle,
+          slugWhitespace: options.structure.slugWhitespace,
+        }),
     )
 
     segments.push(...categorySegments)

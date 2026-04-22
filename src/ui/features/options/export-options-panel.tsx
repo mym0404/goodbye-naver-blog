@@ -7,7 +7,7 @@ import type {
   OptionDescriptionMap,
   PostSummary,
 } from "../../../shared/types.js"
-import { sanitizePathSegment } from "../../../shared/path-format.js"
+import { formatCategorySegment } from "../../../shared/path-format.js"
 import { getDefaultSlugWhitespace } from "../../../shared/export-options.js"
 import {
   applyPostTemplate,
@@ -131,7 +131,11 @@ const appendStructurePreviewPost = ({
   let currentLevel = items
 
   for (const segment of post.categoryPath) {
-    const folderName = sanitizePathSegment(segment)
+    const folderName = formatCategorySegment({
+      value: segment,
+      slugStyle: options.slugStyle,
+      slugWhitespace: options.slugWhitespace,
+    })
     const existingFolder = findFolderNode(currentLevel, folderName)
 
     if (existingFolder) {
@@ -527,7 +531,7 @@ const linkTemplateVariableMeta: Record<
   },
   category: {
     label: "{category}",
-    description: "카테고리 이름만 path-safe 값으로 넣습니다.",
+    description: "카테고리 이름을 현재 slug 규칙에 맞춰 바꾼 값입니다.",
   },
   title: {
     label: "{title}",
@@ -713,7 +717,7 @@ export const ExportOptionsPanel = ({
         <OptionField
           optionKey="structure-slugStyle"
           labelFor="structure-slugStyle"
-          label="slug 방식"
+          label="slug/카테고리 표기 방식"
           description={description("structure-slugStyle")}
         >
           <OptionSelectField
@@ -740,7 +744,7 @@ export const ExportOptionsPanel = ({
         <OptionField
           optionKey="structure-slugWhitespace"
           labelFor="structure-slugWhitespace"
-          label="공백 처리"
+          label="slug/카테고리 공백 처리"
           description={description("structure-slugWhitespace")}
         >
           <OptionSelectField

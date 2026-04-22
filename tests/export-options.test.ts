@@ -214,7 +214,9 @@ describe("export options", () => {
   it("exposes option descriptions for newly added export controls", () => {
     expect(optionDescriptions["structure-groupByCategory"]).toContain("카테고리 경로")
     expect(optionDescriptions["structure-slugStyle"]).toContain("snake_case")
+    expect(optionDescriptions["structure-slugStyle"]).toContain("카테고리")
     expect(optionDescriptions["structure-slugWhitespace"]).toContain("공백")
+    expect(optionDescriptions["structure-slugWhitespace"]).toContain("카테고리")
     expect(optionDescriptions["structure-postFolderNameMode"]).toContain("커스텀 템플릿")
     expect(optionDescriptions["structure-postFolderNameCustomTemplate"]).toContain("{slug}")
     expect(optionDescriptions["assets-imageHandlingMode"]).toContain("업로드")

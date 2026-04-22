@@ -131,6 +131,8 @@ UI에서 아래 5개 옵션 묶음을 조절할 수 있습니다.
 - `pnpm parser:check`: 지원 범위와 샘플 검증 계약 확인
 - `pnpm samples:verify`: 저장된 대표 샘플 export 결과 회귀 확인
 - `pnpm smoke:ui`: Playwright 기반 UI 흐름과 작업 복구 회귀 확인
+- `pnpm test:network:resume-export`: 실제 네이버 export 중단 후 `manifest.json` 기반 resume export 회귀 확인
+- `pnpm test:network:resume-export:se2-table`: 실제 네이버 SE2 표 본문(`blogpeople`, 2013-06-26~2013-06-27, category 21)에서 output dir resume 회귀 확인
 - `pnpm check:local`: 저장소 파일 변경 뒤 기본 로컬 기준선 확인
 - `pnpm check:full`: 전체 기본 회귀 확인
 
@@ -143,4 +145,6 @@ UI에서 아래 5개 옵션 묶음을 조절할 수 있습니다.
 - 각 글에 필요한 이미지 업로드가 모두 끝나는 즉시 해당 Markdown과 `manifest.json`을 업로드 URL 기준으로 갱신합니다.
 - 웹 UI는 마지막 `outputDir`의 `manifest.json`을 읽어 `running`, `upload-ready`, `uploading`, `upload-failed`, `completed`, `upload-completed`, `failed` 상태를 복구합니다. 자동 재실행은 하지 않고, 사용자가 직접 이어서 진행합니다.
 
+실네트워크 resume export 검증은 `pnpm test:network:resume-export`를 사용합니다.
+SE2 표 본문이 포함된 실제 재현 케이스는 `pnpm test:network:resume-export:se2-table`를 사용합니다.
 실업로드 검증은 `pnpm test:network:upload`를 사용하며, 현재는 GitHub 경로만 검증합니다.
