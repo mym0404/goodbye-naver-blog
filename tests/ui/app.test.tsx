@@ -614,6 +614,14 @@ describe("App", () => {
         })
       }
 
+      if (url.endsWith("/api/export-resume/lookup")) {
+        return buildJsonResponse({
+          resumedJob: null,
+          resumeSummary: null,
+          resumedScanResult: null,
+        })
+      }
+
       if (url.endsWith("/api/scan")) {
         return buildJsonResponse(scanResult)
       }
@@ -1090,7 +1098,7 @@ describe("App", () => {
 
     await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
 
-    const event = new Event("beforeunload", { cancelable: true })
+    const event = new Event("beforeunload", { cancelable: true }) as BeforeUnloadEvent
     Object.defineProperty(event, "returnValue", {
       configurable: true,
       writable: true,
@@ -1100,7 +1108,7 @@ describe("App", () => {
     window.dispatchEvent(event)
 
     expect(event.defaultPrevented).toBe(true)
-    expect((event as Event & { returnValue?: string }).returnValue).toBe("")
+    expect(event.returnValue).toBe("")
   })
 
   it("autosaves sanitized options and ignores blog, output, and category-only changes", async () => {
@@ -1762,6 +1770,14 @@ describe("App", () => {
           },
           503,
         )
+      }
+
+      if (url.endsWith("/api/export-resume/lookup")) {
+        return buildJsonResponse({
+          resumedJob: null,
+          resumeSummary: null,
+          resumedScanResult: null,
+        })
       }
 
       if (url.endsWith("/api/scan")) {
