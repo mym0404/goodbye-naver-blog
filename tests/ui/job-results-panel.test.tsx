@@ -411,10 +411,15 @@ describe("JobResultsPanel upload provider UX", () => {
       job: runningUploadJob,
     })
 
-    const resultsTable = document.querySelector("#job-file-tree table")
+    const resultsTable = screen.getByRole("table")
 
-    expect(resultsTable).not.toBeNull()
-    expect(within(resultsTable as HTMLElement).getByText("업로드 상태")).toBeInTheDocument()
+    expect(within(resultsTable).getByRole("columnheader", { name: "파일" })).toBeInTheDocument()
+    expect(within(resultsTable).getByRole("columnheader", { name: "업로드 상태" })).toBeInTheDocument()
+    expect(within(resultsTable).getByRole("columnheader", { name: "상태" })).toBeInTheDocument()
+    expect(within(resultsTable).getByRole("columnheader", { name: "액션" })).toBeInTheDocument()
+    expect(within(resultsTable).queryByRole("columnheader", { name: "경로" })).not.toBeInTheDocument()
+    expect(within(resultsTable).queryByRole("columnheader", { name: "경고" })).not.toBeInTheDocument()
+    expect(within(resultsTable).getByText("posts/first/index.md")).toBeInTheDocument()
     expect(
       document.querySelector('#job-file-tree [data-upload-row-id="posts/first/index.md"]')?.getAttribute(
         "data-upload-row-status",
@@ -525,14 +530,38 @@ describe("JobResultsPanel upload provider UX", () => {
     expect(document.querySelector('[data-upload-row-status-badge="failed"]')).not.toBeNull()
   })
 
-  it("renders an external markdown preview link for successful results", () => {
+  it("renders action buttons for preview and local file open", async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn<typeof fetch>(async () => new Response(null, { status: 204 }))
+    vi.stubGlobal("fetch", fetchMock)
     renderPanel()
 
     expect(
       screen.getByRole("link", {
-        name: "첫 글 미리보기",
+        name: "첫 글 외부 미리보기",
       }),
     ).toHaveAttribute("href", "https://markdownviewer.pages.dev/#share=test")
+
+    await user.hover(screen.getByText("first"))
+
+    expect((await screen.findAllByText("./output/posts/first/index.md")).length).toBeGreaterThan(0)
+
+    await user.click(screen.getByRole("button", { name: "첫 글 파일 열기" }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/local-file/open",
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-requested-with": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          outputDir: "./output",
+          outputPath: "posts/first/index.md",
+        }),
+      }),
+    )
   })
 
   it("renders provider and field descriptions", () => {

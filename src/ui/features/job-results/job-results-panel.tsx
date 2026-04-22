@@ -1,4 +1,4 @@
-import { RiExternalLinkLine } from "@remixicon/react"
+import { RiExternalLinkLine, RiFolderOpenLine } from "@remixicon/react"
 import { useEffect, useRef, useState } from "react"
 
 import type {
@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "../../components/ui/select.js"
 import { Separator } from "../../components/ui/separator.js"
+import { toast } from "../../components/ui/sonner.js"
 import {
   Table,
   TableBody,
@@ -39,7 +40,14 @@ import {
   TableRow,
 } from "../../components/ui/table.js"
 import { ToggleGroup, ToggleGroupItem } from "../../components/ui/toggle-group.js"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../components/ui/tooltip.js"
 import { cn } from "../../lib/cn.js"
+import { postSameOriginJsonNoContent } from "../../lib/api.js"
 import {
   buildInitialProviderUiState,
   getUploadProviderFieldRule,
@@ -149,7 +157,6 @@ const buildJobItemPathMeta = (
   if (pathSegments.length === 0) {
     return {
       fileLabel: `${item.logNo}.diagnostics`,
-      directoryLabel: "failed",
       outputLabel: "diagnostics only",
     }
   }
@@ -157,13 +164,35 @@ const buildJobItemPathMeta = (
   const fileName = pathSegments.at(-1) ?? `${item.logNo}.diagnostics`
   const isIndexMarkdown = fileName === INDEX_MARKDOWN_FILE
   const postFolderName = isIndexMarkdown ? pathSegments.at(-2) : null
-  const directorySegments = pathSegments.slice(0, isIndexMarkdown ? -2 : -1)
 
   return {
     fileLabel: postFolderName || fileName,
-    directoryLabel: directorySegments.length > 0 ? directorySegments.join(" / ") : "root",
     outputLabel: item.outputPath ?? "diagnostics only",
   }
+}
+
+const normalizeLocalPath = (value: string) =>
+  value.replace(/\\/g, "/").replace(/\/{2,}/g, "/")
+
+const buildLocalOutputPath = ({
+  outputDir,
+  outputPath,
+}: {
+  outputDir: string
+  outputPath: string | null
+}) => {
+  if (!outputPath) {
+    return null
+  }
+
+  const normalizedOutputDir = normalizeLocalPath(outputDir.trim()).replace(/\/$/, "")
+  const normalizedOutputPath = normalizeLocalPath(outputPath).replace(/^\.\//, "")
+
+  if (!normalizedOutputDir) {
+    return normalizedOutputPath
+  }
+
+  return normalizeLocalPath(`${normalizedOutputDir}/${normalizedOutputPath}`)
 }
 
 const severityMeta = {
@@ -405,6 +434,25 @@ export const JobResultsPanel = ({
     job?.upload.candidateCount ?? 0,
   )
 
+  const handleOpenLocalFile = async ({
+    outputPath,
+    title,
+  }: {
+    outputPath: string
+    title: string
+  }) => {
+    try {
+      await postSameOriginJsonNoContent("/api/local-file/open", {
+        outputDir: job?.request.outputDir ?? "",
+        outputPath,
+      })
+    } catch (error) {
+      toast.error("파일을 열지 못했습니다.", {
+        description: `${title}: ${error instanceof Error ? error.message : String(error)}`,
+      })
+    }
+  }
+
   useEffect(() => {
     const viewport = logsScrollAreaRef.current?.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]')
 
@@ -426,11 +474,12 @@ export const JobResultsPanel = ({
   }, [job?.id, uploadProviders])
 
   return (
-    <Card
-      variant="panel"
-      className="board-card overflow-hidden"
-      id="status-panel"
-    >
+    <TooltipProvider>
+      <Card
+        variant="panel"
+        className="board-card overflow-hidden"
+        id="status-panel"
+      >
       <CardHeader className="panel-header gap-4 p-6 sm:flex sm:items-start sm:justify-between">
         <div className="panel-heading space-y-2">
           <CardTitle className="section-title text-2xl">
@@ -447,7 +496,7 @@ export const JobResultsPanel = ({
         </Badge>
       </CardHeader>
 
-      <CardContent className="status-layout grid gap-5 p-6">
+        <CardContent className="status-layout grid gap-5 p-6">
         {mode === "running" ? (
           <section className="subtle-panel grid gap-4 rounded-[1.5rem] p-4">
             <div className="field-card grid gap-2 rounded-2xl p-4">
@@ -991,17 +1040,28 @@ export const JobResultsPanel = ({
                 <Table
                   className={cn(
                     "w-full text-[11px] sm:text-xs",
-                    showUploadColumns ? "min-w-[44rem] table-auto" : "table-fixed",
+                    showUploadColumns ? "min-w-[44rem] table-fixed" : "table-fixed",
                   )}
                 >
                   <TableHeader className="sticky top-0 z-10">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className={showUploadColumns ? "w-[11rem] text-[10px] sm:text-[11px]" : "w-[36%] text-[10px] sm:text-[11px]"}>파일</TableHead>
-                      <TableHead className={showUploadColumns ? "w-[12rem] text-[10px] sm:text-[11px]" : "w-[36%] text-[10px] sm:text-[11px]"}>경로</TableHead>
-                      {showUploadColumns ? <TableHead className="w-[6.5rem] text-[10px] sm:text-[11px]">업로드</TableHead> : null}
-                      {showUploadColumns ? <TableHead className="w-[5.5rem] text-[10px] sm:text-[11px]">업로드 상태</TableHead> : null}
-                      <TableHead className="w-20 text-[10px] sm:text-[11px]">상태</TableHead>
-                      <TableHead className="w-14 text-[10px] sm:text-[11px]">경고</TableHead>
+                      <TableHead className="text-[10px] sm:text-[11px]">파일</TableHead>
+                      {showUploadColumns ? (
+                        <TableHead className="w-[7rem] text-center text-[10px] sm:w-[8rem] sm:text-[11px]">
+                          업로드
+                        </TableHead>
+                      ) : null}
+                      {showUploadColumns ? (
+                        <TableHead className="w-[7rem] text-center text-[10px] sm:w-[8rem] sm:text-[11px]">
+                          업로드 상태
+                        </TableHead>
+                      ) : null}
+                      <TableHead className="w-[6.5rem] text-center text-[10px] sm:w-[7.5rem] sm:text-[11px]">
+                        상태
+                      </TableHead>
+                      <TableHead className="w-[6.5rem] text-center text-[10px] sm:w-[7.5rem] sm:text-[11px]">
+                        액션
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1010,6 +1070,10 @@ export const JobResultsPanel = ({
                       const pathMeta = buildJobItemPathMeta(item)
                       const meta = severityMeta[severity]
                       const externalPreviewUrl = item.externalPreviewUrl?.trim()
+                      const localOutputPath = buildLocalOutputPath({
+                        outputDir: job?.request.outputDir ?? "",
+                        outputPath: item.outputPath,
+                      })
                       const hasUploadCandidate = item.upload.candidateCount > 0
                       const uploadRowStatus =
                         showUploadColumns && hasUploadCandidate
@@ -1042,48 +1106,43 @@ export const JobResultsPanel = ({
                               data-job-item-id={item.id}
                               data-severity={severity}
                             >
-                              <span className="grid min-w-0 gap-0.5">
-                                <strong className="break-words text-[12px] font-semibold leading-5 text-foreground sm:text-sm">
-                                  {pathMeta.fileLabel}
-                                </strong>
-                                {externalPreviewUrl ? (
-                                  <a
-                                    href={externalPreviewUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex w-fit items-center gap-1 text-[10px] font-medium text-[var(--status-running-fg)] underline underline-offset-2 sm:text-xs"
-                                    data-job-item-preview-link
-                                    aria-label={`${item.title} 미리보기`}
-                                  >
-                                    <RiExternalLinkLine className="size-[0.9rem]" aria-hidden="true" />
-                                    <span>미리보기</span>
-                                  </a>
-                                ) : null}
-                                <span className="whitespace-normal break-words text-[11px] leading-5 text-muted-foreground sm:text-xs">
+                              <span className="grid min-w-0 gap-1">
+                                {localOutputPath ? (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="w-fit max-w-full cursor-help outline-none" tabIndex={0}>
+                                        <strong className="break-words text-[11px] font-semibold leading-[1.45] text-foreground sm:text-[13px]">
+                                          {pathMeta.fileLabel}
+                                        </strong>
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent align="start" side="top" sideOffset={8}>
+                                      <span className="font-mono">{localOutputPath}</span>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                ) : (
+                                  <strong className="break-words text-[11px] font-semibold leading-[1.45] text-foreground sm:text-[13px]">
+                                    {pathMeta.fileLabel}
+                                  </strong>
+                                )}
+                                <span className="font-mono text-[10px] leading-[1.45] text-muted-foreground/75 sm:text-[11px]">
+                                  {pathMeta.outputLabel}
+                                </span>
+                                <span className="whitespace-normal break-words text-[10px] leading-[1.45] text-muted-foreground sm:text-[11px]">
                                   {item.title}
                                 </span>
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell className="align-top text-[11px] text-muted-foreground sm:text-xs">
-                            <div className="grid gap-0.5">
-                              <span className="whitespace-normal break-words leading-5">
-                                {pathMeta.directoryLabel}
-                              </span>
-                              <span className="whitespace-normal break-words text-muted-foreground/70">
-                                {pathMeta.outputLabel}
-                              </span>
-                            </div>
-                          </TableCell>
                           {showUploadColumns ? (
-                            <TableCell className="align-top text-[11px] text-foreground sm:text-xs">
+                            <TableCell className="align-middle text-center text-[11px] text-foreground sm:text-xs">
                               {hasUploadCandidate ? (
-                                <div className="grid gap-1">
+                                <div className="grid justify-items-center gap-1">
                                   <span>
                                     {item.upload.uploadedCount} / {item.upload.candidateCount}
                                   </span>
                                   {uploadedLinks.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1.5 text-[10px] sm:text-xs">
+                                    <div className="flex flex-wrap justify-center gap-1.5 text-[10px] sm:text-xs">
                                       {uploadedLinks.map((link) => (
                                         <a
                                           key={`${item.id}:${link.label}`}
@@ -1104,7 +1163,7 @@ export const JobResultsPanel = ({
                             </TableCell>
                           ) : null}
                           {showUploadColumns ? (
-                            <TableCell className="align-top">
+                            <TableCell className="align-middle text-center">
                               {uploadRowStatus ? (
                                 <Badge
                                   variant="outline"
@@ -1121,7 +1180,7 @@ export const JobResultsPanel = ({
                               )}
                             </TableCell>
                           ) : null}
-                          <TableCell className="align-top">
+                          <TableCell className="align-middle text-center">
                             <Badge
                               className="min-w-14 justify-center rounded-full px-2 py-0.5 text-[10px] sm:min-w-16 sm:px-2.5 sm:text-[11px]"
                               variant={severity === "success" ? "secondary" : meta.badge}
@@ -1129,8 +1188,72 @@ export const JobResultsPanel = ({
                               {meta.label}
                             </Badge>
                           </TableCell>
-                          <TableCell className="align-top text-[11px] font-medium text-foreground sm:text-xs">
-                            {item.warningCount > 0 ? item.warningCount : "0"}
+                          <TableCell className="align-middle text-center">
+                            <div className="inline-flex items-center rounded-full border border-border bg-card p-1 shadow-[var(--panel-shadow-border)]">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  {externalPreviewUrl ? (
+                                    <Button
+                                      asChild
+                                      variant="ghost"
+                                      size="icon"
+                                      className="size-8 rounded-full"
+                                    >
+                                      <a
+                                        href={externalPreviewUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        aria-label={`${item.title} 외부 미리보기`}
+                                        data-job-item-preview-link
+                                      >
+                                        <RiExternalLinkLine data-icon="inline-start" aria-hidden="true" />
+                                      </a>
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="size-8 rounded-full"
+                                      aria-label={`${item.title} 외부 미리보기`}
+                                      disabled
+                                    >
+                                      <RiExternalLinkLine data-icon="inline-start" aria-hidden="true" />
+                                    </Button>
+                                  )}
+                                </TooltipTrigger>
+                                <TooltipContent side="top" sideOffset={8}>
+                                  {externalPreviewUrl ? "외부 미리보기" : "미리보기 없음"}
+                                </TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-8 rounded-full"
+                                    aria-label={`${item.title} 파일 열기`}
+                                    disabled={!item.outputPath}
+                                    onClick={() => {
+                                      if (!item.outputPath) {
+                                        return
+                                      }
+
+                                      void handleOpenLocalFile({
+                                        outputPath: item.outputPath,
+                                        title: item.title,
+                                      })
+                                    }}
+                                  >
+                                    <RiFolderOpenLine data-icon="inline-start" aria-hidden="true" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" sideOffset={8}>
+                                  {item.outputPath ? "로컬 파일 열기" : "열 파일 없음"}
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
                           </TableCell>
                         </TableRow>
                       )
@@ -1181,7 +1304,8 @@ export const JobResultsPanel = ({
             </div>
           </ScrollArea>
         </section>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   )
 }

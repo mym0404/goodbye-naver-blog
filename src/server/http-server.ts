@@ -4,6 +4,7 @@ import {
   type Server as HttpServer,
   type ServerResponse,
 } from "node:http"
+import { execFile } from "node:child_process"
 import { access, mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import type { ViteDevServer } from "vite"
@@ -212,6 +213,38 @@ const isSameOriginUploadRequest = (request: IncomingMessage) => {
   } catch {
     return false
   }
+}
+
+const isPathInsideRoot = ({
+  rootPath,
+  targetPath,
+}: {
+  rootPath: string
+  targetPath: string
+}) => {
+  const relativePath = path.relative(rootPath, targetPath)
+
+  return relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath))
+}
+
+const openLocalPathWithSystem = async (targetPath: string) => {
+  await new Promise<void>((resolve, reject) => {
+    const [command, args]: [string, string[]] =
+      process.platform === "darwin"
+        ? ["open", [targetPath]]
+        : process.platform === "win32"
+          ? ["cmd", ["/c", "start", "", targetPath]]
+          : ["xdg-open", [targetPath]]
+
+    execFile(command, args, (error) => {
+      if (error) {
+        reject(error)
+        return
+      }
+
+      resolve()
+    })
+  })
 }
 
 const readScanCacheFile = async (scanCachePath: string) => {
@@ -507,6 +540,7 @@ export const createHttpServer = ({
   scanCachePath = defaultScanCachePath,
   settingsPath = defaultSettingsPath,
   uploadProviderSource = createImageUploadProviderSource(),
+  openLocalPath = openLocalPathWithSystem,
 }: {
   jobStore?: JobStore
   uploadPhaseRunner?: typeof runImageUploadPhase
@@ -515,6 +549,7 @@ export const createHttpServer = ({
   scanCachePath?: string
   settingsPath?: string
   uploadProviderSource?: UploadProviderSource
+  openLocalPath?: (targetPath: string) => Promise<void> | void
 } = {}) => {
   const isDevelopment = process.env.NODE_ENV === "development"
   let httpServer: HttpServer
@@ -1263,6 +1298,83 @@ export const createHttpServer = ({
           statusCode: 200,
           body: await buildBootstrapResponse(),
         })
+        return
+      }
+
+      if (method === "POST" && url.pathname === "/api/local-file/open") {
+        if (!hasJsonContentType(request)) {
+          sendJson({
+            response,
+            statusCode: 415,
+            body: {
+              error: "application/json 요청만 허용합니다.",
+            },
+          })
+          return
+        }
+
+        if (!isSameOriginUploadRequest(request)) {
+          sendJson({
+            response,
+            statusCode: 403,
+            body: {
+              error: "same-origin XHR 요청만 허용합니다.",
+            },
+          })
+          return
+        }
+
+        const payload = await parseJsonBody<{
+          outputDir?: unknown
+          outputPath?: unknown
+        }>(request)
+
+        if (
+          !isPlainObject(payload) ||
+          typeof payload.outputDir !== "string" ||
+          !payload.outputDir.trim() ||
+          typeof payload.outputPath !== "string" ||
+          !payload.outputPath.trim()
+        ) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: "outputDir와 outputPath는 필수입니다.",
+            },
+          })
+          return
+        }
+
+        const outputRoot = resolveRepoPath(payload.outputDir.trim())
+        const targetPath = path.resolve(outputRoot, payload.outputPath.trim())
+
+        if (!isPathInsideRoot({ rootPath: outputRoot, targetPath })) {
+          sendJson({
+            response,
+            statusCode: 400,
+            body: {
+              error: "허용되지 않은 파일 경로입니다.",
+            },
+          })
+          return
+        }
+
+        if (!(await fileExists(targetPath))) {
+          sendJson({
+            response,
+            statusCode: 404,
+            body: {
+              error: "파일을 찾을 수 없습니다.",
+            },
+          })
+          return
+        }
+
+        await openLocalPath(targetPath)
+
+        response.writeHead(204)
+        response.end()
         return
       }
 

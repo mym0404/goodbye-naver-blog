@@ -29,6 +29,7 @@ import type {
 } from "../shared/types.js"
 
 import { Badge } from "./components/ui/badge.js"
+import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert.js"
 import { Button } from "./components/ui/button.js"
 import {
   Card,
@@ -269,6 +270,7 @@ const getPersistedUiStateSignature = ({
 
 export const App = () => {
   const [defaults, setDefaults] = useState(fallbackDefaults)
+  const [bootstrapping, setBootstrapping] = useState(true)
   const [uploadProviders, setUploadProviders] = useState(fallbackUploadProviders)
   const [uploadProviderError, setUploadProviderError] = useState<string | null>(null)
   const [resettingResume, setResettingResume] = useState(false)
@@ -468,6 +470,7 @@ export const App = () => {
         })
         hasLoadedDefaultsRef.current = true
         applyBootstrapState(nextDefaults)
+        setBootstrapping(false)
       } catch (error) {
         if (cancelled) {
           return
@@ -485,6 +488,7 @@ export const App = () => {
         hasLoadedDefaultsRef.current = true
         applyBootstrapState(fallbackDefaults)
         setErrorScanStatus(error instanceof Error ? error.message : String(error))
+        setBootstrapping(false)
       }
     }
 
@@ -869,7 +873,7 @@ export const App = () => {
     }
 
     const confirmed = window.confirm(
-      `${resumeDialog.outputDir} 경로의 작업내역을 모두 삭제하고 초기화할까요?`,
+      `${resumeDialog.outputDir} 경로의 작업내역과 output 파일을 모두 삭제하고 초기화할까요?`,
     )
 
     if (!confirmed) {
@@ -1151,7 +1155,10 @@ export const App = () => {
   }
 
   return (
-    <main className={cn("dashboard-shell relative min-h-screen w-full overflow-x-clip", themePreference)}>
+    <main
+      className={cn("dashboard-shell relative min-h-screen w-full overflow-x-clip", themePreference)}
+      aria-busy={bootstrapping || undefined}
+    >
       <Dialog open={Boolean(resumeDialog)} onOpenChange={(open) => (!open ? setResumeDialog(null) : null)}>
         <DialogContent showCloseButton>
           <DialogHeader>
@@ -1161,22 +1168,30 @@ export const App = () => {
             </DialogDescription>
           </DialogHeader>
           {resumeDialog ? (
-            <div className="subtle-panel grid gap-2 rounded-[var(--radius-lg)] px-4 py-4 text-sm text-foreground">
-              <p>
-                <strong className="font-semibold text-foreground">상태</strong> {resumeDialog.status}
-              </p>
-              <p>
-                <strong className="font-semibold text-foreground">출력 경로</strong> {resumeDialog.outputDir}
-              </p>
-              <p>
-                <strong className="font-semibold text-foreground">진행</strong> 총 {resumeDialog.totalPosts} / 완료 {resumeDialog.completedCount} / 실패 {resumeDialog.failedCount}
-              </p>
-              <p>
-                <strong className="font-semibold text-foreground">업로드</strong> {resumeDialog.uploadedCount} / {resumeDialog.uploadCandidateCount}
-              </p>
+            <div className="grid gap-3">
+              <div className="subtle-panel grid gap-2 rounded-[var(--radius-lg)] px-4 py-4 text-sm text-foreground">
+                <p>
+                  <strong className="font-semibold text-foreground">상태</strong> {resumeDialog.status}
+                </p>
+                <p>
+                  <strong className="font-semibold text-foreground">출력 경로</strong> {resumeDialog.outputDir}
+                </p>
+                <p>
+                  <strong className="font-semibold text-foreground">진행</strong> 총 {resumeDialog.totalPosts} / 완료 {resumeDialog.completedCount} / 실패 {resumeDialog.failedCount}
+                </p>
+                <p>
+                  <strong className="font-semibold text-foreground">업로드</strong> {resumeDialog.uploadedCount} / {resumeDialog.uploadCandidateCount}
+                </p>
+              </div>
+              <Alert variant="destructive">
+                <AlertTitle>초기화 경고</AlertTitle>
+                <AlertDescription>
+                  작업 초기화를 실행하면 <strong>{resumeDialog.outputDir}</strong> 경로의 작업내역과 output 파일을 함께 삭제합니다.
+                </AlertDescription>
+              </Alert>
             </div>
           ) : null}
-          <DialogFooter showCloseButton>
+          <DialogFooter showCloseButton closeButtonLabel="확인">
             <Button variant="destructive" onClick={() => void handleResetResume()} disabled={resettingResume}>
               {resettingResume ? "초기화 중" : "작업 초기화"}
             </Button>
@@ -1189,6 +1204,33 @@ export const App = () => {
         className="shell-backdrop pointer-events-none fixed inset-0 -z-10"
         aria-hidden="true"
       />
+
+      {bootstrapping ? (
+        <section className="fixed inset-0 z-50 grid place-items-center px-4 py-6" data-step-view="bootstrap-loading">
+          <div className="absolute inset-0 bg-background/78 backdrop-blur-[6px]" aria-hidden="true" />
+          <Card variant="panel" className="relative w-full max-w-xl overflow-hidden">
+            <CardContent className="grid gap-4 px-6 py-8 sm:px-8 sm:py-10">
+              <div
+                className="grid justify-items-center gap-4 text-center"
+                role="status"
+                aria-live="polite"
+              >
+                <span className="inline-flex size-12 items-center justify-center rounded-full border border-border bg-secondary text-foreground shadow-[var(--panel-shadow-border)]">
+                  <RiLoader4Line className="size-5 motion-safe:animate-spin" aria-hidden="true" />
+                </span>
+                <div className="grid gap-1.5">
+                  <h1 className="text-xl font-semibold tracking-[-0.04em] text-foreground">
+                    작업 상태를 확인하는 중입니다.
+                  </h1>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    이전 작업을 다시 불러올지, 새로 시작할지 확인하고 있습니다.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      ) : null}
 
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-5 px-4 py-5 xl:px-6 xl:py-6">
         <Card variant="panel" className="overflow-hidden">

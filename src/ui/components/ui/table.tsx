@@ -18,7 +18,7 @@ const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttribut
     <thead
       ref={ref}
       className={cn(
-        "bg-[color-mix(in_srgb,var(--panel)_82%,transparent)] backdrop-blur supports-[backdrop-filter]:bg-[color-mix(in_srgb,var(--panel)_82%,transparent)]",
+        "bg-[color-mix(in_srgb,var(--panel-muted)_98%,var(--card))] supports-[backdrop-filter]:bg-[color-mix(in_srgb,var(--panel-muted)_92%,transparent)] backdrop-blur",
         className,
       )}
       {...props}
@@ -51,7 +51,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
     <th
       ref={ref}
       className={cn(
-        "px-3 py-2.5 align-middle font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground",
+        "bg-[color-mix(in_srgb,var(--panel-muted)_98%,var(--card))] supports-[backdrop-filter]:bg-[color-mix(in_srgb,var(--panel-muted)_92%,transparent)] bg-clip-padding px-3 py-2.5 align-middle font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)] first:rounded-tl-[calc(var(--radius-lg)-4px)] last:rounded-tr-[calc(var(--radius-lg)-4px)]",
         className,
       )}
       {...props}

@@ -1231,6 +1231,40 @@ describe("http server", () => {
     expect(uploadProviderSource.getCatalog).toHaveBeenCalledTimes(1)
   })
 
+  it("opens a local output file through the action api", async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), "open-local-file-"))
+    const targetPath = path.join(rootDir, "posts", "first", "index.md")
+    const openLocalPath = vi.fn(async () => {})
+
+    try {
+      await mkdir(path.dirname(targetPath), { recursive: true })
+      await writeFile(targetPath, "# hello")
+
+      activeServer = createTestHttpServer({
+        openLocalPath,
+      })
+      const baseUrl = await startServer(activeServer)
+
+      const response = await fetch(`${baseUrl}/api/local-file/open`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "origin": baseUrl,
+          "x-requested-with": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          outputDir: rootDir,
+          outputPath: "posts/first/index.md",
+        }),
+      })
+
+      expect(response.status).toBe(204)
+      expect(openLocalPath).toHaveBeenCalledWith(targetPath)
+    } finally {
+      await rm(rootDir, { recursive: true, force: true })
+    }
+  })
+
   it("persists scan results to a json file and reuses them after app reloads", async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), "scan-cache-"))
     const scanCachePath = path.join(rootDir, "scan-cache.json")
