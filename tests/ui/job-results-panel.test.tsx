@@ -415,13 +415,16 @@ describe("JobResultsPanel upload provider UX", () => {
 
     const resultsTable = screen.getByRole("table")
 
+    expect(within(resultsTable).getByRole("columnheader", { name: "카테고리" })).toBeInTheDocument()
     expect(within(resultsTable).getByRole("columnheader", { name: "파일" })).toBeInTheDocument()
     expect(within(resultsTable).getByRole("columnheader", { name: "업로드 상태" })).toBeInTheDocument()
     expect(within(resultsTable).getByRole("columnheader", { name: "상태" })).toBeInTheDocument()
     expect(within(resultsTable).getByRole("columnheader", { name: "액션" })).toBeInTheDocument()
     expect(within(resultsTable).queryByRole("columnheader", { name: "경로" })).not.toBeInTheDocument()
     expect(within(resultsTable).queryByRole("columnheader", { name: "경고" })).not.toBeInTheDocument()
-    expect(within(resultsTable).getByText("posts/first/index.md")).toBeInTheDocument()
+    expect(within(resultsTable).getByText("NestJS")).toBeInTheDocument()
+    expect(within(resultsTable).getByText("first")).toBeInTheDocument()
+    expect(within(resultsTable).queryByText("posts/first/index.md")).not.toBeInTheDocument()
     expect(
       document.querySelector('#job-file-tree [data-upload-row-id="posts/first/index.md"]')?.getAttribute(
         "data-upload-row-status",

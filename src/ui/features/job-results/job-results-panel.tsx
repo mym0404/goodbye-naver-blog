@@ -157,7 +157,6 @@ const buildJobItemPathMeta = (
   if (pathSegments.length === 0) {
     return {
       fileLabel: `${item.logNo}.diagnostics`,
-      outputLabel: "diagnostics only",
     }
   }
 
@@ -167,7 +166,6 @@ const buildJobItemPathMeta = (
 
   return {
     fileLabel: postFolderName || fileName,
-    outputLabel: item.outputPath ?? "diagnostics only",
   }
 }
 
@@ -1078,11 +1076,14 @@ export const JobResultsPanel = ({
                 <Table
                   className={cn(
                     "w-full text-[11px] sm:text-xs",
-                    showUploadColumns ? "min-w-[44rem] table-fixed" : "table-fixed",
+                    showUploadColumns ? "min-w-[50rem] table-fixed" : "table-fixed",
                   )}
                 >
                   <TableHeader className="sticky top-0 z-10">
                     <TableRow className="hover:bg-transparent">
+                      <TableHead className="w-[7.5rem] text-[10px] sm:w-[8.5rem] sm:text-[11px]">
+                        카테고리
+                      </TableHead>
                       <TableHead className="text-[10px] sm:text-[11px]">파일</TableHead>
                       {showUploadColumns ? (
                         <TableHead className="w-[7rem] text-center text-[10px] sm:w-[8rem] sm:text-[11px]">
@@ -1139,6 +1140,17 @@ export const JobResultsPanel = ({
                           data-upload-row-status={uploadRowStatus?.key}
                           data-severity={severity}
                         >
+                          <TableCell className="align-top">
+                            <div className="flex min-h-[3.5rem] items-start">
+                              <Badge
+                                variant="outline"
+                                className="max-w-full rounded-full px-2.5 py-1 text-[10px] font-medium normal-case sm:text-[11px]"
+                                title={item.category.path.join(" / ")}
+                              >
+                                <span className="truncate">{item.category.name}</span>
+                              </Badge>
+                            </div>
+                          </TableCell>
                           <TableCell className="min-w-0 align-top">
                             <div
                               className="job-results-row grid min-h-0 w-full min-w-0 whitespace-normal rounded-xl px-1.5 py-1 text-left"
@@ -1164,9 +1176,6 @@ export const JobResultsPanel = ({
                                     {pathMeta.fileLabel}
                                   </strong>
                                 )}
-                                <span className="font-mono text-[10px] leading-[1.45] text-muted-foreground/75 sm:text-[11px]">
-                                  {pathMeta.outputLabel}
-                                </span>
                                 <span className="whitespace-normal break-words text-[10px] leading-[1.45] text-muted-foreground sm:text-[11px]">
                                   {item.title}
                                 </span>
