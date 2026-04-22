@@ -19,7 +19,7 @@
 - [../../../scripts/harness/run-ui-live-upload.ts](../../../scripts/harness/run-ui-live-upload.ts)
 
 ## 검증 방법
-- `pnpm check:local`: 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다. 같은 로컬 기준선을 다시 확인한다.
+- `pnpm check:local`: 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다. 같은 로컬 기준선을 다시 확인한다. 실패하면 현재 작업이 만든 회귀인지 먼저 보고, 현재 작업 때문이면 고치면서 진행하고 다른 변경이나 기존 상태 때문이면 즉시 중단하고 실패 사실을 보고한다.
 - `pnpm check:full`: fixture-based sample regression, generated coverage, Playwright smoke UI까지 포함한 전체 기본 회귀가 필요할 때 실행한다.
 - `pnpm test:coverage`: 커버리지 게이트나 CI 동작을 다시 확인해야 할 때 실행한다.
 
@@ -89,6 +89,8 @@
 
 ## Task Loops
 - 모든 저장소 파일 변경 턴은 `pnpm check:local`로 시작한다. 더 큰 검증이 필요하면 그 위에 focused command나 broader regression을 추가한다.
+- 검증 명령이 실패하면 현재 작업 diff와 실패 지점을 먼저 대조한다. 현재 작업 때문에 깨졌다면 그 자리에서 고치고 같은 검증을 다시 돌린다.
+- 검증 명령이 현재 작업과 무관한 기존 실패를 드러내면 그 시점에서 작업을 멈추고, 통과로 보고하지 않은 채 실패 명령과 영향 범위를 그대로 보고한다.
 - 코어 기능, 사용자 흐름, 상태 전이, 결과/복구 구조를 바꾸는 변경 뒤에는 Playwright smoke 경로를 직접 건드렸는지와 무관하게 최소 `pnpm smoke:ui`를 실행한다.
 - capability/sample/harness 변경 뒤에는 `pnpm typecheck`, `pnpm test:offline`, `pnpm parser:check`, `pnpm samples:verify`, `pnpm quality:report`를 우선 본다.
 - capability catalog를 바꿀 때는 `sample-fixture`와 `parser-fixture` 분류를 함께 검토한다. 공개 글을 끝내 확보하지 못한 capability를 억지로 sample gap으로 남기지 않는다.

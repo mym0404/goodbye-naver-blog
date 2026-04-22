@@ -28,6 +28,7 @@
 - 영속적인 UI 설정과 서버 파일 캐시는 작업 산출물 폴더가 아니라 `.cache/` 아래에 저장한다. 런타임 산출물만 저장한다.
 - 사용자용 HMR 개발 서버는 `pnpm dev`와 `4173` 포트를 기준으로 본다. AI agent, test, harness가 로컬 서버를 직접 띄울 때는 `pnpm dev`를 그대로 쓰지 않고, 공유 `.cache/export-ui-settings.json`을 피하는 별도 `FAREWELL_SETTINGS_PATH`, `FAREWELL_SCAN_CACHE_PATH`와 `4173`이 아닌 `PORT` 또는 `listen(0)` 기반 entry를 사용한다.
 - 저장소 파일을 수정한 턴에서는 범위와 무관하게 `pnpm check:local`을 항상 실행한다. 이 명령이 가장 기본 검사다.
+- 검증 명령이 실패하면 현재 작업이 만든 회귀인지 먼저 본다. 현재 작업 때문이면 고치면서 계속 진행하고, 다른 변경이나 기존 상태 때문에 생긴 실패면 바로 멈추고 실패 사실을 보고한다.
 - parser capability, sample fixture, renderer/exporter 계약이 바뀌면 관련 knowledge와 generated 문서를 같이 갱신한다.
 - parser/sample 회귀는 fixture-first가 기본이다. live 네이버 fetch는 fixture refresh/drift check 보조 경로로만 취급한다.
 - Playwright UI smoke와 live upload e2e는 유지한다. parser fixture 전환을 이유로 제거하지 않는다.
