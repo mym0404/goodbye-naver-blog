@@ -11,7 +11,16 @@ categoryPath:
 editorVersion: 2
 visibility: public
 thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxOTAyMDZfMTA0/MDAxNTQ5NDA2MzAxNjMx.yvJrtmBJP1HOloCZfCfI_oo4xxnZbqhEtct2h4sbWpAg.RY6DIb_lok5SJBDO-1pmxfY_z9zpLdab7jhCsp4cphIg.PNG.mym0404/1.png?type=w800
+warnings:
+  - SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다.
+  - fallback HTML 블록 1개가 포함됩니다.
 ---
+
+## Export Diagnostics
+
+> ⚠️ Warning: SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다.
+
+> ⚠️ Warning: fallback HTML 블록 1개가 포함됩니다.
 
 **\[AAC의 Navigation Component의 필요성\]**
 
@@ -311,7 +320,7 @@ stackoverflow.com
 
 결과물을 보자!
 
-[![](https://mblogthumb-phinf.pstatic.net/MjAxOTAyMDZfMTUz/MDAxNTQ5NDEzOTc5ODQy.dIfNXspKNS2I29ivFYqiUMxLCDJV17xWrtjut7p5etEg.Cwrfu83gmXKmtAz3wIAi-nOGgZtmy9FmvNu6zdDEg_Eg.GIF.mym0404/123.gif?type=w210)](https://mblogvideo-phinf.pstatic.net/MjAxOTAyMDZfMTUz/MDAxNTQ5NDEzOTc5ODQy.dIfNXspKNS2I29ivFYqiUMxLCDJV17xWrtjut7p5etEg.Cwrfu83gmXKmtAz3wIAi-nOGgZtmy9FmvNu6zdDEg_Eg.GIF.mym0404/123.gif?type=mp4w800)
+<p><video src="https://mblogvideo-phinf.pstatic.net/MjAxOTAyMDZfMTUz/MDAxNTQ5NDEzOTc5ODQy.dIfNXspKNS2I29ivFYqiUMxLCDJV17xWrtjut7p5etEg.Cwrfu83gmXKmtAz3wIAi-nOGgZtmy9FmvNu6zdDEg_Eg.GIF.mym0404/123.gif?type=mp4w800" loop="loop" muted="muted" playsinline="" class="fx _postImage _gifmp4" data-gif-url="https://mblogthumb-phinf.pstatic.net/MjAxOTAyMDZfMTUz/MDAxNTQ5NDEzOTc5ODQy.dIfNXspKNS2I29ivFYqiUMxLCDJV17xWrtjut7p5etEg.Cwrfu83gmXKmtAz3wIAi-nOGgZtmy9FmvNu6zdDEg_Eg.GIF.mym0404/123.gif?type=w210"></video>&nbsp;</p>
 
 \----------
 

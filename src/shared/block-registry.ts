@@ -102,8 +102,8 @@ export const parserCapabilityCatalog: ParserCapabilityCatalogEntry[] = [
     editorVersion: 3,
     blockType: "divider",
     fallbackPolicy: "structured",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se3-quote-table-vita"],
+    verificationMode: "parser-fixture",
+    sampleIds: [],
     testFilePaths: se3ParserTestFilePaths,
   },
   {
@@ -234,22 +234,6 @@ export const parserCapabilityCatalog: ParserCapabilityCatalogEntry[] = [
     sampleIds: ["se4-video-table", "se4-heading-itinerary"],
     testFilePaths: se4ParserTestFilePaths,
   },
-  {
-    editorVersion: 2,
-    blockType: "rawHtml",
-    fallbackPolicy: "raw-html",
-    verificationMode: "parser-fixture",
-    sampleIds: [],
-    testFilePaths: se2ParserTestFilePaths,
-  },
-  {
-    editorVersion: 4,
-    blockType: "rawHtml",
-    fallbackPolicy: "raw-html",
-    verificationMode: "parser-fixture",
-    sampleIds: [],
-    testFilePaths: se4ParserTestFilePaths,
-  },
 ]
 
 type BlockOutputParamDefinition = {
@@ -304,7 +288,6 @@ export const blockOutputFamilyOrder: BlockType[] = [
   "video",
   "linkCard",
   "table",
-  "rawHtml",
 ]
 
 export const defaultBlockOutputSelections: {
@@ -332,7 +315,6 @@ export const defaultBlockOutputSelections: {
   video: { variant: "source-link" },
   linkCard: { variant: "title-link" },
   table: { variant: "gfm-or-html" },
-  rawHtml: { variant: "omit" },
 }
 
 export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
@@ -524,22 +506,6 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
       { id: "html-only", label: "원본 HTML 유지", description: "표를 HTML fragment로 유지합니다." },
     ],
   },
-  {
-    blockType: "rawHtml",
-    label: "Raw HTML",
-    description: "구조화하지 못한 HTML을 생략하거나 Markdown fallback으로 출력합니다.",
-    previewCapabilityId: "se2-rawHtml",
-    previewBlock: {
-      type: "rawHtml",
-      html: "<div><strong>Legacy block</strong><br>with text</div>",
-      reason: "se2:legacy-fragment",
-    },
-    variants: [
-      { id: "omit", label: "생략 + diagnostic", description: "본문에서는 생략하고 diagnostic에만 남깁니다." },
-      { id: "markdown-fallback", label: "Markdown fallback", description: "추출 가능한 텍스트를 Markdown으로 남깁니다." },
-      { id: "markdown-no-warning", label: "경고 없이 출력", description: "추출 가능한 텍스트를 본문에만 남기고 warning과 diagnostic은 추가하지 않습니다." },
-    ],
-  },
 ]
 
 export const blockOutputCapabilityOverrideDefinitions: BlockOutputCapabilityOverrideDefinition[] = [
@@ -548,18 +514,6 @@ export const blockOutputCapabilityOverrideDefinitions: BlockOutputCapabilityOver
     capabilityId: "se4-formula",
     label: "SE4 수식",
     description: "ONE 수식 블록만 다른 출력 정책을 줄 때 사용합니다.",
-  },
-  {
-    blockType: "rawHtml",
-    capabilityId: "se2-rawHtml",
-    label: "SE2 rawHtml",
-    description: "SE2 fallback HTML 블록만 따로 처리할 때 사용합니다.",
-  },
-  {
-    blockType: "rawHtml",
-    capabilityId: "se4-rawHtml",
-    label: "SE4 rawHtml",
-    description: "SE4 fallback HTML 블록만 따로 처리할 때 사용합니다.",
   },
 ]
 

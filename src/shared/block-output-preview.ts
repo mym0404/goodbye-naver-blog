@@ -6,7 +6,6 @@ import type {
   ImageBlockOutputSelection,
 } from "./types.js"
 import {
-  composeRawHtmlPreview,
   composeSnippetWithReferences,
   createLinkFormatter,
   getDividerMarker,
@@ -19,14 +18,6 @@ import {
   renderParagraph,
   renderQuote,
 } from "./block-markdown.js"
-
-const stripHtmlForPreview = (html: string) =>
-  html
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim()
 
 const toPreviewAssetPath = (sourceUrl: string) => {
   const pathname = (() => {
@@ -48,66 +39,6 @@ const getPreviewImageReference = ({
   sourceUrl: string
   imageHandlingMode: ExportOptions["assets"]["imageHandlingMode"]
 }) => (imageHandlingMode === "remote" ? sourceUrl : toPreviewAssetPath(sourceUrl))
-
-const renderRawHtmlPreview = ({
-  block,
-  selection,
-  linkFormatter,
-}: {
-  block: Extract<AstBlock, { type: "rawHtml" }>
-  selection: BlockOutputSelection
-  linkFormatter: ReturnType<typeof createLinkFormatter>
-}) => {
-  const extractedText = stripHtmlForPreview(block.html)
-  const message = `raw HTML 블록을 생략했습니다: ${block.reason}`
-
-  if (selection.variant === "omit") {
-    return composeRawHtmlPreview({
-      body: "",
-      diagnostics: [
-        {
-          level: extractedText ? "warning" : "error",
-          message,
-          detail: extractedText || undefined,
-        },
-      ],
-      linkFormatter,
-    })
-  }
-
-  if (!extractedText) {
-    return composeRawHtmlPreview({
-      body: "",
-      diagnostics: [
-        {
-          level: "error",
-          message,
-        },
-      ],
-      linkFormatter,
-    })
-  }
-
-  if (selection.variant === "markdown-no-warning") {
-    return composeRawHtmlPreview({
-      body: extractedText,
-      diagnostics: [],
-      linkFormatter,
-    })
-  }
-
-  return composeRawHtmlPreview({
-    body: extractedText,
-    diagnostics: [
-      {
-        level: "warning",
-        message: `raw HTML 블록을 Markdown으로 변환했습니다: ${block.reason}`,
-        detail: extractedText,
-      },
-    ],
-    linkFormatter,
-  })
-}
 
 const getPreviewSelection = ({
   block,
@@ -215,10 +146,6 @@ const renderResolvedPreviewBlock = ({
       block,
       formatLink: linkFormatter.formatLink,
     })
-  }
-
-  if (block.type === "htmlFragment") {
-    return block.html
   }
 
   throw new Error(`unsupported preview block type: ${block.type}`)
@@ -385,13 +312,5 @@ export const renderBlockOutputPreview = ({
     return tableSelection.variant === "html-only" ? block.html : renderGfmTable(block)
   }
 
-  if (block.type === "htmlFragment") {
-    return block.html
-  }
-
-  return renderRawHtmlPreview({
-    block,
-    selection,
-    linkFormatter,
-  })
+  return ""
 }

@@ -374,7 +374,7 @@ describe("NaverBlogExporter", () => {
     await rm(outputDir, { recursive: true, force: true })
   })
 
-  it("normalizes unsupported representative cases before warning aggregation in bulk exports", async () => {
+  it("renders normalized unsupported representative cases as fallback html with warnings in bulk exports", async () => {
     const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
     const onProgress = vi.fn()
     const onItem = vi.fn()
@@ -417,40 +417,48 @@ describe("NaverBlogExporter", () => {
       const markdownPath = path.join(outputDir, manifest.posts[0]!.outputPath!)
       const writtenMarkdown = await readFile(markdownPath, "utf8")
 
-      expect(manifest.warningCount).toBe(0)
+      expect(manifest.warningCount).toBe(4)
       expect(manifest.posts[0]).toMatchObject({
         logNo: se3Post.logNo,
         editorVersion: 3,
-        warnings: [],
-        warningCount: 0,
+        warnings: [
+          "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine default",
+          "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine line5",
+          "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_oglink og_bSize ",
+          "fallback HTML 블록 3개가 포함됩니다.",
+        ],
+        warningCount: 4,
       })
       expect(onProgress).toHaveBeenCalledWith({
         total: 1,
         completed: 1,
         failed: 0,
-        warnings: 0,
+        warnings: 4,
       })
       expect(onItem).toHaveBeenCalledWith(
         expect.objectContaining({
           logNo: se3Post.logNo,
-          warnings: [],
-          warningCount: 0,
+          warnings: [
+            "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine default",
+            "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine line5",
+            "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_oglink og_bSize ",
+            "fallback HTML 블록 3개가 포함됩니다.",
+          ],
+          warningCount: 4,
         }),
       )
       expect(writtenMarkdown).toContain("본문 시작입니다.")
-      expect(writtenMarkdown).toContain("\n---\n")
-      expect(writtenMarkdown).toContain('<hr data-naver-block="se3-horizontal-line" data-style="line5">')
-      expect(writtenMarkdown).toContain(
-        '<a data-naver-block="se3-oglink" data-size="og_bSize" href="https://blog.naver.com/is02019/221072284462">',
-      )
+      expect(writtenMarkdown).toContain("se_component se_horizontalLine default")
+      expect(writtenMarkdown).toContain("se_component se_horizontalLine line5")
+      expect(writtenMarkdown).toContain("se_component se_oglink og_bSize")
       expect(writtenMarkdown).toContain("비타는 삶이다")
-      expect(writtenMarkdown).not.toContain("## Export Diagnostics")
+      expect(writtenMarkdown).toContain("## Export Diagnostics")
     } finally {
       await rm(outputDir, { recursive: true, force: true })
     }
   })
 
-  it("keeps html-fragment assets from normalized unsupported blocks in markdown and manifest upload metadata", async () => {
+  it("keeps normalized unsupported html fragments literal without upload candidates", async () => {
     const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
     const options = defaultExportOptions()
     const se3Post = {
@@ -492,16 +500,11 @@ describe("NaverBlogExporter", () => {
       const markdownPath = path.join(outputDir, postManifest.outputPath!)
       const writtenMarkdown = await readFile(markdownPath, "utf8")
 
-      expect(manifest.warningCount).toBe(0)
-      expect(postManifest.assetPaths).toHaveLength(1)
-      expect(postManifest.assetPaths[0]).toMatch(/^\.\.\/\.\.\/public\/[a-f0-9]{64}\.png$/)
-      expect(postManifest.upload.candidateCount).toBe(1)
-      expect(postManifest.upload.candidates[0]).toMatchObject({
-        kind: "image",
-        sourceUrl: "https://dthumb-phinf.pstatic.net/sample.jpg?type=ff500_300",
-        markdownReference: postManifest.assetPaths[0],
-      })
-      expect(writtenMarkdown).toContain(`<img src="${postManifest.assetPaths[0]}" alt="">`)
+      expect(manifest.warningCount).toBe(4)
+      expect(postManifest.assetPaths).toEqual([])
+      expect(postManifest.upload.candidateCount).toBe(0)
+      expect(postManifest.upload.candidates).toEqual([])
+      expect(writtenMarkdown).toContain('<img src="https://dthumb-phinf.pstatic.net/sample.jpg?type=ff500_300" alt="">')
     } finally {
       await rm(outputDir, { recursive: true, force: true })
     }

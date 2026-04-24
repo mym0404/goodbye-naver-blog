@@ -1,7 +1,6 @@
 import path from "node:path"
 
 import { renderMarkdownPost } from "../../../src/modules/converter/markdown-renderer.js"
-import { normalizeUnsupportedBlocks } from "../../../src/modules/converter/unsupported-block-normalizer.js"
 import { parsePostHtml } from "../../../src/modules/parser/post-parser.js"
 import { reviewParsedPost } from "../../../src/modules/reviewer/post-reviewer.js"
 import { defaultExportOptions } from "../../../src/shared/export-options.js"
@@ -75,10 +74,7 @@ export const renderSampleFixture = async ({
     sourceUrl: sample.post.source,
     options,
   })
-  const parsedPost = normalizeUnsupportedBlocks({
-    parsedPost: parsedPostBeforeNormalization,
-    options,
-  })
+  const parsedPost = parsedPostBeforeNormalization
   const review = reviewParsedPost(parsedPost)
   const rendered = await renderMarkdownPost({
     post: buildSamplePostSummary(sample),
@@ -104,13 +100,11 @@ export const renderSampleFixture = async ({
       editorVersion: parsedPostBeforeNormalization.editorVersion,
       blocks: parsedPostBeforeNormalization.blocks,
       warnings: parsedPostBeforeNormalization.warnings,
-      unsupportedBlocks: parsedPostBeforeNormalization.unsupportedBlocks,
     }),
     ...getParserCapabilityLookupIds({
       editorVersion: parsedPost.editorVersion,
       blocks: parsedPost.blocks,
       warnings: parsedPost.warnings,
-      unsupportedBlocks: parsedPost.unsupportedBlocks,
     }),
   ])
 

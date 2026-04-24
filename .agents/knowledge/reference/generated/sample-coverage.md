@@ -29,7 +29,7 @@
 | `se3-quote` | `quote` | `sample-fixture` | `se3-quote-imagegroup-note9`, `se3-quote-table-vita` |
 | `se4-quote` | `quote` | `sample-fixture` | `se4-quote-formula-code` |
 | `se2-divider` | `divider` | `parser-fixture` | - |
-| `se3-divider` | `divider` | `sample-fixture` | `se3-quote-table-vita` |
+| `se3-divider` | `divider` | `parser-fixture` | - |
 | `se4-divider` | `divider` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-image-group`, `se4-heading-itinerary` |
 | `se2-code` | `code` | `sample-fixture` | `se2-code-image-autolayout` |
 | `se3-code` | `code` | `parser-fixture` | - |
@@ -46,8 +46,6 @@
 | `se2-table` | `table` | `sample-fixture` | `se2-table-rawhtml-navigation` |
 | `se3-table` | `table` | `sample-fixture` | `se3-quote-table-vita` |
 | `se4-table` | `table` | `sample-fixture` | `se4-video-table`, `se4-heading-itinerary` |
-| `se2-rawHtml` | `rawHtml` | `parser-fixture` | - |
-| `se4-rawHtml` | `rawHtml` | `parser-fixture` | - |
 
 ## Sample Catalog
 | id | editorVersion | expectedCapabilityLookupIds |
@@ -60,11 +58,11 @@
 | `se4-quote-formula-code` | `4` | `se4-linkCard`, `se4-image`, `se4-divider`, `se4-paragraph`, `se4-quote`, `se4-formula`, `se4-code` |
 | `se2-legacy` | `2` | `se2-paragraph` |
 | `se2-code-image-autolayout` | `2` | `se2-paragraph`, `se2-image`, `se2-code` |
-| `se2-table-rawhtml-navigation` | `2` | `se2-paragraph`, `se2-image`, `se2-table`, `case:se2-inline-gif-video` |
+| `se2-table-rawhtml-navigation` | `2` | `se2-paragraph`, `se2-image`, `se2-table` |
 | `se2-thumburl-image-group` | `2` | `se2-imageGroup`, `se2-paragraph` |
 | `se3-legacy` | `3` | `se3-paragraph` |
 | `se3-quote-imagegroup-note9` | `3` | `se3-paragraph`, `se3-image`, `se3-quote`, `se3-imageGroup` |
-| `se3-quote-table-vita` | `3` | `se3-paragraph`, `se3-divider`, `se3-image`, `se3-quote`, `se3-table`, `case:se3-horizontal-line-default`, `case:se3-horizontal-line-line5`, `case:se3-oglink-og_bSize` |
+| `se3-quote-table-vita` | `3` | `se3-paragraph`, `se3-image`, `se3-quote`, `se3-table` |
 
 ## Sample Gaps
 - 현재 sample gap 없음
@@ -73,6 +71,5 @@
 - `se2-heading`
 - `se2-quote`
 - `se2-divider`
+- `se3-divider`
 - `se3-code`
-- `se2-rawHtml`
-- `se4-rawHtml`

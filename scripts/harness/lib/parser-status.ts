@@ -1,11 +1,7 @@
 import path from "node:path"
 
-import {
-  getUnsupportedBlockCaseCapabilityLookupId,
-  parserCapabilities,
-} from "../../../src/shared/parser-capabilities.js"
+import { parserCapabilities } from "../../../src/shared/parser-capabilities.js"
 import { sampleCorpus } from "../../../src/shared/sample-corpus.js"
-import { unsupportedBlockCaseIds } from "../../../src/shared/unsupported-block-cases.js"
 import type { BlockType, EditorVersion, ParserCapabilityId } from "../../../src/shared/types.js"
 import { pathExists, repoPath, walkFiles } from "./paths.js"
 
@@ -21,7 +17,6 @@ export const collectParserStatus = async () => {
   const sampleById = new Map(sampleCorpus.map((sample) => [sample.id, sample]))
   const capabilityLookupIdSet = new Set([
     ...parserCapabilities.map((capability) => capability.id),
-    ...unsupportedBlockCaseIds.map((caseId) => getUnsupportedBlockCaseCapabilityLookupId(caseId)),
   ])
   const sampleFixtureCapabilities = parserCapabilities.filter(
     (capability) => capability.verificationMode === "sample-fixture",

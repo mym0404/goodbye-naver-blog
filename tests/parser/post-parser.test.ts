@@ -4,11 +4,11 @@ import {
   detectEditorVersionFromHtml,
   parsePostHtml,
 } from "../../src/modules/parser/post-parser.js"
+import { createBodyNodesFromLegacyBlocks } from "../../src/modules/parser/blocks/body-node-utils.js"
 import { defaultExportOptions } from "../../src/shared/export-options.js"
 
 const parserOptions = {
   markdown: defaultExportOptions().markdown,
-  unsupportedBlockCases: defaultExportOptions().unsupportedBlockCases,
 }
 
 describe("post-parser routing", () => {
@@ -45,6 +45,7 @@ describe("post-parser routing", () => {
     expect(parsed.editorVersion).toBe(4)
     expect(parsed.tags).toEqual(["algo", "math"])
     expect(parsed.blocks).toEqual([{ type: "paragraph", text: "SE4 text" }])
+    expect(parsed.body).toEqual([{ kind: "block", block: { type: "paragraph", text: "SE4 text" } }])
   })
 
   it("rewrites same-blog links before paragraph markdown is finalized", () => {
@@ -104,5 +105,19 @@ describe("post-parser routing", () => {
 
     expect(parsed.editorVersion).toBe(2)
     expect(parsed.blocks).toEqual([{ type: "heading", level: 2, text: "SE2 title" }])
+  })
+
+  it("keeps raw legacy html out of structured ordered body nodes", () => {
+    const blocks: Parameters<typeof createBodyNodesFromLegacyBlocks>[0] = [
+      { type: "paragraph", text: "before" },
+      { type: "rawHtml", html: "<div>raw</div>", reason: "fallback" },
+      { type: "htmlFragment", html: "<span>fragment</span>" },
+    ]
+
+    expect(createBodyNodesFromLegacyBlocks(blocks)).toEqual([
+      { kind: "block", block: { type: "paragraph", text: "before" } },
+      { kind: "fallbackHtml", html: "<div>raw</div>", reason: "fallback", warnings: [] },
+      { kind: "fallbackHtml", html: "<span>fragment</span>", reason: "html-fragment", warnings: [] },
+    ])
   })
 })

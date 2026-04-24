@@ -1,19 +1,19 @@
-import { load } from "cheerio"
 import YAML from "yaml"
 
 import { convertHtmlToMarkdown } from "./html-fragment-converter.js"
 
 import type {
   AssetRecord,
-  AstBlock,
   BlockOutputSelection,
   CategoryInfo,
   ExportOptions,
   FrontmatterFieldName,
   ImageData,
   UnknownRecord,
+  ParsedPostFallbackHtmlBodyNode,
   ParsedPost,
   PostSummary,
+  StructuredAstBlock,
 } from "../../shared/types.js"
 import { resolveBlockOutputSelection } from "../../shared/block-registry.js"
 import {
@@ -33,33 +33,11 @@ import {
 } from "../../shared/block-markdown.js"
 import { getFrontmatterExportKey } from "../../shared/export-options.js"
 import { getParserCapabilityId } from "../../shared/parser-capabilities.js"
-import { compactText, unique } from "../../shared/utils.js"
-
-const extractFallbackText = ({
-  html,
-  htmlConversionOptions,
-  resolveLinkUrl,
-}: {
-  html: string
-  htmlConversionOptions: {
-    linkStyle: ExportOptions["markdown"]["linkStyle"]
-    dividerMarker: "---" | "***"
-  }
-  resolveLinkUrl?: (url: string) => string
-}) => {
-  const convertedMarkdown = convertHtmlToMarkdown({
-    html,
-    options: htmlConversionOptions,
-    resolveLinkUrl,
-  }).trim()
-
-  if (convertedMarkdown) {
-    return convertedMarkdown
-  }
-
-  return compactText(load(html).text())
-}
-
+import { unique } from "../../shared/utils.js"
+import {
+  getFallbackHtmlBodyNodeWarnings,
+  getParsedPostBodyNodes,
+} from "../parser/blocks/body-node-utils.js"
 
 const buildFrontmatter = ({
   fields,
@@ -121,7 +99,11 @@ export const renderMarkdownPost = async ({
   }) => Promise<AssetRecord>
   resolveLinkUrl?: (url: string) => string
 }) => {
-  const initialWarnings = unique([...parsedPost.warnings, ...reviewedWarnings])
+  const bodyNodes = getParsedPostBodyNodes(parsedPost)
+  const fallbackHtmlWarnings = bodyNodes.flatMap((node) =>
+    node.kind === "fallbackHtml" ? getFallbackHtmlBodyNodeWarnings(node) : [],
+  )
+  const initialWarnings = unique([...parsedPost.warnings, ...reviewedWarnings, ...fallbackHtmlWarnings])
   const warnings: string[] = [...initialWarnings]
   const diagnostics: RenderDiagnostic[] = initialWarnings.map((warning) => ({
     level: "warning",
@@ -255,49 +237,9 @@ export const renderMarkdownPost = async ({
     })
   }
 
-  const renderHtmlFragmentBlock = async (block: Extract<AstBlock, { type: "htmlFragment" }>) => {
-    const $ = load(`<div data-render-root="html-fragment">${block.html}</div>`)
-    const fragmentRoot = $('[data-render-root="html-fragment"]').first()
+  const renderFallbackHtmlBodyNode = (node: ParsedPostFallbackHtmlBodyNode) => node.html.trim()
 
-    for (const node of fragmentRoot.find("img").toArray()) {
-      const image = $(node)
-      const sourceUrl = image.attr("src")?.trim()
-
-      if (!sourceUrl) {
-        continue
-      }
-
-      const assetPath = await resolveAssetPath({
-        kind: "image",
-        sourceUrl,
-      })
-
-      if (!assetPath) {
-        image.remove()
-        continue
-      }
-
-      maybeRecordBodyThumbnail(assetPath)
-      image.attr("src", assetPath)
-    }
-
-    if (resolveLinkUrl) {
-      for (const node of fragmentRoot.find("a[href]").toArray()) {
-        const anchor = $(node)
-        const href = anchor.attr("href")?.trim()
-
-        if (!href) {
-          continue
-        }
-
-        anchor.attr("href", resolveLinkUrl(href))
-      }
-    }
-
-    return fragmentRoot.html()?.trim() ?? ""
-  }
-
-  const renderVideoBlock = async (block: Extract<AstBlock, { type: "video" }>) => {
+  const renderVideoBlock = async (block: Extract<StructuredAstBlock, { type: "video" }>) => {
     renderedVideos.push({
       title: block.video.title,
       sourceUrl: block.video.sourceUrl,
@@ -310,7 +252,7 @@ export const renderMarkdownPost = async ({
     })
   }
 
-  const renderTableBlock = (block: Extract<AstBlock, { type: "table" }>) => {
+  const renderTableBlock = (block: Extract<StructuredAstBlock, { type: "table" }>) => {
     const capabilityId = getParserCapabilityId({
       editorVersion: parsedPost.editorVersion,
       blockType: "table",
@@ -336,11 +278,13 @@ export const renderMarkdownPost = async ({
     })
   }
 
-  for (const block of parsedPost.blocks) {
-    if (block.type === "htmlFragment") {
-      sections.push(await renderHtmlFragmentBlock(block))
+  for (const bodyNode of bodyNodes) {
+    if (bodyNode.kind === "fallbackHtml") {
+      sections.push(renderFallbackHtmlBodyNode(bodyNode))
       continue
     }
+
+    const block = bodyNode.block
 
     if (block.type === "paragraph") {
       sections.push(renderParagraph(block.text))
@@ -483,59 +427,6 @@ export const renderMarkdownPost = async ({
       continue
     }
 
-    if (block.type === "rawHtml") {
-      const selection = resolveBlockOutputSelection({
-        blockType: "rawHtml",
-        capabilityId: getParserCapabilityId({
-          editorVersion: parsedPost.editorVersion,
-          blockType: "rawHtml",
-        }),
-        blockOutputs: options.blockOutputs,
-      })
-      const extractedText = extractFallbackText({
-        html: block.html,
-        htmlConversionOptions,
-        resolveLinkUrl,
-      })
-
-      if (selection.variant === "omit") {
-        const message = `raw HTML 블록을 생략했습니다: ${block.reason}`
-
-        warnings.push(message)
-        diagnostics.push({
-          level: extractedText ? "warning" : "error",
-          message,
-          detail: extractedText || undefined,
-        })
-        continue
-      }
-
-      if (!extractedText) {
-        const message = `raw HTML 블록을 생략했습니다: ${block.reason}`
-
-        warnings.push(message)
-        diagnostics.push({
-          level: "error",
-          message,
-        })
-        continue
-      }
-
-      if (selection.variant === "markdown-no-warning") {
-        sections.push(extractedText)
-        continue
-      }
-
-      const message = `raw HTML 블록을 Markdown으로 변환했습니다: ${block.reason}`
-
-      warnings.push(message)
-      diagnostics.push({
-        level: "warning",
-        message,
-        detail: extractedText,
-      })
-      sections.push(extractedText)
-    }
   }
 
   const thumbnailPath =

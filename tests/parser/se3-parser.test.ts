@@ -2,11 +2,10 @@ import { load } from "cheerio"
 import { describe, expect, it } from "vitest"
 
 import { NaverBlogSE3Editor } from "../../src/modules/parser/editors/naver-blog-se3-editor.js"
-import { cloneExportOptions, defaultExportOptions } from "../../src/shared/export-options.js"
+import { defaultExportOptions } from "../../src/shared/export-options.js"
 
 const parserOptions = {
   markdown: defaultExportOptions().markdown,
-  unsupportedBlockCases: defaultExportOptions().unsupportedBlockCases,
 }
 const se3Editor = new NaverBlogSE3Editor()
 
@@ -166,20 +165,26 @@ console.log(legacy)
     ])
   })
 
-  it("falls back to markdown paragraphs for unsupported blocks with content", () => {
+  it("keeps unsupported blocks with content as fallback html", () => {
     const parsed = parseSe3Fixture(`
       <div class="se_component se_unknown">
         <div><strong>Fallback</strong> block</div>
       </div>
     `)
 
-    expect(parsed.blocks).toEqual([{ type: "paragraph", text: "**Fallback** block" }])
+    expect(parsed.blocks).toEqual([])
+    expect(parsed.body?.[0]).toMatchObject({
+      kind: "fallbackHtml",
+      reason: "se3:se_component se_unknown",
+      warnings: ["SE3 블록을 구조화하지 못해 원본 HTML로 보존했습니다: se_component se_unknown"],
+    })
+    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain("<strong>Fallback</strong>")
     expect(parsed.warnings).toContain(
-      "SE3 블록을 구조화하지 못해 텍스트로 변환했습니다: se_component se_unknown",
+      "SE3 블록을 구조화하지 못해 원본 HTML로 보존했습니다: se_component se_unknown",
     )
   })
 
-  it("captures horizontal line fallback blocks as structured unsupported cases", () => {
+  it("captures horizontal line fallback blocks as fallback html", () => {
     const parsed = parseSe3Fixture(`
       <div class="se_component se_horizontalLine line5">
         <div class="se_horizontalLineView">
@@ -188,29 +193,16 @@ console.log(legacy)
       </div>
     `)
 
-    expect(parsed.blocks).toEqual([
-      {
-        type: "htmlFragment",
-        html: '<hr data-naver-block="se3-horizontal-line" data-style="line5">',
-      },
-    ])
-    expect(parsed.warnings).toEqual([])
-    expect(parsed.unsupportedBlocks).toEqual([
-      {
-        caseId: "se3-horizontal-line-line5",
-        blockIndex: 0,
-        blockCount: 1,
-        warningText:
-          "SE3 블록을 구조화하지 못해 텍스트로 변환했습니다: se_component se_horizontalLine line5",
-        data: {
-          blockKind: "horizontalLine",
-          styleToken: "line5",
-        },
-      },
-    ])
+    expect(parsed.blocks).toEqual([])
+    expect(parsed.body?.[0]).toMatchObject({
+      kind: "fallbackHtml",
+      reason: "se3:se_component se_horizontalLine line5",
+      warnings: ["SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine line5"],
+    })
+    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain("<hr>")
   })
 
-  it("captures oglink fallback blocks as structured unsupported cases", () => {
+  it("captures oglink fallback blocks as fallback html", () => {
     const parsed = parseSe3Fixture(`
       <div class="se_component se_oglink og_bSize ">
         <div class="se_viewArea se_og_wrap">
@@ -228,47 +220,16 @@ console.log(legacy)
       </div>
     `)
 
-    expect(parsed.blocks).toEqual([
-      {
-        type: "htmlFragment",
-        html: [
-          '<a data-naver-block="se3-oglink" data-size="og_bSize" href="https://blog.naver.com/is02019/221072284462">',
-          '  <img src="https://dthumb-phinf.pstatic.net/sample.jpg?type=ff500_300" alt="">',
-          "  <strong>비타는 삶이다</strong>",
-          "  <span>PS Vita 리뷰</span>",
-          "  <span>blog.naver.com</span>",
-          "</a>",
-        ].join("\n"),
-      },
-    ])
-    expect(parsed.warnings).toEqual([])
-    expect(parsed.unsupportedBlocks).toEqual([
-      {
-        caseId: "se3-oglink-og_bSize",
-        blockIndex: 0,
-        blockCount: 1,
-        warningText:
-          "SE3 블록을 구조화하지 못해 텍스트로 변환했습니다: se_component se_oglink og_bSize ",
-        data: {
-          url: "https://blog.naver.com/is02019/221072284462",
-          title: "비타는 삶이다",
-          description: "PS Vita 리뷰",
-          publisher: "blog.naver.com",
-          imageUrl: "https://dthumb-phinf.pstatic.net/sample.jpg?type=ff500_300",
-          sizeToken: "og_bSize",
-        },
-      },
-    ])
+    expect(parsed.blocks).toEqual([])
+    expect(parsed.body?.[0]).toMatchObject({
+      kind: "fallbackHtml",
+      reason: "se3:se_component se_oglink og_bSize ",
+      warnings: ["SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_oglink og_bSize "],
+    })
+    expect(parsed.body?.[0]?.kind === "fallbackHtml" ? parsed.body[0].html : "").toContain("비타는 삶이다")
   })
 
-  it("expands oglink into multiple AST blocks when the markdown summary candidate is selected", () => {
-    const options = cloneExportOptions(defaultExportOptions())
-
-    options.unsupportedBlockCases["se3-oglink-og_bSize"] = {
-      candidateId: "markdown-image-summary",
-      confirmed: true,
-    }
-
+  it("ignores oglink unsupported candidate selections and keeps fallback html", () => {
     const parsed = parseSe3FixtureWithOptions({
       components: [`
         <div class="se_component se_oglink og_bSize ">
@@ -287,56 +248,15 @@ console.log(legacy)
         </div>
       `],
       options: {
-        markdown: options.markdown,
-        unsupportedBlockCases: options.unsupportedBlockCases,
+        markdown: defaultExportOptions().markdown,
       },
     })
 
-    expect(parsed.blocks).toEqual([
-      {
-        type: "image",
-        image: {
-          sourceUrl: "https://dthumb-phinf.pstatic.net/sample.jpg?type=ff500_300",
-          originalSourceUrl: "https://blog.naver.com/is02019/221072284462",
-          alt: "",
-          caption: null,
-          mediaKind: "image",
-        },
-        outputSelection: {
-          variant: "linked-image",
-        },
-      },
-      {
-        type: "paragraph",
-        text: "[비타는 삶이다](https://blog.naver.com/is02019/221072284462)",
-      },
-      {
-        type: "paragraph",
-        text: "PS Vita 리뷰",
-      },
-      {
-        type: "paragraph",
-        text: "blog.naver.com",
-      },
-    ])
-    expect(parsed.warnings).toEqual([])
-    expect(parsed.unsupportedBlocks).toEqual([
-      {
-        caseId: "se3-oglink-og_bSize",
-        blockIndex: 0,
-        blockCount: 4,
-        warningText:
-          "SE3 블록을 구조화하지 못해 텍스트로 변환했습니다: se_component se_oglink og_bSize ",
-        data: {
-          url: "https://blog.naver.com/is02019/221072284462",
-          title: "비타는 삶이다",
-          description: "PS Vita 리뷰",
-          publisher: "blog.naver.com",
-          imageUrl: "https://dthumb-phinf.pstatic.net/sample.jpg?type=ff500_300",
-          sizeToken: "og_bSize",
-        },
-      },
-    ])
+    expect(parsed.blocks).toEqual([])
+    expect(parsed.body?.[0]).toMatchObject({
+      kind: "fallbackHtml",
+      reason: "se3:se_component se_oglink og_bSize ",
+    })
   })
 
   it("warns and skips unsupported empty blocks", () => {
@@ -346,7 +266,7 @@ console.log(legacy)
 
     expect(parsed.blocks).toEqual([])
     expect(parsed.warnings).toContain(
-      "SE3 블록을 해석하지 못해 건너뛰었습니다: se_component se_unknown",
+      "SE3 블록을 구조화하지 못해 원본 HTML로 보존했습니다: se_component se_unknown",
     )
   })
 })

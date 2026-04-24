@@ -197,9 +197,6 @@ const exportedOptions = (() => {
   const options = defaultExportOptions()
   options.scope.categoryIds = [101]
   options.frontmatter.aliases.title = "postTitle"
-  Object.values(options.unsupportedBlockCases).forEach((selection) => {
-    selection.confirmed = true
-  })
   return options
 })()
 
@@ -585,18 +582,6 @@ describe("App", () => {
     return user
   }
 
-  const confirmAllUnsupportedBlockCases = async (user: ReturnType<typeof userEvent.setup>) => {
-    while (true) {
-      const nextButton = screen.queryByRole("button", { name: "이 후보안으로 확정" })
-
-      if (!nextButton) {
-        break
-      }
-
-      await user.click(nextButton)
-    }
-  }
-
   const moveToDiagnosticsStep = async (user: ReturnType<typeof userEvent.setup>) => {
     await user.type(screen.getByLabelText("블로그 ID 또는 URL"), "mym0404")
     await user.click(screen.getByRole("button", { name: "카테고리 불러오기" }))
@@ -606,7 +591,6 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "구조 설정" }))
     await user.click(screen.getByRole("button", { name: "Frontmatter 설정" }))
     await user.click(screen.getByRole("button", { name: "Markdown 설정" }))
-    await confirmAllUnsupportedBlockCases(user)
     await user.click(screen.getByRole("button", { name: "Assets 설정" }))
     await user.click(screen.getByRole("button", { name: "Link 처리" }))
     await user.click(screen.getByRole("button", { name: "진단 설정" }))
@@ -1328,7 +1312,6 @@ describe("App", () => {
 
     await user.click(screen.getByRole("button", { name: "Markdown 설정" }))
     expect(document.querySelector('[data-step-view="markdown-options"]')).not.toBeNull()
-    await confirmAllUnsupportedBlockCases(user)
     await user.click(screen.getByRole("button", { name: "Assets 설정" }))
     expect(document.querySelector('[data-step-view="assets-options"]')).not.toBeNull()
     await user.click(screen.getByRole("button", { name: "Link 처리" }))

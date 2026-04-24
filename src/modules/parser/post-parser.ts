@@ -2,6 +2,7 @@ import { load } from "cheerio"
 
 import type { EditorVersion, ExportOptions } from "../../shared/types.js"
 import { unique } from "../../shared/utils.js"
+import { withParsedPostBody } from "./blocks/body-node-utils.js"
 import { NaverBlogSE2Editor } from "./editors/naver-blog-se2-editor.js"
 import { NaverBlogSE3Editor } from "./editors/naver-blog-se3-editor.js"
 import { NaverBlogSE4Editor } from "./editors/naver-blog-se4-editor.js"
@@ -52,7 +53,7 @@ export const parsePostHtml = ({
 }: {
   html: string
   sourceUrl: string
-  options: Pick<ExportOptions, "markdown" | "unsupportedBlockCases"> & {
+  options: Pick<ExportOptions, "markdown"> & {
     resolveLinkUrl?: (url: string) => string
   }
 }) => {
@@ -61,25 +62,31 @@ export const parsePostHtml = ({
   const $ = load(html)
 
   if (editorVersion === 4) {
-    return new NaverBlogSE4Editor().parse({
-      $,
-      sourceUrl,
-      tags,
-      options,
-    })
+    return withParsedPostBody(
+      new NaverBlogSE4Editor().parse({
+        $,
+        sourceUrl,
+        tags,
+        options,
+      }),
+    )
   }
 
   if (editorVersion === 3) {
-    return new NaverBlogSE3Editor().parse({
+    return withParsedPostBody(
+      new NaverBlogSE3Editor().parse({
+        $,
+        tags,
+        options,
+      }),
+    )
+  }
+
+  return withParsedPostBody(
+    new NaverBlogSE2Editor().parse({
       $,
       tags,
       options,
-    })
-  }
-
-  return new NaverBlogSE2Editor().parse({
-    $,
-    tags,
-    options,
-  })
+    }),
+  )
 }

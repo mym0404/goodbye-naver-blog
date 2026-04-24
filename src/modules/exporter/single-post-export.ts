@@ -4,11 +4,11 @@ import { writeFile } from "node:fs/promises"
 import { cloneExportOptions } from "../../shared/export-options.js"
 import { isPostWithinScope } from "../../shared/export-scope.js"
 import type {
-  AstBlock,
   ExportOptions,
   ParsedPost,
   PostSummary,
   ScanResult,
+  StructuredAstBlock,
 } from "../../shared/types.js"
 import { ensureDir, extractBlogId, recreateDir, resolveRepoPath } from "../../shared/utils.js"
 import { NaverBlogFetcher } from "../blog-fetcher/naver-blog-fetcher.js"
@@ -18,7 +18,7 @@ import { reviewParsedPost } from "../reviewer/post-reviewer.js"
 import { AssetStore } from "./asset-store.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "./export-paths.js"
 import { buildPostLinkTargets, createSameBlogPostLinkResolver } from "./post-link-rewriter.js"
-import { normalizeUnsupportedBlocks } from "../converter/unsupported-block-normalizer.js"
+import { getStructuredBodyBlocks } from "../parser/blocks/body-node-utils.js"
 
 export type SinglePostFetcher = {
   scanBlog: () => Promise<ScanResult>
@@ -41,7 +41,7 @@ export type ExportSinglePostDiagnostics = {
   markdown: string
   markdownFilePath: string
   editorVersion: ParsedPost["editorVersion"]
-  blockTypes: AstBlock["type"][]
+  blockTypes: StructuredAstBlock["type"][]
   parserWarnings: string[]
   reviewerWarnings: string[]
   renderWarnings: string[]
@@ -120,17 +120,13 @@ export const exportSinglePost = async ({
     targets: postLinkTargets,
   })
   const html = await fetcher.fetchPostHtml(post.logNo)
-  const parsedPost = normalizeUnsupportedBlocks({
-    parsedPost: parsePostHtml({
-      html,
-      sourceUrl: post.source,
-      options: {
-        markdown: resolvedOptions.markdown,
-        unsupportedBlockCases: resolvedOptions.unsupportedBlockCases,
-        resolveLinkUrl,
-      },
-    }),
-    options: resolvedOptions,
+  const parsedPost = parsePostHtml({
+    html,
+    sourceUrl: post.source,
+    options: {
+      markdown: resolvedOptions.markdown,
+      resolveLinkUrl,
+    },
   })
   const review = reviewParsedPost(parsedPost)
   const rendered = await renderMarkdownPost({
@@ -153,7 +149,7 @@ export const exportSinglePost = async ({
     markdown: rendered.markdown,
     markdownFilePath,
     editorVersion: parsedPost.editorVersion,
-    blockTypes: parsedPost.blocks.map((block) => block.type),
+    blockTypes: getStructuredBodyBlocks(parsedPost).map((block) => block.type),
     parserWarnings: parsedPost.warnings,
     reviewerWarnings: review.warnings,
     renderWarnings,

@@ -1,15 +1,21 @@
 import type { CheerioAPI } from "cheerio"
 
 import { convertHtmlToMarkdown, sanitizeHtmlFragment } from "../../converter/html-fragment-converter.js"
-import type { AstBlock, ExportOptions, ImageData, ParsedPost, UnsupportedBlockInstance } from "../../../shared/types.js"
-import {
-  getUnsupportedBlockCaseDefinition,
-  resolveUnsupportedBlockCaseSelection,
-} from "../../../shared/unsupported-block-cases.js"
-import { buildUnsupportedBlockCaseBlocks } from "../../../shared/unsupported-block-resolution.js"
+import type {
+  AstBlock,
+  ExportOptions,
+  ImageData,
+  ParsedPost,
+  ParsedPostBodyNode,
+  StructuredAstBlock,
+} from "../../../shared/types.js"
 import { compactMarkdownText, compactText, normalizeAssetUrl, unique } from "../../../shared/utils.js"
-import { BaseEditor } from "./base-editor.js"
+import {
+  createBodyNodesFromStructuredBlocks,
+  createFallbackHtmlBodyNode,
+} from "../blocks/body-node-utils.js"
 import { parseHtmlTable } from "../table-parser.js"
+import { BaseEditor } from "./base-editor.js"
 
 const parseTextBlocks = ({
   $,
@@ -39,7 +45,7 @@ const parseTextBlocks = ({
         ({
           type: "paragraph",
           text,
-        }) satisfies AstBlock,
+        }) satisfies StructuredAstBlock,
     )
 
 const getStandaloneImages = ({
@@ -82,279 +88,202 @@ const getStandaloneImages = ({
   return textWithoutImages ? [] : images
 }
 
-const parseUnsupportedHorizontalLine = ({
-  $component,
-}: {
-  $component: ReturnType<CheerioAPI>
-}) => {
-  if (!$component.hasClass("se_horizontalLine") || $component.find(".se_hr > hr").length === 0) {
-    return null
-  }
-
-  if ($component.hasClass("default")) {
-    return {
-      caseId: "se3-horizontal-line-default",
-      data: {
-        blockKind: "horizontalLine",
-        styleToken: "default",
-      },
-    } satisfies {
-      caseId: "se3-horizontal-line-default"
-      data: UnsupportedBlockInstance<"se3-horizontal-line-default">["data"]
-    }
-  }
-
-  if ($component.hasClass("line5")) {
-    return {
-      caseId: "se3-horizontal-line-line5",
-      data: {
-        blockKind: "horizontalLine",
-        styleToken: "line5",
-      },
-    } satisfies {
-      caseId: "se3-horizontal-line-line5"
-      data: UnsupportedBlockInstance<"se3-horizontal-line-line5">["data"]
-    }
-  }
-
-  return null
-}
-
-const parseUnsupportedOgLink = ({
-  $,
-  $component,
-}: {
+type Se3ComponentContext = {
   $: CheerioAPI
   $component: ReturnType<CheerioAPI>
-}) => {
-  if (!$component.hasClass("se_oglink") || !$component.hasClass("og_bSize")) {
-    return null
-  }
-
-  const link = $component.find("a.se_og_box").first()
-  const url = link.attr("href")?.trim() ?? ""
-
-  if (!url) {
-    return null
-  }
-
-  return {
-    caseId: "se3-oglink-og_bSize",
-    data: {
-      url,
-      title: compactText($component.find(".se_og_tit").first().text()),
-      description: compactText($component.find(".se_og_desc").first().text()),
-      publisher: compactText($component.find(".se_og_cp").first().text()),
-      imageUrl: normalizeAssetUrl($component.find(".se_og_thumb img").first().attr("src") ?? "") || null,
-      sizeToken: "og_bSize",
-    },
-  } satisfies {
-    caseId: "se3-oglink-og_bSize"
-    data: UnsupportedBlockInstance<"se3-oglink-og_bSize">["data"]
+  options: Pick<ExportOptions, "markdown"> & {
+    resolveLinkUrl?: (url: string) => string
   }
 }
 
-const buildUnsupportedBlockInstance = <
-  CaseId extends UnsupportedBlockInstance["caseId"],
->({
-  caseId,
-  blockIndex,
-  warningText,
-  data,
-  blockCount,
-}: {
-  caseId: CaseId
-  blockIndex: number
-  warningText: string
-  data: UnsupportedBlockInstance<CaseId>["data"]
-  blockCount?: number
-}): UnsupportedBlockInstance<CaseId> => ({
-  caseId,
-  blockIndex,
-  ...(blockCount ? { blockCount } : {}),
-  warningText,
-  data,
-} as UnsupportedBlockInstance<CaseId>)
+type Se3ComponentResult =
+  | { status: "handled"; blocks: StructuredAstBlock[] }
+  | { status: "fallback"; html: string; reason: string; warnings: string[] }
+  | { status: "skip" }
+
+type Se3ComponentBlock = {
+  id: string
+  match: (context: Se3ComponentContext) => boolean
+  convert: (context: Se3ComponentContext) => Se3ComponentResult
+}
+
+const se3ComponentBlocks: readonly Se3ComponentBlock[] = [
+  {
+    id: "se3-document-title",
+    match: ({ $component }) => $component.hasClass("se_documentTitle"),
+    convert: () => ({ status: "skip" }),
+  },
+  {
+    id: "se3-table",
+    match: ({ $component }) => $component.find("table").first().length > 0,
+    convert: ({ $, $component }) => {
+      const parsedTable = parseHtmlTable({ $, table: $component.find("table").first() })
+
+      return {
+        status: "handled",
+        blocks: [
+          {
+            type: "table",
+            rows: parsedTable.rows,
+            html: parsedTable.html,
+            complex: parsedTable.complex,
+          },
+        ],
+      }
+    },
+  },
+  {
+    id: "se3-quote",
+    match: ({ $component }) => $component.find("blockquote").first().length > 0,
+    convert: ({ $component, options }) => {
+      const markdown = convertHtmlToMarkdown({
+        html: $component.find("blockquote").first().html() ?? "",
+        options,
+        resolveLinkUrl: options.resolveLinkUrl,
+      })
+
+      return markdown
+        ? { status: "handled", blocks: [{ type: "quote", text: markdown }] }
+        : { status: "skip" }
+    },
+  },
+  {
+    id: "se3-code",
+    match: ({ $component }) => $component.find("pre").first().length > 0,
+    convert: ({ $component }) => {
+      const code = $component.find("pre").first().text().trimEnd()
+
+      return code
+        ? { status: "handled", blocks: [{ type: "code", language: null, code }] }
+        : { status: "skip" }
+    },
+  },
+  {
+    id: "se3-image",
+    match: ({ $, $component }) => getStandaloneImages({ $, $component }).length > 0,
+    convert: ({ $, $component }) => {
+      const standaloneImages = getStandaloneImages({ $, $component })
+
+      if (standaloneImages.length === 1) {
+        return {
+          status: "handled",
+          blocks: [{ type: "image", image: standaloneImages[0]! }],
+        }
+      }
+
+      return {
+        status: "handled",
+        blocks: [{ type: "imageGroup", images: standaloneImages }],
+      }
+    },
+  },
+  {
+    id: "se3-representative-unsupported",
+    match: ({ $component }) =>
+      ($component.hasClass("se_horizontalLine") && $component.find(".se_hr > hr").length > 0) ||
+      ($component.hasClass("se_oglink") && $component.hasClass("og_bSize")),
+    convert: ({ $, $component }) => {
+      const className = $component.attr("class") ?? "unknown"
+
+      return {
+        status: "fallback",
+        html: sanitizeHtmlFragment($.html($component) ?? ""),
+        reason: `se3:${className}`,
+        warnings: [`SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: ${className}`],
+      }
+    },
+  },
+  {
+    id: "se3-text",
+    match: ({ $component }) => $component.find(".se_textarea").length > 0,
+    convert: ({ $, $component, options }) => {
+      const blocks = parseTextBlocks({ $, $component, options })
+
+      return blocks.length > 0 ? { status: "handled", blocks } : { status: "skip" }
+    },
+  },
+  {
+    id: "se3-fallback",
+    match: () => true,
+    convert: ({ $, $component }) => {
+      const className = $component.attr("class") ?? "unknown"
+
+      return {
+        status: "fallback",
+        html: sanitizeHtmlFragment($.html($component) ?? ""),
+        reason: `se3:${className}`,
+        warnings: [`SE3 블록을 구조화하지 못해 원본 HTML로 보존했습니다: ${className}`],
+      }
+    },
+  },
+]
 
 export type ParseSe3PostInput = {
   $: CheerioAPI
   tags: string[]
-  options: Pick<ExportOptions, "markdown" | "unsupportedBlockCases"> & {
+  options: Pick<ExportOptions, "markdown"> & {
     resolveLinkUrl?: (url: string) => string
   }
 }
 
 export class NaverBlogSE3Editor extends BaseEditor<ParseSe3PostInput> {
-  parse({
-    $,
-    tags,
-    options,
-  }: ParseSe3PostInput) {
-  const warnings: string[] = []
-  const blocks: AstBlock[] = []
-  const unsupportedBlocks: UnsupportedBlockInstance[] = []
-  const container = $("#viewTypeSelector .se_component_wrap.sect_dsc").first()
+  parse({ $, tags, options }: ParseSe3PostInput): ParsedPost {
+    const warnings: string[] = []
+    const blocks: AstBlock[] = []
+    const body: ParsedPostBodyNode[] = []
+    const container = $("#viewTypeSelector .se_component_wrap.sect_dsc").first()
 
-  container.children(".se_component").toArray().forEach((node) => {
-    const $component = $(node)
-    const standaloneImages = getStandaloneImages({ $, $component })
-    const table = $component.find("table").first()
-    const blockquote = $component.find("blockquote").first()
-    const pre = $component.find("pre").first()
-
-    if ($component.hasClass("se_documentTitle")) {
-      return
+    const pushBlocks = (nextBlocks: StructuredAstBlock[]) => {
+      blocks.push(...nextBlocks)
+      body.push(...createBodyNodesFromStructuredBlocks(nextBlocks))
     }
 
-    if (table.length > 0) {
-      const parsedTable = parseHtmlTable({ $, table })
-      blocks.push({
-        type: "table",
-        rows: parsedTable.rows,
-        html: parsedTable.html,
-        complex: parsedTable.complex,
-      })
-      return
-    }
-
-    if (blockquote.length > 0) {
-      const markdown = convertHtmlToMarkdown({
-        html: blockquote.html() ?? "",
-        options,
-        resolveLinkUrl: options.resolveLinkUrl,
-      })
-
-      if (markdown) {
-        blocks.push({
-          type: "quote",
-          text: markdown,
-        })
-      }
-      return
-    }
-
-    if (pre.length > 0) {
-      const code = pre.text().trimEnd()
-
-      if (code) {
-        blocks.push({
-          type: "code",
-          language: null,
-          code,
-        })
-      }
-      return
-    }
-
-    if (standaloneImages.length === 1) {
-      blocks.push({
-        type: "image",
-        image: standaloneImages[0],
-      })
-      return
-    }
-
-    if (standaloneImages.length > 1) {
-      blocks.push({
-        type: "imageGroup",
-        images: standaloneImages,
-      })
-      return
-    }
-
-    const unsupportedCase =
-      parseUnsupportedHorizontalLine({
-        $component,
-      }) ??
-      parseUnsupportedOgLink({
-        $,
-        $component,
-      })
-
-    if (unsupportedCase) {
-      const warningText = getUnsupportedBlockCaseDefinition(unsupportedCase.caseId)!.warningText
-      const blockIndex = blocks.length
-      const unsupportedBlock = buildUnsupportedBlockInstance({
-        caseId: unsupportedCase.caseId,
-        blockIndex,
-        warningText,
-        data: unsupportedCase.data,
-      })
-      const resolvedBlocks = buildUnsupportedBlockCaseBlocks({
-        unsupportedBlock,
-        candidateId: resolveUnsupportedBlockCaseSelection({
-          caseId: unsupportedCase.caseId,
-          unsupportedBlockCases: options.unsupportedBlockCases,
-        }).candidateId,
-      })
-
-      if (resolvedBlocks.length > 0) {
-        blocks.push(...resolvedBlocks)
-        unsupportedBlocks.push(
-          buildUnsupportedBlockInstance({
-            caseId: unsupportedCase.caseId,
-            blockIndex,
-            blockCount: resolvedBlocks.length,
-            warningText,
-            data: unsupportedCase.data,
-          }),
-        )
+    const pushFallback = ({
+      html,
+      reason,
+      nextWarnings,
+    }: {
+      html: string
+      reason: string
+      nextWarnings: string[]
+    }) => {
+      if (!html) {
         return
       }
 
-      const markdown = convertHtmlToMarkdown({
-        html: sanitizeHtmlFragment($.html($component) ?? ""),
-        options,
-        resolveLinkUrl: options.resolveLinkUrl,
-      })
+      warnings.push(...nextWarnings)
+      body.push(createFallbackHtmlBodyNode({ html, reason, warnings: nextWarnings }))
+    }
 
-      if (markdown) {
-        warnings.push(warningText)
-        blocks.push({
-          type: "paragraph",
-          text: markdown,
-        })
-        unsupportedBlocks.push(unsupportedBlock)
+    container.children(".se_component").toArray().forEach((node) => {
+      const $component = $(node)
+      const context = { $, $component, options }
+      const block = se3ComponentBlocks.find((componentBlock) => componentBlock.match(context))
+      const result = block?.convert(context)
+
+      if (!result || result.status === "skip") {
         return
       }
-    }
 
-    const textBlocks = parseTextBlocks({
-      $,
-      $component,
-      options,
-    })
+      if (result.status === "handled") {
+        pushBlocks(result.blocks)
+        return
+      }
 
-    if (textBlocks.length > 0) {
-      blocks.push(...textBlocks)
-      return
-    }
-
-    const markdown = convertHtmlToMarkdown({
-      html: sanitizeHtmlFragment($.html($component) ?? ""),
-      options,
-      resolveLinkUrl: options.resolveLinkUrl,
-    })
-
-    if (markdown) {
-      warnings.push(`SE3 블록을 구조화하지 못해 텍스트로 변환했습니다: ${$component.attr("class") ?? "unknown"}`)
-      blocks.push({
-        type: "paragraph",
-        text: markdown,
+      pushFallback({
+        html: result.html,
+        reason: result.reason,
+        nextWarnings: result.warnings,
       })
-      return
-    }
+    })
 
-    warnings.push(`SE3 블록을 해석하지 못해 건너뛰었습니다: ${$component.attr("class") ?? "unknown"}`)
-  })
-
-  return {
-    editorVersion: 3,
-    tags: unique(tags),
-    blocks,
-    unsupportedBlocks,
-    warnings: unique(warnings),
-    videos: [],
+    return {
+      editorVersion: 3,
+      tags: unique(tags),
+      body,
+      blocks,
+      warnings: unique(warnings),
+      videos: [],
     } satisfies ParsedPost
   }
 }

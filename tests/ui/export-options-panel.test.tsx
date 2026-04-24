@@ -174,8 +174,6 @@ describe("ExportOptionsPanel", () => {
       },
     })
     await selectOption({ user, trigger: "#blockOutputs-overrides-se4-formula-variant", value: "math-fence" })
-    await user.click(query<HTMLInputElement>("#unsupportedBlockCases-se3-oglink-og_bSize-title-link-only"))
-
     cleanup()
 
     render(
@@ -281,7 +279,6 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.blockOutputs.defaults.code?.variant).toBe("tilde-fence")
     expect(latestOptions.blockOutputs.defaults.heading?.params?.levelOffset).toBe(2)
     expect(latestOptions.blockOutputs.overrides["se4-formula"]?.variant).toBe("math-fence")
-    expect(latestOptions.unsupportedBlockCases["se3-oglink-og_bSize"].candidateId).toBe("title-link-only")
     expect(latestOptions.assets.imageHandlingMode).toBe("remote")
     expect(latestOptions.assets.compressionEnabled).toBe(false)
     expect(latestOptions.assets.stickerAssetMode).toBe("download-original")
@@ -481,9 +478,9 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    const blockCard = query<HTMLElement>('[data-block-output-card="se2-rawHtml"]')
+    const blockCard = query<HTMLElement>('[data-block-output-card="se4-formula"]')
     const twoColumnLayout = blockCard.querySelector(".lg\\:grid-cols-\\[minmax\\(0\\,0\\.8fr\\)_minmax\\(0\\,1fr\\)\\]")
-    const optionField = blockCard.querySelector('[data-option-key="blockOutputs-overrides-se2-rawHtml-variant"]')
+    const optionField = blockCard.querySelector('[data-option-key="blockOutputs-overrides-se4-formula-variant"]')
     const preview = blockCard.querySelector("pre")
 
     expect(twoColumnLayout).toHaveClass("items-start")
@@ -531,7 +528,7 @@ describe("ExportOptionsPanel", () => {
     expect(query<HTMLElement>('[data-block-output-card="image"] pre').textContent).toContain("https://example.com/image.png")
   })
 
-  it("shows raw html preview as diagnostics output instead of inline warning text", () => {
+  it("does not render raw html or unsupported representative controls", () => {
     render(
       <ExportOptionsPanel
         step="markdown"
@@ -546,127 +543,10 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    const preview = query<HTMLElement>('[data-block-output-card="rawHtml"] pre').textContent
-
-    expect(preview).toContain("## Export Diagnostics")
-    expect(preview).toContain("raw HTML 블록을 생략했습니다")
-  })
-
-  it("shows raw html preview without diagnostics when the no-warning option is selected", async () => {
-    const options = defaultExportOptions()
-
-    options.blockOutputs.defaults.rawHtml = {
-      variant: "markdown-no-warning",
-    }
-
-    render(
-      <ExportOptionsPanel
-        step="markdown"
-        outputDir={testOutputDir}
-        options={options}
-        optionDescriptions={optionDescriptions}
-        frontmatterFieldOrder={frontmatterFieldOrder}
-        frontmatterFieldMeta={frontmatterFieldMeta}
-        frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
-        onOptionsChange={vi.fn()}
-      />,
-    )
-
-    const optionField = query<HTMLElement>('[data-block-output-card="rawHtml"]')
-
-    expect(optionField.textContent).toContain("경고 없이 출력")
-    expect(optionField.querySelector("pre")?.textContent).toContain("Legacy block")
-    expect(optionField.querySelector("pre")?.textContent).toContain("with text")
-    expect(optionField.querySelector("pre")?.textContent).not.toContain("## Export Diagnostics")
-  })
-
-  it("shows multiple candidates for each unsupported representative case and updates the preview", async () => {
-    const user = userEvent.setup()
-    let latestOptions = defaultExportOptions()
-
-    render(
-      <ExportOptionsPanel
-        step="markdown"
-        outputDir={testOutputDir}
-        options={latestOptions}
-        optionDescriptions={optionDescriptions}
-        frontmatterFieldOrder={frontmatterFieldOrder}
-        frontmatterFieldMeta={frontmatterFieldMeta}
-        frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
-        onOptionsChange={(updater) => {
-          latestOptions = updater(latestOptions)
-        }}
-      />,
-    )
-
-    const ogCard = query<HTMLElement>('[data-unsupported-block-card="se3-oglink-og_bSize"]')
-
-    expect(screen.getByText("대표 사례 선택 확정이 필요합니다.")).toBeInTheDocument()
-    expect(screen.getByText("0 / 4건 확정")).toBeInTheDocument()
-    expect(ogCard.textContent).toContain("썸네일 포함 HTML 카드")
-    expect(ogCard.textContent).toContain("썸네일 + 제목 링크 + 설명")
-    expect(ogCard.textContent).toContain("제목 링크만 유지")
-    expect(ogCard.textContent).toContain("선택 필요")
-    expect(ogCard.querySelectorAll('input[type="radio"]').length).toBe(3)
-    expect(ogCard.querySelector("pre")?.textContent).toContain('<a data-naver-block="se3-oglink"')
-
-    await user.click(query<HTMLInputElement>("#unsupportedBlockCases-se3-oglink-og_bSize-markdown-image-summary"))
-    await user.click(query<HTMLButtonElement>('[data-unsupported-block-confirm="se3-oglink-og_bSize"]'))
-
-    cleanup()
-
-    render(
-      <ExportOptionsPanel
-        step="markdown"
-        outputDir={testOutputDir}
-        options={latestOptions}
-        optionDescriptions={optionDescriptions}
-        frontmatterFieldOrder={frontmatterFieldOrder}
-        frontmatterFieldMeta={frontmatterFieldMeta}
-        frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
-        onOptionsChange={(updater) => {
-          latestOptions = updater(latestOptions)
-        }}
-      />,
-    )
-
-    const rerenderedOgCard = query<HTMLElement>('[data-unsupported-block-card="se3-oglink-og_bSize"]')
-
-    expect(latestOptions.unsupportedBlockCases["se3-oglink-og_bSize"].candidateId).toBe("markdown-image-summary")
-    expect(latestOptions.unsupportedBlockCases["se3-oglink-og_bSize"].confirmed).toBe(true)
-    expect(rerenderedOgCard.textContent).toContain("확정됨")
-    expect(rerenderedOgCard.querySelector("pre")?.textContent).toContain("../../public/")
-    expect(rerenderedOgCard.querySelector("pre")?.textContent).toContain("blog.naver.com")
-    expect(rerenderedOgCard.querySelector("pre")?.textContent).toContain("\\[Review PS Vita Part1\\]")
-
-    await user.click(query<HTMLInputElement>("#unsupportedBlockCases-se3-oglink-og_bSize-title-link-only"))
-
-    cleanup()
-
-    render(
-      <ExportOptionsPanel
-        step="markdown"
-        outputDir={testOutputDir}
-        options={latestOptions}
-        optionDescriptions={optionDescriptions}
-        frontmatterFieldOrder={frontmatterFieldOrder}
-        frontmatterFieldMeta={frontmatterFieldMeta}
-        frontmatterValidationErrors={[]}
-        onOutputDirChange={vi.fn()}
-        onOptionsChange={vi.fn()}
-      />,
-    )
-
-    const resetOgCard = query<HTMLElement>('[data-unsupported-block-card="se3-oglink-og_bSize"]')
-
-    expect(latestOptions.unsupportedBlockCases["se3-oglink-og_bSize"].candidateId).toBe("title-link-only")
-    expect(latestOptions.unsupportedBlockCases["se3-oglink-og_bSize"].confirmed).toBe(false)
-    expect(screen.getByText("대표 사례 선택 확정이 필요합니다.")).toBeInTheDocument()
-    expect(screen.getByText("0 / 4건 확정")).toBeInTheDocument()
-    expect(resetOgCard.textContent).toContain("선택 필요")
+    expect(screen.queryByText("Raw HTML")).not.toBeInTheDocument()
+    expect(document.querySelector('[data-block-output-card="rawHtml"]')).toBeNull()
+    expect(document.querySelector("[data-unsupported-block-card]")).toBeNull()
+    expect(document.querySelector("[data-unsupported-block-confirm]")).toBeNull()
   })
 
   it("keeps upload credentials out of the assets step and disables local-only controls in remote mode", () => {

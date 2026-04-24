@@ -6,6 +6,14 @@ import {
 
 const formatWarnings = (warnings: string[]) => warnings.join(" | ")
 
+const expectedWarnings = ({
+  sample,
+  surface,
+}: {
+  sample: (typeof sampleCorpus)[number]
+  surface: "parser" | "reviewer" | "render"
+}) => sample.expectedWarnings?.[surface] ?? []
+
 const run = async () => {
   const failures: string[] = []
 
@@ -26,29 +34,25 @@ const run = async () => {
       failures.push(`${sample.id}: rendered markdown does not match expected.md`)
     }
 
-    const unresolvedUnsupportedBlockCount = rendered.parsedPost.unsupportedBlocks?.length ?? 0
+    const expectedParserWarnings = expectedWarnings({ sample, surface: "parser" })
+    const expectedReviewerWarnings = expectedWarnings({ sample, surface: "reviewer" })
+    const expectedRenderWarnings = expectedWarnings({ sample, surface: "render" })
 
-    if (unresolvedUnsupportedBlockCount > 0) {
+    if (formatWarnings(rendered.parsedPost.warnings) !== formatWarnings(expectedParserWarnings)) {
       failures.push(
-        `${sample.id}: unsupported blocks must be fully resolved (${unresolvedUnsupportedBlockCount})`,
+        `${sample.id}: parser warnings mismatch (expected: ${formatWarnings(expectedParserWarnings)}, actual: ${formatWarnings(rendered.parsedPost.warnings)})`,
       )
     }
 
-    if (rendered.parsedPost.warnings.length > 0) {
+    if (formatWarnings(rendered.reviewWarnings) !== formatWarnings(expectedReviewerWarnings)) {
       failures.push(
-        `${sample.id}: parser warnings must be 0 (${formatWarnings(rendered.parsedPost.warnings)})`,
+        `${sample.id}: reviewer warnings mismatch (expected: ${formatWarnings(expectedReviewerWarnings)}, actual: ${formatWarnings(rendered.reviewWarnings)})`,
       )
     }
 
-    if (rendered.reviewWarnings.length > 0) {
+    if (formatWarnings(rendered.rendered.warnings) !== formatWarnings(expectedRenderWarnings)) {
       failures.push(
-        `${sample.id}: reviewer warnings must be 0 (${formatWarnings(rendered.reviewWarnings)})`,
-      )
-    }
-
-    if (rendered.rendered.warnings.length > 0) {
-      failures.push(
-        `${sample.id}: render warnings must be 0 (${formatWarnings(rendered.rendered.warnings)})`,
+        `${sample.id}: render warnings mismatch (expected: ${formatWarnings(expectedRenderWarnings)}, actual: ${formatWarnings(rendered.rendered.warnings)})`,
       )
     }
 

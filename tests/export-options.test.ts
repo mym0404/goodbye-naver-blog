@@ -32,10 +32,7 @@ describe("export options", () => {
     expect(options.markdown.linkStyle).toBe("inlined")
     expect(options.blockOutputs.defaults.formula?.params?.inlineWrapper).toBe("$")
     expect(options.blockOutputs.defaults.formula?.params?.blockWrapper).toBe("$$")
-    expect(options.unsupportedBlockCases["se2-inline-gif-video"].candidateId).toBe("linked-poster-image")
-    expect(options.unsupportedBlockCases["se2-inline-gif-video"].confirmed).toBe(false)
-    expect(options.unsupportedBlockCases["se3-horizontal-line-line5"].candidateId).toBe("html-line5-hr")
-    expect(options.unsupportedBlockCases["se3-oglink-og_bSize"].candidateId).toBe("rich-html-card")
+    expect(Object.hasOwn(options, "unsupportedBlockCases")).toBe(false)
     expect(options.structure.groupByCategory).toBe(true)
     expect(options.structure.includeDateInPostFolderName).toBe(true)
     expect(options.structure.includeLogNoInPostFolderName).toBe(false)
@@ -99,7 +96,7 @@ describe("export options", () => {
     expect(options.blockOutputs.overrides["se4-formula"]?.params?.blockWrapper).toBe("\\[...\\]")
   })
 
-  it("merges unsupported block representative-case selections and ignores invalid candidates", () => {
+  it("ignores legacy unsupported block representative-case selections", () => {
     const options = cloneExportOptions(
       JSON.parse(`{
         "unsupportedBlockCases": {
@@ -115,10 +112,7 @@ describe("export options", () => {
       }`),
     )
 
-    expect(options.unsupportedBlockCases["se2-inline-gif-video"].candidateId).toBe("poster-image-only")
-    expect(options.unsupportedBlockCases["se2-inline-gif-video"].confirmed).toBe(true)
-    expect(options.unsupportedBlockCases["se3-oglink-og_bSize"].candidateId).toBe("rich-html-card")
-    expect(options.unsupportedBlockCases["se3-oglink-og_bSize"].confirmed).toBe(false)
+    expect(Object.hasOwn(options, "unsupportedBlockCases")).toBe(false)
   })
 
   it("normalizes legacy formula open/close params into wrapper params", () => {
@@ -225,22 +219,19 @@ describe("export options", () => {
     })
   })
 
-  it("keeps unsupported block case selections in persisted options", () => {
-    const sanitized = sanitizePersistedExportOptions({
-      unsupportedBlockCases: {
-        "se3-horizontal-line-default": {
-          candidateId: "html-default-hr",
-          confirmed: true,
-        },
-      },
-    })
+  it("drops legacy unsupported block case selections from persisted options", () => {
+    const sanitized = sanitizePersistedExportOptions(
+      JSON.parse(`{
+        "unsupportedBlockCases": {
+          "se3-horizontal-line-default": {
+            "candidateId": "html-default-hr",
+            "confirmed": true
+          }
+        }
+      }`),
+    )
 
-    expect(sanitized.unsupportedBlockCases).toEqual({
-      "se3-horizontal-line-default": {
-        candidateId: "html-default-hr",
-        confirmed: true,
-      },
-    })
+    expect(Object.hasOwn(sanitized, "unsupportedBlockCases")).toBe(false)
   })
 
   it("infers legacy slug whitespace from stored slug style", () => {

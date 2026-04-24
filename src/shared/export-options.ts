@@ -5,7 +5,6 @@ import type {
   FrontmatterFieldName,
   OptionDescriptionMap,
   ParserCapabilityId,
-  UnsupportedBlockCaseId,
 } from "./types.js"
 import {
   blockOutputFamilyOrder,
@@ -13,11 +12,6 @@ import {
   resolveBlockOutputSelection,
 } from "./block-registry.js"
 import { parserCapabilities } from "./parser-capabilities.js"
-import {
-  defaultUnsupportedBlockCaseSelections,
-  resolveUnsupportedBlockCaseSelection,
-  unsupportedBlockCaseIds,
-} from "./unsupported-block-cases.js"
 
 export type PartialExportOptions = {
   scope?: Partial<ExportOptions["scope"]>
@@ -32,7 +26,6 @@ export type PartialExportOptions = {
     defaults?: Partial<ExportOptions["blockOutputs"]["defaults"]>
     overrides?: Partial<ExportOptions["blockOutputs"]["overrides"]>
   }
-  unsupportedBlockCases?: Partial<ExportOptions["unsupportedBlockCases"]>
   assets?: Partial<ExportOptions["assets"]>
   links?: Partial<ExportOptions["links"]>
 }
@@ -284,9 +277,6 @@ export const defaultExportOptions = (): ExportOptions => ({
     ) as ExportOptions["blockOutputs"]["defaults"],
     overrides: {},
   },
-  unsupportedBlockCases: {
-    ...defaultUnsupportedBlockCaseSelections,
-  },
   assets: {
     imageHandlingMode: "download-and-upload",
     compressionEnabled: true,
@@ -388,20 +378,24 @@ export const sanitizePersistedExportOptions = (options?: PartialExportOptions): 
     const blockOutputs: NonNullable<PartialExportOptions["blockOutputs"]> = {}
 
     if (options.blockOutputs.defaults) {
-      blockOutputs.defaults = { ...options.blockOutputs.defaults }
+      blockOutputs.defaults = Object.fromEntries(
+        Object.entries(options.blockOutputs.defaults).filter(([blockType]) =>
+          blockOutputFamilyOrder.includes(blockType as BlockType),
+        ),
+      ) as NonNullable<PartialExportOptions["blockOutputs"]>["defaults"]
     }
 
     if (options.blockOutputs.overrides) {
-      blockOutputs.overrides = { ...options.blockOutputs.overrides }
+      blockOutputs.overrides = Object.fromEntries(
+        Object.entries(options.blockOutputs.overrides).filter(([capabilityId]) =>
+          parserCapabilityBlockTypeMap.has(capabilityId as ParserCapabilityId),
+        ),
+      ) as NonNullable<PartialExportOptions["blockOutputs"]>["overrides"]
     }
 
     if (Object.keys(blockOutputs).length > 0) {
       sanitized.blockOutputs = blockOutputs
     }
-  }
-
-  if (options?.unsupportedBlockCases) {
-    sanitized.unsupportedBlockCases = { ...options.unsupportedBlockCases }
   }
 
   if (options?.assets) {
@@ -494,19 +488,6 @@ const buildBlockOutputOverrides = ({
   return resolvedOverrides
 }
 
-const buildUnsupportedBlockCaseSelections = (
-  selections?: PartialExportOptions["unsupportedBlockCases"],
-) =>
-  Object.fromEntries(
-    unsupportedBlockCaseIds.map((caseId) => [
-      caseId,
-      resolveUnsupportedBlockCaseSelection({
-        caseId,
-        unsupportedBlockCases: selections,
-      }),
-    ]),
-  ) as ExportOptions["unsupportedBlockCases"]
-
 export const cloneExportOptions = (options?: PartialExportOptions) => {
   const defaults = defaultExportOptions()
   const slugStyle = options?.structure?.slugStyle ?? defaults.structure.slugStyle
@@ -546,7 +527,6 @@ export const cloneExportOptions = (options?: PartialExportOptions) => {
         overrides: options?.blockOutputs?.overrides,
       }),
     },
-    unsupportedBlockCases: buildUnsupportedBlockCaseSelections(options?.unsupportedBlockCases),
     assets: {
       imageHandlingMode:
         options?.assets?.imageHandlingMode ?? defaults.assets.imageHandlingMode,

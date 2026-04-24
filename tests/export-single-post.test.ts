@@ -217,15 +217,18 @@ describe("exportSinglePost", () => {
       })
 
       expect(diagnostics.editorVersion).toBe(2)
-      expect(diagnostics.blockTypes).toEqual(["paragraph", "image"])
-      expect(diagnostics.parserWarnings).toEqual([])
-      expect(diagnostics.reviewerWarnings).toEqual([])
+      expect(diagnostics.blockTypes).toEqual(["paragraph"])
+      expect(diagnostics.parserWarnings).toEqual([
+        "SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다.",
+      ])
+      expect(diagnostics.reviewerWarnings).toEqual([
+        "SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다.",
+        "fallback HTML 블록 1개가 포함됩니다.",
+      ])
       expect(diagnostics.renderWarnings).toEqual([])
       expect(diagnostics.markdown).toContain("인트로입니다.")
-      expect(diagnostics.markdown).toContain(
-        "[![](",
-      )
-      expect(diagnostics.markdown).toContain("](https://example.com/123.mp4)")
+      expect(diagnostics.markdown).toContain("<video")
+      expect(diagnostics.markdown).toContain("https://example.com/123.mp4")
     } finally {
       await rm(outputDir, { recursive: true, force: true })
     }

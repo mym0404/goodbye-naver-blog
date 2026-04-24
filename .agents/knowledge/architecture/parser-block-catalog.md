@@ -34,7 +34,7 @@
 | `se3-quote` | `3` | `quote` | `markdown-paragraph` | `sample-fixture` | `se3-quote-imagegroup-note9`, `se3-quote-table-vita` |
 | `se4-quote` | `4` | `quote` | `markdown-paragraph` | `sample-fixture` | `se4-quote-formula-code` |
 | `se2-divider` | `2` | `divider` | `structured` | `parser-fixture` | - |
-| `se3-divider` | `3` | `divider` | `structured` | `sample-fixture` | `se3-quote-table-vita` |
+| `se3-divider` | `3` | `divider` | `structured` | `parser-fixture` | - |
 | `se4-divider` | `4` | `divider` | `structured` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-image-group`, `se4-heading-itinerary` |
 | `se2-code` | `2` | `code` | `markdown-paragraph` | `sample-fixture` | `se2-code-image-autolayout` |
 | `se3-code` | `3` | `code` | `markdown-paragraph` | `parser-fixture` | - |
@@ -51,8 +51,6 @@
 | `se2-table` | `2` | `table` | `raw-html` | `sample-fixture` | `se2-table-rawhtml-navigation` |
 | `se3-table` | `3` | `table` | `raw-html` | `sample-fixture` | `se3-quote-table-vita` |
 | `se4-table` | `4` | `table` | `raw-html` | `sample-fixture` | `se4-video-table`, `se4-heading-itinerary` |
-| `se2-rawHtml` | `2` | `rawHtml` | `raw-html` | `parser-fixture` | - |
-| `se4-rawHtml` | `4` | `rawHtml` | `raw-html` | `parser-fixture` | - |
 
 ## Notes
 - capability id는 parser, renderer, UI preview, generated knowledge가 함께 쓰는 공통 seam이다.

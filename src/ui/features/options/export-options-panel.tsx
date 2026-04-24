@@ -18,12 +18,6 @@ import { renderBlockOutputPreview } from "../../../shared/block-output-preview.j
 import { formatCategorySegment } from "../../../shared/path-format.js"
 import { getDefaultSlugWhitespace } from "../../../shared/export-options.js"
 import {
-  getUnsupportedBlockCaseConfirmationSummary,
-  renderUnsupportedBlockCaseCandidatePreview,
-  resolveUnsupportedBlockCaseSelection,
-  unsupportedBlockCaseDefinitions,
-} from "../../../shared/unsupported-block-cases.js"
-import {
   applyPostTemplate,
   buildPostFolderName,
   buildPostTemplateValues,
@@ -662,137 +656,6 @@ const BlockOutputCard = ({
   )
 }
 
-const unsupportedBlockMetaClass = "grid gap-2 rounded-2xl border border-border/70 bg-background/70 px-3 py-3"
-
-const UnsupportedBlockCaseCard = ({
-  options,
-  caseDefinition,
-  onOptionsChange,
-}: {
-  options: ExportOptions
-  caseDefinition: (typeof unsupportedBlockCaseDefinitions)[number]
-  onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
-}) => {
-  const selection = resolveUnsupportedBlockCaseSelection({
-    caseId: caseDefinition.id,
-    unsupportedBlockCases: options.unsupportedBlockCases,
-  })
-  const selectedCandidate =
-    caseDefinition.candidates.find((candidate) => candidate.id === selection.candidateId) ??
-    caseDefinition.candidates[0]!
-  const selectedCandidatePreview = renderUnsupportedBlockCaseCandidatePreview({
-    caseId: caseDefinition.id,
-    candidateId: selectedCandidate.id,
-    linkStyle: options.markdown.linkStyle,
-    includeImageCaptions: options.assets.includeImageCaptions,
-    imageHandlingMode: options.assets.imageHandlingMode,
-  })
-
-  const updateSelection = (candidateId: string) => {
-    onOptionsChange((current) => ({
-      ...current,
-      unsupportedBlockCases: {
-        ...current.unsupportedBlockCases,
-        [caseDefinition.id]: {
-          candidateId,
-          confirmed: false,
-        },
-      },
-    }))
-  }
-
-  const confirmSelection = () => {
-    onOptionsChange((current) => ({
-      ...current,
-      unsupportedBlockCases: {
-        ...current.unsupportedBlockCases,
-        [caseDefinition.id]: {
-          ...resolveUnsupportedBlockCaseSelection({
-            caseId: caseDefinition.id,
-            unsupportedBlockCases: current.unsupportedBlockCases,
-          }),
-          confirmed: true,
-        },
-      },
-    }))
-  }
-
-  return (
-    <Card className={blockOutputCardClass} data-unsupported-block-card={caseDefinition.id}>
-      <CardHeader className="gap-2 px-0 pb-0">
-        <div className="flex items-start justify-between gap-3">
-          <div className="grid gap-1">
-            <CardTitle className="text-base tracking-[-0.03em]">{caseDefinition.label}</CardTitle>
-            <CardDescription className="text-sm leading-6">{caseDefinition.description}</CardDescription>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <Badge variant="secondary">{caseDefinition.id}</Badge>
-            <Badge variant="secondary">{selection.confirmed ? "확정됨" : "선택 필요"}</Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="grid content-start gap-4 px-0 pb-0">
-        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
-          <div className="grid content-start gap-3 self-start">
-            {caseDefinition.candidates.map((candidate) => (
-              <RadioField
-                key={`${caseDefinition.id}-${candidate.id}`}
-                inputId={`unsupportedBlockCases-${caseDefinition.id}-${candidate.id}`}
-                name={`unsupportedBlockCases-${caseDefinition.id}`}
-                optionKey={`unsupportedBlockCases-${caseDefinition.id}-${candidate.id}`}
-                label={
-                  candidate.id === caseDefinition.recommendedCandidateId
-                    ? `${candidate.label} (추천)`
-                    : candidate.label
-                }
-                description={candidate.description}
-                checked={selection.candidateId === candidate.id}
-                onChange={() => updateSelection(candidate.id)}
-              />
-            ))}
-          </div>
-
-          <div className="grid content-start gap-4 self-start">
-            <BlockOutputPreview snippet={selectedCandidatePreview} />
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant={selection.confirmed ? "secondary" : "default"}
-                data-unsupported-block-confirm={caseDefinition.id}
-                disabled={selection.confirmed}
-                onClick={confirmSelection}
-              >
-                {selection.confirmed ? "확정됨" : "이 후보안으로 확정"}
-              </Button>
-              <p className="text-xs leading-5 text-muted-foreground">후보를 바꾸면 확정 상태가 다시 해제됩니다.</p>
-            </div>
-            <div className={unsupportedBlockMetaClass}>
-              <div className="grid gap-0.5">
-                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Context</span>
-                <p className="text-sm leading-6 text-foreground">{caseDefinition.currentOutput}</p>
-              </div>
-              <div className="grid gap-1 text-sm leading-6 text-muted-foreground">
-                <p>
-                  <span className="font-semibold text-foreground">sample</span>: {caseDefinition.sampleId}
-                </p>
-                <p>
-                  <span className="font-semibold text-foreground">selector</span>: {caseDefinition.selector}
-                </p>
-                <p>
-                  <span className="font-semibold text-foreground">warning</span>: {caseDefinition.warningText}
-                </p>
-                <p>
-                  <span className="font-semibold text-foreground">source</span>: {caseDefinition.sourceUrl}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 const linkTemplateVariableMeta: Record<
   (typeof postTemplateKeys)[number],
   {
@@ -886,9 +749,6 @@ export const ExportOptionsPanel = ({
   onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
 }) => {
   const description = (key: string) => optionDescriptions[key]
-  const unsupportedBlockCaseSummary = getUnsupportedBlockCaseConfirmationSummary({
-    unsupportedBlockCases: options.unsupportedBlockCases,
-  })
   const structureTemplatePreviewPost = {
     blogId: "mym0404",
     logNo: structurePreviewSample.posts[0]?.logNo ?? "223034929697",
@@ -1376,41 +1236,6 @@ export const ExportOptionsPanel = ({
               />
             )
           })}
-        </div>
-      </div>
-      <div className="field-card grid gap-3 rounded-[1.5rem] px-4 py-4 xl:col-span-2">
-        <div className="grid gap-1">
-          <p className="text-sm font-semibold text-foreground">미지원 block 대표 사례</p>
-          <p className="field-help text-sm leading-6">
-            현재 corpus에서 warning이 나는 대표 사례마다 실제 렌더 기준 후보안을 먼저 고릅니다. 이 선택은 block type 기본값과 분리되어 사례별로 유지됩니다.
-          </p>
-        </div>
-        <Alert variant={unsupportedBlockCaseSummary.unconfirmedCaseIds.length > 0 ? "destructive" : "default"}>
-          <AlertTitle>
-            {unsupportedBlockCaseSummary.unconfirmedCaseIds.length > 0
-              ? "대표 사례 선택 확정이 필요합니다."
-              : "대표 사례 선택이 모두 확정되었습니다."}
-          </AlertTitle>
-          <AlertDescription>
-            <p>
-              {unsupportedBlockCaseSummary.confirmedCaseCount} / {unsupportedBlockCaseSummary.totalCaseCount}건 확정
-            </p>
-            {unsupportedBlockCaseSummary.unconfirmedCaseIds.length > 0 ? (
-              <p>이 단계를 넘어가기 전에 각 사례 카드에서 현재 후보안을 한 번씩 확정하세요.</p>
-            ) : (
-              <p>이 확정값이 이후 export 옵션과 결과 검증 기준으로 이어집니다.</p>
-            )}
-          </AlertDescription>
-        </Alert>
-        <div className="grid gap-4">
-          {unsupportedBlockCaseDefinitions.map((caseDefinition) => (
-            <UnsupportedBlockCaseCard
-              key={caseDefinition.id}
-              options={options}
-              caseDefinition={caseDefinition}
-              onOptionsChange={onOptionsChange}
-            />
-          ))}
         </div>
       </div>
     </OptionSection>

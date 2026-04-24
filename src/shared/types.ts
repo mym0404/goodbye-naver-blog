@@ -152,20 +152,6 @@ export type TableBlockOutputSelection =
       params?: Record<string, BlockOutputParamValue>
     }
 
-export type RawHtmlBlockOutputSelection =
-  | {
-      variant: "omit"
-      params?: Record<string, BlockOutputParamValue>
-    }
-  | {
-      variant: "markdown-fallback"
-      params?: Record<string, BlockOutputParamValue>
-    }
-  | {
-      variant: "markdown-no-warning"
-      params?: Record<string, BlockOutputParamValue>
-    }
-
 export type BlockOutputSelectionByType = {
   paragraph: ParagraphBlockOutputSelection
   heading: HeadingBlockOutputSelection
@@ -178,7 +164,6 @@ export type BlockOutputSelectionByType = {
   video: VideoBlockOutputSelection
   linkCard: LinkCardBlockOutputSelection
   table: TableBlockOutputSelection
-  rawHtml: RawHtmlBlockOutputSelection
 }
 
 export type BlockOutputSelection<
@@ -198,125 +183,6 @@ export type ThumbnailSource = "post-list-first" | "first-body-image" | "none"
 export type StickerAssetMode = "ignore" | "download-original"
 
 export type SameBlogPostLinkMode = "keep-source" | "custom-url" | "relative-filepath"
-
-export type UnsupportedBlockCaseId =
-  | "se2-inline-gif-video"
-  | "se3-horizontal-line-default"
-  | "se3-horizontal-line-line5"
-  | "se3-oglink-og_bSize"
-
-export type UnsupportedBlockCandidateIdByCase = {
-  "se2-inline-gif-video": "linked-poster-image" | "poster-image-only" | "source-link-only"
-  "se3-horizontal-line-default": "markdown-hr" | "asterisk-hr" | "html-default-hr"
-  "se3-horizontal-line-line5": "html-line5-hr" | "markdown-hr" | "asterisk-hr"
-  "se3-oglink-og_bSize": "rich-html-card" | "markdown-image-summary" | "title-link-only"
-}
-
-export type UnsupportedBlockCandidateId<
-  CaseId extends UnsupportedBlockCaseId = UnsupportedBlockCaseId,
-> = UnsupportedBlockCandidateIdByCase[CaseId]
-
-export type UnsupportedBlockCaseSelection<
-  CaseId extends UnsupportedBlockCaseId = UnsupportedBlockCaseId,
-> = CaseId extends UnsupportedBlockCaseId ? {
-  candidateId: UnsupportedBlockCandidateId<CaseId>
-  confirmed: boolean
-} : never
-
-export type UnsupportedBlockCaseSelections = {
-  [CaseId in UnsupportedBlockCaseId]: UnsupportedBlockCaseSelection<CaseId>
-}
-
-export type UnsupportedBlockResolvedAstBlockType = BlockType | "htmlFragment"
-
-export type UnsupportedBlockDataByCase = {
-  "se2-inline-gif-video": {
-    sourceUrl: string
-    posterUrl: string | null
-  }
-  "se3-horizontal-line-default": {
-    blockKind: "horizontalLine"
-    styleToken: "default"
-  }
-  "se3-horizontal-line-line5": {
-    blockKind: "horizontalLine"
-    styleToken: "line5"
-  }
-  "se3-oglink-og_bSize": {
-    url: string
-    title: string
-    description: string
-    publisher: string
-    imageUrl: string | null
-    sizeToken: "og_bSize"
-  }
-}
-
-export type UnsupportedBlockInstance<
-  CaseId extends UnsupportedBlockCaseId = UnsupportedBlockCaseId,
-> = CaseId extends UnsupportedBlockCaseId ? {
-  caseId: CaseId
-  blockIndex: number
-  blockCount?: number
-  warningText: string
-  data: UnsupportedBlockDataByCase[CaseId]
-} : never
-
-export type UnsupportedBlockAstResolution = {
-  blockTypes: [UnsupportedBlockResolvedAstBlockType, ...UnsupportedBlockResolvedAstBlockType[]]
-}
-
-export type UnsupportedBlockCompositeMarkdownSection =
-  | "linked-thumbnail"
-  | "linked-title"
-  | "description"
-  | "publisher"
-
-export type UnsupportedBlockRenderResolution =
-  | {
-      surface: "markdown"
-      blockType: "image"
-      selection: ImageBlockOutputSelection
-    }
-  | {
-      surface: "markdown"
-      blockType: "video"
-      selection: VideoBlockOutputSelection
-    }
-  | {
-      surface: "markdown"
-      blockType: "divider"
-      selection: DividerBlockOutputSelection
-    }
-  | {
-      surface: "markdown"
-      blockType: "linkCard"
-      selection: LinkCardBlockOutputSelection
-    }
-  | {
-      surface: "markdown"
-      blockType: "composite"
-      sections: UnsupportedBlockCompositeMarkdownSection[]
-    }
-  | {
-      surface: "html"
-      blockType: "htmlFragment"
-      htmlTag: "a" | "hr"
-    }
-
-export type UnsupportedBlockCaseCandidateResolution = {
-  ast: UnsupportedBlockAstResolution
-  render: UnsupportedBlockRenderResolution
-}
-
-export type UnsupportedBlockCaseResolutionRule<
-  CaseId extends UnsupportedBlockCaseId = UnsupportedBlockCaseId,
-> = {
-  caseId: CaseId
-  confirmedCandidateId: UnsupportedBlockCandidateId<CaseId>
-  resolution: UnsupportedBlockCaseCandidateResolution
-  processingScope: "block-unit"
-}
 
 export type OptionDescriptionMap = Record<string, string>
 export type UnknownRecord = Record<string, unknown>
@@ -431,7 +297,6 @@ export type ExportOptions = {
     defaults: Partial<{ [Key in BlockType]: BlockOutputSelection<Key> }>
     overrides: Partial<{ [Key in ParserCapabilityId]: BlockOutputSelectionByType[Key extends `se${EditorVersion}-${infer Block}` ? Extract<Block, keyof BlockOutputSelectionByType> : never] }>
   }
-  unsupportedBlockCases: UnsupportedBlockCaseSelections
   assets: {
     imageHandlingMode: ImageHandlingMode
     compressionEnabled: boolean
@@ -542,10 +407,24 @@ export type AstBlock =
   | { type: "video"; video: VideoData; outputSelection?: VideoBlockOutputSelection }
   | { type: "linkCard"; card: LinkCardData; outputSelection?: LinkCardBlockOutputSelection }
   | { type: "table"; rows: TableRow[]; html: string; complex: boolean }
-  | { type: "htmlFragment"; html: string }
-  | { type: "rawHtml"; html: string; reason: string }
 
-export type BlockType = Exclude<AstBlock["type"], "htmlFragment">
+export type StructuredAstBlock = AstBlock
+
+export type ParsedPostStructuredBodyNode = {
+  kind: "block"
+  block: StructuredAstBlock
+}
+
+export type ParsedPostFallbackHtmlBodyNode = {
+  kind: "fallbackHtml"
+  html: string
+  reason: string
+  warnings: string[]
+}
+
+export type ParsedPostBodyNode = ParsedPostStructuredBodyNode | ParsedPostFallbackHtmlBodyNode
+
+export type BlockType = AstBlock["type"]
 
 export type ParserFallbackPolicy =
   | "structured"
@@ -555,8 +434,7 @@ export type ParserFallbackPolicy =
   | "skip"
 
 export type ParserCapabilityId = `se${EditorVersion}-${BlockType}`
-export type UnsupportedBlockCaseCapabilityId = `case:${UnsupportedBlockCaseId}`
-export type ParserCapabilityLookupId = ParserCapabilityId | UnsupportedBlockCaseCapabilityId
+export type ParserCapabilityLookupId = ParserCapabilityId
 
 export type ParserCapabilityVerificationMode = "sample-fixture" | "parser-fixture"
 
@@ -568,7 +446,6 @@ export type ParserCapability = {
   verificationMode: ParserCapabilityVerificationMode
   sampleIds: string[]
   testFilePaths: string[]
-  unsupportedBlockCaseResolutions?: UnsupportedBlockCaseResolutionRule[]
 }
 
 export type SampleCorpusEntry = {
@@ -577,6 +454,11 @@ export type SampleCorpusEntry = {
   logNo: string
   editorVersion: EditorVersion
   expectedCapabilityLookupIds: ParserCapabilityLookupId[]
+  expectedWarnings?: {
+    parser?: string[]
+    reviewer?: string[]
+    render?: string[]
+  }
   post: {
     title: string
     publishedAt: string
@@ -593,8 +475,8 @@ export type SampleCorpusEntry = {
 export type ParsedPost = {
   editorVersion: EditorVersion
   tags: string[]
+  body?: ParsedPostBodyNode[]
   blocks: AstBlock[]
-  unsupportedBlocks?: UnsupportedBlockInstance[]
   warnings: string[]
   videos: VideoData[]
 }

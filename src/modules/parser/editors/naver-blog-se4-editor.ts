@@ -7,12 +7,25 @@ import type {
   ExportOptions,
   ImageData,
   ParsedPost,
+  ParsedPostBodyNode,
   UnknownRecord,
   VideoData,
 } from "../../../shared/types.js"
 import { compactMarkdownText, compactText, normalizeAssetUrl, unique } from "../../../shared/utils.js"
+import {
+  createBodyNodesFromStructuredBlocks,
+  createFallbackHtmlBodyNode,
+} from "../blocks/body-node-utils.js"
 import { BaseEditor } from "./base-editor.js"
 import { parseHtmlTable } from "../table-parser.js"
+
+type Se4FallbackHtmlBlock = {
+  type: "fallbackHtml"
+  html: string
+  reason: string
+}
+
+type Se4ParsedBlock = AstBlock | Se4FallbackHtmlBlock
 
 const parseJsonAttribute = (value: string | undefined) => {
   if (!value) {
@@ -539,13 +552,13 @@ const parseTableBlock = ({
   const table = $component.find("table").first()
 
   if (table.length === 0) {
-    warnings.push("표 블록을 표로 해석하지 못해 raw HTML fallback으로 남겼습니다.")
+    warnings.push("표 블록을 표로 해석하지 못해 원본 HTML로 보존했습니다.")
 
     return {
-      type: "rawHtml",
+      type: "fallbackHtml",
       html: getComponentHtml({ $, $component }),
       reason: "table-fallback",
-    } satisfies AstBlock
+    } satisfies Se4ParsedBlock
   }
 
   const parsedTable = parseHtmlTable({ $, table })
@@ -640,27 +653,13 @@ const parseUnsupportedComponent = ({
 }) => {
   const className = $component.attr("class") ?? "unknown"
   const html = getComponentHtml({ $, $component })
-  const markdown = convertHtmlToMarkdown({
-    html,
-    options,
-    resolveLinkUrl: options.resolveLinkUrl,
-  })
 
-  if (markdown) {
-    warnings.push(`지원하지 않는 SE4 블록을 텍스트로 변환했습니다: ${className}`)
-
-    return {
-      type: "paragraph",
-      text: markdown,
-    } satisfies AstBlock
-  }
-
-  warnings.push(`지원하지 않는 SE4 블록을 raw HTML로 보존했습니다: ${className}`)
+  warnings.push(`지원하지 않는 SE4 블록을 원본 HTML로 보존했습니다: ${className}`)
   return {
-    type: "rawHtml",
+    type: "fallbackHtml",
     html,
     reason: `unsupported:${className}`,
-  } satisfies AstBlock
+  } satisfies Se4ParsedBlock
 }
 
 const parseImageBlock = ($component: ReturnType<CheerioAPI>) => {
@@ -711,75 +710,105 @@ export class NaverBlogSE4Editor extends BaseEditor<ParseSe4PostInput> {
   }: ParseSe4PostInput) {
   const warnings: string[] = []
   const blocks: AstBlock[] = []
+  const body: ParsedPostBodyNode[] = []
 
-  $("#viewTypeSelector .se-component")
-    .toArray()
-    .forEach((componentNode) => {
-      const $component = $(componentNode)
-      const moduleData = getComponentModule($component)
-      const moduleType = typeof moduleData?.type === "string" ? moduleData.type : null
-      const hasQuote = $component.find("blockquote.se-quotation-container").length > 0
+  const pushBlocks = (nextBlocks: Se4ParsedBlock[], fallbackWarnings: string[] = []) => {
+    const structuredBlocks = nextBlocks.filter((block): block is AstBlock => block.type !== "fallbackHtml")
 
-      if ($component.hasClass("se-documentTitle")) {
-        return
-      }
+    blocks.push(...structuredBlocks)
+    body.push(...createBodyNodesFromStructuredBlocks(structuredBlocks))
 
-      if (moduleType === "v2_formula" && moduleData) {
-        const formulaBlock = parseFormulaBlock({ $component, moduleData, warnings })
+    nextBlocks
+      .filter((block): block is Se4FallbackHtmlBlock => block.type === "fallbackHtml")
+      .forEach((block) => {
+        body.push(
+          createFallbackHtmlBodyNode({
+            html: block.html,
+            reason: block.reason,
+            warnings: fallbackWarnings,
+          }),
+        )
+      })
+  }
 
-        if (formulaBlock) {
-          blocks.push(formulaBlock)
-        }
-        return
-      }
+  type Se4ComponentContext = {
+    $component: ReturnType<CheerioAPI>
+    moduleData: UnknownRecord | null
+    moduleType: string | null
+    hasQuote: boolean
+  }
+  type Se4ComponentBlock = {
+    id: string
+    match: (context: Se4ComponentContext) => boolean
+    convert: (context: Se4ComponentContext) => Se4ParsedBlock[]
+  }
+  const componentBlocks: readonly Se4ComponentBlock[] = [
+    {
+      id: "se4-document-title",
+      match: ({ $component }) => $component.hasClass("se-documentTitle"),
+      convert: () => [],
+    },
+    {
+      id: "se4-formula",
+      match: ({ moduleType, moduleData }) => moduleType === "v2_formula" && Boolean(moduleData),
+      convert: ({ $component, moduleData }) => {
+        const formulaBlock = moduleData ? parseFormulaBlock({ $component, moduleData, warnings }) : null
 
-      if (moduleType === "v2_code" || $component.hasClass("se-code")) {
+        return formulaBlock ? [formulaBlock] : []
+      },
+    },
+    {
+      id: "se4-code",
+      match: ({ $component, moduleType }) => moduleType === "v2_code" || $component.hasClass("se-code"),
+      convert: ({ $component }) => {
         const codeBlock = parseCodeBlock($component)
 
-        if (codeBlock) {
-          blocks.push(codeBlock)
-        }
-        return
-      }
-
-      if (moduleType === "v2_oglink" || $component.hasClass("se-oglink")) {
+        return codeBlock ? [codeBlock] : []
+      },
+    },
+    {
+      id: "se4-link-card",
+      match: ({ $component, moduleType }) => moduleType === "v2_oglink" || $component.hasClass("se-oglink"),
+      convert: ({ $component }) => {
         const linkCard = parseLinkCardBlock($component)
 
-        if (linkCard) {
-          blocks.push(linkCard)
-        }
-        return
-      }
-
-      if (moduleType === "v2_video" || $component.hasClass("se-video")) {
-        blocks.push(parseVideoBlock({ moduleData: moduleData ?? {}, sourceUrl }))
-        return
-      }
-
-      if (moduleType === "v2_oembed" || $component.hasClass("se-oembed")) {
+        return linkCard ? [linkCard] : []
+      },
+    },
+    {
+      id: "se4-video",
+      match: ({ $component, moduleType }) => moduleType === "v2_video" || $component.hasClass("se-video"),
+      convert: ({ moduleData }) => [parseVideoBlock({ moduleData: moduleData ?? {}, sourceUrl })],
+    },
+    {
+      id: "se4-oembed",
+      match: ({ $component, moduleType }) => moduleType === "v2_oembed" || $component.hasClass("se-oembed"),
+      convert: ({ moduleData }) => {
         const oembedBlock = parseOembedBlock({
           moduleData: moduleData ?? {},
         })
 
-        if (oembedBlock) {
-          blocks.push(oembedBlock)
-        } else {
+        if (!oembedBlock) {
           warnings.push("oEmbed 블록을 해석하지 못해 건너뛰었습니다.")
+          return []
         }
-        return
-      }
 
-      if (moduleType === "v2_map" || $component.hasClass("se-placesMap")) {
-        blocks.push(
-          ...parsePlacesMapBlock({
-            $component,
-            moduleData,
-          }),
-        )
-        return
-      }
-
-      if (moduleType === "v2_table" || $component.hasClass("se-table")) {
+        return [oembedBlock]
+      },
+    },
+    {
+      id: "se4-map",
+      match: ({ $component, moduleType }) => moduleType === "v2_map" || $component.hasClass("se-placesMap"),
+      convert: ({ $component, moduleData }) =>
+        parsePlacesMapBlock({
+          $component,
+          moduleData,
+        }),
+    },
+    {
+      id: "se4-table",
+      match: ({ $component, moduleType }) => moduleType === "v2_table" || $component.hasClass("se-table"),
+      convert: ({ $component }) => {
         const tableBlock = parseTableBlock({
           $,
           $component,
@@ -787,108 +816,129 @@ export class NaverBlogSE4Editor extends BaseEditor<ParseSe4PostInput> {
           options,
         })
 
-        if (tableBlock) {
-          blocks.push(tableBlock)
-        }
-        return
-      }
-
-      if ($component.hasClass("se-imageStrip")) {
+        return tableBlock ? [tableBlock] : []
+      },
+    },
+    {
+      id: "se4-image-strip",
+      match: ({ $component }) => $component.hasClass("se-imageStrip"),
+      convert: ({ $component }) => {
         const imageStrip = parseImageStripBlock($component)
 
-        if (imageStrip) {
-          blocks.push(imageStrip)
-        }
-        return
-      }
-
-      if (moduleType === "v2_imageGroup") {
+        return imageStrip ? [imageStrip] : []
+      },
+    },
+    {
+      id: "se4-image-group",
+      match: ({ moduleType }) => moduleType === "v2_imageGroup",
+      convert: ({ $component }) => {
         const imageGroup = parseImageGroupBlock($component)
 
-        if (imageGroup) {
-          blocks.push(imageGroup)
-        }
-        return
-      }
-
-      if ($component.hasClass("se-sticker")) {
+        return imageGroup ? [imageGroup] : []
+      },
+    },
+    {
+      id: "se4-sticker",
+      match: ({ $component }) => $component.hasClass("se-sticker"),
+      convert: ({ $component }) => {
         const stickerBlock = parseStickerBlock($component)
 
-        if (stickerBlock) {
-          blocks.push(stickerBlock)
-        }
-        return
-      }
-
-      if ($component.hasClass("se-image")) {
+        return stickerBlock ? [stickerBlock] : []
+      },
+    },
+    {
+      id: "se4-image",
+      match: ({ $component }) => $component.hasClass("se-image"),
+      convert: ({ $component }) => {
         const imageBlock = parseImageBlock($component)
 
-        if (imageBlock) {
-          blocks.push(imageBlock)
-        }
-        return
-      }
-
-      if ($component.hasClass("se-sectionTitle")) {
+        return imageBlock ? [imageBlock] : []
+      },
+    },
+    {
+      id: "se4-heading",
+      match: ({ $component }) => $component.hasClass("se-sectionTitle"),
+      convert: ({ $component }) => {
         const headingBlock = parseHeadingBlock({
           $component,
           options,
         })
 
-        if (headingBlock) {
-          blocks.push(headingBlock)
-        }
-        return
-      }
-
-      if ($component.hasClass("se-horizontalLine")) {
-        blocks.push({ type: "divider" })
-        return
-      }
-
-      if (hasQuote) {
+        return headingBlock ? [headingBlock] : []
+      },
+    },
+    {
+      id: "se4-divider",
+      match: ({ $component }) => $component.hasClass("se-horizontalLine"),
+      convert: () => [{ type: "divider" }],
+    },
+    {
+      id: "se4-quote",
+      match: ({ hasQuote }) => hasQuote,
+      convert: ({ $component }) => {
         const quoteBlock = parseQuoteBlock({
           $component,
           options,
         })
 
-        if (quoteBlock) {
-          blocks.push(quoteBlock)
-        }
-        return
-      }
-
-      if (moduleType === "v2_text" || $component.hasClass("se-text")) {
-        blocks.push(
-          ...parseTextBlocks({
-            $component,
-            options,
-          }),
-        )
-        return
-      }
-
-      if ($component.hasClass("se-material")) {
+        return quoteBlock ? [quoteBlock] : []
+      },
+    },
+    {
+      id: "se4-text",
+      match: ({ $component, moduleType }) => moduleType === "v2_text" || $component.hasClass("se-text"),
+      convert: ({ $component }) =>
+        parseTextBlocks({
+          $component,
+          options,
+        }),
+    },
+    {
+      id: "se4-material",
+      match: ({ $component }) => $component.hasClass("se-material"),
+      convert: ({ $component }) => {
         const materialBlock = parseMaterialBlock($component)
 
-        if (materialBlock) {
-          blocks.push(materialBlock)
-        } else {
+        if (!materialBlock) {
           warnings.push("material 블록을 해석하지 못해 건너뛰었습니다.")
+          return []
         }
-        return
-      }
 
-      const fallbackBlock = parseUnsupportedComponent({
-        $,
+        return [materialBlock]
+      },
+    },
+    {
+      id: "se4-fallback",
+      match: () => true,
+      convert: ({ $component }) => {
+        const fallbackBlock = parseUnsupportedComponent({
+          $,
+          $component,
+          warnings,
+          options,
+        })
+
+        return fallbackBlock ? [fallbackBlock] : []
+      },
+    },
+  ]
+
+  $("#viewTypeSelector .se-component")
+    .toArray()
+    .forEach((componentNode) => {
+      const $component = $(componentNode)
+      const moduleData = getComponentModule($component)
+      const moduleType = typeof moduleData?.type === "string" ? moduleData.type : null
+      const context = {
         $component,
-        warnings,
-        options,
-      })
-
-      if (fallbackBlock) {
-        blocks.push(fallbackBlock)
+        moduleData,
+        moduleType,
+        hasQuote: $component.find("blockquote.se-quotation-container").length > 0,
       }
+      const warningStart = warnings.length
+      const componentBlock = componentBlocks.find((block) => block.match(context))
+
+      pushBlocks(componentBlock?.convert(context) ?? [], warnings.slice(warningStart))
     })
 
   const videos = blocks
@@ -898,8 +948,8 @@ export class NaverBlogSE4Editor extends BaseEditor<ParseSe4PostInput> {
   return {
     editorVersion: 4,
     tags: unique(tags),
+    body,
     blocks,
-    unsupportedBlocks: [],
     warnings: unique(warnings),
     videos,
     } satisfies ParsedPost

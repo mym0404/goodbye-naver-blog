@@ -1,7 +1,4 @@
-import {
-  getParserCapabilityId,
-  getUnsupportedBlockCaseCapabilityLookupId,
-} from "./parser-capabilities.js"
+import { getParserCapabilityId } from "./parser-capabilities.js"
 import type { SampleCorpusEntry } from "./types.js"
 
 export const sampleCorpus: SampleCorpusEntry[] = [
@@ -202,8 +199,18 @@ export const sampleCorpus: SampleCorpusEntry[] = [
       getParserCapabilityId({ editorVersion: 2, blockType: "paragraph" }),
       getParserCapabilityId({ editorVersion: 2, blockType: "image" }),
       getParserCapabilityId({ editorVersion: 2, blockType: "table" }),
-      getUnsupportedBlockCaseCapabilityLookupId("se2-inline-gif-video"),
     ],
+    expectedWarnings: {
+      parser: ["SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다."],
+      reviewer: [
+        "SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다.",
+        "fallback HTML 블록 1개가 포함됩니다.",
+      ],
+      render: [
+        "SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다.",
+        "fallback HTML 블록 1개가 포함됩니다.",
+      ],
+    },
     post: {
       title: "[Android] Android Architecture Component(AAC) #5-1 : Navigation - Basic",
       publishedAt: "2019-02-06T09:53:27+09:00",
@@ -214,9 +221,9 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAxOTAyMDZfMTA0/MDAxNTQ5NDA2MzAxNjMx.yvJrtmBJP1HOloCZfCfI_oo4xxnZbqhEtct2h4sbWpAg.RY6DIb_lok5SJBDO-1pmxfY_z9zpLdab7jhCsp4cphIg.PNG.mym0404/1.png?type=w800",
       source: "https://blog.naver.com/mym0404/221459172607",
     },
-    description: "SE2 table과 인라인 GIF video 사례 해소가 함께 반영된 실제 본문을 검증한다.",
+    description: "SE2 table과 인라인 GIF video fallback이 함께 반영된 실제 본문을 검증한다.",
     notes: [
-      "테이블 구조화와 `case:se2-inline-gif-video` 기준 출력을 함께 확인하는 대표 샘플이다.",
+      "테이블 구조화와 fallback HTML 보존을 함께 확인하는 대표 샘플이다.",
     ],
   },
   {
@@ -290,14 +297,29 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     editorVersion: 3,
     expectedCapabilityLookupIds: [
       getParserCapabilityId({ editorVersion: 3, blockType: "paragraph" }),
-      getParserCapabilityId({ editorVersion: 3, blockType: "divider" }),
       getParserCapabilityId({ editorVersion: 3, blockType: "image" }),
       getParserCapabilityId({ editorVersion: 3, blockType: "quote" }),
       getParserCapabilityId({ editorVersion: 3, blockType: "table" }),
-      getUnsupportedBlockCaseCapabilityLookupId("se3-horizontal-line-default"),
-      getUnsupportedBlockCaseCapabilityLookupId("se3-horizontal-line-line5"),
-      getUnsupportedBlockCaseCapabilityLookupId("se3-oglink-og_bSize"),
     ],
+    expectedWarnings: {
+      parser: [
+        "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine default",
+        "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine line5",
+        "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_oglink og_bSize ",
+      ],
+      reviewer: [
+        "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine default",
+        "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine line5",
+        "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_oglink og_bSize ",
+        "fallback HTML 블록 3개가 포함됩니다.",
+      ],
+      render: [
+        "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine default",
+        "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_horizontalLine line5",
+        "SE3 대표 미지원 블록을 원본 HTML로 보존했습니다: se_component se_oglink og_bSize ",
+        "fallback HTML 블록 3개가 포함됩니다.",
+      ],
+    },
     post: {
       title: "[Review PS Vita Game] 건담 브레이커 3 브레이크 에디션 (Gundam Breaker 3 BREAK EDITION)",
       publishedAt: "2018-06-03T23:13:07+09:00",
@@ -308,9 +330,9 @@ export const sampleCorpus: SampleCorpusEntry[] = [
         "https://mblogthumb-phinf.pstatic.net/MjAxODA2MDNfMjI1/MDAxNTI4MDM0NTQwNTg5.ERq5Wa-BGkly6OymiT-ruEFUigr43NXjjd25J1hXNxkg.yrCSnvvU0niyVKTC8_BINfqjLWi0g4QZoDashAlpHVgg.JPEG.is02019/2017-11-18-210621.jpg?type=w800",
       source: "https://blog.naver.com/sekishin/221290869775",
     },
-    description: "SE3 table, quote와 대표 사례 3건의 해소 출력이 함께 반영된 게임 리뷰 글을 검증한다.",
+    description: "SE3 table, quote와 fallback HTML 보존이 함께 반영된 게임 리뷰 글을 검증한다.",
     notes: [
-      "SE3 table 구조화, quote 파싱, `case:se3-horizontal-line-default`, `case:se3-horizontal-line-line5`, `case:se3-oglink-og_bSize` 기준 출력을 함께 확인하는 대표 샘플이다.",
+      "SE3 table 구조화, quote 파싱, fallback HTML 보존을 함께 확인하는 대표 샘플이다.",
     ],
   },
 ]
