@@ -1,1 +1,269 @@
-tasks: []
+tasks:
+- id: T1
+  kind: execution
+  title: Introduce abstract editor classes
+  depends_on: []
+  start_when:
+    description: Draft is approved and current parser entry functions are understood.
+  files:
+    primary:
+    - src/modules/parser/editors/naver-blog-editor.ts
+    - src/modules/parser/editors/naver-blog-se2-editor.ts
+    - src/modules/parser/editors/naver-blog-se3-editor.ts
+    - src/modules/parser/editors/naver-blog-se4-editor.ts
+    - src/modules/parser/se2-parser.ts
+    - src/modules/parser/se3-parser.ts
+    - src/modules/parser/se4-parser.ts
+    - tests/parser/se2-parser.test.ts
+    - tests/parser/se3-parser.test.ts
+    - tests/parser/se4-parser.test.ts
+    generated_incidental: []
+  context: Existing SE parser functions already return ParsedPost and are imported
+    directly by parser tests. The first task should create the class boundary while
+    preserving those named exports as compatibility wrappers.
+  must_do:
+  - Add one abstract Naver Blog editor class with a parse method contract returning
+    ParsedPost.
+  - Add NaverBlogSE2Editor, NaverBlogSE3Editor, and NaverBlogSE4Editor under src/modules/parser/editors/.
+  - Make each concrete class inherit the abstract class and expose parse.
+  - Preserve parseSe2Post, parseSe3Post, and parseSe4Post named exports as wrappers
+    around the concrete editor classes.
+  - Reuse the existing parser implementation logic instead of rewriting parser internals.
+  - Keep named exports.
+  must_not_do:
+  - Do not create src/modules/parser/editors/index.ts.
+  - Do not remove parseSe2Post, parseSe3Post, or parseSe4Post exports.
+  - Do not change AstBlock, ParsedPost, or EditorVersion types unless type-only reuse
+    is needed without semantic change.
+  - Do not change Markdown rendering.
+  - Do not update fixtures just to match a changed output.
+  implementation_notes:
+  - Prefer a shared parse input type that includes CheerioAPI, tags, sourceUrl when
+    needed, options, and optional resolveLinkUrl.
+  - If sourceUrl is only needed by SE4, allow the abstract input to include it and
+    let other editors ignore it.
+  - Existing parseSe2Post, parseSe3Post, and parseSe4Post must remain as compatibility
+    wrappers around class instances.
+  - Use private helper methods only when moving logic into classes makes a helper
+    internal to the class.
+  verification:
+    evidence_required: true
+    steps:
+    - id: typecheck-editors
+      command: pnpm typecheck
+      success_signal: TypeScript accepts the new abstract editor, concrete editor
+        class files, and compatibility wrappers.
+      failure_policy: Keep T1 in Doing and repair class typings unless a stop condition
+        applies.
+    - id: focused-se-parser-wrappers
+      command: pnpm vitest run tests/parser/se2-parser.test.ts tests/parser/se3-parser.test.ts
+        tests/parser/se4-parser.test.ts --configLoader runner --silent
+      success_signal: Existing direct parser function tests still pass through compatibility
+        wrappers.
+      failure_policy: Keep T1 in Doing and repair wrapper behavior unless a stop condition
+        applies.
+  acceptance_criteria:
+  - The editors folder contains the abstract editor class and concrete SE2, SE3, SE4
+    editor classes.
+  - Each concrete editor inherits the abstract class and has a parse method.
+  - Existing parseSe2Post, parseSe3Post, and parseSe4Post exports remain valid wrappers.
+  - Existing direct parser tests pass without fixture output changes.
+  expected_evidence:
+  - step_id: typecheck-editors
+    file: evidence/t1-typecheck-editors.txt
+  - step_id: focused-se-parser-wrappers
+    file: evidence/t1-focused-se-parser-wrappers.txt
+  reopen_when:
+  - A parser file cannot preserve existing behavior through the class boundary.
+  - Existing parser tests require fixture output changes.
+  - A compatibility wrapper export would need to be removed.
+- id: T2
+  kind: execution
+  title: Route post parser through editor selection
+  depends_on:
+  - T1
+  start_when:
+    description: Abstract and concrete editor classes compile and direct parser wrapper
+      tests pass.
+  files:
+    primary:
+    - src/modules/parser/post-parser.ts
+    - src/modules/parser/editors/naver-blog-editor.ts
+    - src/modules/parser/editors/naver-blog-se2-editor.ts
+    - src/modules/parser/editors/naver-blog-se3-editor.ts
+    - src/modules/parser/editors/naver-blog-se4-editor.ts
+    - src/modules/exporter/naver-blog-exporter.ts
+    - src/modules/exporter/single-post-export.ts
+    - scripts/harness/lib/sample-fixtures.ts
+    - tests/parser/post-parser.test.ts
+    - tests/parser/se4-parser.test.ts
+    generated_incidental: []
+  context: parsePostHtml should remain the public entry point while dispatch moves
+    from direct parser function calls to editor class selection. Existing exporters
+    and sample harness code call parsePostHtml directly and must keep compiling.
+  must_do:
+  - Keep detectEditorVersionFromHtml behavior unchanged.
+  - Replace direct parseSe2Post, parseSe3Post, parseSe4Post branching in parsePostHtml
+    with selecting a concrete editor and calling parse.
+  - Keep sourceUrl passed to editors so SE4 video parsing remains compatible.
+  - Preserve tags extraction behavior.
+  - Confirm direct parsePostHtml callers keep the same signature.
+  must_not_do:
+  - Do not remove parsePostHtml or change its input shape.
+  - Do not drop SE3 support.
+  - Do not make editor selection depend on network or runtime state.
+  - Do not edit exporter or harness call sites unless a type error proves compatibility
+    broke and the change preserves the public contract.
+  implementation_notes:
+  - A small local registry or selector in post-parser.ts is acceptable if it keeps
+    the public API stable.
+  - Do not add a new top-level feature folder; this refactor belongs under src/modules/parser/.
+  - The sourceUrl-sensitive SE4 path should be covered by a focused test or an existing
+    SE4 parser test that exercises video parsing.
+  verification:
+    evidence_required: true
+    steps:
+    - id: focused-post-parser
+      command: pnpm vitest run tests/parser/post-parser.test.ts tests/parser/se4-parser.test.ts
+        --configLoader runner --silent
+      success_signal: post-parser tests pass through the class-based dispatch path
+        and SE4 parser coverage still passes.
+      failure_policy: Keep T2 in Doing and repair dispatch unless a stop condition
+        applies.
+    - id: compatibility-typecheck
+      command: pnpm typecheck
+      success_signal: Existing parsePostHtml callers in exporters and harness compile
+        without signature changes.
+      failure_policy: Keep T2 in Doing and repair compatibility unless a stop condition
+        applies.
+  acceptance_criteria:
+  - parsePostHtml uses editor class selection and parse.
+  - Editor version detection still returns 2, 3, and 4 for existing detection cases.
+  - SE2, SE3, and SE4 parse paths remain reachable.
+  - Existing exporter and sample harness parsePostHtml call sites compile unchanged.
+  expected_evidence:
+  - step_id: focused-post-parser
+    file: evidence/t2-focused-post-parser.txt
+  - step_id: compatibility-typecheck
+    file: evidence/t2-compatibility-typecheck.txt
+  reopen_when:
+  - A caller needs a changed parsePostHtml signature.
+  - Editor detection output changes for existing tests.
+  - SE4 sourceUrl-dependent parsing is no longer covered.
+- id: T3
+  kind: execution
+  title: Align parser tests with editor classes
+  depends_on:
+  - T2
+  start_when:
+    description: post-parser dispatch works through concrete editor classes and compatibility
+      typecheck passes.
+  files:
+    primary:
+    - tests/parser/post-parser.test.ts
+    - tests/parser/se2-parser.test.ts
+    - tests/parser/se3-parser.test.ts
+    - tests/parser/se4-parser.test.ts
+    - src/modules/parser/editors/naver-blog-editor.ts
+    - src/modules/parser/editors/naver-blog-se2-editor.ts
+    - src/modules/parser/editors/naver-blog-se3-editor.ts
+    - src/modules/parser/editors/naver-blog-se4-editor.ts
+    generated_incidental: []
+  context: Tests should cover the new class boundary without weakening existing parser
+    behavior assertions.
+  must_do:
+  - Update tests only where imports or dispatch assertions need the new editor class
+    surface.
+  - Keep parser behavior expectations equivalent to current assertions.
+  - Add focused assertions that concrete editors can parse through their parse method
+    when useful and not redundant.
+  must_not_do:
+  - Do not relax parser assertions to hide behavior changes.
+  - Do not snapshot new outputs if they differ from existing semantics.
+  - Do not add broad UI or network tests for this parser-only refactor.
+  implementation_notes:
+  - Existing parser tests can continue using compatibility wrappers when post-parser
+    tests carry class dispatch coverage.
+  - Prefer minimal test edits over duplicating all parser fixture coverage at class
+    level.
+  verification:
+    evidence_required: true
+    steps:
+    - id: focused-parser-suite
+      command: pnpm vitest run tests/parser/post-parser.test.ts tests/parser/se2-parser.test.ts
+        tests/parser/se3-parser.test.ts tests/parser/se4-parser.test.ts --configLoader
+        runner --silent
+      success_signal: Focused parser suite passes with class-based editor structure
+        and compatibility wrappers.
+      failure_policy: Keep T3 in Doing and repair tests or code unless a stop condition
+        applies.
+  acceptance_criteria:
+  - Focused parser tests pass.
+  - Tests do not encode changed Markdown or AST semantics.
+  - The new editor class path is covered by at least the post-parser dispatch tests
+    or direct editor tests.
+  - Direct parser function imports remain covered through compatibility wrapper tests.
+  expected_evidence:
+  - step_id: focused-parser-suite
+    file: evidence/t3-focused-parser-suite.txt
+  reopen_when:
+  - Parser tests pass without exercising the class dispatch path.
+  - Test updates hide a behavior regression.
+  - Compatibility wrapper imports are no longer tested.
+- id: FV1
+  kind: final_verification
+  title: Run repository local check
+  depends_on:
+  - T3
+  start_when:
+    description: Class extraction, post-parser dispatch, and focused parser tests
+      are complete.
+  files:
+    primary:
+    - package.json
+    - src/modules/parser/post-parser.ts
+    - src/modules/parser/editors/naver-blog-editor.ts
+    - src/modules/parser/editors/naver-blog-se2-editor.ts
+    - src/modules/parser/editors/naver-blog-se3-editor.ts
+    - src/modules/parser/editors/naver-blog-se4-editor.ts
+    - src/modules/parser/se2-parser.ts
+    - src/modules/parser/se3-parser.ts
+    - src/modules/parser/se4-parser.ts
+    - src/modules/exporter/naver-blog-exporter.ts
+    - src/modules/exporter/single-post-export.ts
+    - scripts/harness/lib/sample-fixtures.ts
+    - tests/parser/post-parser.test.ts
+    - tests/parser/se2-parser.test.ts
+    - tests/parser/se3-parser.test.ts
+    - tests/parser/se4-parser.test.ts
+    generated_incidental: []
+  context: AGENTS.md requires pnpm check:local for any repository file modification.
+  must_do:
+  - Run pnpm check:local after all implementation tasks.
+  - Investigate any failure before deciding whether it belongs to the current changes.
+  must_not_do:
+  - Do not skip pnpm check:local after source changes.
+  - Do not modify unrelated failing areas unless they are caused by this refactor.
+  implementation_notes:
+  - check:local includes typecheck, test:offline, parser:check, and samples:verify.
+  - If generated quality reports are not changed, do not run quality:report solely
+    for this refactor.
+  verification:
+    evidence_required: true
+    steps:
+    - id: check-local
+      command: pnpm check:local
+      success_signal: typecheck, offline tests, parser capability check, and sample
+        verification all pass.
+      failure_policy: Repair failures caused by this refactor; halt as external_environment
+        for unrelated existing failures.
+  acceptance_criteria:
+  - pnpm check:local passes or failure is clearly classified under a stop condition.
+  - Final source state preserves parser output semantics.
+  - Existing direct parsePostHtml callers compile with the unchanged public signature.
+  expected_evidence:
+  - step_id: check-local
+    file: evidence/fv1-check-local.txt
+  reopen_when:
+  - Any implementation task changes after final verification.
+  - check:local exposes parser or sample output regressions.

@@ -1,1 +1,71 @@
-records: []
+records:
+- id: V1
+  task_id: T1
+  step_id: typecheck-editors
+  command: pnpm typecheck
+  exit_code: 0
+  success: true
+  artifact: evidence/t1-typecheck-editors.txt
+  satisfies: []
+- id: V2
+  task_id: T1
+  step_id: focused-se-parser-wrappers
+  command: pnpm vitest run tests/parser/se2-parser.test.ts tests/parser/se3-parser.test.ts
+    tests/parser/se4-parser.test.ts --configLoader runner --silent
+  exit_code: 127
+  success: false
+  artifact: evidence/t1-focused-se-parser-wrappers.txt
+  satisfies: []
+- id: V3
+  task_id: T1
+  step_id: focused-se-parser-wrappers
+  command: pnpm vitest run tests/parser/se2-parser.test.ts tests/parser/se3-parser.test.ts
+    tests/parser/se4-parser.test.ts --configLoader runner --silent
+  exit_code: 0
+  success: true
+  artifact: evidence/t1-focused-se-parser-wrappers-rerun.txt
+  satisfies: []
+- id: V4
+  task_id: T1
+  step_id: focused-se-parser-wrappers
+  command: pnpm vitest run tests/parser/se2-parser.test.ts tests/parser/se3-parser.test.ts
+    tests/parser/se4-parser.test.ts --configLoader runner --silent
+  exit_code: 0
+  success: true
+  artifact: evidence/t1-focused-se-parser-wrappers.txt
+  satisfies: []
+- id: V5
+  task_id: T2
+  step_id: focused-post-parser
+  command: pnpm vitest run tests/parser/post-parser.test.ts tests/parser/se4-parser.test.ts
+    --configLoader runner --silent
+  exit_code: 0
+  success: true
+  artifact: evidence/t2-focused-post-parser.txt
+  satisfies: []
+- id: V6
+  task_id: T2
+  step_id: compatibility-typecheck
+  command: pnpm typecheck
+  exit_code: 0
+  success: true
+  artifact: evidence/t2-compatibility-typecheck.txt
+  satisfies: []
+- id: V7
+  task_id: T3
+  step_id: focused-parser-suite
+  command: pnpm vitest run tests/parser/post-parser.test.ts tests/parser/se2-parser.test.ts
+    tests/parser/se3-parser.test.ts tests/parser/se4-parser.test.ts --configLoader
+    runner --silent
+  exit_code: 0
+  success: true
+  artifact: evidence/t3-focused-parser-suite.txt
+  satisfies: []
+- id: V8
+  task_id: FV1
+  step_id: check-local
+  command: pnpm check:local
+  exit_code: 0
+  success: true
+  artifact: evidence/fv1-check-local.txt
+  satisfies: []

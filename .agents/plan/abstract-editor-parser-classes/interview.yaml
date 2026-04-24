@@ -1,26 +1,111 @@
-status: open
+status: closed
 non_user_answer_streak: 0
 required_tracks:
   scope:
-    status: open
-    summary: ''
+    status: closed
+    summary: "parsePostHtml\uC758 \uD568\uC218 \uBD84\uAE30\uB97C editors/ class \uACC4\
+      \uCE35\uACFC registry/selection \uD750\uB984\uC73C\uB85C \uC62E\uAE30\uBA70\
+      \ SE2, SE3, SE4 \uBAA8\uB450 \uD3EC\uD568\uD55C\uB2E4."
   non_goals:
-    status: open
-    summary: ''
+    status: closed
+    summary: "Markdown \uB80C\uB354\uB7EC, AST \uC758\uBBF8, exporter public API,\
+      \ fixture \uAE30\uB300 \uCD9C\uB825 \uC758\uBBF8 \uBCC0\uACBD\uC740 \uC81C\uC678\
+      \uD55C\uB2E4."
   outputs:
-    status: open
-    summary: ''
+    status: closed
+    summary: "\uCD94\uC0C1 editor class, concrete NaverBlogSE2Editor/NaverBlogSE3Editor/NaverBlogSE4Editor,\
+      \ post-parser registry wiring, \uAD00\uB828 parser tests \uAC31\uC2E0\uC744\
+      \ \uC0B0\uCD9C\uBB3C\uB85C \uB454\uB2E4."
   verification:
-    status: open
-    summary: ''
+    status: closed
+    summary: "focused parser tests\uC640 \uCD5C\uC885 pnpm check:local\uC744 \uAC80\
+      \uC99D \uAE30\uC900\uC73C\uB85C \uB454\uB2E4."
   constraints:
-    status: open
-    summary: ''
+    status: closed
+    summary: "js-skills class \uADDC\uCE59, \uAE30\uC874 TypeScript \uC2A4\uD0C0\uC77C\
+      , named export, public API \uD638\uD658, repo-native \uAC80\uC99D\uC744 \uB530\
+      \uB978\uB2E4."
   stop_conditions:
-    status: open
-    summary: ''
-rounds: []
+    status: closed
+    summary: "AST \uC758\uBBF8\uB098 parser public contract \uBCC0\uACBD\uC774 \uD544\
+      \uC694\uD558\uBA74 user_decision, \uAE30\uC874 \uC678\uBD80 \uC2E4\uD328\uAC00\
+      \ \uAC80\uC99D\uC744 \uB9C9\uC73C\uBA74 external_environment\uB85C \uC911\uB2E8\
+      \uD55C\uB2E4."
+rounds:
+- id: Q1
+  route: user_decision
+  track: outputs
+  question: "\uC694\uCCAD\uB41C \uC0B0\uCD9C\uBB3C\uC758 \uD615\uD0DC\uB294 \uBB34\
+    \uC5C7\uC778\uAC00?"
+  answer: "Editor \uCD94\uC0C1\uD654\uB97C class \uAE30\uBC18\uC73C\uB85C \uB9CC\uB4E4\
+    \uACE0, \uAC01 editor class\uAC00 \uCD94\uC0C1 class\uB97C \uC0C1\uC18D\uD558\uBA70\
+    \ parse \uBA54\uC11C\uB4DC\uB97C \uAC16\uAC8C \uD55C\uB2E4. \uD30C\uC77C \uAD6C\
+    \uC870\uC5D0\uB294 editors/ \uD3F4\uB354\uC640 NaverBlogSE2Editor, NaverBlogSE4Editor\
+    \ \uAC19\uC740 concrete editor \uD074\uB798\uC2A4\uB97C \uB454\uB2E4."
+  source: user request
+- id: Q2
+  route: code_fact
+  track: scope
+  question: "\uD604\uC7AC editor parsing \uC9C4\uC785\uC810\uC740 \uC5B4\uB514\uC778\
+    \uAC00?"
+  answer: "src/modules/parser/post-parser.ts:48\uC758 parsePostHtml\uC774 HTML\uC744\
+    \ \uBC1B\uC544 editorVersion\uC744 \uAC10\uC9C0\uD558\uACE0 SE2/SE3/SE4 parser\
+    \ \uD568\uC218\uB85C \uC9C1\uC811 \uBD84\uAE30\uD55C\uB2E4."
+  source: src/modules/parser/post-parser.ts:48
+- id: Q3
+  route: code_plus_decision
+  track: scope
+  question: "SE3\uB3C4 class editor\uB85C \uD3EC\uD568\uD574\uC57C \uD558\uB294\uAC00\
+    ?"
+  answer: "\uD604\uC7AC src/modules/parser/post-parser.ts:72\uC5D0\uC11C SE3\uB97C\
+    \ \uC9C0\uC6D0\uD558\uBBC0\uB85C \uB3D9\uC791 \uBCF4\uC874\uC744 \uC704\uD574\
+    \ NaverBlogSE3Editor\uB3C4 \uAC19\uC740 \uCD94\uC0C1 class \uACC4\uCE35\uC5D0\
+    \ \uD3EC\uD568\uD55C\uB2E4. \uC0AC\uC6A9\uC790 \uC608\uC2DC\uB294 SE2/SE4 \uBA85\
+    \uBA85 \uD328\uD134\uC73C\uB85C \uD574\uC11D\uD55C\uB2E4."
+  source: src/modules/parser/post-parser.ts:72 + user request
+- id: Q4
+  route: code_fact
+  track: verification
+  question: "\uC800\uC7A5\uC18C \uD30C\uC77C \uBCC0\uACBD \uD6C4 \uAE30\uBCF8 \uAC80\
+    \uC99D \uBA85\uB839\uC740 \uBB34\uC5C7\uC778\uAC00?"
+  answer: "package.json:24\uC758 pnpm check:local\uC774 \uAE30\uBCF8 \uAC80\uC99D\uC774\
+    \uBA70 typecheck, test:offline, parser:check, samples:verify\uB97C \uD3EC\uD568\
+    \uD55C\uB2E4."
+  source: package.json:24
+- id: Q5
+  route: code_fact
+  track: constraints
+  question: "class \uC124\uACC4\uC5D0 \uC801\uC6A9\uD560 JS \uADDC\uCE59\uC740 \uBB34\
+    \uC5C7\uC778\uAC00?"
+  answer: "js-skills module-class-over-factory \uADDC\uCE59\uC5D0 \uB530\uB77C named\
+    \ class \uACBD\uACC4\uB97C \uC0AC\uC6A9\uD558\uACE0 \uB0B4\uBD80 \uAD6C\uD604\uC740\
+    \ private, \uC7AC\uD560\uB2F9\uD558\uC9C0 \uC54A\uB294 \uC758\uC874\uC131\uC740\
+    \ readonly, \uC800\uC7A5\uC6A9 \uC0DD\uC131\uC790 \uC785\uB825\uC740 constructor\
+    \ parameter property\uB97C \uC120\uD638\uD55C\uB2E4."
+  source: /Users/mj/.agents/skills/js-skills/rules/module-class-over-factory.md
+- id: Q6
+  route: user_decision
+  track: non_goals
+  question: "\uC774\uBC88 \uC694\uCCAD\uC5D0\uC11C \uC81C\uC678\uD560 \uBC94\uC704\
+    \uB294 \uBB34\uC5C7\uC778\uAC00?"
+  answer: "Markdown \uB80C\uB354\uB9C1 \uACC4\uC57D, AST \uD615\uD0DC, exporter public\
+    \ API, fixture \uAE30\uB300 \uCD9C\uB825\uC758 \uC758\uBBF8 \uBCC0\uACBD\uC740\
+    \ \uC81C\uC678\uD55C\uB2E4. \uBAA9\uD45C\uB294 parser editor \uAD6C\uC870 \uCD94\
+    \uC0C1\uD654\uC640 \uD638\uD658\uC131 \uBCF4\uC874\uC774\uB2E4."
+  source: user request interpreted with repository contracts
+- id: Q7
+  route: code_plus_decision
+  track: stop_conditions
+  question: "\uC5B4\uB5A4 \uACBD\uC6B0 \uC2E4\uD589\uC744 \uBA48\uCDB0\uC57C \uD558\
+    \uB294\uAC00?"
+  answer: "class \uCD94\uCD9C \uACFC\uC815\uC5D0\uC11C AST \uCD9C\uB825 \uC758\uBBF8\
+    \uB97C \uBC14\uAFB8\uAC70\uB098 parser public contract\uB97C \uBC14\uAFD4\uC57C\
+    \uB9CC \uC9C4\uD589 \uAC00\uB2A5\uD55C \uACBD\uC6B0 user_decision\uC73C\uB85C\
+    \ \uBA48\uCD98\uB2E4. pnpm check:local\uC774 \uD604\uC7AC \uBCC0\uACBD\uACFC \uBB34\
+    \uAD00\uD55C \uAE30\uC874 \uC2E4\uD328\uB85C \uB9C9\uD788\uBA74 external_environment\uB85C\
+    \ \uBA48\uCD98\uB2E4."
+  source: AGENTS.md validation rules + repository contracts
 closure:
-  ready: false
-  summary: ''
+  ready: true
+  summary: Editor parser class abstraction plan is decision-complete for implementation.
   material_blockers: []

@@ -1,9 +1,13 @@
-phase: drafting
+phase: complete
 subagents:
-  allowed: false
-  source: ask
+  allowed: true
+  source: asked
   explore: skipped
-  review: pending_permission
+  review: passed
 current_task: null
-tasks: {}
+tasks:
+  T1: Done
+  T2: Done
+  T3: Done
+  FV1: Done
 halt: null

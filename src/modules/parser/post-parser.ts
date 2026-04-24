@@ -2,9 +2,9 @@ import { load } from "cheerio"
 
 import type { EditorVersion, ExportOptions } from "../../shared/types.js"
 import { unique } from "../../shared/utils.js"
-import { parseSe2Post } from "./se2-parser.js"
-import { parseSe3Post } from "./se3-parser.js"
-import { parseSe4Post } from "./se4-parser.js"
+import { NaverBlogSE2Editor } from "./editors/naver-blog-se2-editor.js"
+import { NaverBlogSE3Editor } from "./editors/naver-blog-se3-editor.js"
+import { NaverBlogSE4Editor } from "./editors/naver-blog-se4-editor.js"
 
 const editorVersionPattern = /smartEditorVersion["']?\s*:\s*["']?(\d+)["']?/i
 
@@ -61,7 +61,7 @@ export const parsePostHtml = ({
   const $ = load(html)
 
   if (editorVersion === 4) {
-    return parseSe4Post({
+    return new NaverBlogSE4Editor().parse({
       $,
       sourceUrl,
       tags,
@@ -70,14 +70,14 @@ export const parsePostHtml = ({
   }
 
   if (editorVersion === 3) {
-    return parseSe3Post({
+    return new NaverBlogSE3Editor().parse({
       $,
       tags,
       options,
     })
   }
 
-  return parseSe2Post({
+  return new NaverBlogSE2Editor().parse({
     $,
     tags,
     options,

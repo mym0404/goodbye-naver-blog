@@ -6,3 +6,258 @@ events:
   - exec.yaml
   - status.yaml#phase
   source: ex planner init
+- id: E2
+  kind: interview_recorded
+  summary: Recorded interview answer Q1 for outputs.
+  affects:
+  - interview.yaml#rounds
+  - interview.yaml#non_user_answer_streak
+  source: ex planner interview record
+- id: E3
+  kind: interview_recorded
+  summary: Recorded interview answer Q2 for scope.
+  affects:
+  - interview.yaml#rounds
+  - interview.yaml#non_user_answer_streak
+  source: ex planner interview record
+- id: E4
+  kind: interview_recorded
+  summary: Recorded interview answer Q3 for scope.
+  affects:
+  - interview.yaml#rounds
+  - interview.yaml#non_user_answer_streak
+  source: ex planner interview record
+- id: E5
+  kind: interview_recorded
+  summary: Recorded interview answer Q4 for verification.
+  affects:
+  - interview.yaml#rounds
+  - interview.yaml#non_user_answer_streak
+  source: ex planner interview record
+- id: E6
+  kind: interview_recorded
+  summary: Recorded interview answer Q5 for constraints.
+  affects:
+  - interview.yaml#rounds
+  - interview.yaml#non_user_answer_streak
+  source: ex planner interview record
+- id: E7
+  kind: interview_recorded
+  summary: Recorded interview answer Q6 for non_goals.
+  affects:
+  - interview.yaml#rounds
+  - interview.yaml#non_user_answer_streak
+  source: ex planner interview record
+- id: E8
+  kind: interview_recorded
+  summary: Recorded interview answer Q7 for stop_conditions.
+  affects:
+  - interview.yaml#rounds
+  - interview.yaml#non_user_answer_streak
+  source: ex planner interview record
+- id: E9
+  kind: interview_track_changed
+  summary: Interview track scope closed.
+  affects:
+  - interview.yaml#required_tracks.scope
+  - interview.yaml#closure
+  source: ex planner interview track close
+- id: E10
+  kind: interview_track_changed
+  summary: Interview track outputs closed.
+  affects:
+  - interview.yaml#required_tracks.outputs
+  - interview.yaml#closure
+  source: ex planner interview track close
+- id: E11
+  kind: interview_track_changed
+  summary: Interview track non_goals closed.
+  affects:
+  - interview.yaml#required_tracks.non_goals
+  - interview.yaml#closure
+  source: ex planner interview track close
+- id: E12
+  kind: interview_track_changed
+  summary: Interview track verification closed.
+  affects:
+  - interview.yaml#required_tracks.verification
+  - interview.yaml#closure
+  source: ex planner interview track close
+- id: E13
+  kind: interview_track_changed
+  summary: Interview track constraints closed.
+  affects:
+  - interview.yaml#required_tracks.constraints
+  - interview.yaml#closure
+  source: ex planner interview track close
+- id: E14
+  kind: interview_track_changed
+  summary: Interview track stop_conditions closed.
+  affects:
+  - interview.yaml#required_tracks.stop_conditions
+  - interview.yaml#closure
+  source: ex planner interview track close
+- id: E15
+  kind: interview_closed
+  summary: Interview closed and draft gate opened.
+  affects:
+  - interview.yaml#status
+  - interview.yaml#closure
+  source: ex planner interview close
+- id: E16
+  kind: draft_approved
+  summary: Draft approved and planning phase opened.
+  affects:
+  - draft.md
+  - status.yaml#phase
+  source: ex planner approve-draft
+- id: E17
+  kind: subagents_set
+  summary: Subagent usage set to true.
+  affects:
+  - status.yaml#subagents
+  source: ex planner set-subagents
+- id: E18
+  kind: subagent_phase_changed
+  summary: Subagent review phase started.
+  affects:
+  - status.yaml#subagents.review
+  - status.yaml#phase
+  source: ex planner subagent review start
+- id: E19
+  kind: subagent_phase_changed
+  summary: Subagent review phase passed.
+  affects:
+  - status.yaml#subagents.review
+  - status.yaml#phase
+  source: ex planner subagent review pass
+- id: E20
+  kind: bundle_finalized
+  summary: Bundle finalized and ready for execution.
+  affects:
+  - status.yaml#phase
+  source: ex planner finalize
+- id: E21
+  kind: phase_changed
+  summary: Execution started.
+  affects:
+  - status.yaml#phase
+  source: ex exec start
+- id: E22
+  kind: task_claimed
+  summary: T1 moved from Todo to Doing.
+  affects:
+  - status.yaml#tasks.T1
+  - status.yaml#current_task
+  source: ex exec claim T1
+- id: E23
+  kind: evidence_recorded
+  summary: Recorded evidence for T1/typecheck-editors.
+  affects:
+  - evidence.yaml
+  - evidence/t1-typecheck-editors.txt
+  source: ex exec evidence add --task T1 --step typecheck-editors
+- id: E24
+  kind: evidence_recorded
+  summary: Recorded evidence for T1/focused-se-parser-wrappers.
+  affects:
+  - evidence.yaml
+  - evidence/t1-focused-se-parser-wrappers.txt
+  source: ex exec evidence add --task T1 --step focused-se-parser-wrappers
+- id: E25
+  kind: evidence_recorded
+  summary: Recorded evidence for T1/focused-se-parser-wrappers.
+  affects:
+  - evidence.yaml
+  - evidence/t1-focused-se-parser-wrappers-rerun.txt
+  source: ex exec evidence add --task T1 --step focused-se-parser-wrappers
+- id: E26
+  kind: evidence_recorded
+  summary: Recorded evidence for T1/focused-se-parser-wrappers.
+  affects:
+  - evidence.yaml
+  - evidence/t1-focused-se-parser-wrappers.txt
+  source: ex exec evidence add --task T1 --step focused-se-parser-wrappers
+- id: E27
+  kind: task_completed
+  summary: T1 moved from Doing to Done.
+  affects:
+  - status.yaml#tasks.T1
+  - status.yaml#current_task
+  source: ex exec complete-task T1
+- id: E28
+  kind: task_claimed
+  summary: T2 moved from Todo to Doing.
+  affects:
+  - status.yaml#tasks.T2
+  - status.yaml#current_task
+  source: ex exec claim T2
+- id: E29
+  kind: evidence_recorded
+  summary: Recorded evidence for T2/focused-post-parser.
+  affects:
+  - evidence.yaml
+  - evidence/t2-focused-post-parser.txt
+  source: ex exec evidence add --task T2 --step focused-post-parser
+- id: E30
+  kind: evidence_recorded
+  summary: Recorded evidence for T2/compatibility-typecheck.
+  affects:
+  - evidence.yaml
+  - evidence/t2-compatibility-typecheck.txt
+  source: ex exec evidence add --task T2 --step compatibility-typecheck
+- id: E31
+  kind: task_completed
+  summary: T2 moved from Doing to Done.
+  affects:
+  - status.yaml#tasks.T2
+  - status.yaml#current_task
+  source: ex exec complete-task T2
+- id: E32
+  kind: task_claimed
+  summary: T3 moved from Todo to Doing.
+  affects:
+  - status.yaml#tasks.T3
+  - status.yaml#current_task
+  source: ex exec claim T3
+- id: E33
+  kind: evidence_recorded
+  summary: Recorded evidence for T3/focused-parser-suite.
+  affects:
+  - evidence.yaml
+  - evidence/t3-focused-parser-suite.txt
+  source: ex exec evidence add --task T3 --step focused-parser-suite
+- id: E34
+  kind: task_completed
+  summary: T3 moved from Doing to Done.
+  affects:
+  - status.yaml#tasks.T3
+  - status.yaml#current_task
+  source: ex exec complete-task T3
+- id: E35
+  kind: task_claimed
+  summary: FV1 moved from Todo to Doing.
+  affects:
+  - status.yaml#tasks.FV1
+  - status.yaml#current_task
+  source: ex exec claim FV1
+- id: E36
+  kind: evidence_recorded
+  summary: Recorded evidence for FV1/check-local.
+  affects:
+  - evidence.yaml
+  - evidence/fv1-check-local.txt
+  source: ex exec evidence add --task FV1 --step check-local
+- id: E37
+  kind: task_completed
+  summary: FV1 moved from Doing to Done.
+  affects:
+  - status.yaml#tasks.FV1
+  - status.yaml#current_task
+  source: ex exec complete-task FV1
+- id: E38
+  kind: phase_changed
+  summary: Execution completed.
+  affects:
+  - status.yaml#phase
+  source: ex exec finish

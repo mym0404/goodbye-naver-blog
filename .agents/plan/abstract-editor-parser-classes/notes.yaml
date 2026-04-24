@@ -1,1 +1,9 @@
-entries: []
+entries:
+- id: N1
+  kind: decision
+  text: User approved draft option 1.
+  why: Draft approval comment.
+  affects:
+  - draft.md
+  - status.yaml#phase
+  source: ex planner approve-draft

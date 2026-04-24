@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 /Users/mj/projects/farewell-naver-blog
+
+ ✓ tests/parser/post-parser.test.ts (5 tests) 89ms
+ ✓ tests/parser/se3-parser.test.ts (12 tests) 117ms
+ ✓ tests/parser/se2-parser.test.ts (21 tests) 163ms
+ ✓ tests/parser/se4-parser.test.ts (23 tests) 177ms
+
+ Test Files  4 passed (4)
+      Tests  61 passed (61)
+   Start at  21:38:06
+   Duration  982ms (transform 258ms, setup 0ms, collect 1.92s, tests 546ms, environment 0ms, prepare 271ms)

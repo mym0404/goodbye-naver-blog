@@ -1,11 +1,52 @@
 title: Abstract editor parser classes
-goal: ''
-context: []
-non_goals: []
-constraints: []
-success_criteria: []
-verification_policy: []
-execution_strategy: []
+goal: Make Naver Blog editor parsing class-based and easier to extend while preserving
+  existing ParsedPost output and parsePostHtml compatibility.
+context:
+- src/modules/parser/post-parser.ts owns HTML-level editor detection and current parser
+  dispatch.
+- src/modules/parser/se2-parser.ts, src/modules/parser/se3-parser.ts, and src/modules/parser/se4-parser.ts
+  each expose standalone parser entry functions that existing parser tests import
+  directly.
+- src/shared/types.ts defines EditorVersion and ParsedPost contracts consumed by exporter,
+  renderer, tests, and harness scripts.
+- The user explicitly invoked js-skills for this refactor; its module-class-over-factory
+  guidance requires named class boundaries with private internal implementation and
+  readonly dependencies where appropriate.
+non_goals:
+- Do not change Markdown renderer behavior.
+- Do not change AstBlock or ParsedPost meaning.
+- Do not change exporter public APIs.
+- Do not change sample fixture expected output semantics.
+constraints:
+- Keep parsePostHtml as the public parser entry point for existing callers.
+- Preserve parseSe2Post, parseSe3Post, and parseSe4Post named exports as compatibility
+  wrappers around concrete editor classes.
+- Add concrete editor classes under src/modules/parser/editors/.
+- Include NaverBlogSE3Editor to preserve the existing SE3 parser path even though
+  the user examples named SE2 and SE4.
+- Prefer named exports and avoid creating index.ts barrel files.
+- Follow existing TypeScript import style and class guidance from js-skills.
+success_criteria:
+- parsePostHtml selects a concrete editor class and invokes parse instead of calling
+  SE parser functions directly.
+- NaverBlogSE2Editor, NaverBlogSE3Editor, and NaverBlogSE4Editor inherit from one
+  abstract editor class.
+- Existing parseSe2Post, parseSe3Post, and parseSe4Post imports remain valid.
+- Existing parser tests and sample fixture verification pass without fixture output
+  meaning changes.
+verification_policy:
+- Run focused parser tests after class extraction and dispatch changes.
+- Run pnpm check:local as final verification because repository files change.
+execution_strategy:
+- First introduce the abstract class and concrete editor wrappers around existing
+  parser implementations while preserving existing named parser exports.
+- Then replace post-parser function dispatch with editor selection while keeping detectEditorVersionFromHtml
+  and parsePostHtml callable.
+- Finally update tests only where imports or dispatch behavior need to reflect the
+  new class boundary.
 stop_conditions:
-- user_decision
-- external_environment
+- user_decision: Continuing would require changing AST semantics, ParsedPost shape,
+    parsePostHtml public contract, or removing existing parseSe2Post/parseSe3Post/parseSe4Post
+    exports.
+- external_environment: pnpm check:local fails for a pre-existing or unrelated issue
+    that cannot be fixed within this refactor.
