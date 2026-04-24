@@ -7,10 +7,10 @@
 이 문서는 `src/shared/parser-capabilities.ts` 와 `src/shared/sample-corpus.ts` 를 바탕으로 자동 생성된다.
 
 ## 관련 코드
-- [../../src/shared/parser-capabilities.ts](../../src/shared/parser-capabilities.ts)
-- [../../src/shared/sample-corpus.ts](../../src/shared/sample-corpus.ts)
-- [../../.agents/knowledge/product/sample-corpus.md](../../.agents/knowledge/product/sample-corpus.md)
-- [../../scripts/harness/generate-quality-report.ts](../../scripts/harness/generate-quality-report.ts)
+- [../../../../src/shared/parser-capabilities.ts](../../../../src/shared/parser-capabilities.ts)
+- [../../../../src/shared/sample-corpus.ts](../../../../src/shared/sample-corpus.ts)
+- [../../product/sample-corpus.md](../../product/sample-corpus.md)
+- [../../../../scripts/harness/generate-quality-report.ts](../../../../scripts/harness/generate-quality-report.ts)
 
 ## 검증 방법
 - `pnpm quality:report`

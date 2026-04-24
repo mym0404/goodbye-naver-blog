@@ -24,8 +24,8 @@
 
 ## 관련 경로
 - [./../plan-archive/picgo-upload-progress-visibility/plan.md](./../plan-archive/picgo-upload-progress-visibility/plan.md)
-- [../../../src/server/http-server.ts](../../../src/server/http-server.ts)
-- [../../../src/server/job-store.ts](../../../src/server/job-store.ts)
-- [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx)
-- [../../../src/ui/features/job-results/use-export-job.ts](../../../src/ui/features/job-results/use-export-job.ts)
-- [../../../scripts/harness/run-ui-live-upload.ts](../../../scripts/harness/run-ui-live-upload.ts)
+- [../../../../src/server/http-server.ts](../../../../src/server/http-server.ts)
+- [../../../../src/server/job-store.ts](../../../../src/server/job-store.ts)
+- [../../../../src/ui/features/job-results/job-results-panel.tsx](../../../../src/ui/features/job-results/job-results-panel.tsx)
+- [../../../../src/ui/features/job-results/use-export-job.ts](../../../../src/ui/features/job-results/use-export-job.ts)
+- [../../../../scripts/harness/run-ui-live-upload.ts](../../../../scripts/harness/run-ui-live-upload.ts)

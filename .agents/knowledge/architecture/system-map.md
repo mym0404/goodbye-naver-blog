@@ -9,6 +9,7 @@
 ## 관련 코드
 - [../../../src/modules/blog-fetcher/naver-blog-fetcher.ts](../../../src/modules/blog-fetcher/naver-blog-fetcher.ts)
 - [../../../src/modules/parser/post-parser.ts](../../../src/modules/parser/post-parser.ts)
+- [../../../src/modules/parser/editors/base-editor.ts](../../../src/modules/parser/editors/base-editor.ts)
 - [../../../src/shared/export-options.ts](../../../src/shared/export-options.ts)
 
 ## 검증 방법
@@ -17,7 +18,7 @@
 
 ## Module Boundaries
 - `blog-fetcher`: 네이버 모바일 API, 글 HTML fetch, 자산 다운로드
-- `parser`: SE2, SE3, SE4 본문을 공용 AST로 변환
+- `parser`: `post-parser.ts`가 editor version을 감지하고 `editors/*`의 SE2, SE3, SE4 class가 본문을 공용 AST로 변환한다. `se2-parser.ts`, `se3-parser.ts`, `se4-parser.ts`는 기존 import 호환 wrapper다.
 - `reviewer`: 파싱 경고를 보정하고 정리
 - `converter`: AST를 Markdown과 frontmatter로 렌더링
 - `exporter`: fetch -> parse -> review -> render -> write -> manifest 실행과 image upload/rewrite 단계를 묶고, 글 본문 export는 제한된 동시성으로 처리하되 결과 반영 순서는 입력 순서를 유지한다.
@@ -36,6 +37,7 @@
 
 ## Code Anchors
 - parser capability: `src/shared/parser-capabilities.ts`
+- parser editor classes: `src/modules/parser/editors/base-editor.ts`, `src/modules/parser/editors/naver-blog-se2-editor.ts`, `src/modules/parser/editors/naver-blog-se3-editor.ts`, `src/modules/parser/editors/naver-blog-se4-editor.ts`
 - sample corpus: `src/shared/sample-corpus.ts`
 - Markdown renderer: `src/modules/converter/markdown-renderer.ts`
 - exporter flow: `src/modules/exporter/naver-blog-exporter.ts`

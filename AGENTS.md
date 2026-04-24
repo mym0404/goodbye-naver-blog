@@ -13,7 +13,7 @@
 ## Runtime And Architecture
 - 런타임 시작점은 `src/server.ts`, `src/server/http-server.ts`다.
 - export 실행 구조는 `src/modules/exporter/naver-blog-exporter.ts`에서 따라간다.
-- parser/sample 구조 seam은 `src/shared/parser-capabilities.ts`, `src/shared/sample-corpus.ts`가 기준이다.
+- parser/sample 구조 seam은 `src/modules/parser/post-parser.ts`, `src/modules/parser/editors/*`, `src/shared/parser-capabilities.ts`, `src/shared/sample-corpus.ts`가 기준이다.
 - UI 셸과 토큰 시작점은 `src/ui/App.tsx`, `src/ui/features/common/*`, `src/ui/styles/globals.css`다.
 
 ## Design System

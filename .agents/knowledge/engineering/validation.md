@@ -30,7 +30,7 @@
 ## 테스트 종류
 - parser unit
   `tests/parser/*.test.ts`
-  개별 editor parser가 blockType을 어떻게 AST로 만드는지 확인한다.
+  `src/modules/parser/editors/*`의 editor parser class와 호환 wrapper가 blockType을 어떻게 AST로 만드는지 확인한다.
 - renderer/exporter unit
   `tests/markdown-renderer.test.ts`, `tests/export-single-post.test.ts`, `tests/naver-blog-exporter.test.ts` 등
   AST -> Markdown, export 파이프라인, frontmatter, 자산 처리 계약을 확인한다.

@@ -51,10 +51,10 @@ export const buildGeneratedDocs = async () => {
 이 문서는 \`src/shared/parser-capabilities.ts\`, \`src/shared/sample-corpus.ts\`, \`tests/fixtures/\`, \`tests/*.test.ts\`를 바탕으로 자동 생성된다.
 
 ## 관련 코드
-- [../../src/shared/parser-capabilities.ts](../../src/shared/parser-capabilities.ts)
-- [../../src/shared/sample-corpus.ts](../../src/shared/sample-corpus.ts)
-- [../../scripts/harness/generate-quality-report.ts](../../scripts/harness/generate-quality-report.ts)
-- [../../scripts/harness/check-parser-capabilities.ts](../../scripts/harness/check-parser-capabilities.ts)
+- [../../../../src/shared/parser-capabilities.ts](../../../../src/shared/parser-capabilities.ts)
+- [../../../../src/shared/sample-corpus.ts](../../../../src/shared/sample-corpus.ts)
+- [../../../../scripts/harness/generate-quality-report.ts](../../../../scripts/harness/generate-quality-report.ts)
+- [../../../../scripts/harness/check-parser-capabilities.ts](../../../../scripts/harness/check-parser-capabilities.ts)
 
 ## 검증 방법
 - \`pnpm quality:report\`
@@ -86,10 +86,10 @@ ${parserStatus.parserFixtureOnlyCapabilityIds.length > 0 ? parserStatus.parserFi
 이 문서는 \`src/shared/parser-capabilities.ts\` 와 \`src/shared/sample-corpus.ts\` 를 바탕으로 자동 생성된다.
 
 ## 관련 코드
-- [../../src/shared/parser-capabilities.ts](../../src/shared/parser-capabilities.ts)
-- [../../src/shared/sample-corpus.ts](../../src/shared/sample-corpus.ts)
-- [../../.agents/knowledge/product/sample-corpus.md](../../.agents/knowledge/product/sample-corpus.md)
-- [../../scripts/harness/generate-quality-report.ts](../../scripts/harness/generate-quality-report.ts)
+- [../../../../src/shared/parser-capabilities.ts](../../../../src/shared/parser-capabilities.ts)
+- [../../../../src/shared/sample-corpus.ts](../../../../src/shared/sample-corpus.ts)
+- [../../product/sample-corpus.md](../../product/sample-corpus.md)
+- [../../../../scripts/harness/generate-quality-report.ts](../../../../scripts/harness/generate-quality-report.ts)
 
 ## 검증 방법
 - \`pnpm quality:report\`
@@ -137,9 +137,10 @@ ${parserStatus.parserFixtureOnlyCapabilityIds.length > 0 ? parserStatus.parserFi
 - [../../../src/shared/parser-capabilities.ts](../../../src/shared/parser-capabilities.ts)
 - [../../../src/shared/sample-corpus.ts](../../../src/shared/sample-corpus.ts)
 - [../../../src/modules/parser/post-parser.ts](../../../src/modules/parser/post-parser.ts)
-- [../../../src/modules/parser/se2-parser.ts](../../../src/modules/parser/se2-parser.ts)
-- [../../../src/modules/parser/se3-parser.ts](../../../src/modules/parser/se3-parser.ts)
-- [../../../src/modules/parser/se4-parser.ts](../../../src/modules/parser/se4-parser.ts)
+- [../../../src/modules/parser/editors/base-editor.ts](../../../src/modules/parser/editors/base-editor.ts)
+- [../../../src/modules/parser/editors/naver-blog-se2-editor.ts](../../../src/modules/parser/editors/naver-blog-se2-editor.ts)
+- [../../../src/modules/parser/editors/naver-blog-se3-editor.ts](../../../src/modules/parser/editors/naver-blog-se3-editor.ts)
+- [../../../src/modules/parser/editors/naver-blog-se4-editor.ts](../../../src/modules/parser/editors/naver-blog-se4-editor.ts)
 
 ## 검증 방법
 - \`pnpm quality:report\`

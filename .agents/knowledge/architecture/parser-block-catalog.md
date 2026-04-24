@@ -12,9 +12,10 @@
 - [../../../src/shared/parser-capabilities.ts](../../../src/shared/parser-capabilities.ts)
 - [../../../src/shared/sample-corpus.ts](../../../src/shared/sample-corpus.ts)
 - [../../../src/modules/parser/post-parser.ts](../../../src/modules/parser/post-parser.ts)
-- [../../../src/modules/parser/se2-parser.ts](../../../src/modules/parser/se2-parser.ts)
-- [../../../src/modules/parser/se3-parser.ts](../../../src/modules/parser/se3-parser.ts)
-- [../../../src/modules/parser/se4-parser.ts](../../../src/modules/parser/se4-parser.ts)
+- [../../../src/modules/parser/editors/base-editor.ts](../../../src/modules/parser/editors/base-editor.ts)
+- [../../../src/modules/parser/editors/naver-blog-se2-editor.ts](../../../src/modules/parser/editors/naver-blog-se2-editor.ts)
+- [../../../src/modules/parser/editors/naver-blog-se3-editor.ts](../../../src/modules/parser/editors/naver-blog-se3-editor.ts)
+- [../../../src/modules/parser/editors/naver-blog-se4-editor.ts](../../../src/modules/parser/editors/naver-blog-se4-editor.ts)
 
 ## 검증 방법
 - `pnpm quality:report`

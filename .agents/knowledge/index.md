@@ -20,12 +20,13 @@
 - `.agents/knowledge/reference/`: runbook, generated 보고서, 플랜 아카이브, 트러블슈팅, README 이미지처럼 깊게 보는 참고 자료
 - `.cache/`: 카테고리 스캔 캐시와 export UI 설정 같은 영속 로컬 상태 저장 위치
 - `public/brand/`: 로고, favicon, OG image, preview 원본 같은 정적 브랜드 자산 위치
-- `.agents/plans/`: 진행 중 scratch와 임시 실행 메모
+- `.agents/plan/`: 현재 plan-execute 번들과 evidence
 - `README.md`, `CONTRIBUTING.md`: 사용자와 기여자용 진입 문서
 
 ## 대표 코드 기준점
 - 저장소 명령과 검증 루프: [../../package.json](../../package.json)
 - parser/block SoT: [../../src/shared/block-registry.ts](../../src/shared/block-registry.ts)
+- parser editor dispatch: [../../src/modules/parser/post-parser.ts](../../src/modules/parser/post-parser.ts), `src/modules/parser/editors/*`
 - parser 지원 범위 projection: [../../src/shared/parser-capabilities.ts](../../src/shared/parser-capabilities.ts)
 - 실샘플 기준: [../../src/shared/sample-corpus.ts](../../src/shared/sample-corpus.ts)
 - export/upload API 흐름: [../../src/server/http-server.ts](../../src/server/http-server.ts)
@@ -46,4 +47,4 @@
 1. 사용자 지시와 루트 [../../AGENTS.md](../../AGENTS.md)
 2. 실제 코드, 설정, 스크립트, 테스트
 3. 이 knowledge 문서
-4. `.agents/knowledge/reference/`, `README.md`, `.agents/plans/README.md`
+4. `.agents/knowledge/reference/`, `README.md`, `.agents/plan/`
