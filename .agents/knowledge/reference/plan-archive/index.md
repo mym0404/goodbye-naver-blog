@@ -9,7 +9,7 @@
 - 결과 판단에 직접 연결되는 evidence 묶음
 
 ## 현재 아카이브
-- PicGo upload progress visibility: [./picgo-upload-progress-visibility/plan.md](./picgo-upload-progress-visibility/plan.md)
+- PicGo upload progress visibility: `.agents/knowledge/reference/plan-archive/picgo-upload-progress-visibility/plan.md`
 
 ## 운영 규칙
 - 새 큰 변경을 닫을 때는 `plan.md`, `tasks.md`, 필요한 `notes.md`, `evidence/`를 같은 번들 폴더에 보관한다.

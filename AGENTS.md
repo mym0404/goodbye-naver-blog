@@ -17,12 +17,12 @@
 - UI 셸과 토큰 시작점은 `src/ui/App.tsx`, `src/ui/features/common/*`, `src/ui/styles/globals.css`다.
 
 ## Design System
-- UI 기준 문서는 [.agents/knowledge/DESIGN.md](.agents/knowledge/DESIGN.md)다.
+- UI 기준 문서는 `.agents/knowledge/DESIGN.md`다.
 - theme/token source of truth는 `src/ui/styles/globals.css`, primitive layer는 `src/ui/components/ui/*`다.
 - dark-first single-column wizard, shadcn primitive 우선, 아이콘은 `@remixicon/react`만 유지한다.
 
 ## Non-Negotiables
-- evergreen 프로젝트 지식은 라우터 트리 [.agents/knowledge/index.md](.agents/knowledge/index.md)에서 시작한다.
+- evergreen 프로젝트 지식은 라우터 트리 `.agents/knowledge/index.md`에서 시작한다.
 - 실제 source of truth 우선순위는 사용자 지시와 이 문서, 코드/설정/테스트, evergreen knowledge, reference/generated 문서 순서다.
 - `.agents/knowledge/reference/`와 generated 보고서는 참고 자료다. 실제 제품 계약을 대신하지 않는다.
 - 큰 변경의 완료 기록은 `.agents/knowledge/reference/plan-archive/`에, 재발 방지 성격의 이슈 정리는 `.agents/knowledge/reference/troubleshooting/`에 남긴다.
@@ -40,7 +40,7 @@
 - commit, push, PR 생성은 사용자가 명시적으로 요청한 경우에만 수행한다.
 
 ## Validation Routes
-- `pnpm check:local`: 저장소 파일 변경의 최소 기준선이다. 정확한 bundle 구성과 CI 연결은 [.agents/knowledge/engineering/validation.md](.agents/knowledge/engineering/validation.md), [package.json](package.json)이 기준이다.
+- `pnpm check:local`: 저장소 파일 변경의 최소 기준선이다. 정확한 bundle 구성과 CI 연결은 `.agents/knowledge/engineering/validation.md`, `package.json`이 기준이다.
 - `pnpm check:full`: sample fixture 회귀, generated 품질 보고서, Playwright smoke UI까지 포함한 넓은 기본 회귀다.
 - `pnpm parser:check`: capability catalog, parser fixture, sample fixture, 테스트 연결이 맞는지 확인할 때 실행한다.
 - `pnpm samples:verify`: 저장된 `source.html -> expected.md` fixture 회귀를 오프라인으로 확인할 때 실행한다.
@@ -50,11 +50,11 @@
 - `pnpm quality:report`: capability/sample coverage generated 문서를 다시 만들 때 실행한다.
 
 ## Knowledge Router
-- evergreen 프로젝트 지식은 라우터 트리 [.agents/knowledge/index.md](.agents/knowledge/index.md)에서 시작한다.
-- 개요와 출력 규약은 [.agents/knowledge/product/product-outline.md](.agents/knowledge/product/product-outline.md)에서 바로 본다.
-- 스택, coding 규칙, harness 역할은 [.agents/knowledge/engineering/index.md](.agents/knowledge/engineering/index.md)로 간다.
-- 검증 의미와 bundle 구성은 [.agents/knowledge/engineering/validation.md](.agents/knowledge/engineering/validation.md)에서 본다.
-- capability 카탈로그, 모듈 경계, export/server 파이프라인은 [.agents/knowledge/architecture/index.md](.agents/knowledge/architecture/index.md)로 간다.
-- 도메인 제약, 출력 규약, sample corpus 운영은 [.agents/knowledge/product/index.md](.agents/knowledge/product/index.md)로 간다.
-- UI 규칙과 primitive/token 계약은 [.agents/knowledge/DESIGN.md](.agents/knowledge/DESIGN.md)에서 본다.
-- runbook, generated 보고서, 플랜 아카이브, 트러블슈팅, README 자산은 [.agents/knowledge/reference/index.md](.agents/knowledge/reference/index.md)로 내려간다.
+- evergreen 프로젝트 지식은 라우터 트리 `.agents/knowledge/index.md`에서 시작한다.
+- 개요와 출력 규약은 `.agents/knowledge/product/product-outline.md`에서 바로 본다.
+- 스택, coding 규칙, harness 역할은 `.agents/knowledge/engineering/index.md`로 간다.
+- 검증 의미와 bundle 구성은 `.agents/knowledge/engineering/validation.md`에서 본다.
+- capability 카탈로그, 모듈 경계, export/server 파이프라인은 `.agents/knowledge/architecture/index.md`로 간다.
+- 도메인 제약, 출력 규약, sample corpus 운영은 `.agents/knowledge/product/index.md`로 간다.
+- UI 규칙과 primitive/token 계약은 `.agents/knowledge/DESIGN.md`에서 본다.
+- runbook, generated 보고서, 플랜 아카이브, 트러블슈팅, README 자산은 `.agents/knowledge/reference/index.md`로 내려간다.

@@ -4,7 +4,7 @@
 이 문서는 UI smoke 실패 후 수동으로 브라우저에서 확인해야 할 순서를 정리한다.
 
 ## Single Post Cross-Check
-개별 글의 구조와 Markdown 결과를 비교해야 하면 [single-post-verification.md](./single-post-verification.md)를 따른다.
+개별 글의 구조와 Markdown 결과를 비교해야 하면 `.agents/knowledge/reference/runbooks/single-post-verification.md`를 따른다.
 
 ## Source Of Truth
 기본 자동 검증은 `scripts/harness/run-ui-smoke.ts`, `scripts/harness/run-ui-resume-smoke.ts` 이고, 이 문서는 수동 재현 절차를 보완한다.
@@ -14,19 +14,19 @@
 - 같은 시나리오를 반복 회귀나 CI로 고정해야 하면 Playwright harness에 추가하고, 이 문서는 보조 수동 절차로만 유지한다.
 
 ## 관련 코드
-- [../../../../index.html](../../../../index.html)
-- [../../../../src/ui/App.tsx](../../../../src/ui/App.tsx)
-- [../../../../src/ui/features/common/shell/wizard-header.tsx](../../../../src/ui/features/common/shell/wizard-header.tsx)
-- [../../../../src/ui/features/common/shell/wizard-dock.tsx](../../../../src/ui/features/common/shell/wizard-dock.tsx)
-- [../../../../src/ui/features/scan/blog-input-panel.tsx](../../../../src/ui/features/scan/blog-input-panel.tsx)
-- [../../../../src/ui/features/resume/resume-dialog-panel.tsx](../../../../src/ui/features/resume/resume-dialog-panel.tsx)
-- [../../../../src/ui/styles/globals.css](../../../../src/ui/styles/globals.css)
-- [../../../../src/ui/features/options/export-options-panel.tsx](../../../../src/ui/features/options/export-options-panel.tsx)
-- [../../../../src/ui/features/job-results/job-results-panel.tsx](../../../../src/ui/features/job-results/job-results-panel.tsx)
-- [../../DESIGN.md](../../DESIGN.md)
-- [../../../../src/server/http-server.ts](../../../../src/server/http-server.ts)
-- [../../../../scripts/harness/run-ui-smoke.ts](../../../../scripts/harness/run-ui-smoke.ts)
-- [../../../../scripts/harness/run-ui-resume-smoke.ts](../../../../scripts/harness/run-ui-resume-smoke.ts)
+- `index.html`
+- `src/ui/App.tsx`
+- `src/ui/features/common/shell/wizard-header.tsx`
+- `src/ui/features/common/shell/wizard-dock.tsx`
+- `src/ui/features/scan/blog-input-panel.tsx`
+- `src/ui/features/resume/resume-dialog-panel.tsx`
+- `src/ui/styles/globals.css`
+- `src/ui/features/options/export-options-panel.tsx`
+- `src/ui/features/job-results/job-results-panel.tsx`
+- `.agents/knowledge/DESIGN.md`
+- `src/server/http-server.ts`
+- `scripts/harness/run-ui-smoke.ts`
+- `scripts/harness/run-ui-resume-smoke.ts`
 
 ## 검증 방법
 - `agent-browser`

@@ -1,0 +1,29 @@
+events:
+- id: E1
+  kind: plan_initialized
+  summary: Initialized plan execution.
+  affects:
+  - exec.yaml
+  - status.yaml#phase
+  source: ex planner init
+- id: E2
+  kind: interview_recorded
+  summary: Recorded interview answer Q1 for scope.
+  affects:
+  - interview.yaml#rounds
+  - interview.yaml#non_user_answer_streak
+  source: ex planner interview record
+- id: E3
+  kind: interview_recorded
+  summary: Recorded interview answer Q2 for constraints.
+  affects:
+  - interview.yaml#rounds
+  - interview.yaml#non_user_answer_streak
+  source: ex planner interview record
+- id: E4
+  kind: interview_recorded
+  summary: Recorded interview answer Q3 for non_goals.
+  affects:
+  - interview.yaml#rounds
+  - interview.yaml#non_user_answer_streak
+  source: ex planner interview record

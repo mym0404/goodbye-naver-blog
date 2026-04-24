@@ -4,17 +4,17 @@
 이 문서는 이 저장소의 UI 기준 문서다. shadcn primitive, `globals.css` 토큰, wizard shell, 검증 기준을 한곳에서 유지한다.
 
 ## 시작점
-- UI 셸과 단계 전환: [../../src/ui/App.tsx](../../src/ui/App.tsx)
-- 공용 shell/status/hook: [../../src/ui/features/common](../../src/ui/features/common)
-- 전역 토큰과 helper surface: [../../src/ui/styles/globals.css](../../src/ui/styles/globals.css)
-- 브랜드/소셜 정적 자산: [../../public/brand](../../public/brand)
-- shadcn chooser와 현재 사용처: [./engineering/shadcn-component-map.md](./engineering/shadcn-component-map.md)
-- 복구 dialog와 상태: [../../src/ui/features/resume](../../src/ui/features/resume)
-- 블로그 입력/스캔 상태: [../../src/ui/features/scan](../../src/ui/features/scan)
-- 옵션 패널: [../../src/ui/features/options/export-options-panel.tsx](../../src/ui/features/options/export-options-panel.tsx)
-- 결과/업로드 패널: [../../src/ui/features/job-results/job-results-panel.tsx](../../src/ui/features/job-results/job-results-panel.tsx)
-- 카테고리 패널: [../../src/ui/features/scan/category-panel.tsx](../../src/ui/features/scan/category-panel.tsx)
-- 공용 primitive: [../../src/ui/components/ui](../../src/ui/components/ui)
+- UI 셸과 단계 전환: `src/ui/App.tsx`
+- 공용 shell/status/hook: `src/ui/features/common`
+- 전역 토큰과 helper surface: `src/ui/styles/globals.css`
+- 브랜드/소셜 정적 자산: `public/brand`
+- shadcn chooser와 현재 사용처: `.agents/knowledge/engineering/shadcn-component-map.md`
+- 복구 dialog와 상태: `src/ui/features/resume`
+- 블로그 입력/스캔 상태: `src/ui/features/scan`
+- 옵션 패널: `src/ui/features/options/export-options-panel.tsx`
+- 결과/업로드 패널: `src/ui/features/job-results/job-results-panel.tsx`
+- 카테고리 패널: `src/ui/features/scan/category-panel.tsx`
+- 공용 primitive: `src/ui/components/ui`
 
 ## Source Of Truth
 - theme source of truth는 `globals.css`다.

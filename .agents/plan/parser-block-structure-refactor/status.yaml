@@ -1,0 +1,9 @@
+phase: drafting
+subagents:
+  allowed: false
+  source: ask
+  explore: skipped
+  review: pending_permission
+current_task: null
+tasks: {}
+halt: null

@@ -1,7 +1,7 @@
 import { load } from "cheerio"
 import { describe, expect, it } from "vitest"
 
-import { parseSe4Post } from "../../src/modules/parser/se4-parser.js"
+import { NaverBlogSE4Editor } from "../../src/modules/parser/editors/naver-blog-se4-editor.js"
 import { defaultExportOptions } from "../../src/shared/export-options.js"
 
 const parserOptions = {
@@ -9,6 +9,7 @@ const parserOptions = {
 }
 
 const sourceUrl = "https://blog.naver.com/mym0404/123456789"
+const se4Editor = new NaverBlogSE4Editor()
 
 const createModuleScript = (module: Record<string, unknown>) =>
   `<script class="__se_module_data" data-module-v2='${JSON.stringify(module)}'></script>`
@@ -17,14 +18,14 @@ const createSe4Html = (...components: string[]) =>
   `<div id="viewTypeSelector">${components.join("")}</div>`
 
 const parseSe4Fixture = (...components: string[]) =>
-  parseSe4Post({
+  se4Editor.parse({
     $: load(createSe4Html(...components)),
     sourceUrl,
     tags: ["algo", "algo", "math"],
     options: parserOptions,
   })
 
-describe("parseSe4Post", () => {
+describe("NaverBlogSE4Editor", () => {
   it("parses text components into paragraph blocks", () => {
     const parsed = parseSe4Fixture(`
       <div class="se-component se-text">

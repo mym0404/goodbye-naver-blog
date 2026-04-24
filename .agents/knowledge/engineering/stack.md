@@ -7,9 +7,9 @@
 - 실제 스택 계약은 `package.json`, `src/`, `scripts/`, `tests/`가 기준이다.
 
 ## 관련 코드
-- [../../../package.json](../../../package.json)
-- [../../../src/server.ts](../../../src/server.ts)
-- [../../../scripts/export-single-post.ts](../../../scripts/export-single-post.ts)
+- `package.json`
+- `src/server.ts`
+- `scripts/export-single-post.ts`
 
 ## 검증 방법
 - `pnpm typecheck`: 런타임 엔트리, shared 타입, import 구조를 빠르게 다시 확인할 때 실행한다.

@@ -5,17 +5,17 @@
 - 새 UI를 만들 때 "이미 있는 primitive로 끝낼 수 있는지"를 먼저 판단하는 기준 문서로 쓴다.
 
 ## Source Of Truth
-- shadcn 프로젝트 설정: [../../../components.json](../../../components.json)
-- 설치된 primitive 구현: [../../../src/ui/components/ui](../../../src/ui/components/ui)
-- 전역 token과 helper surface: [../../../src/ui/styles/globals.css](../../../src/ui/styles/globals.css)
-- 디자인 규칙: [../DESIGN.md](../DESIGN.md)
-- shadcn CLI 기준 정보는 `npx shadcn@latest info --json` 출력과 [shadcn docs](https://ui.shadcn.com/docs)를 함께 본다.
+- shadcn 프로젝트 설정: `components.json`
+- 설치된 primitive 구현: `src/ui/components/ui`
+- 전역 token과 helper surface: `src/ui/styles/globals.css`
+- 디자인 규칙: `.agents/knowledge/DESIGN.md`
+- shadcn CLI 기준 정보는 `npx shadcn@latest info --json` 출력과 `https://ui.shadcn.com/docs`를 함께 본다.
 - `src/ui/components/ui/*`는 shadcn CLI 생성 surface로 본다. 웬만하면 feature 쪽 조합이나 token에서 해결하고, 공통 primitive 동작이나 variant 자체를 바꿔야 할 때만 직접 수정한다.
 
 ## 현재 설정
 - registry style은 `new-york`, base는 `radix`, icon library는 `remix`다.
 - 이 저장소의 UI 아이콘은 전부 Remix icon을 기준으로 쓴다. 새 아이콘도 `@remixicon/react`에서 고른다.
-- Tailwind는 v4, css variable 기반 테마는 [../../../src/ui/styles/globals.css](../../../src/ui/styles/globals.css)를 source of truth로 쓴다.
+- Tailwind는 v4, css variable 기반 테마는 `src/ui/styles/globals.css`를 source of truth로 쓴다.
 - 현재 설치된 shadcn primitive는 아래 17개다.
   - `alert`
   - `badge`
@@ -39,21 +39,21 @@
 ## 현재 사용처
 | primitive | 현재 사용처 | 역할 |
 | --- | --- | --- |
-| `Alert` | [../../../src/ui/features/options/export-options-panel.tsx](../../../src/ui/features/options/export-options-panel.tsx) | frontmatter alias 같은 blocking validation |
-| `Badge` | [../../../src/ui/features/common/shell/wizard-header.tsx](../../../src/ui/features/common/shell/wizard-header.tsx), [../../../src/ui/features/scan/category-panel.tsx](../../../src/ui/features/scan/category-panel.tsx), [../../../src/ui/features/options/export-options-panel.tsx](../../../src/ui/features/options/export-options-panel.tsx), [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx) | 단계 상태, count, 결과 status pill |
-| `Button` | [../../../src/ui/features/common/shell/wizard-dock.tsx](../../../src/ui/features/common/shell/wizard-dock.tsx), [../../../src/ui/features/scan/category-panel.tsx](../../../src/ui/features/scan/category-panel.tsx), [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx) | primary/secondary/destructive action |
-| `Card` | [../../../src/ui/App.tsx](../../../src/ui/App.tsx), [../../../src/ui/features/scan/blog-input-panel.tsx](../../../src/ui/features/scan/blog-input-panel.tsx), [../../../src/ui/features/scan/category-panel.tsx](../../../src/ui/features/scan/category-panel.tsx), [../../../src/ui/features/options/export-options-panel.tsx](../../../src/ui/features/options/export-options-panel.tsx), [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx) | shell, section panel, status board |
-| `Checkbox` | [../../../src/ui/features/scan/category-panel.tsx](../../../src/ui/features/scan/category-panel.tsx), [../../../src/ui/features/options/export-options-panel.tsx](../../../src/ui/features/options/export-options-panel.tsx), [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx) | 독립 boolean field |
-| `Collapsible` | [../../../src/ui/features/options/export-options-panel.tsx](../../../src/ui/features/options/export-options-panel.tsx) | 고급 옵션 펼침/접힘 |
-| `Dialog` | [../../../src/ui/features/resume/resume-dialog-panel.tsx](../../../src/ui/features/resume/resume-dialog-panel.tsx) | resume/초기화 같은 modal interrupt |
-| `Input` | [../../../src/ui/features/scan/blog-input-panel.tsx](../../../src/ui/features/scan/blog-input-panel.tsx), [../../../src/ui/features/scan/category-panel.tsx](../../../src/ui/features/scan/category-panel.tsx), [../../../src/ui/features/options/export-options-panel.tsx](../../../src/ui/features/options/export-options-panel.tsx), [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx) | text, path, url, alias, token 입력 |
-| `Progress` | [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx) | export/upload 진행률 |
-| `ScrollArea` | [../../../src/ui/features/scan/category-panel.tsx](../../../src/ui/features/scan/category-panel.tsx), [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx) | 긴 표와 로그 viewport |
-| `Select` | [../../../src/ui/features/scan/category-panel.tsx](../../../src/ui/features/scan/category-panel.tsx), [../../../src/ui/features/options/export-options-panel.tsx](../../../src/ui/features/options/export-options-panel.tsx), [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx) | 단일 선택 dropdown |
-| `Separator` | [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx) | upload/result panel 내부 구획 |
-| `Sonner` | [../../../src/ui/App.tsx](../../../src/ui/App.tsx) | toast |
-| `Table` | [../../../src/ui/features/scan/category-panel.tsx](../../../src/ui/features/scan/category-panel.tsx), [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx) | 카테고리 트리, 결과/업로드 파일 테이블 |
-| `ToggleGroup` | [../../../src/ui/features/common/shell/wizard-header.tsx](../../../src/ui/features/common/shell/wizard-header.tsx), [../../../src/ui/features/job-results/job-results-panel.tsx](../../../src/ui/features/job-results/job-results-panel.tsx) | theme toggle, 소수의 상호배타 선택 |
+| `Alert` | `src/ui/features/options/export-options-panel.tsx` | frontmatter alias 같은 blocking validation |
+| `Badge` | `src/ui/features/common/shell/wizard-header.tsx`, `src/ui/features/scan/category-panel.tsx`, `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | 단계 상태, count, 결과 status pill |
+| `Button` | `src/ui/features/common/shell/wizard-dock.tsx`, `src/ui/features/scan/category-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | primary/secondary/destructive action |
+| `Card` | `src/ui/App.tsx`, `src/ui/features/scan/blog-input-panel.tsx`, `src/ui/features/scan/category-panel.tsx`, `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | shell, section panel, status board |
+| `Checkbox` | `src/ui/features/scan/category-panel.tsx`, `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | 독립 boolean field |
+| `Collapsible` | `src/ui/features/options/export-options-panel.tsx` | 고급 옵션 펼침/접힘 |
+| `Dialog` | `src/ui/features/resume/resume-dialog-panel.tsx` | resume/초기화 같은 modal interrupt |
+| `Input` | `src/ui/features/scan/blog-input-panel.tsx`, `src/ui/features/scan/category-panel.tsx`, `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | text, path, url, alias, token 입력 |
+| `Progress` | `src/ui/features/job-results/job-results-panel.tsx` | export/upload 진행률 |
+| `ScrollArea` | `src/ui/features/scan/category-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | 긴 표와 로그 viewport |
+| `Select` | `src/ui/features/scan/category-panel.tsx`, `src/ui/features/options/export-options-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | 단일 선택 dropdown |
+| `Separator` | `src/ui/features/job-results/job-results-panel.tsx` | upload/result panel 내부 구획 |
+| `Sonner` | `src/ui/App.tsx` | toast |
+| `Table` | `src/ui/features/scan/category-panel.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | 카테고리 트리, 결과/업로드 파일 테이블 |
+| `ToggleGroup` | `src/ui/features/common/shell/wizard-header.tsx`, `src/ui/features/job-results/job-results-panel.tsx` | theme toggle, 소수의 상호배타 선택 |
 | `Skeleton` | 현재 미사용 | 실제 비동기 로딩 placeholder가 필요할 때만 사용 |
 | `Tabs` | 현재 미사용 | 같은 깊이의 병렬 뷰가 필요할 때만 사용 |
 
@@ -82,7 +82,7 @@
 - panel look이 다르다고 feature 파일에서 새 카드 스타일을 만들지 않는다. 먼저 `Card` variant나 token/helper class를 늘린다.
 - validation color가 필요하면 feature 파일에서 raw red utility를 늘리기보다 `aria-invalid`와 primitive invalid style을 먼저 쓴다.
 - dense admin 표는 custom div grid보다 `Table`을 우선하고, viewport가 길어지면 `ScrollArea`를 조합한다.
-- wizard step 전환은 `Tabs`로 바꾸지 않는다. 현재 setup flow는 [../../../src/ui/App.tsx](../../../src/ui/App.tsx)의 step 계약을 유지한다.
+- wizard step 전환은 `Tabs`로 바꾸지 않는다. 현재 setup flow는 `src/ui/App.tsx`의 step 계약을 유지한다.
 
 ## 자주 쓰는 조합
 - 블로그 입력이나 provider field 같은 일반 폼: `Input` + helper text + `aria-invalid`

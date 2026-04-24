@@ -1,0 +1,50 @@
+status: open
+non_user_answer_streak: 0
+required_tracks:
+  scope:
+    status: open
+    summary: ''
+  non_goals:
+    status: open
+    summary: ''
+  outputs:
+    status: open
+    summary: ''
+  verification:
+    status: open
+    summary: ''
+  constraints:
+    status: open
+    summary: ''
+  stop_conditions:
+    status: open
+    summary: ''
+rounds:
+- id: Q1
+  route: user_decision
+  track: scope
+  question: 이번 리팩토링의 구현 범위는 무엇인가?
+  answer: parser block을 ContainerBlock/LeafBlock 모델로 구조화한다. Editor는 supportedBlocks를
+    갖고 match/convert 기반으로 dispatch한다. block module 경로는 common, naver-se2, naver-se3,
+    naver-se4를 포함한다.
+  source: 사용자 요청과 직전 논의
+- id: Q2
+  route: user_decision
+  track: constraints
+  question: unsupported block 처리 정책은 무엇인가?
+  answer: 기존 candidate/resolution/confirmation 중심 로직은 축소한다. 지원하지 못한 입력은 무조건 raw HTML
+    원문 보존 block으로 렌더링하고 warning을 띄운다. UI에서도 대표 case 선택/확정 흐름을 제거하고 raw HTML warning
+    흐름으로 반영한다.
+  source: 사용자 요청
+- id: Q3
+  route: user_decision
+  track: non_goals
+  question: 이번 계획에서 제외할 것은 무엇인가?
+  answer: 새로운 네이버 블록 지원 추가, fixture refresh, live 네이버 drift 보정, 업로드/provider 변경, manifest
+    resume 계약 변경은 제외한다. 다만 unsupported raw HTML 정책 때문에 바뀌는 expected.md와 UI 옵션 테스트는
+    범위에 포함한다.
+  source: 사용자 목표 해석
+closure:
+  ready: false
+  summary: ''
+  material_blockers: []

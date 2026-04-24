@@ -1,24 +1,25 @@
 import { load } from "cheerio"
 import { describe, expect, it } from "vitest"
 
-import { parseSe2Post } from "../../src/modules/parser/se2-parser.js"
+import { NaverBlogSE2Editor } from "../../src/modules/parser/editors/naver-blog-se2-editor.js"
 import { defaultExportOptions } from "../../src/shared/export-options.js"
 
 const parserOptions = {
   markdown: defaultExportOptions().markdown,
   unsupportedBlockCases: defaultExportOptions().unsupportedBlockCases,
 }
+const se2Editor = new NaverBlogSE2Editor()
 
 const createSe2Html = (content: string) => `<div id="viewTypeSelector">${content}</div>`
 
 const parseSe2Fixture = (content: string) =>
-  parseSe2Post({
+  se2Editor.parse({
     $: load(createSe2Html(content)),
     tags: ["legacy", "legacy", "archive"],
     options: parserOptions,
   })
 
-describe("parseSe2Post", () => {
+describe("NaverBlogSE2Editor", () => {
   it("parses direct text nodes into paragraph blocks", () => {
     const parsed = parseSe2Fixture("plain legacy text")
 

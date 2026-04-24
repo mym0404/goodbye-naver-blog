@@ -1,14 +1,14 @@
 # Architecture Knowledge
 
 ## 여기서 찾는 것
-- 파이프라인과 계층 계약: [principles.md](./principles.md)
-- 모듈 책임, 의존 방향, 코드 앵커: [system-map.md](./system-map.md)
-- parser block 지원 범위와 fallback projection: [parser-block-catalog.md](./parser-block-catalog.md)
+- 파이프라인과 계층 계약: `.agents/knowledge/architecture/principles.md`
+- 모듈 책임, 의존 방향, 코드 앵커: `.agents/knowledge/architecture/system-map.md`
+- parser block 지원 범위와 fallback projection: `.agents/knowledge/architecture/parser-block-catalog.md`
 
 ## 대표 기준점
-- export 파이프라인: [../../../src/modules/exporter/naver-blog-exporter.ts](../../../src/modules/exporter/naver-blog-exporter.ts)
-- Markdown 렌더러: [../../../src/modules/converter/markdown-renderer.ts](../../../src/modules/converter/markdown-renderer.ts)
-- HTTP API와 job lifecycle: [../../../src/server/http-server.ts](../../../src/server/http-server.ts)
+- export 파이프라인: `src/modules/exporter/naver-blog-exporter.ts`
+- Markdown 렌더러: `src/modules/converter/markdown-renderer.ts`
+- HTTP API와 job lifecycle: `src/server/http-server.ts`
 
 ## 언제 읽는가
 - 모듈 경계와 의존 방향을 빠르게 파악해야 할 때

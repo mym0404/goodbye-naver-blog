@@ -9,15 +9,15 @@
 - 사용자 수동 개발 서버는 `pnpm dev`의 `4173` 포트를 기준으로 보고, harness가 띄우는 서버는 이 포트와 겹치지 않게 `listen(0)` 또는 별도 포트를 사용한다.
 
 ## 관련 코드
-- [../../../package.json](../../../package.json)
-- [./validation.md](./validation.md)
-- [../../../scripts/harness/check-parser-capabilities.ts](../../../scripts/harness/check-parser-capabilities.ts)
-- [../../../scripts/harness/verify-sample-exports.ts](../../../scripts/harness/verify-sample-exports.ts)
-- [../../../scripts/harness/refresh-sample-fixtures.ts](../../../scripts/harness/refresh-sample-fixtures.ts)
-- [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
-- [../../../scripts/harness/generate-quality-report.ts](../../../scripts/harness/generate-quality-report.ts)
-- [../reference/generated/quality-score.md](../reference/generated/quality-score.md)
-- [../reference/generated/sample-coverage.md](../reference/generated/sample-coverage.md)
+- `package.json`
+- `.agents/knowledge/engineering/validation.md`
+- `scripts/harness/check-parser-capabilities.ts`
+- `scripts/harness/verify-sample-exports.ts`
+- `scripts/harness/refresh-sample-fixtures.ts`
+- `scripts/harness/run-ui-smoke.ts`
+- `scripts/harness/generate-quality-report.ts`
+- `.agents/knowledge/reference/generated/quality-score.md`
+- `.agents/knowledge/reference/generated/sample-coverage.md`
 
 ## 검증 방법
 - `pnpm check:local`: harness와 맞물린 기본 타입·오프라인·parser·sample fixture 계약이 그대로 유지되는지 확인할 때 실행한다.

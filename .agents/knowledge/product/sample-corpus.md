@@ -4,16 +4,16 @@
 이 문서는 capability-first parser regression에 쓰는 공개 네이버 블로그 샘플과 fixture 운영 방식을 정리한다.
 
 ## Source Of Truth
-- 실제 샘플 목록과 metadata는 [../../../src/shared/sample-corpus.ts](../../../src/shared/sample-corpus.ts) 이다.
+- 실제 샘플 목록과 metadata는 `src/shared/sample-corpus.ts` 이다.
 - 실제 fixture 파일은 `tests/fixtures/samples/<sampleId>/source.html`, `expected.md` 이다.
 - 이 문서는 코드에서 자동 생성되며 수동 편집하지 않는다.
 
 ## 관련 코드
-- [../../../src/shared/sample-corpus.ts](../../../src/shared/sample-corpus.ts)
-- [../../../src/shared/parser-capabilities.ts](../../../src/shared/parser-capabilities.ts)
-- [../../../scripts/harness/verify-sample-exports.ts](../../../scripts/harness/verify-sample-exports.ts)
-- [../../../scripts/harness/refresh-sample-fixtures.ts](../../../scripts/harness/refresh-sample-fixtures.ts)
-- [../../../scripts/harness/lib/sample-fixtures.ts](../../../scripts/harness/lib/sample-fixtures.ts)
+- `src/shared/sample-corpus.ts`
+- `src/shared/parser-capabilities.ts`
+- `scripts/harness/verify-sample-exports.ts`
+- `scripts/harness/refresh-sample-fixtures.ts`
+- `scripts/harness/lib/sample-fixtures.ts`
 
 ## 검증 방법
 - `pnpm quality:report`
@@ -43,5 +43,5 @@
 - `case:<unsupportedBlockCaseId>` lookup id는 warning 기반 대표 사례 해소를 뜻한다.
 - `sample-fixture` capability에 연결할 sample이 없으면 gap을 숨기지 않고 generated coverage에 남긴다.
 - `parser-fixture` capability는 sample gap으로 계산하지 않는다. 이 경우 parser unit test와 parser fixture가 canonical 검증 경로다.
-- 새 sample을 추가할 때는 `sample-corpus.ts` metadata, `source.html`, `expected.md`를 같이 추가한다.
+- 새 sample을 추가할 때는 `src/shared/sample-corpus.ts`, `tests/fixtures/samples/<sampleId>/source.html`, `tests/fixtures/samples/<sampleId>/expected.md`를 같이 추가한다.
 - sample을 갱신할 때는 기본적으로 `pnpm samples:refresh -- --id <sampleId>`를 사용한다.

@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-기존 PicGo upload flow 위에 수집/업로드 progress bar, 글 단위 부분 완료 표시, 업로드 테이블 `max-height`를 얹는다. 핵심 경로는 `picgo-upload-phase -> http-server/job-store -> upload panel -> smoke/live upload harness`이며, 최종 완료는 계속 rewrite 완료 뒤에만 인정한다. 최종 검증은 `pnpm check:full`과 `pnpm test:network:upload`를 함께 통과해야 닫힌다.
+기존 PicGo upload flow 위에 수집/업로드 progress bar, 글 단위 부분 완료 표시, 업로드 테이블 `max-height`를 얹는다. 핵심 경로는 `image-upload-phase -> http-server/job-store -> upload panel -> smoke/live upload harness`이며, 최종 완료는 계속 rewrite 완료 뒤에만 인정한다. 최종 검증은 `pnpm check:full`과 `pnpm test:network:upload`를 함께 통과해야 닫힌다.
 
 ## Context
 
@@ -12,11 +12,11 @@
 - export 단계는 이미 `src/modules/exporter/naver-blog-exporter.ts`에서 글 단위 `onProgress`, `onItem`을 호출해 증분 갱신을 한다.
 - upload 단계는 `src/server/http-server.ts`에서 `startUpload -> runPicGoUploadPhase -> rewriteUploadedAssets -> completeUpload`만 묶고 중간 증분 갱신이 없다.
 - `src/server/job-store.ts`에는 `updateUpload()`가 이미 있지만 실제 upload 경로에서 호출되지 않는다.
-- `src/modules/exporter/picgo-upload-phase.ts`는 PicGo에 파일 배열 전체를 한 번 넘기고 최종 결과 배열을 마지막에만 받는다.
+- `src/modules/exporter/image-upload-phase.ts`는 PicGo에 파일 배열 전체를 한 번 넘기고 최종 결과 배열을 마지막에만 받는다.
 - `src/ui/features/job-results/use-export-job.ts`는 이미 1초 polling을 하고 있어 transport 추가 없이도 서버 state만 자주 갱신하면 UI가 따라온다.
 - `src/ui/features/job-results/job-results-panel.tsx`는 업로드 패널과 대상 테이블을 이미 갖고 있지만 progress bar가 없고, 행 상태도 전역 job 상태만 따라간다.
 - 같은 파일의 결과 리스트는 `ScrollArea + max-h` 패턴을 이미 쓰고 있어 업로드 테이블에 같은 house pattern을 재사용할 수 있다.
-- `.agents/knowledge/product/ui-dashboard-design-system.md`와 현재 UI 구현은 upload form이 `upload-ready`, `upload-failed`에서만 보이고 `uploading`, `upload-completed`에서는 숨는 계약을 이미 갖고 있다. 이번 bundle은 그 기존 동작을 보존하고 regression으로 고정한다.
+- `.agents/knowledge/DESIGN.md`와 현재 UI 구현은 upload form이 `upload-ready`, `upload-failed`에서만 보이고 `uploading`, `upload-completed`에서는 숨는 계약을 이미 갖고 있다. 이번 bundle은 그 기존 동작을 보존하고 regression으로 고정한다.
 - `scripts/harness/run-ui-smoke.ts`는 mocked upload flow를, `scripts/harness/run-ui-live-upload.ts`는 실제 GitHub upload를 이미 검증하지만 둘 다 “중간 진행률이 올라가는가”는 강하게 고정하지 않는다.
 - 인터뷰가 필요했던 user-visible choice는 다음 네 가지였고, 모두 사용자 답변으로 닫혔다.
 - 수집 progress bar는 글 기준 `처리한 글 수 / 전체 글 수`
@@ -58,7 +58,7 @@
 
 ## Commands
 
-- `pnpm exec vitest run tests/picgo-upload-phase.test.ts --silent`
+- `pnpm exec vitest run tests/image-upload-phase.test.ts --silent`
 - `pnpm exec vitest run tests/http-server.test.ts --silent`
 - `pnpm exec vitest run tests/ui/app.test.tsx --silent`
 - `pnpm check:local`
@@ -69,9 +69,9 @@
 
 ## Project Structure
 
-- `src/modules/exporter/picgo-upload-phase.ts`
+- `src/modules/exporter/image-upload-phase.ts`
   - PicGo upload 실행 surface. 현재 batch 호출만 하므로 중간 progress를 만들려면 여기부터 바뀐다.
-- `src/modules/exporter/picgo-upload-rewriter.ts`
+- `src/modules/exporter/image-upload-rewriter.ts`
   - upload 결과를 Markdown/manifest/item에 반영하는 후처리 surface. 최종 완료 경계가 여기와 붙어 있다.
 - `src/server/http-server.ts`
   - upload same-job orchestration, polling API, progress update 결합 지점
@@ -95,7 +95,7 @@
   - 실제 GitHub upload와 UI polling 관찰 regression
 - `.agents/knowledge/product/domain.md`
   - upload 진행률과 완료 경계의 evergreen 제품 계약
-- `.agents/knowledge/product/ui-dashboard-design-system.md`
+- `.agents/knowledge/DESIGN.md`
   - upload table overflow와 progress UI 규약
 
 ## Testing Strategy

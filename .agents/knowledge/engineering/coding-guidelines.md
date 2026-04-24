@@ -1,9 +1,9 @@
 # Coding Guidelines
 
 ## 관련 코드
-- [../../../AGENTS.md](../../../AGENTS.md)
-- [../../../src/shared/parser-capabilities.ts](../../../src/shared/parser-capabilities.ts)
-- [../../../scripts/harness/run-ui-smoke.ts](../../../scripts/harness/run-ui-smoke.ts)
+- `AGENTS.md`
+- `src/shared/parser-capabilities.ts`
+- `scripts/harness/run-ui-smoke.ts`
 
 ## 검증 방법
 - `pnpm check:local`: 저장소 파일을 수정한 모든 턴에서 가장 먼저 실행하는 기본 검사다. parser, renderer, exporter, server, UI 중 수정한 코드가 기본 타입·오프라인·sample fixture 회귀를 깨지 않았는지 확인한다.

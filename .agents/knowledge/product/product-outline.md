@@ -7,9 +7,9 @@
 - 실제 흐름과 출력 동작은 server, exporter, renderer, React UI 구현이 기준이다.
 
 ## 관련 코드
-- [../../../src/server/http-server.ts](../../../src/server/http-server.ts)
-- [../../../src/modules/converter/markdown-renderer.ts](../../../src/modules/converter/markdown-renderer.ts)
-- [../../../src/ui/App.tsx](../../../src/ui/App.tsx)
+- `src/server/http-server.ts`
+- `src/modules/converter/markdown-renderer.ts`
+- `src/ui/App.tsx`
 
 ## 검증 방법
 - `pnpm smoke:ui`: scan, export, upload, 복구 Dialog와 마지막 단계 복귀까지 사용자 흐름을 다시 확인할 때 실행한다.

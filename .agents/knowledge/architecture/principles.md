@@ -7,9 +7,9 @@
 - 실제 구조 계약은 exporter, parser, converter, server, React UI 구현이 기준이다.
 
 ## 관련 코드
-- [../../../src/modules/exporter/naver-blog-exporter.ts](../../../src/modules/exporter/naver-blog-exporter.ts)
-- [../../../src/modules/converter/markdown-renderer.ts](../../../src/modules/converter/markdown-renderer.ts)
-- [../../../src/server/http-server.ts](../../../src/server/http-server.ts)
+- `src/modules/exporter/naver-blog-exporter.ts`
+- `src/modules/converter/markdown-renderer.ts`
+- `src/server/http-server.ts`
 
 ## 검증 방법
 - `pnpm check:local`: 계층 경계나 구조 규칙을 건드린 뒤 기본 타입·오프라인·parser·sample fixture 계약이 유지되는지 확인할 때 실행한다.

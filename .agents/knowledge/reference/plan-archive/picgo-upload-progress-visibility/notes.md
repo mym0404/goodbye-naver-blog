@@ -31,8 +31,8 @@
 
 - `src/server/job-store.ts` already has `updateUpload()` but no current upload path uses it.
 - `src/ui/features/job-results/use-export-job.ts` already polls every second, so progress visibility is blocked by state production, not transport.
-- `src/modules/exporter/picgo-upload-phase.ts` currently returns only final results after a single batch call.
-- `src/modules/exporter/picgo-upload-rewriter.ts` currently moves counts to final values only after rewrite success.
+- `src/modules/exporter/image-upload-phase.ts` currently returns only final results after a single batch call.
+- `src/modules/exporter/image-upload-rewriter.ts` currently moves counts to final values only after rewrite success.
 - Existing result-list UI already uses a bounded `ScrollArea` pattern that can be copied to the upload table.
 - Existing smoke and live upload harnesses already cover the upload flow, which lowers the cost of adding progress visibility assertions.
 

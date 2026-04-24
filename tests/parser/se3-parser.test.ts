@@ -1,19 +1,20 @@
 import { load } from "cheerio"
 import { describe, expect, it } from "vitest"
 
-import { parseSe3Post } from "../../src/modules/parser/se3-parser.js"
+import { NaverBlogSE3Editor } from "../../src/modules/parser/editors/naver-blog-se3-editor.js"
 import { cloneExportOptions, defaultExportOptions } from "../../src/shared/export-options.js"
 
 const parserOptions = {
   markdown: defaultExportOptions().markdown,
   unsupportedBlockCases: defaultExportOptions().unsupportedBlockCases,
 }
+const se3Editor = new NaverBlogSE3Editor()
 
 const createSe3Html = (...components: string[]) =>
   `<div id="viewTypeSelector"><div class="se_component_wrap sect_dsc">${components.join("")}</div></div>`
 
 const parseSe3Fixture = (...components: string[]) =>
-  parseSe3Post({
+  se3Editor.parse({
     $: load(createSe3Html(...components)),
     tags: ["daily", "daily", "legacy"],
     options: parserOptions,
@@ -26,13 +27,13 @@ const parseSe3FixtureWithOptions = ({
   components: string[]
   options: typeof parserOptions
 }) =>
-  parseSe3Post({
+  se3Editor.parse({
     $: load(createSe3Html(...components)),
     tags: ["daily", "daily", "legacy"],
     options,
   })
 
-describe("parseSe3Post", () => {
+describe("NaverBlogSE3Editor", () => {
   it("parses text components into paragraph blocks", () => {
     const parsed = parseSe3Fixture(`
       <div class="se_component se_text">
