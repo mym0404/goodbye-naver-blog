@@ -1,0 +1,16 @@
+
+ RUN  v3.2.4 /Users/mj/projects/farewell-naver-blog
+
+ ✓ tests/parser-capabilities.test.ts (3 tests) 2ms
+ ✓ tests/export-options.test.ts (15 tests) 5ms
+ ✓ tests/post-reviewer.test.ts (2 tests) 2ms
+ ✓ tests/markdown-renderer.test.ts (13 tests) 14ms
+ ✓ tests/single-post-cli.test.ts (14 tests) 19ms
+ ✓ tests/export-single-post.test.ts (5 tests) 116ms
+ ✓ tests/naver-blog-exporter.test.ts (14 tests) 242ms
+
+ Test Files  7 passed (7)
+      Tests  66 passed (66)
+   Start at  23:16:04
+   Duration  1.14s (transform 487ms, setup 0ms, collect 2.64s, tests 400ms, environment 1ms, prepare 457ms)
+

@@ -1,0 +1,115 @@
+status: closed
+non_user_answer_streak: 0
+required_tracks:
+  scope:
+    status: closed
+    summary: ContainerBlock/LeafBlock은 SE2 전용이 아니라 모든 editor block에 적용되는 parser node
+      모델이다. Editor는 supportedBlocks dispatch로 전환하고 block module은 common, naver-se2,
+      naver-se3, naver-se4를 포함한다.
+  non_goals:
+    status: closed
+    summary: 새 블록 지원, live fixture refresh, 업로드/provider, manifest resume 계약 변경은 제외한다.
+      Fallback/raw HTML 정책 때문에 필요한 expected output과 UI test 변경은 포함한다.
+  outputs:
+    status: closed
+    summary: 산출물은 전 editor 공용 parser node contract, block modules, editor dispatch,
+      fallback Turndown 제거, rawHtml block/output option 제거, literal HTML warning fallback,
+      UI option/gating 정리, tests와 generated/knowledge 갱신이다.
+  verification:
+    status: closed
+    summary: 최소 검증은 pnpm check:local이다. Parser/sample/UI 옵션 변경을 반영해 pnpm quality:report와
+      pnpm smoke:ui도 최종 검증에 포함한다.
+  constraints:
+    status: closed
+    summary: Fallback은 Turndown을 쓰지 않는다. 지원하지 못한 입력은 literal HTML passthrough와 warning
+      diagnostic으로만 처리한다. Turndown은 지원 block 내부 inline HTML 변환에만 허용한다.
+  stop_conditions:
+    status: closed
+    summary: 제품 정책 변경, literal HTML 보안/위생 충돌, 작업과 무관한 기존 검증 실패, 승인 범위를 넘는 출력 변경이 생기면
+      멈춘다.
+rounds:
+- id: Q1
+  route: user_decision
+  track: scope
+  question: Container/Leaf parser node 모델의 적용 범위는 어디까지인가?
+  answer: ContainerBlock과 LeafBlock은 SE2 전용이 아니라 모든 editor block에 적용되는 parser node
+    모델이다. SE2, SE3, SE4 모두 supportedBlocks 안에서 Container/Leaf parser node를 가질 수 있다.
+  source: from-user clarification
+- id: Q2
+  route: user_decision
+  track: constraints
+  question: Fallback에서 Turndown을 사용할 수 있는가?
+  answer: 아니오. 앞으로 fallback은 Turndown으로 Markdown paragraph를 만들지 않는다. 지원하지 못한 순간은 실패/손실
+    신호로 보고 raw HTML literal output과 warning으로만 처리한다. Turndown은 지원 block 내부 inline
+    HTML 변환에는 사용할 수 있지만 fallback 복구 경로에는 쓰지 않는다.
+  source: from-user fallback policy clarification
+- id: Q3
+  route: user_decision
+  track: outputs
+  question: rawHtml block 개념은 유지하는가?
+  answer: 아니오. rawHtml block이라는 별도 block output 개념은 제거한다. fallback은 구조화 block처럼 취급하지
+    않고 literal HTML passthrough와 warning diagnostic으로 처리한다. 기존 rawHtml 렌더 옵션과 UI 선택지도
+    제거 대상이다.
+  source: from-user raw html block removal
+- id: Q4
+  route: user_decision
+  track: non_goals
+  question: 이번 계획에서 제외할 것은 무엇인가?
+  answer: 새로운 네이버 블록 지원 추가, live fixture refresh, live 네이버 drift 보정, 업로드/provider
+    변경, manifest resume 계약 변경은 제외한다. fallback/raw HTML 정책 때문에 필요한 expected.md와 UI
+    옵션 테스트 변경은 포함한다.
+  source: from-user scoped planning
+- id: Q5
+  route: code_fact
+  track: outputs
+  question: 현재 parser와 UI에서 바뀌는 표면은 어디인가?
+  answer: 현재 editor parse 구현은 src/modules/parser/editors/naver-blog-se2-editor.ts,
+    naver-blog-se3-editor.ts, naver-blog-se4-editor.ts 내부 if-chain에 모여 있다. rawHtml,
+    unsupportedBlockCases, unsupported normalizer, rawHtml output UI는 src/shared/types.ts,
+    src/shared/block-registry.ts, src/shared/export-options.ts, src/shared/unsupported-block-cases.ts,
+    src/shared/unsupported-block-resolution.ts, src/modules/converter/unsupported-block-normalizer.ts,
+    src/modules/converter/markdown-renderer.ts, src/ui/features/options/export-options-panel.tsx,
+    src/ui/App.tsx, 관련 tests에 걸쳐 있다.
+  source: from-code local rg sweep
+- id: Q6
+  route: user_decision
+  track: verification
+  question: 검증은 어떤 수준까지 수행해야 하는가?
+  answer: 최소 기준은 pnpm check:local이다. Parser/sample/UI 옵션과 generated projection 변경을
+    포함하므로 quality:report와 smoke:ui도 최종 검증에 포함한다. Fallback policy 변경으로 sample expected
+    Markdown과 warning count가 바뀌는 경우 의도된 fixture 갱신을 검증한다.
+  source: from-user verification acceptance
+- id: Q7
+  route: user_decision
+  track: stop_conditions
+  question: 실행자가 멈춰야 하는 조건은 무엇인가?
+  answer: 지원 블록 출력 정책 변경이나 raw HTML warning 정책을 넘어서는 제품 결정이 필요하면 멈춘다. check:local에서
+    현재 작업과 무관한 기존 실패가 드러나면 멈춘다. literal HTML passthrough가 보안/위생 정책과 충돌해 단순 구현으로 해결할
+    수 없으면 멈춘다.
+  source: from-user stop condition policy
+pending_user_question: null
+closure:
+  ready: true
+  summary: Global parser node model, no-Turndown fallback, rawHtml block removal,
+    literal HTML warning fallback, verification and stop conditions are decision-complete.
+  material_blockers: []
+  checks:
+    desired_output_explicit:
+      passed: true
+      summary: 전 editor 공용 parser node 구조, fallback Turndown 제거, rawHtml block/output
+        option 제거, literal HTML warning fallback이 산출물로 명시됐다.
+    user_tradeoffs_explicit:
+      passed: true
+      summary: 사용자는 fallback에서 Markdown 복구를 포기하고 raw HTML literal과 warning으로 노출하는
+        정책을 선택했다.
+    executor_determinism:
+      passed: true
+      summary: Block model, fallback policy, UI removal scope, non-goals, stop conditions가
+        결정되어 executor가 추가 설계 질문 없이 진행 가능하다.
+    verification_proves_behavior:
+      passed: true
+      summary: typecheck, test:offline, parser:check, samples:verify, quality:report,
+        smoke:ui가 parser contract, output fixtures, generated docs, UI flow를 검증한다.
+    no_material_questions:
+      passed: true
+      summary: 남은 질문은 승인 여부뿐이며 구현 중 새 제품 정책 충돌이 생기면 stop condition으로 다룬다.

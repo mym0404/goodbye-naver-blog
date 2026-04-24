@@ -1,0 +1,30 @@
+
+ RUN  v3.2.4 /Users/mj/projects/farewell-naver-blog
+
+ ✓ tests/ui/export-options-panel.test.tsx (13 tests) 1665ms
+   ✓ ExportOptionsPanel > wires option updaters across all option steps  960ms
+ ✓ tests/ui/job-results-panel.test.tsx (8 tests) 2152ms
+   ✓ JobResultsPanel upload provider UX > disables github customUrl when jsDelivr is enabled, preserves the raw value, and submits the derived URL  531ms
+   ✓ JobResultsPanel upload provider UX > switches AList auth mode and validates only active required fields  680ms
+   ✓ JobResultsPanel upload provider UX > applies AWS S3, Lsky Pro, and SFTP conditional field rules with reasons  440ms
+ ✓ tests/http-server.test.ts (33 tests) 3006ms
+   ✓ http server > returns 422 when a preview link cannot be generated  1872ms
+ ✓ tests/ui/app.test.tsx (22 tests) 11825ms
+   ✓ App > restores persisted options from the bootstrap response  380ms
+   ✓ App > asks whether to restore a resumable path before scanning categories  614ms
+   ✓ App > resets a resumable path and continues category scan from the first screen  460ms
+   ✓ App > autosaves sanitized options and ignores blog, output, and category-only changes  2408ms
+   ✓ App > runs the main export flow in the wizard without preview or modal  562ms
+   ✓ App > hides setup panels while the export job is running  328ms
+   ✓ App > submits structured provider fields from the upload step and returns to results  1984ms
+   ✓ App > keeps provider-specific values when switching upload providers  1275ms
+   ✓ App > loads upload providers only when needed and hides internal runtime errors  382ms
+   ✓ App > keeps the same job editable after upload failure and allows retry with corrected fields  1649ms
+   ✓ App > shows rewrite-pending copy when the upload bar is full but completion is not final yet  546ms
+   ✓ App > hides the upload form when the export completed with skipped-no-candidates  354ms
+
+ Test Files  4 passed (4)
+      Tests  76 passed (76)
+   Start at  23:21:05
+   Duration  13.03s (transform 686ms, setup 0ms, collect 2.38s, tests 18.65s, environment 789ms, prepare 247ms)
+

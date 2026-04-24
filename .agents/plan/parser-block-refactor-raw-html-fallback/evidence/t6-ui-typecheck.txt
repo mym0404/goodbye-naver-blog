@@ -1,0 +1,4 @@
+
+> farewell-naver-blog@0.1.0 typecheck /Users/mj/projects/farewell-naver-blog
+> tsc -p tsconfig.json --noEmit
+

@@ -1,0 +1,11 @@
+title: JS Skills 기반 리팩토링
+goal: ''
+context: []
+non_goals: []
+constraints: []
+success_criteria: []
+verification_policy: []
+execution_strategy: []
+stop_conditions:
+- user_decision
+- external_environment

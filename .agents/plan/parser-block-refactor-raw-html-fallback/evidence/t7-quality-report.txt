@@ -1,0 +1,5 @@
+
+> farewell-naver-blog@0.1.0 quality:report /Users/mj/projects/farewell-naver-blog
+> node --import tsx ./scripts/harness/generate-quality-report.ts
+
+quality:report updated parser/sample knowledge docs and generated coverage reports

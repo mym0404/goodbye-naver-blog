@@ -43,14 +43,14 @@ events:
   source: ex planner interview record
 - id: E7
   kind: interview_recorded
-  summary: Recorded interview answer Q6 for stop_conditions.
+  summary: Recorded interview answer Q6 for outputs.
   affects:
   - interview.yaml#rounds
   - interview.yaml#non_user_answer_streak
   source: ex planner interview record
 - id: E8
   kind: interview_recorded
-  summary: Recorded interview answer Q7 for outputs.
+  summary: Recorded interview answer Q7 for stop_conditions.
   affects:
   - interview.yaml#rounds
   - interview.yaml#non_user_answer_streak
@@ -92,9 +92,9 @@ events:
   source: ex planner interview track close
 - id: E14
   kind: interview_track_changed
-  summary: Interview track stop_conditions closed.
+  summary: Interview track constraints closed.
   affects:
-  - interview.yaml#required_tracks.stop_conditions
+  - interview.yaml#required_tracks.constraints
   - interview.yaml#closure
   source: ex planner interview track close
 - id: E15
@@ -104,3 +104,21 @@ events:
   - interview.yaml#status
   - interview.yaml#closure
   source: ex planner interview close
+- id: E16
+  kind: interview_track_changed
+  summary: 'Interview track constraints reopened: User clarified fallback must never
+    use Turndown and rawHtml block concept should be removed.'
+  affects:
+  - interview.yaml#required_tracks.constraints
+  - interview.yaml#closure
+  - status.yaml#phase
+  source: ex planner interview track open
+- id: E17
+  kind: interview_track_changed
+  summary: 'Interview track outputs reopened: User clarified rawHtml block concept
+    should be removed from the planned parser/rendering output model.'
+  affects:
+  - interview.yaml#required_tracks.outputs
+  - interview.yaml#closure
+  - status.yaml#phase
+  source: ex planner interview track open

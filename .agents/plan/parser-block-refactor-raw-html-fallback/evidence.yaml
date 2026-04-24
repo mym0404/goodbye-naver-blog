@@ -1,0 +1,253 @@
+records:
+- id: V1
+  task_id: T1
+  step_id: type-contract
+  command: pnpm typecheck
+  exit_code: 0
+  success: true
+  artifact: evidence/t1-type-contract.txt
+  satisfies: []
+- id: V2
+  task_id: T1
+  step_id: routing-smoke
+  command: pnpm test:offline -- tests/parser/post-parser.test.ts
+  exit_code: 1
+  success: false
+  artifact: evidence/t1-routing-smoke.txt
+  satisfies: []
+- id: V3
+  task_id: T1
+  step_id: routing-smoke
+  command: pnpm test:offline -- tests/parser/post-parser.test.ts
+  exit_code: 1
+  success: false
+  artifact: evidence/t1-routing-smoke-rerun.txt
+  satisfies: []
+- id: V4
+  task_id: T1
+  step_id: routing-smoke
+  command: pnpm test:offline tests/parser/post-parser.test.ts
+  exit_code: 1
+  success: false
+  artifact: evidence/t1-routing-smoke-focused.txt
+  satisfies: []
+- id: V5
+  task_id: T1
+  step_id: routing-smoke
+  command: pnpm exec vitest run --configLoader runner --silent=true tests/parser/post-parser.test.ts
+  exit_code: 0
+  success: true
+  artifact: evidence/t1-routing-smoke-focused-vitest.txt
+  satisfies: []
+- id: V6
+  task_id: T1
+  step_id: routing-smoke
+  command: pnpm exec vitest run --configLoader runner --silent=true tests/parser/post-parser.test.ts
+  exit_code: 0
+  success: true
+  artifact: evidence/t1-routing-smoke.txt
+  satisfies: []
+- id: V7
+  task_id: T2
+  step_id: renderer-tests
+  command: pnpm exec vitest run --configLoader runner --silent=true tests/markdown-renderer.test.ts
+    tests/post-reviewer.test.ts tests/export-single-post.test.ts
+  exit_code: 0
+  success: true
+  artifact: evidence/t2-renderer-tests.txt
+  satisfies: []
+- id: V8
+  task_id: T2
+  step_id: exporter-tests
+  command: pnpm exec vitest run --configLoader runner --silent=true tests/naver-blog-exporter.test.ts
+  exit_code: 0
+  success: true
+  artifact: evidence/t2-exporter-tests.txt
+  satisfies: []
+- id: V9
+  task_id: T3
+  step_id: se2-parser-tests
+  command: pnpm exec vitest run --configLoader runner --silent=true tests/parser/se2-parser.test.ts
+    tests/parser/post-parser.test.ts
+  exit_code: 0
+  success: true
+  artifact: evidence/t3-se2-parser-tests.txt
+  satisfies: []
+- id: V10
+  task_id: T3
+  step_id: se2-typecheck
+  command: pnpm typecheck
+  exit_code: 0
+  success: true
+  artifact: evidence/t3-se2-typecheck.txt
+  satisfies: []
+- id: V11
+  task_id: T4
+  step_id: se3-se4-parser-tests
+  command: pnpm exec vitest run --configLoader runner --silent=true tests/parser/se3-parser.test.ts
+    tests/parser/se4-parser.test.ts tests/parser/post-parser.test.ts
+  exit_code: 0
+  success: true
+  artifact: evidence/t4-se3-se4-parser-tests.txt
+  satisfies: []
+- id: V12
+  task_id: T4
+  step_id: se3-se4-typecheck
+  command: pnpm typecheck
+  exit_code: 0
+  success: true
+  artifact: evidence/t4-se3-se4-typecheck.txt
+  satisfies: []
+- id: V13
+  task_id: C1
+  step_id: parser-suite
+  command: pnpm exec vitest run --configLoader runner --silent=true tests/parser/post-parser.test.ts
+    tests/parser/se2-parser.test.ts tests/parser/se3-parser.test.ts tests/parser/se4-parser.test.ts
+  exit_code: 0
+  success: true
+  artifact: evidence/c1-parser-suite.txt
+  satisfies: []
+- id: V14
+  task_id: T5
+  step_id: backend-contract-tests
+  command: pnpm exec vitest run --configLoader runner --silent=true tests/parser-capabilities.test.ts
+    tests/export-options.test.ts tests/single-post-cli.test.ts tests/markdown-renderer.test.ts
+    tests/post-reviewer.test.ts tests/export-single-post.test.ts tests/naver-blog-exporter.test.ts
+  exit_code: 1
+  success: false
+  artifact: evidence/t5-backend-contract-tests.txt
+  satisfies: []
+- id: V15
+  task_id: T5
+  step_id: backend-contract-tests
+  command: pnpm exec vitest run --configLoader runner --silent=true tests/parser-capabilities.test.ts
+    tests/export-options.test.ts tests/single-post-cli.test.ts tests/markdown-renderer.test.ts
+    tests/post-reviewer.test.ts tests/export-single-post.test.ts tests/naver-blog-exporter.test.ts
+  exit_code: 1
+  success: false
+  artifact: evidence/t5-backend-contract-tests.txt
+  satisfies: []
+- id: V16
+  task_id: T5
+  step_id: backend-contract-tests
+  command: pnpm exec vitest run --configLoader runner --silent=true tests/parser-capabilities.test.ts
+    tests/export-options.test.ts tests/single-post-cli.test.ts tests/markdown-renderer.test.ts
+    tests/post-reviewer.test.ts tests/export-single-post.test.ts tests/naver-blog-exporter.test.ts
+  exit_code: 0
+  success: true
+  artifact: evidence/t5-backend-contract-tests.txt
+  satisfies: []
+- id: V17
+  task_id: T5
+  step_id: backend-typecheck
+  command: pnpm typecheck
+  exit_code: 0
+  success: true
+  artifact: evidence/t5-backend-typecheck.txt
+  satisfies: []
+- id: V18
+  task_id: T6
+  step_id: ui-options-tests
+  command: pnpm exec vitest run --configLoader runner --silent=true tests/ui/export-options-panel.test.tsx
+    tests/ui/app.test.tsx tests/ui/job-results-panel.test.tsx tests/http-server.test.ts
+  exit_code: 1
+  success: false
+  artifact: evidence/t6-ui-options-tests.txt
+  satisfies: []
+- id: V19
+  task_id: T6
+  step_id: ui-options-tests
+  command: pnpm exec vitest run --configLoader runner --silent=true tests/ui/export-options-panel.test.tsx
+    tests/ui/app.test.tsx tests/ui/job-results-panel.test.tsx tests/http-server.test.ts
+  exit_code: 0
+  success: true
+  artifact: evidence/t6-ui-options-tests.txt
+  satisfies: []
+- id: V20
+  task_id: T6
+  step_id: ui-typecheck
+  command: pnpm typecheck
+  exit_code: 0
+  success: true
+  artifact: evidence/t6-ui-typecheck.txt
+  satisfies: []
+- id: V21
+  task_id: T7
+  step_id: quality-report
+  command: pnpm quality:report
+  exit_code: 0
+  success: true
+  artifact: evidence/t7-quality-report.txt
+  satisfies: []
+- id: V22
+  task_id: T7
+  step_id: parser-check
+  command: pnpm parser:check
+  exit_code: 0
+  success: true
+  artifact: evidence/t7-parser-check.txt
+  satisfies: []
+- id: V23
+  task_id: T7
+  step_id: sample-verify
+  command: pnpm samples:verify
+  exit_code: 1
+  success: false
+  artifact: evidence/t7-sample-verify.txt
+  satisfies: []
+- id: V24
+  task_id: T7
+  step_id: quality-report
+  command: pnpm quality:report
+  exit_code: 0
+  success: true
+  artifact: evidence/t7-quality-report.txt
+  satisfies: []
+- id: V25
+  task_id: T7
+  step_id: parser-check
+  command: pnpm parser:check
+  exit_code: 0
+  success: true
+  artifact: evidence/t7-parser-check.txt
+  satisfies: []
+- id: V26
+  task_id: T7
+  step_id: sample-verify
+  command: pnpm samples:verify
+  exit_code: 0
+  success: true
+  artifact: evidence/t7-sample-verify.txt
+  satisfies: []
+- id: V27
+  task_id: FV1
+  step_id: check-full
+  command: pnpm check:full
+  exit_code: 0
+  success: true
+  artifact: evidence/fv1-check-full.txt
+  satisfies: []
+- id: V28
+  task_id: FV1
+  step_id: check-local
+  command: pnpm check:local
+  exit_code: 0
+  success: true
+  artifact: evidence/fv1-check-local.txt
+  satisfies: []
+- id: V29
+  task_id: FV1
+  step_id: check-full
+  command: pnpm check:full
+  exit_code: 0
+  success: true
+  artifact: evidence/fv1-check-full.txt
+  satisfies: []
+- id: V30
+  task_id: FV1
+  step_id: check-local
+  command: pnpm check:local
+  exit_code: 0
+  success: true
+  artifact: evidence/fv1-check-local.txt
+  satisfies: []

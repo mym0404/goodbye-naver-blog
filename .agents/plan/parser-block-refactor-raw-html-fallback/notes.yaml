@@ -1,0 +1,97 @@
+entries:
+- id: N1
+  kind: decision
+  text: Approved by user request to continue with the current draft.
+  why: Draft approval comment.
+  affects:
+  - draft.md
+  - status.yaml#phase
+  source: ex planner approve-draft
+- id: N2
+  kind: repair
+  text: Repaired T1 field verification.steps[1].command.
+  why: Use repo-native Vitest file filter; pnpm test:offline -- passes a literal separator
+    and runs the full suite.
+  affects:
+  - tasks.yaml#T1.verification.steps[1].command
+  source: E35
+- id: N3
+  kind: repair
+  text: Repaired T1 field verification.steps[1].command.
+  why: Use focused Vitest invocation that does not trigger the package script --silent
+    positional parsing issue.
+  affects:
+  - tasks.yaml#T1.verification.steps[1].command
+  source: E37
+- id: N4
+  kind: repair
+  text: Repaired T2 field files.primary.
+  why: Renderer body-node support must reuse parser body-node helpers and keep normalized
+    unsupported block output body in sync.
+  affects:
+  - tasks.yaml#T2.files.primary
+  source: E42
+- id: N5
+  kind: repair
+  text: Repaired T2 field files.primary.
+  why: Renderer body-node support must keep normalizeUnsupportedBlocks output body
+    synchronized with rewritten blocks.
+  affects:
+  - tasks.yaml#T2.files.primary
+  source: E43
+- id: N6
+  kind: repair
+  text: Repaired T2 field verification.steps[0].command.
+  why: Use focused Vitest invocation; pnpm test:offline -- runs the full suite in
+    this repo.
+  affects:
+  - tasks.yaml#T2.verification.steps[0].command
+  source: E44
+- id: N7
+  kind: repair
+  text: Repaired T2 field verification.steps[1].command.
+  why: Use focused Vitest invocation; pnpm test:offline -- runs the full suite in
+    this repo.
+  affects:
+  - tasks.yaml#T2.verification.steps[1].command
+  source: E45
+- id: N8
+  kind: repair
+  text: Repaired T3 field verification.steps[0].command.
+  why: Use focused Vitest invocation; pnpm test:offline -- runs the full suite in
+    this repo.
+  affects:
+  - tasks.yaml#T3.verification.steps[0].command
+  source: E50
+- id: N9
+  kind: repair
+  text: Repaired T4 field verification.steps[0].command.
+  why: Use focused Vitest invocation; pnpm test:offline -- runs the full suite in
+    this repo.
+  affects:
+  - tasks.yaml#T4.verification.steps[0].command
+  source: E55
+- id: N10
+  kind: repair
+  text: Repaired C1 field verification.steps[0].command.
+  why: Use focused Vitest invocation; pnpm test:offline -- runs the full suite in
+    this repo.
+  affects:
+  - tasks.yaml#C1.verification.steps[0].command
+  source: E60
+- id: N11
+  kind: repair
+  text: Repaired T5 field verification.steps[0].command.
+  why: Use focused Vitest invocation because pnpm test:offline forwards file args
+    through the repo script inconsistently.
+  affects:
+  - tasks.yaml#T5.verification.steps[0].command
+  source: E64
+- id: N12
+  kind: repair
+  text: Repaired T6 field verification.steps[0].command.
+  why: Use focused Vitest invocation because pnpm test:offline forwards file args
+    through the repo script inconsistently.
+  affects:
+  - tasks.yaml#T6.verification.steps[0].command
+  source: E71

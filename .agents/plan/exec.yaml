@@ -1,2 +1,2 @@
-active_plan_id: parser-block-structure-refactor
-plan_dir: .agents/plan/parser-block-structure-refactor
+active_plan_id: parser-block-refactor-raw-html-fallback
+plan_dir: .agents/plan/parser-block-refactor-raw-html-fallback

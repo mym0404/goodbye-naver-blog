@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 /Users/mj/projects/farewell-naver-blog
+
+ ✓ tests/post-reviewer.test.ts (2 tests) 2ms
+ ✓ tests/markdown-renderer.test.ts (13 tests) 14ms
+ ✓ tests/export-single-post.test.ts (5 tests) 106ms
+
+ Test Files  3 passed (3)
+      Tests  20 passed (20)
+   Start at  22:47:46
+   Duration  833ms (transform 199ms, setup 0ms, collect 880ms, tests 122ms, environment 0ms, prepare 170ms)
+

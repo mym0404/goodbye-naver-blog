@@ -1,26 +1,25 @@
-status: closed
+status: open
 non_user_answer_streak: 0
 required_tracks:
   scope:
     status: closed
-    summary: Parser block을 ContainerBlock/LeafBlock 모델로 구조화하고 editor supportedBlocks
-      dispatch로 전환한다. block module은 common, naver-se2, naver-se3, naver-se4를 포함한다.
+    summary: ContainerBlock/LeafBlock은 SE2 전용이 아니라 모든 editor block에 적용되는 parser node
+      모델이다. Editor는 supportedBlocks dispatch로 전환하고 block module은 common, naver-se2,
+      naver-se3, naver-se4를 포함한다.
   non_goals:
     status: closed
     summary: 새 블록 지원, live fixture refresh, 업로드/provider, manifest resume 계약 변경은 제외한다.
       Unsupported raw HTML 정책 때문에 필요한 expected output과 UI test 변경은 포함한다.
   outputs:
-    status: closed
-    summary: 산출물은 parser block contract, block modules, editor dispatch, raw HTML
-      unsupported fallback, UI option/gating 정리, tests와 generated/knowledge 갱신이다.
+    status: open
+    summary: ''
   verification:
     status: closed
     summary: 최소 검증은 pnpm check:local이다. Parser/sample/UI 옵션 변경을 반영해 quality:report와
       smoke:ui를 최종 검증에 포함한다.
   constraints:
-    status: closed
-    summary: Unsupported representative case 선택/확정 로직은 줄이고, 미지원 입력은 raw HTML 그대로 렌더링하며
-      warning을 노출한다. UI도 이 정책으로 정리한다.
+    status: open
+    summary: ''
   stop_conditions:
     status: closed
     summary: 제품 정책 변경, raw HTML 보안/위생 충돌, 작업과 무관한 기존 검증 실패, 승인 범위를 넘는 출력 변경이 생기면 멈춘다.
@@ -28,11 +27,10 @@ rounds:
 - id: Q1
   route: user_decision
   track: scope
-  question: 이번 리팩토링의 구현 범위는 무엇인가?
-  answer: parser block을 ContainerBlock/LeafBlock 모델로 구조화한다. Editor는 supportedBlocks를
-    갖고 match/convert 기반으로 dispatch한다. block module 경로는 common, naver-se2, naver-se3,
-    naver-se4를 포함한다.
-  source: 사용자 요청과 직전 논의
+  question: Container/Leaf parser node 모델의 적용 범위는 어디까지인가?
+  answer: ContainerBlock과 LeafBlock은 SE2 전용이 아니라 모든 editor block에 적용되는 parser node
+    모델이다. SE2, SE3, SE4 모두 supportedBlocks 안에서 Container/Leaf parser node를 가질 수 있다.
+  source: from-user clarification
 - id: Q2
   route: user_decision
   track: constraints
@@ -40,15 +38,15 @@ rounds:
   answer: 기존 candidate/resolution/confirmation 중심 로직은 축소한다. 지원하지 못한 입력은 무조건 raw HTML
     원문 보존 block으로 렌더링하고 warning을 띄운다. UI에서도 대표 case 선택/확정 흐름을 제거하고 raw HTML warning
     흐름으로 반영한다.
-  source: 사용자 요청
+  source: from-user request
 - id: Q3
   route: user_decision
   track: non_goals
   question: 이번 계획에서 제외할 것은 무엇인가?
-  answer: 새로운 네이버 블록 지원 추가, fixture refresh, live 네이버 drift 보정, 업로드/provider 변경, manifest
-    resume 계약 변경은 제외한다. 다만 unsupported raw HTML 정책 때문에 바뀌는 expected.md와 UI 옵션 테스트는
-    범위에 포함한다.
-  source: 사용자 목표 해석
+  answer: 새로운 네이버 블록 지원 추가, live fixture refresh, live 네이버 drift 보정, 업로드/provider
+    변경, manifest resume 계약 변경은 제외한다. Unsupported raw HTML 정책 때문에 필요한 expected.md와
+    UI 옵션 테스트 변경은 포함한다.
+  source: from-user scoped planning
 - id: Q4
   route: code_fact
   track: outputs
@@ -58,7 +56,7 @@ rounds:
     src/shared/types.ts, src/shared/export-options.ts, src/shared/unsupported-block-cases.ts,
     src/shared/unsupported-block-resolution.ts, src/shared/parser-capabilities.ts,
     src/ui/features/options/export-options-panel.tsx, src/ui/App.tsx, 관련 tests에서 사용된다.
-  source: 로컬 rg sweep
+  source: from-code local rg sweep
 - id: Q5
   route: code_fact
   track: verification
@@ -66,24 +64,23 @@ rounds:
   answer: package.json의 pnpm check:local은 pnpm typecheck, pnpm test:offline, pnpm
     parser:check, pnpm samples:verify를 묶는다. parser/sample/harness 변경 후에는 quality:report도
     필요하고, UI 옵션 흐름 변경 후에는 smoke:ui를 추가 검증으로 본다.
-  source: package.json과 .agents/knowledge/engineering/validation.md
+  source: from-code package.json and validation knowledge
 - id: Q6
+  route: user_decision
+  track: outputs
+  question: 완료 산출물은 무엇이어야 하는가?
+  answer: 전 editor에 적용 가능한 parser node contract, common/naver-se2/naver-se3/naver-se4
+    block modules, editor supportedBlocks dispatch, raw HTML unsupported fallback,
+    UI option/gating 정리, 관련 tests와 generated/knowledge projection 갱신을 산출물로 둔다.
+  source: from-user requested outcome
+- id: Q7
   route: user_decision
   track: stop_conditions
   question: 실행자가 멈춰야 하는 조건은 무엇인가?
   answer: 지원 블록 출력 정책 변경이나 raw HTML warning 정책을 넘어서는 제품 결정이 필요하면 멈춘다. check:local에서
     현재 작업과 무관한 기존 실패가 드러나면 멈춘다. raw HTML 원문 렌더링이 보안/위생 정책과 충돌해 단순 구현으로 해결할 수 없으면 멈춘다.
-  source: 사용자 정책과 저장소 검증 규칙
-- id: Q7
-  route: user_decision
-  track: outputs
-  question: 완료 산출물은 무엇이어야 하는가?
-  answer: parser block contract, common/naver-se2/naver-se3/naver-se4 block modules,
-    editor supportedBlocks dispatch, raw HTML unsupported fallback, UI option/gating
-    정리, 관련 tests와 generated/knowledge projection 갱신을 산출물로 둔다.
-  source: 사용자 요청과 로컬 탐색 종합
+  source: from-user stop condition policy
 closure:
-  ready: true
-  summary: Block 구조화와 unsupported raw HTML 정책의 scope, non-goals, outputs, verification,
-    constraints, stop conditions가 결정됨.
+  ready: false
+  summary: ''
   material_blockers: []

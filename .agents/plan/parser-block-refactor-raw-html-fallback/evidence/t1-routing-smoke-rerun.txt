@@ -1,0 +1,110 @@
+
+> farewell-naver-blog@0.1.0 test:offline /Users/mj/projects/farewell-naver-blog
+> vitest run --configLoader runner --silent -- tests/parser/post-parser.test.ts
+
+
+ RUN  v3.2.4 /Users/mj/projects/farewell-naver-blog
+
+ ✓ tests/markdown-renderer.test.ts (13 tests) 161ms
+ ✓ tests/parser/se3-parser.test.ts (12 tests) 169ms
+ ✓ tests/parser/se2-parser.test.ts (21 tests) 208ms
+ ✓ tests/parser/se4-parser.test.ts (23 tests) 208ms
+ ✓ tests/export-single-post.test.ts (5 tests) 210ms
+ ✓ tests/utils.test.ts (5 tests) 39ms
+ ✓ tests/naver-blog-fetcher.test.ts (5 tests) 35ms
+ ✓ tests/asset-store.test.ts (6 tests) 67ms
+ ✓ tests/image-upload-provider-source.test.ts (2 tests) 7ms
+ ✓ tests/unsupported-block-cases.test.ts (4 tests) 6ms
+ ✓ tests/single-post-metadata-cache.test.ts (1 test) 13ms
+ ✓ tests/naver-blog-exporter.test.ts (14 tests) 614ms
+ ✓ tests/ui/api.test.ts (2 tests) 10ms
+ ✓ tests/image-upload-phase.test.ts (2 tests) 6ms
+ ✓ tests/parser/post-parser.test.ts (6 tests) 139ms
+ ✓ tests/export-options.test.ts (15 tests) 9ms
+ ✓ tests/post-link-rewriter.test.ts (4 tests) 6ms
+ ✓ tests/post-path-template.test.ts (5 tests) 6ms
+ ✓ tests/parser-capabilities.test.ts (6 tests) 5ms
+ ✓ tests/ui/category-selection.test.ts (2 tests) 4ms
+ ✓ tests/unsupported-block-normalizer.test.ts (3 tests) 3ms
+ ✓ tests/single-post-cli.test.ts (14 tests) 72ms
+ ✓ tests/export-job-manifest.test.ts (1 test) 3ms
+ ✓ tests/job-store.test.ts (1 test) 4ms
+ ✓ tests/export-scope.test.ts (2 tests) 3ms
+ ✓ tests/post-reviewer.test.ts (2 tests) 9ms
+ ✓ tests/vite-config.test.ts (1 test) 4ms
+ ✓ tests/coalesced-task-runner.test.ts (1 test) 4ms
+ ✓ tests/sample-fixture-warning-regression.test.ts (2 tests) 1824ms
+   ✓ sample fixture unsupported warning regression > keeps 'se2-table-rawhtml-navigation' warning-free after unsupported block normalization  1541ms
+ ✓ tests/unsupported-block-fixture-evidence.test.ts (2 tests) 2185ms
+   ✓ unsupported block fixture evidence > replays source fixtures and re-finds the stored observations  2170ms
+ ✓ tests/ui/alert.test.tsx (1 test) 53ms
+ ✓ tests/ui/use-export-job.test.tsx (6 tests) 49ms
+ ✓ tests/ui/primitives.test.tsx (3 tests) 167ms
+ ✓ tests/ui/category-panel.test.tsx (2 tests) 133ms
+ ❯ tests/http-server.test.ts (33 tests | 1 failed) 3799ms
+   ✓ http server > returns frontmatter metadata from export defaults 41ms
+   ✓ http server > hydrates resumed jobs from manifest.json 17ms
+   ✓ http server > looks up resumable jobs for an explicit output path 17ms
+   ✓ http server > restores a resumable job for an explicit output path and persists that path 17ms
+   ✓ http server > does not hydrate resumed jobs from temporary output directories 28ms
+   ✓ http server > restores full resumed scan posts from scan cache when manifest snapshot was compacted 15ms
+   ✓ http server > clears the resumed output directory and bootstrap state 74ms
+   ✓ http server > cancels an active export job before resetting output 66ms
+   ✓ http server > returns an error when manifest.json is invalid 6ms
+   × http server > keeps the newer in-memory job when bootstrap sees an older manifest snapshot 75ms
+     → ENOTEMPTY: directory not empty, rmdir '/var/folders/nd/j93ncpq51lz3k3xqfv_4k9r40000gn/T/export-manifest-stale-hTMOUt/output'
+   ✓ http server > loads persisted export settings from the project settings file 55ms
+   ✓ http server > falls back to defaults when the settings file is malformed 59ms
+   ✓ http server > persists export settings without category ids 7ms
+   ✓ http server > rejects invalid persisted export settings payloads 4ms
+   ✓ http server > returns the runtime-backed upload provider catalog 6ms
+   ✓ http server > loads upload providers lazily and hides internal runtime errors 34ms
+   ✓ http server > opens a local output file through the action api 11ms
+   ✓ http server > builds a preview link from the current markdown file through the action api 27ms
+   ✓ http server > rejects preview-link requests for missing files 22ms
+   ✓ http server > rejects preview-link requests that escape the output root 6ms
+   ✓ http server > returns 422 when a preview link cannot be generated  2470ms
+   ✓ http server > persists scan results to a json file and reuses them after app reloads 5ms
+   ✓ http server > accepts same-origin upload actions for upload-ready jobs without persisting provider fields 145ms
+   ✓ http server > preserves false and 0 in normalized provider fields 83ms
+   ✓ http server > redacts only string provider fields in upload failures 60ms
+   ✓ http server > rejects cross-site style upload requests 31ms
+   ✓ http server > rejects upload requests that omit the Origin header 30ms
+   ✓ http server > keeps a safe upload failure reason and allows retry from upload-failed jobs 88ms
+   ✓ http server > cancels an active upload job before resetting output 60ms
+   ✓ http server > exposes nonzero uploadedCount while the job is still uploading 87ms
+   ✓ http server > preserves uploadedCount when rewrite fails after upload results return 60ms
+   ✓ http server > keeps earlier rewritten posts completed when a later ready post rewrite fails 61ms
+   ✓ http server > finishes zero-candidate download-and-upload jobs as completed with skipped-no-candidates 32ms
+ ✓ tests/ui/export-options-panel.test.tsx (15 tests) 1759ms
+   ✓ ExportOptionsPanel > wires option updaters across all option steps  948ms
+ ✓ tests/ui/job-results-panel.test.tsx (8 tests) 1861ms
+   ✓ JobResultsPanel upload provider UX > disables github customUrl when jsDelivr is enabled, preserves the raw value, and submits the derived URL  479ms
+   ✓ JobResultsPanel upload provider UX > switches AList auth mode and validates only active required fields  535ms
+   ✓ JobResultsPanel upload provider UX > applies AWS S3, Lsky Pro, and SFTP conditional field rules with reasons  343ms
+ ✓ tests/ui/app.test.tsx (22 tests) 11425ms
+   ✓ App > restores persisted options from the bootstrap response  359ms
+   ✓ App > asks whether to restore a resumable path before scanning categories  408ms
+   ✓ App > resets a resumable path and continues category scan from the first screen  450ms
+   ✓ App > autosaves sanitized options and ignores blog, output, and category-only changes  2468ms
+   ✓ App > runs the main export flow in the wizard without preview or modal  505ms
+   ✓ App > submits structured provider fields from the upload step and returns to results  1970ms
+   ✓ App > keeps provider-specific values when switching upload providers  1190ms
+   ✓ App > loads upload providers only when needed and hides internal runtime errors  332ms
+   ✓ App > keeps the same job editable after upload failure and allows retry with corrected fields  1656ms
+   ✓ App > shows rewrite-pending copy when the upload bar is full but completion is not final yet  550ms
+   ✓ App > hides the upload form when the export completed with skipped-no-candidates  370ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/http-server.test.ts > http server > keeps the newer in-memory job when bootstrap sees an older manifest snapshot
+Error: ENOTEMPTY: directory not empty, rmdir '/var/folders/nd/j93ncpq51lz3k3xqfv_4k9r40000gn/T/export-manifest-stale-hTMOUt/output'
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 37 passed (38)
+      Tests  1 failed | 271 passed (272)
+   Start at  22:42:51
+   Duration  15.59s (transform 2.00s, setup 0ms, collect 13.79s, tests 25.28s, environment 2.78s, prepare 2.35s)
+
+ ELIFECYCLE  Command failed with exit code 1.

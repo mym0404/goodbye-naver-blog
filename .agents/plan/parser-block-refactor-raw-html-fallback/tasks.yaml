@@ -1,0 +1,671 @@
+tasks:
+- id: T1
+  kind: execution
+  title: Define global parser node and ordered body contracts
+  depends_on: []
+  start_when:
+    description: Draft is approved and current parser still exposes editor parse classes
+      plus ParsedPost.blocks.
+  files:
+    primary:
+    - src/shared/types.ts
+    - src/modules/parser/post-parser.ts
+    - src/modules/parser/editors/base-editor.ts
+    - src/modules/parser/blocks/parser-node.ts
+    - src/modules/parser/blocks/body-node-utils.ts
+    - tests/parser/post-parser.test.ts
+    generated_incidental: []
+  context: The executor needs a typed contract before moving editor-specific branches.
+    The final model must represent structured blocks separately from fallback literal
+    HTML, without using rawHtml as an AstBlock variant.
+  must_do:
+  - Add parser-internal ContainerBlock and LeafBlock types that can be used by every
+    editor.
+  - Add ParserBlockResult variants for handled structured blocks, fallback literal
+    HTML, traverse, and skip.
+  - Add an ordered ParsedPost body representation such as ParsedPostBodyNode with
+    structured block and fallbackHtml entries.
+  - Make ordered body output the authoritative render order while keeping any temporary
+    ParsedPost.blocks compatibility structured-only.
+  - Keep supported structured AstBlock entries limited to Markdown-renderable semantic
+    blocks.
+  - Keep Turndown usage available only as a helper for supported block internals.
+  must_not_do:
+  - Do not wire partial editor migrations that change runtime behavior in this task.
+  - Do not keep rawHtml/htmlFragment as user-selectable structured block output types
+    in the new contract.
+  - Do not introduce index.ts export barrel files.
+  - Do not use any, as any, ts-ignore, or ts-expect-error.
+  implementation_notes:
+  - Prefer named exports from concrete files such as parser-node.ts and body-node-utils.ts.
+  - If a compatibility bridge is needed while later tasks migrate call sites, mark
+    it as temporary in code structure, not as user-facing behavior.
+  - Keep ParserBlock match/convert context explicit enough for Cheerio, options, sourceUrl,
+    warnings, and current body position.
+  verification:
+    evidence_required: true
+    steps:
+    - id: type-contract
+      command: pnpm typecheck
+      success_signal: TypeScript accepts the new parser node and body contracts without
+        suppressions.
+      failure_policy: Keep T1 in progress and repair type contract issues unless a
+        product-policy stop condition is hit.
+    - id: routing-smoke
+      command: pnpm test:offline -- tests/parser/post-parser.test.ts
+      success_signal: Parser routing tests still pass before editor migrations begin.
+      failure_policy: Keep T1 in progress and repair only contract-compatible breakage.
+    steps[1]:
+      command: pnpm exec vitest run --configLoader runner --silent=true tests/parser/post-parser.test.ts
+  acceptance_criteria:
+  - Parser node types are available for all editors, not just SE2.
+  - Ordered body output can preserve fallback literal HTML position without an AstBlock
+    rawHtml variant.
+  - Existing parser routing behavior is unchanged.
+  expected_evidence:
+  - step_id: type-contract
+    file: evidence/t1-type-contract.txt
+  - step_id: routing-smoke
+    file: evidence/t1-routing-smoke.txt
+  reopen_when:
+  - Parser node result variants cannot represent an editor behavior without widening
+    the approved model.
+  - ParsedPost body ordering cannot preserve fallback HTML location without reintroducing
+    rawHtml as a block.
+- id: T2
+  kind: execution
+  title: Render ordered body nodes and literal fallback HTML
+  depends_on:
+  - T1
+  start_when:
+    description: Parser/body contracts exist and renderer/reviewer still consume ParsedPost.blocks
+      directly.
+  files:
+    primary:
+    - src/modules/converter/markdown-renderer.ts
+    - src/modules/reviewer/post-reviewer.ts
+    - src/shared/block-markdown.ts
+    - src/modules/exporter/single-post-export.ts
+    - src/modules/exporter/naver-blog-exporter.ts
+    - tests/markdown-renderer.test.ts
+    - tests/post-reviewer.test.ts
+    - tests/export-single-post.test.ts
+    - tests/naver-blog-exporter.test.ts
+    - src/modules/parser/blocks/body-node-utils.ts
+    - src/modules/converter/unsupported-block-normalizer.ts
+    generated_incidental: []
+  context: The renderer and reviewer must understand ordered structured blocks plus
+    fallback HTML diagnostics, so editors can stop producing rawHtml AstBlocks.
+  must_do:
+  - Make renderMarkdownPost render ordered body nodes in source order.
+  - Render fallbackHtml body entries as literal HTML output, not Markdown converted
+    by Turndown.
+  - Move fallback warning aggregation from rawHtml AstBlock scans to ordered body
+    diagnostics.
+  - Preserve asset handling for structured image, imageGroup, video, linkCard, table,
+    and existing supported blocks.
+  - Update export diagnostics such as blockTypes to exclude fallback HTML from structured
+    block capability counts.
+  must_not_do:
+  - Do not call convertHtmlToMarkdown for fallback recovery.
+  - Do not silently omit fallback HTML.
+  - Do not add a user-selectable fallback rendering option.
+  - Do not change upload provider behavior or manifest resume state shape beyond warning/asset
+    consequences.
+  implementation_notes:
+  - Keep supported block rendering helpers in block-markdown.ts where they already
+    exist.
+  - For HTML safety questions, preserve the approved literal passthrough behavior
+    unless existing sanitizer policy makes that impossible; halt if the policy conflict
+    cannot be resolved locally.
+  - Renderer tests should include fallback HTML that stays HTML in final Markdown
+    and emits a warning.
+  - Reviewer tests should assert empty structured body warnings and fallback diagnostic
+    warnings without referring to rawHtml AstBlock.
+  verification:
+    evidence_required: true
+    steps:
+    - id: renderer-tests
+      command: pnpm test:offline -- tests/markdown-renderer.test.ts tests/post-reviewer.test.ts
+        tests/export-single-post.test.ts
+      success_signal: Renderer, reviewer, and single-post export tests pass with literal
+        fallback HTML behavior.
+      failure_policy: Repair renderer/reviewer/export integration within the approved
+        policy.
+    - id: exporter-tests
+      command: pnpm test:offline -- tests/naver-blog-exporter.test.ts
+      success_signal: Bulk exporter tests pass or are updated only for intended warning/output
+        changes.
+      failure_policy: Repair exporter integration unless the failure requires a new
+        product decision.
+    steps[0]:
+      command: pnpm exec vitest run --configLoader runner --silent=true tests/markdown-renderer.test.ts
+        tests/post-reviewer.test.ts tests/export-single-post.test.ts
+    steps[1]:
+      command: pnpm exec vitest run --configLoader runner --silent=true tests/naver-blog-exporter.test.ts
+  acceptance_criteria:
+  - Fallback HTML is rendered literally and in order.
+  - Fallback warning diagnostics are visible in rendered warnings/frontmatter surfaces
+    where warnings are enabled.
+  - Structured block rendering remains unchanged outside fallback paths.
+  expected_evidence:
+  - step_id: renderer-tests
+    file: evidence/t2-renderer-tests.txt
+  - step_id: exporter-tests
+    file: evidence/t2-exporter-tests.txt
+  reopen_when:
+  - Literal fallback HTML cannot be represented without breaking renderer ordering.
+  - Asset rewriting for structured blocks regresses because of body node rendering.
+- id: T3
+  kind: execution
+  title: Migrate SE2 parser to global parser nodes
+  depends_on:
+  - T1
+  - T2
+  start_when:
+    description: Parser node contract and renderer body-node support are available.
+  files:
+    primary:
+    - src/modules/parser/editors/naver-blog-se2-editor.ts
+    - src/modules/parser/blocks/naver-se2/text-node.ts
+    - src/modules/parser/blocks/naver-se2/container.ts
+    - src/modules/parser/blocks/naver-se2/table.ts
+    - src/modules/parser/blocks/naver-se2/heading.ts
+    - src/modules/parser/blocks/naver-se2/quote.ts
+    - src/modules/parser/blocks/naver-se2/code.ts
+    - src/modules/parser/blocks/naver-se2/image.ts
+    - src/modules/parser/blocks/naver-se2/fallback.ts
+    - src/modules/parser/blocks/common/table.ts
+    - tests/parser/se2-parser.test.ts
+    generated_incidental: []
+  context: SE2 has recursive node traversal and wrapper/skip/fallback behavior, so
+    it is the highest-risk migration for ContainerBlock and LeafBlock semantics.
+  must_do:
+  - Preserve direct text node paragraph behavior.
+  - Preserve transparent wrapper traversal behavior for nested block containers.
+  - Preserve spacer and br skip behavior.
+  - Preserve Color Scripter code table, single-column table flattening, normal table,
+    heading, quote, pre/code, standalone image, and imageGroup behavior.
+  - Convert every unknown SE2 fallback into fallbackHtml body entries with warning
+    diagnostics, not Turndown paragraphs and not rawHtml AstBlocks.
+  - Remove SE2-specific unsupported GIF candidate resolution and route it through
+    literal fallback unless it is intentionally modeled as a supported structured
+    video/image block.
+  must_not_do:
+  - Do not make SE2 wrapper elements consume child heading/image/table nodes as fallback
+    HTML.
+  - Do not use Turndown for fallback recovery.
+  - Do not add new SE2 block support beyond preserving existing supported behavior.
+  - Do not change tests to hide behavior regressions.
+  implementation_notes:
+  - The supportedBlocks order must mirror the current appendBlocksFromNode order.
+  - ContainerBlock should only traverse when the current shouldTraverseNestedBlocks
+    criteria are satisfied.
+  - Fallback block should run last.
+  - Existing parseHtmlTable behavior can move to common/table.ts, but table output
+    must stay equivalent.
+  verification:
+    evidence_required: true
+    steps:
+    - id: se2-parser-tests
+      command: pnpm test:offline -- tests/parser/se2-parser.test.ts tests/parser/post-parser.test.ts
+      success_signal: SE2 parser and routing tests pass with updated fallback expectations.
+      failure_policy: Repair migration order or fallback handling within T3.
+    - id: se2-typecheck
+      command: pnpm typecheck
+      success_signal: SE2 block modules compile without type suppressions.
+      failure_policy: Repair T3 type issues before moving on.
+    steps[0]:
+      command: pnpm exec vitest run --configLoader runner --silent=true tests/parser/se2-parser.test.ts
+        tests/parser/post-parser.test.ts
+  acceptance_criteria:
+  - SE2 parse uses supportedBlocks dispatch.
+  - SE2 fallback produces literal HTML diagnostics instead of Turndown paragraph/rawHtml
+    block output.
+  - Existing supported SE2 block tests keep equivalent structured outputs.
+  expected_evidence:
+  - step_id: se2-parser-tests
+    file: evidence/t3-se2-parser-tests.txt
+  - step_id: se2-typecheck
+    file: evidence/t3-se2-typecheck.txt
+  reopen_when:
+  - A SE2 supported block requires behavior not expressible by ContainerBlock/LeafBlock/ParserBlockResult.
+  - Unknown SE2 fallback requires product-policy clarification.
+- id: T4
+  kind: execution
+  title: Migrate SE3 and SE4 parsers to global parser nodes
+  depends_on:
+  - T1
+  - T2
+  start_when:
+    description: Parser node contract and renderer body-node support are available;
+      SE2 migration may proceed independently but final checkpoint waits for both.
+  files:
+    primary:
+    - src/modules/parser/editors/naver-blog-se3-editor.ts
+    - src/modules/parser/editors/naver-blog-se4-editor.ts
+    - src/modules/parser/blocks/naver-se3/text.ts
+    - src/modules/parser/blocks/naver-se3/table.ts
+    - src/modules/parser/blocks/naver-se3/quote.ts
+    - src/modules/parser/blocks/naver-se3/code.ts
+    - src/modules/parser/blocks/naver-se3/image.ts
+    - src/modules/parser/blocks/naver-se3/fallback.ts
+    - src/modules/parser/blocks/naver-se4/text.ts
+    - src/modules/parser/blocks/naver-se4/heading.ts
+    - src/modules/parser/blocks/naver-se4/quote.ts
+    - src/modules/parser/blocks/naver-se4/formula.ts
+    - src/modules/parser/blocks/naver-se4/code.ts
+    - src/modules/parser/blocks/naver-se4/link-card.ts
+    - src/modules/parser/blocks/naver-se4/video.ts
+    - src/modules/parser/blocks/naver-se4/table.ts
+    - src/modules/parser/blocks/naver-se4/image.ts
+    - src/modules/parser/blocks/naver-se4/material.ts
+    - src/modules/parser/blocks/naver-se4/fallback.ts
+    - tests/parser/se3-parser.test.ts
+    - tests/parser/se4-parser.test.ts
+    generated_incidental: []
+  context: SE3 and SE4 are component-oriented, but they still must use the same parser
+    node model and must preserve existing match priority.
+  must_do:
+  - Preserve SE3 component order for table, quote, code, image/imageGroup, text, and
+    fallback.
+  - Convert SE3 horizontalLine and oglink representative cases into fallback literal
+    HTML and warnings instead of candidate resolution.
+  - Preserve SE4 priority for formula, code, oglink, video, oembed, map, table, imageStrip,
+    imageGroup, sticker, image, sectionTitle, divider, quote, text, material, fallback.
+  - Preserve supported SE4 structured outputs for formula/code/linkCard/video/table/image/imageGroup/heading/quote/text/material.
+  - Use Turndown only for supported text-like internals, not fallback.
+  must_not_do:
+  - Do not leave unsupported representative case conversion paths in SE3 or SE4 parser
+    modules.
+  - Do not change link resolving behavior for supported text/quote/link blocks.
+  - Do not collapse SE4 oembed/material/map behavior into fallback if currently supported.
+  implementation_notes:
+  - Module names should be explicit, not barrel-based.
+  - The component context should include moduleData where SE4 blocks need it.
+  - Fallback modules should preserve enough class/module context in warning messages
+    for debugging.
+  verification:
+    evidence_required: true
+    steps:
+    - id: se3-se4-parser-tests
+      command: pnpm test:offline -- tests/parser/se3-parser.test.ts tests/parser/se4-parser.test.ts
+        tests/parser/post-parser.test.ts
+      success_signal: SE3, SE4, and routing tests pass with intended fallback expectation
+        updates.
+      failure_policy: Repair migration order or fallback behavior within T4.
+    - id: se3-se4-typecheck
+      command: pnpm typecheck
+      success_signal: SE3/SE4 block modules compile without type suppressions.
+      failure_policy: Repair T4 type issues before moving on.
+    steps[0]:
+      command: pnpm exec vitest run --configLoader runner --silent=true tests/parser/se3-parser.test.ts
+        tests/parser/se4-parser.test.ts tests/parser/post-parser.test.ts
+  acceptance_criteria:
+  - SE3 and SE4 parse through supportedBlocks dispatch.
+  - Existing supported SE3/SE4 structured outputs remain equivalent.
+  - Representative unsupported cases no longer use candidate/resolution conversion.
+  expected_evidence:
+  - step_id: se3-se4-parser-tests
+    file: evidence/t4-se3-se4-parser-tests.txt
+  - step_id: se3-se4-typecheck
+    file: evidence/t4-se3-se4-typecheck.txt
+  reopen_when:
+  - A supported SE3/SE4 component cannot be expressed by the global parser node contract.
+  - Removing unsupported representative conversion reveals a product-policy decision
+    outside the approved fallback policy.
+- id: C1
+  kind: checkpoint
+  title: Parser migration checkpoint
+  depends_on:
+  - T3
+  - T4
+  start_when:
+    description: All editor parsers have been migrated to parser node dispatch.
+  files:
+    primary:
+    - src/modules/parser
+    - tests/parser
+    generated_incidental: []
+  context: This checkpoint verifies that the parser migration is coherent before legacy
+    rawHtml and unsupported option surfaces are removed.
+  must_do:
+  - Run all parser unit tests together.
+  - Confirm parser routing, editor detection, and structured block output remain consistent.
+  must_not_do:
+  - Do not edit source in this checkpoint unless repairing parser migration regressions
+    through the owning prior task scope.
+  - Do not update sample fixtures in this checkpoint.
+  implementation_notes:
+  - Treat failures in parser-specific tests as migration defects unless they are explicitly
+    expected fallback policy changes already reflected in tests.
+  verification:
+    evidence_required: true
+    steps:
+    - id: parser-suite
+      command: pnpm test:offline -- tests/parser/post-parser.test.ts tests/parser/se2-parser.test.ts
+        tests/parser/se3-parser.test.ts tests/parser/se4-parser.test.ts
+      success_signal: All parser tests pass in one run.
+      failure_policy: Repair the owning parser migration task before completing the
+        checkpoint.
+    steps[0]:
+      command: pnpm exec vitest run --configLoader runner --silent=true tests/parser/post-parser.test.ts
+        tests/parser/se2-parser.test.ts tests/parser/se3-parser.test.ts tests/parser/se4-parser.test.ts
+  acceptance_criteria:
+  - Parser tests pass as a group.
+  - No editor parser still relies on the old monolithic if-chain as the primary dispatch
+    mechanism.
+  expected_evidence:
+  - step_id: parser-suite
+    file: evidence/c1-parser-suite.txt
+  reopen_when:
+  - Later rawHtml or UI removals require parser dispatch changes.
+- id: T5
+  kind: execution
+  title: Remove rawHtml and unsupported representative backend contracts
+  depends_on:
+  - C1
+  start_when:
+    description: All editors can emit structured body entries and fallbackHtml body
+      entries without rawHtml AstBlock producers.
+  files:
+    primary:
+    - src/shared/types.ts
+    - src/shared/block-registry.ts
+    - src/shared/block-output-preview.ts
+    - src/shared/parser-capabilities.ts
+    - src/shared/export-options.ts
+    - src/shared/unsupported-block-cases.ts
+    - src/shared/unsupported-block-resolution.ts
+    - src/modules/parser/post-parser.ts
+    - src/modules/parser/editors/base-editor.ts
+    - src/modules/converter/unsupported-block-normalizer.ts
+    - src/modules/converter/markdown-renderer.ts
+    - src/modules/reviewer/post-reviewer.ts
+    - src/modules/exporter/single-post-export.ts
+    - src/modules/exporter/naver-blog-exporter.ts
+    - scripts/lib/single-post-cli.ts
+    - scripts/harness/verify-sample-exports.ts
+    - scripts/harness/lib/parser-status.ts
+    - scripts/harness/lib/sample-fixtures.ts
+    - scripts/harness/lib/report-generation.ts
+    - scripts/harness/lib/unsupported-block-fixture-evidence.ts
+    - tests/parser-capabilities.test.ts
+    - tests/unsupported-block-cases.test.ts
+    - tests/unsupported-block-normalizer.test.ts
+    - tests/unsupported-block-fixture-evidence.test.ts
+    - tests/export-options.test.ts
+    - tests/single-post-cli.test.ts
+    - tests/post-reviewer.test.ts
+    - tests/sample-fixture-warning-regression.test.ts
+    generated_incidental: []
+  context: Once parsers no longer produce rawHtml AstBlocks, backend option/capability/resolution
+    surfaces must be removed so fallback HTML is not treated as a supported block
+    family.
+  must_do:
+  - Remove rawHtml and htmlFragment from structured block unions and renderer block-output
+    families.
+  - Remove rawHtml parser capabilities or reclassify any necessary legacy references
+    so parser:check stays coherent.
+  - Remove unsupported representative case candidate selection, resolution, confirmation
+    summary, and normalizer behavior from backend source of truth.
+  - Remove parser/editor option dependencies on unsupportedBlockCases after legacy
+    option loading is sanitized at the boundary.
+  - Preserve compatibility with persisted options by ignoring legacy unsupportedBlockCases/rawHtml
+    selections rather than crashing.
+  - Update CLI option parsing and tests so unsupported case selections are no longer
+    accepted as active output policy.
+  - Update harness/report wording so case:<unsupportedBlockCaseId> lookup ids and
+    unsupportedBlocks no longer describe active parser capability behavior.
+  must_not_do:
+  - Do not leave dead candidate/resolution APIs that appear to control output.
+  - Do not keep rawHtml as a BlockType or block output family.
+  - Do not delete parser capability coverage for supported structured blocks.
+  - Do not break loading of older saved options solely because they contain legacy
+    fields.
+  implementation_notes:
+  - Delete files only when no remaining imports need them; otherwise shrink them to
+    compatibility helpers only if necessary.
+  - block-output-preview should no longer render rawHtml/htmlFragment previews after
+    the block family is removed.
+  - Tests that previously asserted unsupported normalization should be removed or
+    rewritten to assert literal fallback warning behavior through parser/render flows.
+  verification:
+    evidence_required: true
+    steps:
+    - id: backend-contract-tests
+      command: pnpm test:offline -- tests/parser-capabilities.test.ts tests/export-options.test.ts
+        tests/single-post-cli.test.ts tests/markdown-renderer.test.ts tests/post-reviewer.test.ts
+        tests/export-single-post.test.ts tests/naver-blog-exporter.test.ts
+      success_signal: Backend contract tests pass after rawHtml/unsupported option
+        removal.
+      failure_policy: Repair backend contract drift within T5.
+    - id: backend-typecheck
+      command: pnpm typecheck
+      success_signal: No remaining type references require rawHtml/htmlFragment/unsupported
+        candidate APIs.
+      failure_policy: Repair type drift before moving to UI removal.
+    steps[0]:
+      command: pnpm exec vitest run --configLoader runner --silent=true tests/parser-capabilities.test.ts
+        tests/export-options.test.ts tests/single-post-cli.test.ts tests/markdown-renderer.test.ts
+        tests/post-reviewer.test.ts tests/export-single-post.test.ts tests/naver-blog-exporter.test.ts
+  acceptance_criteria:
+  - rawHtml is not a structured AstBlock/BlockType/output family.
+  - unsupported representative case options no longer control parser, renderer, exporter,
+    CLI, harness, or report output.
+  - Legacy persisted option data is ignored or sanitized without failure.
+  expected_evidence:
+  - step_id: backend-contract-tests
+    file: evidence/t5-backend-contract-tests.txt
+  - step_id: backend-typecheck
+    file: evidence/t5-backend-typecheck.txt
+  reopen_when:
+  - UI or sample verification still depends on removed unsupported/rawHtml backend
+    APIs.
+  - Backward-compatible option loading requires a product decision.
+- id: T6
+  kind: execution
+  title: Remove unsupported and rawHtml option UI surfaces
+  depends_on:
+  - T5
+  start_when:
+    description: Backend no longer exposes active unsupported case or rawHtml output
+      option contracts.
+  files:
+    primary:
+    - src/ui/App.tsx
+    - src/ui/features/options/export-options-panel.tsx
+    - src/ui/features/options/export-options-state.ts
+    - src/ui/features/common/hooks/use-wizard-actions.ts
+    - src/ui/features/job-results/job-results-panel.tsx
+    - tests/ui/export-options-panel.test.tsx
+    - tests/ui/app.test.tsx
+    - tests/ui/job-results-panel.test.tsx
+    - tests/http-server.test.ts
+    generated_incidental: []
+  context: The UI must stop presenting unsupported case decisions and rawHtml output
+    choices, while still showing warnings in result surfaces.
+  must_do:
+  - Remove unsupported case cards, confirmation summary, and export gating based on
+    unsupported case confirmation.
+  - Remove rawHtml output family cards/options/previews.
+  - Keep job warning filters, warning counts, and result warning display intact.
+  - Update bootstrap/persisted option handling tests for legacy unsupported/rawHtml
+    fields.
+  - Keep wizard progression ergonomic after removed option sections shrink.
+  must_not_do:
+  - Do not add explanatory UI copy about implementation policy unless it is needed
+    for a user-facing warning/result.
+  - Do not hide actual export warnings.
+  - Do not alter upload provider UI behavior.
+  implementation_notes:
+  - App-level export disable logic should no longer depend on getUnsupportedBlockCaseConfirmationSummary.
+  - Export options panel should focus on supported block output options and diagnostics
+    still relevant to users.
+  - Tests should assert removed controls are absent and export flow can start without
+    unsupported confirmations.
+  verification:
+    evidence_required: true
+    steps:
+    - id: ui-options-tests
+      command: pnpm test:offline -- tests/ui/export-options-panel.test.tsx tests/ui/app.test.tsx
+        tests/ui/job-results-panel.test.tsx tests/http-server.test.ts
+      success_signal: UI option, result-warning, app, and HTTP tests pass with unsupported/rawHtml
+        controls removed.
+      failure_policy: Repair UI contract within T6.
+    - id: ui-typecheck
+      command: pnpm typecheck
+      success_signal: UI no longer imports removed unsupported/rawHtml APIs.
+      failure_policy: Repair UI type drift before completing T6.
+    steps[0]:
+      command: pnpm exec vitest run --configLoader runner --silent=true tests/ui/export-options-panel.test.tsx
+        tests/ui/app.test.tsx tests/ui/job-results-panel.test.tsx tests/http-server.test.ts
+  acceptance_criteria:
+  - Unsupported case and rawHtml output controls are not rendered.
+  - Export can proceed without unsupported case confirmation.
+  - Warning result UI still surfaces parser/render warnings.
+  expected_evidence:
+  - step_id: ui-options-tests
+    file: evidence/t6-ui-options-tests.txt
+  - step_id: ui-typecheck
+    file: evidence/t6-ui-typecheck.txt
+  reopen_when:
+  - Removed backend APIs are still required by UI code.
+  - Wizard flow needs a product decision beyond removing unsupported/rawHtml controls.
+- id: T7
+  kind: execution
+  title: Update fixtures, generated docs, and knowledge projections
+  depends_on:
+  - T5
+  - T6
+  start_when:
+    description: Parser, renderer, backend options, and UI surfaces have migrated
+      to the new fallback policy.
+  files:
+    primary:
+    - tests/fixtures/samples
+    - src/shared/sample-corpus.ts
+    - src/shared/block-registry.ts
+    - scripts/harness/verify-sample-exports.ts
+    - scripts/harness/lib/report-generation.ts
+    - scripts/harness/lib/unsupported-block-fixture-evidence.ts
+    - tests/sample-fixture-warning-regression.test.ts
+    - tests/unsupported-block-fixture-evidence.test.ts
+    - .agents/knowledge/architecture/parser-block-catalog.md
+    - .agents/knowledge/product/sample-corpus.md
+    - .agents/knowledge/reference/generated/quality-score.md
+    - .agents/knowledge/reference/generated/sample-coverage.md
+    generated_incidental:
+    - .agents/knowledge/reference/generated/quality-score.md
+    - .agents/knowledge/reference/generated/sample-coverage.md
+    - .agents/knowledge/architecture/parser-block-catalog.md
+    - .agents/knowledge/product/sample-corpus.md
+  context: Fallback policy and rawHtml capability removal can change sample Markdown,
+    warnings, capability catalog, and generated knowledge projections.
+  must_do:
+  - Update sample expected.md files only where fallback policy intentionally changes
+    Markdown or warnings.
+  - Update parser capability declarations so rawHtml capability is removed or replaced
+    by the approved fallback diagnostic model.
+  - Remove or rewrite sample warning regression expectations that depended on unsupported
+    representative normalization being warning-free.
+  - Regenerate generated docs with pnpm quality:report rather than manual edits.
+  - Keep sample corpus expectedCapabilityLookupIds aligned with observed structured
+    capabilities.
+  must_not_do:
+  - Do not run samples:refresh unless explicitly re-approved.
+  - Do not manually edit generated reports after running the generator.
+  - Do not change fixture source.html files unless required by a prior approved task.
+  implementation_notes:
+  - samples:verify is the authority for stored source.html to expected.md output.
+  - parser:check catches stale generated parser block catalog and sample corpus docs.
+  - If unsupported-block-fixture-evidence is deleted, remove its tests and generated
+    references in the same task.
+  verification:
+    evidence_required: true
+    steps:
+    - id: quality-report
+      command: pnpm quality:report
+      success_signal: Generated parser/sample knowledge reports are refreshed without
+        errors.
+      failure_policy: Repair report inputs or generated docs within T7.
+    - id: parser-check
+      command: pnpm parser:check
+      success_signal: Parser capability catalog, generated docs, and sample links
+        are coherent.
+      failure_policy: Repair capability/sample metadata within T7.
+    - id: sample-verify
+      command: pnpm samples:verify
+      success_signal: All stored sample fixtures render to expected Markdown under
+        the new fallback policy.
+      failure_policy: Repair expected fixtures only for intended fallback-policy changes.
+  acceptance_criteria:
+  - Generated docs are fresh.
+  - Sample fixtures pass without live refresh.
+  - RawHtml capability/sample references are removed or deliberately reclassified.
+  expected_evidence:
+  - step_id: quality-report
+    file: evidence/t7-quality-report.txt
+  - step_id: parser-check
+    file: evidence/t7-parser-check.txt
+  - step_id: sample-verify
+    file: evidence/t7-sample-verify.txt
+  reopen_when:
+  - samples:verify reveals unexpected structured block output changes.
+  - parser:check reports capability gaps caused by the new fallback model.
+- id: FV1
+  kind: final_verification
+  title: Final local verification
+  depends_on:
+  - T7
+  start_when:
+    description: All implementation tasks and generated updates are complete.
+  files:
+    primary:
+    - package.json
+    - scripts/harness
+    - .agents/knowledge/engineering/validation.md
+    generated_incidental: []
+  context: Final verification proves the approved parser refactor, fallback policy,
+    generated docs, and UI flow together.
+  must_do:
+  - Run the broad local checks after all source, fixture, and generated changes are
+    complete.
+  - Record evidence for both base local checks and UI smoke.
+  - Inspect failures against current diff before deciding whether to repair or halt.
+  must_not_do:
+  - Do not skip smoke:ui after UI gating removal.
+  - Do not report success if generated docs are stale or samples:verify fails.
+  - Do not run live network upload or live resume tests unless separately requested.
+  implementation_notes:
+  - pnpm check:full includes quality:report, typecheck, offline tests, parser:check,
+    samples:verify, and smoke:ui.
+  - If check:full is too coarse to diagnose, use repo-native focused commands from
+    earlier tasks, then rerun check:full.
+  verification:
+    evidence_required: true
+    steps:
+    - id: check-full
+      command: pnpm check:full
+      success_signal: Full local regression including generated docs, offline tests,
+        parser checks, sample verification, and smoke UI passes.
+      failure_policy: Repair in-contract regressions; halt only for existing unrelated
+        failures or required user decisions.
+    - id: check-local
+      command: pnpm check:local
+      success_signal: Baseline local check passes after check:full.
+      failure_policy: Repair in-contract regressions; halt only for existing unrelated
+        failures or required user decisions.
+  acceptance_criteria:
+  - pnpm check:full passes.
+  - pnpm check:local passes.
+  - No task leaves temporary compatibility code or dead unsupported/rawHtml option
+    surfaces outside explicitly documented compatibility sanitization.
+  expected_evidence:
+  - step_id: check-full
+    file: evidence/fv1-check-full.txt
+  - step_id: check-local
+    file: evidence/fv1-check-local.txt
+  reopen_when:
+  - Any final verification command fails because of this plan's changes.
+  - Review finds hidden decisions or missing evidence in the task contract.

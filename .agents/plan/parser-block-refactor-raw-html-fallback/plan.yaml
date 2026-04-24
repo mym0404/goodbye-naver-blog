@@ -1,0 +1,86 @@
+title: Structure parser blocks and raw HTML fallback
+goal: Refactor parser output around global ContainerBlock/LeafBlock parser nodes,
+  remove fallback Turndown recovery and rawHtml block/output options, and render unstructured
+  fallback as ordered literal HTML with warnings.
+context:
+- src/modules/parser/post-parser.ts routes HTML to SE2, SE3, and SE4 editor classes
+  and currently threads unsupportedBlockCases through parser options.
+- src/modules/parser/editors/base-editor.ts currently only requires parse(input): ParsedPost
+    and its input type still carries unsupportedBlockCases compatibility.
+- src/modules/parser/editors/naver-blog-se2-editor.ts mixes DOM traversal, fallback,
+  unsupported case resolution, and AstBlock creation in appendBlocksFromNode.
+- src/modules/parser/editors/naver-blog-se3-editor.ts and src/modules/parser/editors/naver-blog-se4-editor.ts
+  use component-level if-chains that must preserve existing match order.
+- src/shared/types.ts currently includes AstBlock rawHtml, htmlFragment, UnsupportedBlockInstance,
+  and unsupportedBlockCases option contracts.
+- src/modules/converter/markdown-renderer.ts currently renders ParsedPost.blocks and
+  contains rawHtml/htmlFragment handling.
+- src/modules/reviewer/post-reviewer.ts currently adds fallback warnings by scanning
+  ParsedPost.blocks for rawHtml blocks.
+- src/shared/block-output-preview.ts and src/shared/block-registry.ts expose rawHtml/htmlFragment
+  preview and output-family metadata used by the options UI.
+- src/shared/unsupported-block-cases.ts, src/shared/unsupported-block-resolution.ts,
+  and src/modules/converter/unsupported-block-normalizer.ts implement representative
+  unsupported case candidate selection and normalization.
+- scripts/harness/verify-sample-exports.ts, scripts/harness/lib/parser-status.ts,
+  scripts/harness/lib/sample-fixtures.ts, and scripts/harness/lib/unsupported-block-fixture-evidence.ts
+  use unsupportedBlocks or case lookup ids in sample/capability validation.
+- src/ui/features/options/export-options-panel.tsx and src/ui/App.tsx expose unsupported
+  case selection/confirmation and rawHtml output options/gating.
+non_goals:
+- Add new Naver block support beyond preserving existing supported block behavior.
+- Refresh live fixtures or resolve live Naver HTML drift.
+- Change upload provider behavior, asset upload paths, or external upload state.
+- Change manifest resume/export recovery semantics beyond warning and body output
+  consequences of the parser policy change.
+constraints:
+- ContainerBlock and LeafBlock are global parser node concepts for all editors, not
+  SE2-only abstractions.
+- Fallback must not use Turndown to produce Markdown paragraphs.
+- Turndown may remain for supported block internals such as text, quote, heading,
+  and table-cell inline HTML conversion.
+- rawHtml and htmlFragment must not remain as user-selectable structured block/output
+  families.
+- Literal fallback HTML must preserve body order through an ordered parser output
+  contract rather than through AstBlock rawHtml.
+- Ordered body output is authoritative for rendering; any remaining ParsedPost.blocks
+  compatibility is structured blocks only and must not carry fallback literal HTML.
+- Existing supported block Markdown output should remain unchanged except where raw
+  HTML fallback policy intentionally changes expected output or warning counts.
+- Parser capability remains editorVersion + structured blockType; fallback literal
+  HTML is not a parser capability block type.
+success_criteria:
+- Editors expose or use supportedBlocks with ContainerBlock/LeafBlock parser node
+  dispatch.
+- Parsed output has an ordered body representation that can interleave structured
+  AstBlock nodes and literal fallback HTML diagnostics without a rawHtml AstBlock
+  variant.
+- Review/render/export warning aggregation reads the ordered body diagnostics instead
+  of rawHtml AstBlock scans.
+- Fallback paths output literal HTML and warnings without calling convertHtmlToMarkdown/Turndown
+  for recovery.
+- Unsupported representative case candidate/resolution/confirmation paths no longer
+  control export output, sample capability lookup, or UI gating.
+- RawHtml output settings and unsupported case option UI are removed or ignored compatibly
+  where persisted input still contains legacy fields.
+- Parser unit tests, sample verification, generated docs, and UI smoke reflect the
+  new fallback policy.
+verification_policy:
+- Use focused parser and renderer tests immediately after each implementation slice.
+- Use pnpm typecheck after type contract changes and again after rawHtml removal.
+- Use pnpm parser:check and pnpm samples:verify whenever capability, sample expected
+  output, or generated projections change.
+- Use pnpm quality:report after generated knowledge/report inputs change.
+- Use pnpm smoke:ui after UI gating and option removal is complete.
+- Run pnpm check:local as the minimum final local baseline.
+execution_strategy:
+- First introduce parser node and ordered body output contracts in a backward-compatible
+  way.
+- Then migrate renderer, reviewer, exporter diagnostics, and editors to the ordered
+  body output while preserving supported block behavior.
+- Then remove legacy rawHtml/htmlFragment/unsupported case option surfaces after producers
+  have moved.
+- Then update UI, tests, fixtures, generated docs, and run broad verification.
+stop_conditions:
+- user_decision
+- external_environment

@@ -1,0 +1,5 @@
+
+> farewell-naver-blog@0.1.0 parser:check /Users/mj/projects/farewell-naver-blog
+> node --import tsx ./scripts/harness/check-parser-capabilities.ts
+
+parser:check passed (26 capabilities, 13 samples, 0 sample gaps, 5 parser-fixture only capabilities)

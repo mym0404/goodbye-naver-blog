@@ -1,0 +1,71 @@
+status: open
+non_user_answer_streak: 3
+required_tracks:
+  scope:
+    status: open
+    summary: ''
+  non_goals:
+    status: open
+    summary: ''
+  outputs:
+    status: open
+    summary: ''
+  verification:
+    status: open
+    summary: ''
+  constraints:
+    status: open
+    summary: ''
+  stop_conditions:
+    status: open
+    summary: ''
+rounds:
+- id: Q1
+  route: code_fact
+  track: constraints
+  question: 저장소의 기본 검증 명령은 무엇인가?
+  answer: package.json과 AGENTS.md 기준으로 저장소 파일 수정 후 최소 검증은 pnpm check:local이며, 이 명령은
+    typecheck, test:offline, parser:check, samples:verify를 순서대로 실행한다.
+  source: from-code-package-json-agents
+- id: Q2
+  route: code_fact
+  track: scope
+  question: JS Skills 규칙과 맞닿은 기존 리팩토링 후보는 어디인가?
+  answer: src/server/coalesced-task-runner.ts와 src/server/image-upload-provider-source.ts에는
+    내부 mutable state와 관련 메서드를 가진 createX closure factory가 있고, js-skills의 class-over-factory
+    규칙 적용 후보이다.
+  source: from-code-rg-create-factories
+- id: Q3
+  route: code_fact
+  track: outputs
+  question: 리팩토링이 유지해야 하는 공개 호출 표면은 무엇인가?
+  answer: 테스트와 서버 코드는 createCoalescedTaskRunner, createImageUploadProviderSource,
+    convertHtmlToMarkdown, sanitizeHtmlFragment 같은 named export를 직접 import한다. 계획은
+    호출 표면을 유지해 기존 import 변경을 최소화해야 한다.
+  source: from-code-rg-imports
+pending_user_question:
+  id: Q4
+  route: user_decision
+  track: scope
+  question: 이번 리팩토링 범위는 동작 보존을 전제로 한 JS Skills 적용 후보 정리로 제한할까요, 아니면 feature-first
+    폴더 재배치까지 포함할까요?
+closure:
+  ready: false
+  summary: ''
+  material_blockers: []
+  checks:
+    desired_output_explicit:
+      passed: false
+      summary: ''
+    user_tradeoffs_explicit:
+      passed: false
+      summary: ''
+    executor_determinism:
+      passed: false
+      summary: ''
+    verification_proves_behavior:
+      passed: false
+      summary: ''
+    no_material_questions:
+      passed: false
+      summary: ''
