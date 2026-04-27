@@ -7,17 +7,17 @@ import type {
   ParsedPost,
   ParsedPostBodyNode,
   UnknownRecord,
-} from "../../../shared/Types.js"
+} from "@shared/Types.js"
 import {
   createBodyNodesFromStructuredBlocks,
   createFallbackHtmlBodyNode,
-} from "../blocks/BodyNodeUtils.js"
+} from "../parser/blocks/BodyNodeUtils.js"
 import type {
   ParserBlockConvertContext,
   ParserBlockOptions,
   ParserBlockResult,
-} from "../blocks/ParserNode.js"
-import type { ParserBlockBinding } from "../ParserBlockFactory.js"
+} from "../parser/blocks/ParserNode.js"
+import type { ParserBlockBinding } from "../parser/ParserBlockFactory.js"
 
 export type BaseEditorParseInput = {
   $: CheerioAPI

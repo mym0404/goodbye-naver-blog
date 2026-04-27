@@ -1,7 +1,7 @@
 import { load } from "cheerio"
 import { describe, expect, it } from "vitest"
 
-import { NaverBlogSE4Editor } from "../../src/modules/parser/editors/NaverBlogSe4Editor.js"
+import { NaverBlogSE4Editor } from "../../src/modules/editor/NaverBlogSe4Editor.js"
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 
 const parserOptions = {

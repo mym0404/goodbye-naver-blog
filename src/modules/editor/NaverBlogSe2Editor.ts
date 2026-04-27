@@ -1,8 +1,8 @@
 import type { CheerioAPI } from "cheerio"
 
-import type { AstBlock, ExportOptions, ParsedPost } from "../../../shared/Types.js"
-import { unique } from "../../../shared/Utils.js"
-import { createParserBlocksForEditor } from "../ParserBlockFactory.js"
+import type { AstBlock, ExportOptions, ParsedPost } from "@shared/Types.js"
+import { unique } from "@shared/Utils.js"
+import { createParserBlocksForEditor } from "../parser/ParserBlockFactory.js"
 import { BaseEditor } from "./BaseEditor.js"
 
 export type ParseSe2PostInput = {

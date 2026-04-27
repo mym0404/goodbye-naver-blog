@@ -4,9 +4,9 @@ import type { ExportOptions } from "../../shared/Types.js"
 import type { BlogEditorId, NaverEditorKey } from "../blog/BlogTypes.js"
 import { unique } from "../../shared/Utils.js"
 import { withParsedPostBody } from "./blocks/BodyNodeUtils.js"
-import { NaverBlogSE2Editor } from "./editors/NaverBlogSe2Editor.js"
-import { NaverBlogSE3Editor } from "./editors/NaverBlogSe3Editor.js"
-import { NaverBlogSE4Editor } from "./editors/NaverBlogSe4Editor.js"
+import { NaverBlogSE2Editor } from "../editor/NaverBlogSe2Editor.js"
+import { NaverBlogSE3Editor } from "../editor/NaverBlogSe3Editor.js"
+import { NaverBlogSE4Editor } from "../editor/NaverBlogSe4Editor.js"
 
 const editorVersionPattern = /smartEditorVersion["']?\s*:\s*["']?(\d+)["']?/i
 
