@@ -14,7 +14,7 @@
 - `src/modules/parser/PostParser.ts`
 
 ## 검증 방법
-- `pnpm samples:verify`
+- `pnpm test:offline`
 
 ## Blog Table
 | blogId | editors |
@@ -65,4 +65,4 @@
 ## Notes
 - Parser Block은 source HTML parser 단위이고 AST Block은 Markdown renderer용 공통 중간 표현이다.
 - 같은 AST Block으로 변환되더라도 Parser Block id는 editor별 source 구조를 기준으로 분리한다.
-- fixture 샘플 목록은 `scripts/harness/lib/sample-corpus.ts`에서 관리한다.
+- fixture 샘플 목록은 `tests/fixtures/samples/*` 디렉터리에서 결정한다.

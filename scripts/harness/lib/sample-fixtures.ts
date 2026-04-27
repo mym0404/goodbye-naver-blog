@@ -1,4 +1,6 @@
 import path from "node:path"
+import { readdir } from "node:fs/promises"
+import { parse as parseYaml } from "yaml"
 
 import { renderMarkdownPost } from "../../../src/modules/converter/MarkdownRenderer.js"
 import { parsePostHtml } from "../../../src/modules/parser/PostParser.js"
@@ -9,19 +11,143 @@ import type {
   ExportOptions,
   PostSummary,
 } from "../../../src/shared/Types.js"
-import { ensureHarnessDir, readUtf8, repoPath, writeUtf8 } from "./paths.js"
-import type { sampleCorpus } from "./sample-corpus.js"
+import { ensureHarnessDir, pathExists, readUtf8, repoPath } from "./paths.js"
 
-type SampleCorpusEntry = (typeof sampleCorpus)[number]
+type SampleFixtureEntry = {
+  id: string
+  blogId: string
+  logNo: string
+  editorVersion: number
+  post: {
+    title: string
+    publishedAt: string
+    categoryId: number
+    categoryName: string
+    categoryPath: string[]
+    thumbnailUrl: string | null
+    source: string
+  }
+}
+
+type ExpectedFrontmatter = {
+  title: string
+  source: string
+  blogId: string
+  logNo: string
+  publishedAt: string
+  category: string
+  categoryPath: string[]
+  editorVersion: number
+  thumbnail?: string | null
+}
 
 export const getSampleFixtureDir = (sampleId: string) =>
   repoPath("tests", "fixtures", "samples", sampleId)
+
+export const getSampleFixtureRoot = () => repoPath("tests", "fixtures", "samples")
 
 export const getSampleSourceHtmlPath = (sampleId: string) =>
   path.join(getSampleFixtureDir(sampleId), "source.html")
 
 export const getSampleExpectedMarkdownPath = (sampleId: string) =>
   path.join(getSampleFixtureDir(sampleId), "expected.md")
+
+const assertString = (value: unknown, key: string) => {
+  if (typeof value !== "string") {
+    throw new Error(`sample fixture frontmatter ${key} must be a string`)
+  }
+
+  return value
+}
+
+const assertStringArray = (value: unknown, key: string) => {
+  if (!Array.isArray(value) || !value.every((entry) => typeof entry === "string")) {
+    throw new Error(`sample fixture frontmatter ${key} must be a string array`)
+  }
+
+  return value
+}
+
+const parseExpectedFrontmatter = (markdown: string): ExpectedFrontmatter => {
+  const frontmatterMatch = /^---\n([\s\S]*?)\n---\n/.exec(markdown)
+
+  if (!frontmatterMatch) {
+    throw new Error("sample fixture expected.md must start with YAML frontmatter")
+  }
+
+  const parsed = parseYaml(frontmatterMatch[1])
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("sample fixture frontmatter must be a YAML object")
+  }
+
+  const frontmatter = parsed as Record<string, unknown>
+  const editorVersion = Number(frontmatter.editorVersion)
+
+  if (!Number.isFinite(editorVersion)) {
+    throw new Error("sample fixture frontmatter editorVersion must be a number")
+  }
+
+  return {
+    title: assertString(frontmatter.title, "title"),
+    source: assertString(frontmatter.source, "source"),
+    blogId: assertString(frontmatter.blogId, "blogId"),
+    logNo: String(frontmatter.logNo),
+    publishedAt: assertString(frontmatter.publishedAt, "publishedAt"),
+    category: assertString(frontmatter.category, "category"),
+    categoryPath: assertStringArray(frontmatter.categoryPath, "categoryPath"),
+    editorVersion,
+    thumbnail:
+      typeof frontmatter.thumbnail === "string"
+        ? frontmatter.thumbnail
+        : null,
+  }
+}
+
+export const readSampleFixtureEntry = async (sampleId: string): Promise<SampleFixtureEntry> => {
+  const expectedMarkdown = await readUtf8(getSampleExpectedMarkdownPath(sampleId))
+  const frontmatter = parseExpectedFrontmatter(expectedMarkdown)
+
+  return {
+    id: sampleId,
+    blogId: frontmatter.blogId,
+    logNo: frontmatter.logNo,
+    editorVersion: frontmatter.editorVersion,
+    post: {
+      title: frontmatter.title,
+      publishedAt: frontmatter.publishedAt,
+      categoryId: 0,
+      categoryName: frontmatter.category,
+      categoryPath: frontmatter.categoryPath,
+      thumbnailUrl: frontmatter.thumbnail ?? null,
+      source: frontmatter.source,
+    },
+  }
+}
+
+export const listSampleFixtures = async () => {
+  const entries = await readdir(getSampleFixtureRoot(), {
+    withFileTypes: true,
+  })
+  const sampleIds = entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort()
+  const fixtureEntries = await Promise.all(
+    sampleIds.map(async (sampleId) => {
+      const hasSource = await pathExists(getSampleSourceHtmlPath(sampleId))
+      const hasExpected = await pathExists(getSampleExpectedMarkdownPath(sampleId))
+
+      if (!hasSource || !hasExpected) {
+        throw new Error(`sample fixture ${sampleId} must include source.html and expected.md`)
+      }
+
+      return readSampleFixtureEntry(sampleId)
+    }),
+  )
+
+  return fixtureEntries
+}
 
 export const createSampleVerificationOptions = (): ExportOptions => {
   const options = defaultExportOptions()
@@ -34,7 +160,7 @@ export const createSampleVerificationOptions = (): ExportOptions => {
   return options
 }
 
-export const buildSamplePostSummary = (sample: SampleCorpusEntry): PostSummary => ({
+export const buildSamplePostSummary = (sample: SampleFixtureEntry): PostSummary => ({
   blogId: sample.blogId,
   logNo: sample.logNo,
   title: sample.post.title,
@@ -46,7 +172,7 @@ export const buildSamplePostSummary = (sample: SampleCorpusEntry): PostSummary =
   thumbnailUrl: sample.post.thumbnailUrl,
 })
 
-export const buildSampleCategory = (sample: SampleCorpusEntry): CategoryInfo => ({
+export const buildSampleCategory = (sample: SampleFixtureEntry): CategoryInfo => ({
   id: sample.post.categoryId,
   name: sample.post.categoryName,
   parentId: null,
@@ -64,7 +190,7 @@ export const renderSampleFixture = async ({
   sample,
   html,
 }: {
-  sample: SampleCorpusEntry
+  sample: SampleFixtureEntry
   html: string
 }) => {
   const options = createSampleVerificationOptions()
@@ -103,28 +229,9 @@ export const renderSampleFixture = async ({
   }
 }
 
-export const loadSampleFixture = async (sample: SampleCorpusEntry) => ({
+export const loadSampleFixture = async (sample: SampleFixtureEntry) => ({
   html: await readUtf8(getSampleSourceHtmlPath(sample.id)),
   expectedMarkdown: normalizeMarkdownFixture(
     await readUtf8(getSampleExpectedMarkdownPath(sample.id)),
   ),
 })
-
-export const writeSampleFixture = async ({
-  sample,
-  html,
-  markdown,
-}: {
-  sample: SampleCorpusEntry
-  html: string
-  markdown: string
-}) => {
-  await writeUtf8({
-    targetPath: getSampleSourceHtmlPath(sample.id),
-    content: html,
-  })
-  await writeUtf8({
-    targetPath: getSampleExpectedMarkdownPath(sample.id),
-    content: normalizeMarkdownFixture(markdown),
-  })
-}

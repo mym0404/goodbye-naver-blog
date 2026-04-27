@@ -3,7 +3,7 @@
 ## 여기서 찾는 것
 - 도메인 엔티티와 상태 전이: `.agents/knowledge/product/domain.md`
 - 사용자 흐름과 출력 규약: `.agents/knowledge/product/product-outline.md`
-- 실샘플 fixture 목록과 운영 규칙: `.agents/knowledge/product/sample-corpus.md`
+- 실샘플 fixture 목록과 운영 규칙: `.agents/knowledge/product/sample-fixtures.md`
 - 대시보드 UI 규약과 회귀 기준: `.agents/knowledge/DESIGN.md`
 
 ## 대표 기준점

@@ -20,7 +20,7 @@
 ## 검증
 - `pnpm smoke:ui`: rewrite 대기 중 full bar, row 상태, bounded table이 보이는지 확인
 - `pnpm test:network:upload`: `master`에서 partial upload evidence와 UI snapshot이 같이 남는지 확인
-- `pnpm check:full`: 기본 회귀와 generated/report 연결 확인
+- `pnpm check:full`: 기본 회귀와 UI smoke 확인
 
 ## 관련 경로
 - `.agents/knowledge/reference/plan-archive/picgo-upload-progress-visibility/plan.md`

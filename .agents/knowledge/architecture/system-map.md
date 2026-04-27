@@ -25,7 +25,7 @@
 - `server`: 로컬 웹 UI, export job API, 같은 job의 upload trigger/polling lifecycle, `providerKey/providerFields -> runtime uploader config` 매핑, upload 중간 count 집계 제공
 - `server`: 마지막 `outputDir`의 `manifest.json`을 기준으로 job을 hydrate하고 UI bootstrap 복구 payload를 만든다.
 - scan 후 export는 UI가 가진 scan snapshot을 실행 경로에 넘겨 목록 재수집을 줄인다.
-- `shared`: export 옵션, 타입, lifecycle contract, parser block, sample corpus
+- `shared`: export 옵션, 타입, lifecycle contract, parser block
 - `ui`: 단계형 wizard(`블로그 입력 -> 카테고리 -> 구조 -> Frontmatter -> Markdown -> Assets -> 실행/업로드/결과`) 대시보드 UI
 
 ## Dependency Direction
@@ -47,7 +47,7 @@
 - parser block: `src/modules/blog/BlogRegistry.ts`
 - parser editor classes: `src/modules/parser/editors/BaseEditor.ts`, `src/modules/parser/editors/NaverBlogSe2Editor.ts`, `src/modules/parser/editors/NaverBlogSe3Editor.ts`, `src/modules/parser/editors/NaverBlogSe4Editor.ts`
 - parser block implementations: `src/modules/parser/blocks/`
-- sample corpus: `scripts/harness/lib/sample-corpus.ts`
+- sample fixtures: `tests/fixtures/samples/*`
 - Markdown renderer: `src/modules/converter/MarkdownRenderer.ts`
 - exporter flow: `src/modules/exporter/NaverBlogExporter.ts`
 - upload runner: `src/modules/exporter/ImageUploadPhase.ts`

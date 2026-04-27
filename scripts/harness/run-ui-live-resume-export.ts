@@ -8,12 +8,48 @@ import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 import type { ExportJobState, ExportManifest, ExportOptions, ScanResult } from "../../src/shared/Types.js"
 
 const repoRoot = fileURLToPath(new URL("../../", import.meta.url))
-const blogId = process.env.FAREWELL_LIVE_RESUME_BLOG_ID ?? "mym0404"
-const scopedDateFrom = process.env.FAREWELL_LIVE_RESUME_DATE_FROM ?? "2017-03-31"
-const scopedDateTo = process.env.FAREWELL_LIVE_RESUME_DATE_TO ?? scopedDateFrom
-const scopedCategoryId = Number(process.env.FAREWELL_LIVE_RESUME_CATEGORY_ID ?? "17")
-const delayedLogNo = process.env.FAREWELL_LIVE_RESUME_DELAY_LOGNO ?? "220971956932"
-const expectedScopedPostCount = Number(process.env.FAREWELL_LIVE_RESUME_EXPECTED_POSTS ?? "2")
+
+const resumeCases = {
+  default: {
+    blogId: "mym0404",
+    dateFrom: "2017-03-31",
+    dateTo: "2017-03-31",
+    categoryId: "17",
+    delayedLogNo: "220971956932",
+    expectedPosts: "2",
+  },
+  "se2-table": {
+    blogId: "blogpeople",
+    dateFrom: "2013-06-26",
+    dateTo: "2013-06-27",
+    categoryId: "21",
+    delayedLogNo: "150170710293",
+    expectedPosts: "4",
+  },
+} as const
+
+type ResumeCaseId = keyof typeof resumeCases
+
+const parseResumeCaseId = (argv: string[]): ResumeCaseId => {
+  const caseFlagIndex = argv.indexOf("--case")
+  const caseId = caseFlagIndex >= 0 ? argv[caseFlagIndex + 1] : "default"
+
+  if (caseId !== "default" && caseId !== "se2-table") {
+    throw new Error(`unknown live resume export case: ${caseId}`)
+  }
+
+  return caseId
+}
+
+const selectedResumeCase = resumeCases[parseResumeCaseId(process.argv.slice(2))]
+const blogId = process.env.FAREWELL_LIVE_RESUME_BLOG_ID ?? selectedResumeCase.blogId
+const scopedDateFrom = process.env.FAREWELL_LIVE_RESUME_DATE_FROM ?? selectedResumeCase.dateFrom
+const scopedDateTo = process.env.FAREWELL_LIVE_RESUME_DATE_TO ?? selectedResumeCase.dateTo
+const scopedCategoryId = Number(process.env.FAREWELL_LIVE_RESUME_CATEGORY_ID ?? selectedResumeCase.categoryId)
+const delayedLogNo = process.env.FAREWELL_LIVE_RESUME_DELAY_LOGNO ?? selectedResumeCase.delayedLogNo
+const expectedScopedPostCount = Number(
+  process.env.FAREWELL_LIVE_RESUME_EXPECTED_POSTS ?? selectedResumeCase.expectedPosts,
+)
 const scopedOutputDir = `output/live-resume-e2e-${Date.now()}`
 const responseTimeoutMs = 240_000
 

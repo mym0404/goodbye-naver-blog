@@ -9,7 +9,6 @@
 
 ## 대표 기준점
 - 저장소 명령과 검증 루프: `package.json`
-- sample fixture refresh harness: `scripts/harness/refresh-sample-fixtures.ts`
 
 ## 언제 읽는가
 - 어떤 검증 명령을 우선 돌릴지 정해야 할 때

@@ -10,8 +10,7 @@
 ## 관련 코드
 - `package.json`
 - `.github/workflows/required-checks.yml`
-- `scripts/harness/verify-sample-exports.ts`
-- `scripts/harness/refresh-sample-fixtures.ts`
+- `tests/sample-fixtures.test.ts`
 - `scripts/harness/run-ui-smoke.ts`
 - `scripts/harness/run-ui-resume-smoke.ts`
 - `scripts/harness/run-ui-live-resume-export.ts`
@@ -23,8 +22,8 @@
 - `pnpm test:coverage`: 커버리지 게이트나 CI 동작을 다시 확인해야 할 때 실행한다.
 
 ## Verification Bundles
-- `package.json` 기준으로 `pnpm check:local`은 `pnpm typecheck && pnpm test:offline && pnpm samples:verify`를 실행한다.
-- `package.json` 기준으로 `pnpm check:full`은 `pnpm typecheck && pnpm test:offline && pnpm samples:verify && pnpm smoke:ui`를 실행한다.
+- `package.json` 기준으로 `pnpm check:local`은 `pnpm typecheck && pnpm test:offline`을 실행한다.
+- `package.json` 기준으로 `pnpm check:full`은 `pnpm typecheck && pnpm test:offline && pnpm smoke:ui`를 실행한다.
 - `package.json` 기준으로 `pnpm test:network`는 `pnpm build:ui`를 한 번 실행한 뒤 live resume export, SE2 table resume export, live upload e2e를 순서대로 실행한다.
 
 ## 테스트 종류
@@ -35,11 +34,8 @@
   `tests/markdown-renderer.test.ts`, `tests/export-single-post.test.ts`, `tests/naver-blog-exporter.test.ts` 등
   AST -> Markdown, export 파이프라인, frontmatter, 자산 처리 계약을 확인한다.
 - fixture-based sample regression
-  `pnpm samples:verify`
+  `pnpm test:offline`
   저장된 `source.html -> expected.md` fixture를 오프라인으로 다시 렌더링해 전체 Markdown 골든을 비교한다. `sample-fixture` parser block만 이 경로로 본다.
-- fixture refresh/drift check
-  `pnpm samples:refresh -- --id <sampleId>`
-  live HTML을 다시 받아 fixture를 갱신한다. 회귀 검증이 아니라 fixture 관리용이다.
 - Playwright smoke UI
   `pnpm smoke:ui`
   mock 기반 scan/export/upload 결과 UI 흐름과 복구 Dialog/단계 복귀를 확인한다.
@@ -67,8 +63,6 @@
 - `pnpm typecheck`: TypeScript 오류만 빠르게 다시 확인할 때 실행한다.
 - `pnpm test:offline`: 네트워크 없는 로컬 테스트만 다시 확인할 때 실행한다.
 - `pnpm test:coverage`: V8 coverage 리포트와 threshold를 다시 확인할 때 실행한다.
-- `pnpm samples:verify`: 저장된 sample fixture가 parser -> review -> render 경로와 계속 맞는지 확인할 때 실행한다.
-- `pnpm samples:refresh -- --id <sampleId>`: 지정 sample 하나의 live HTML과 expected Markdown fixture를 갱신할 때 실행한다.
 - `pnpm smoke:ui`: Playwright로 고정한 mock 기반 scan -> category select -> export -> upload 화면 회귀와 `manifest.json` 기반 단계 복구 회귀를 `run-ui-smoke.ts`, `run-ui-resume-smoke.ts`로 함께 확인할 때 실행한다.
 - `pnpm test:network:resume-export`: 개발 서버에서 실제 네이버 공개 글 범위를 export하다가 중간 종료한 뒤, 같은 `output/` 하위 경로의 `manifest.json`을 읽어 resume export를 끝까지 확인할 때 실행한다. 범위는 환경변수로 바꿀 수 있고, 외부 업로드는 하지 않는다.
 - `pnpm test:network:resume-export:se2-table`: `blogpeople`의 SE2 표 본문이 포함된 `2013-06-26`~`2013-06-27`, category `21` 범위를 export하다가 중간 종료한 뒤 resume export를 끝까지 확인할 때 실행한다.
@@ -76,8 +70,8 @@
 
 ## 보장하지 않는 것
 - `pnpm test:offline`은 live 네이버 HTML drift를 보장하지 않는다.
-- `pnpm samples:verify`는 저장된 fixture와 현재 코드의 일치만 보장한다. fixture가 오래됐는지는 보장하지 않는다.
-- `pnpm samples:verify`는 `parser-fixture` parser block를 보장하지 않는다. 이 범위는 parser unit test와 parser fixture가 맡는다.
+- sample fixture 테스트는 저장된 fixture와 현재 코드의 일치만 보장한다. fixture가 오래됐는지는 보장하지 않는다.
+- sample fixture 테스트는 `parser-fixture` parser block를 보장하지 않는다. 이 범위는 parser unit test와 parser fixture가 맡는다.
 - `pnpm smoke:ui`는 실제 네이버 live fetch가 아니라 mock 기반 UI 계약만 보장한다.
 - `pnpm test:network:resume-export`는 실제 네이버 fetch와 resume export까지만 보장하고, 외부 업로드 상태는 보장하지 않는다.
 - upload provider catalog 자체는 설치된 `piclist` runtime이 등록한 uploader config를 따른다. live e2e는 그중 GitHub 경로만 검증한다.
@@ -94,7 +88,7 @@
 - 검증 명령이 실패하면 현재 작업 diff와 실패 지점을 먼저 대조한다. 현재 작업 때문에 깨졌다면 그 자리에서 고치고 같은 검증을 다시 돌린다.
 - 검증 명령이 현재 작업과 무관한 기존 실패를 드러내면 그 시점에서 작업을 멈추고, 통과로 보고하지 않은 채 실패 명령과 영향 범위를 그대로 보고한다.
 - 코어 기능, 사용자 흐름, 상태 전이, 결과/복구 구조를 바꾸는 변경 뒤에는 Playwright smoke 경로를 직접 건드렸는지와 무관하게 최소 `pnpm smoke:ui`를 실행한다.
-- parser block/sample/harness 변경 뒤에는 `pnpm typecheck`, `pnpm test:offline`, `pnpm samples:verify`를 우선 본다.
+- parser block/sample/harness 변경 뒤에는 `pnpm typecheck`, `pnpm test:offline`을 우선 본다.
 - parser block registry를 바꿀 때는 sample fixture와 focused parser 테스트 범위를 함께 검토한다. 공개 글을 끝내 확보하지 못한 parser block는 unit test나 focused fixture 테스트로 확인한다.
 - renderer/exporter 결과 변경 뒤에는 위 전부에 `pnpm smoke:ui`, `pnpm test:coverage`를 추가한다.
 - UI/API 변경 뒤에는 먼저 `agent-browser`로 실제 화면을 확인하고, 그 변경이 코어 기능이나 사용자 경로까지 건드리면 `pnpm smoke:ui`를 함께 돌린다.
@@ -103,6 +97,5 @@
 - 스타일 검증이 꼭 필요하면 광범위한 자동 assert 대신 `agent-browser` 같은 실제 브라우저 확인을 우선하고, 자동화에는 접근성/상태/텍스트처럼 제품 계약만 남긴다.
 - export/upload 흐름, 복구 시나리오, 업로더 연동처럼 사용자 경로를 크게 바꾸는 변경 뒤에는 `pnpm smoke:ui`, `pnpm test:network:upload`를 둘 다 실행한다.
 - export resume 경로나 `manifest.json` 직렬화/복구 규칙을 바꿨다면 `pnpm smoke:ui`, `pnpm test:network:resume-export`를 함께 본다.
-- fixture 자체를 갱신해야 할 때만 `pnpm samples:refresh -- --id <sampleId>`를 실행한다.
 - 실업로드 검증이 필요하면 `pnpm test:network:upload`를 별도로 실행한다. 이 명령은 외부 상태를 만들 수 있으므로 `check:full`에는 포함하지 않는다.
 - knowledge만 변경했을 때도 `pnpm check:local`은 기본으로 실행하고, 수정한 링크와 코드 기준점을 수동 점검한다.
