@@ -3,236 +3,10 @@ import type {
   BlockOutputSelection,
   BlockOutputSelectionByType,
   BlockType,
-  EditorVersion,
-  ParserCapability,
-  ParserCapabilityId,
 } from "./Types.js"
+import type { BlogEditorId, ParserBlockId } from "../modules/blog/BlogTypes.js"
+import { blogEditors } from "../modules/blog/BlogRegistry.js"
 import { normalizeFormulaWrapperParams } from "./FormulaWrapper.js"
-
-export const getParserCapabilityId = ({
-  editorVersion,
-  blockType,
-}: {
-  editorVersion: EditorVersion
-  blockType: BlockType
-}): ParserCapabilityId => `se${editorVersion}-${blockType}`
-
-type ParserCapabilityCatalogEntry = Omit<ParserCapability, "id">
-
-const se2ParserTestFilePaths = ["tests/parser/se2-parser.test.ts"]
-const se3ParserTestFilePaths = ["tests/parser/se3-parser.test.ts"]
-const se4ParserTestFilePaths = ["tests/parser/se4-parser.test.ts"]
-
-export const parserCapabilityCatalog: ParserCapabilityCatalogEntry[] = [
-  {
-    editorVersion: 2,
-    blockType: "paragraph",
-    fallbackPolicy: "best-effort",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se2-legacy", "se2-code-image-autolayout", "se2-table-rawhtml-navigation"],
-    testFilePaths: se2ParserTestFilePaths,
-  },
-  {
-    editorVersion: 3,
-    blockType: "paragraph",
-    fallbackPolicy: "best-effort",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se3-legacy", "se3-quote-imagegroup-note9", "se3-quote-table-vita"],
-    testFilePaths: se3ParserTestFilePaths,
-  },
-  {
-    editorVersion: 4,
-    blockType: "paragraph",
-    fallbackPolicy: "best-effort",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se4-formula-code-linkcard", "se4-heading-itinerary", "se4-image-group"],
-    testFilePaths: se4ParserTestFilePaths,
-  },
-  {
-    editorVersion: 2,
-    blockType: "heading",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "parser-fixture",
-    sampleIds: [],
-    testFilePaths: se2ParserTestFilePaths,
-  },
-  {
-    editorVersion: 4,
-    blockType: "heading",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se4-heading-itinerary"],
-    testFilePaths: se4ParserTestFilePaths,
-  },
-  {
-    editorVersion: 2,
-    blockType: "quote",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "parser-fixture",
-    sampleIds: [],
-    testFilePaths: se2ParserTestFilePaths,
-  },
-  {
-    editorVersion: 3,
-    blockType: "quote",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se3-quote-imagegroup-note9", "se3-quote-table-vita"],
-    testFilePaths: se3ParserTestFilePaths,
-  },
-  {
-    editorVersion: 4,
-    blockType: "quote",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se4-quote-formula-code"],
-    testFilePaths: se4ParserTestFilePaths,
-  },
-  {
-    editorVersion: 2,
-    blockType: "divider",
-    fallbackPolicy: "structured",
-    verificationMode: "parser-fixture",
-    sampleIds: [],
-    testFilePaths: se2ParserTestFilePaths,
-  },
-  {
-    editorVersion: 3,
-    blockType: "divider",
-    fallbackPolicy: "structured",
-    verificationMode: "parser-fixture",
-    sampleIds: [],
-    testFilePaths: se3ParserTestFilePaths,
-  },
-  {
-    editorVersion: 4,
-    blockType: "divider",
-    fallbackPolicy: "structured",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se4-formula-code-linkcard", "se4-image-group", "se4-heading-itinerary"],
-    testFilePaths: se4ParserTestFilePaths,
-  },
-  {
-    editorVersion: 2,
-    blockType: "code",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se2-code-image-autolayout"],
-    testFilePaths: se2ParserTestFilePaths,
-  },
-  {
-    editorVersion: 3,
-    blockType: "code",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "parser-fixture",
-    sampleIds: [],
-    testFilePaths: se3ParserTestFilePaths,
-  },
-  {
-    editorVersion: 4,
-    blockType: "code",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se4-formula-code-linkcard", "se4-quote-formula-code"],
-    testFilePaths: se4ParserTestFilePaths,
-  },
-  {
-    editorVersion: 4,
-    blockType: "formula",
-    fallbackPolicy: "skip",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se4-formula-code-linkcard", "se4-quote-formula-code"],
-    testFilePaths: se4ParserTestFilePaths,
-  },
-  {
-    editorVersion: 2,
-    blockType: "image",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se2-code-image-autolayout", "se2-table-rawhtml-navigation"],
-    testFilePaths: se2ParserTestFilePaths,
-  },
-  {
-    editorVersion: 3,
-    blockType: "image",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se3-quote-imagegroup-note9", "se3-quote-table-vita"],
-    testFilePaths: se3ParserTestFilePaths,
-  },
-  {
-    editorVersion: 4,
-    blockType: "image",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se4-video-table", "se4-image-legacy-link", "se4-quote-formula-code", "se4-heading-itinerary"],
-    testFilePaths: se4ParserTestFilePaths,
-  },
-  {
-    editorVersion: 2,
-    blockType: "imageGroup",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se2-thumburl-image-group"],
-    testFilePaths: se2ParserTestFilePaths,
-  },
-  {
-    editorVersion: 3,
-    blockType: "imageGroup",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se3-quote-imagegroup-note9"],
-    testFilePaths: se3ParserTestFilePaths,
-  },
-  {
-    editorVersion: 4,
-    blockType: "imageGroup",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se4-image-group", "se4-heading-itinerary"],
-    testFilePaths: se4ParserTestFilePaths,
-  },
-  {
-    editorVersion: 4,
-    blockType: "video",
-    fallbackPolicy: "skip",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se4-video-table"],
-    testFilePaths: se4ParserTestFilePaths,
-  },
-  {
-    editorVersion: 4,
-    blockType: "linkCard",
-    fallbackPolicy: "markdown-paragraph",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se4-formula-code-linkcard", "se4-quote-formula-code", "se4-heading-itinerary"],
-    testFilePaths: se4ParserTestFilePaths,
-  },
-  {
-    editorVersion: 2,
-    blockType: "table",
-    fallbackPolicy: "raw-html",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se2-table-rawhtml-navigation"],
-    testFilePaths: se2ParserTestFilePaths,
-  },
-  {
-    editorVersion: 3,
-    blockType: "table",
-    fallbackPolicy: "raw-html",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se3-quote-table-vita"],
-    testFilePaths: se3ParserTestFilePaths,
-  },
-  {
-    editorVersion: 4,
-    blockType: "table",
-    fallbackPolicy: "raw-html",
-    verificationMode: "sample-fixture",
-    sampleIds: ["se4-video-table", "se4-heading-itinerary"],
-    testFilePaths: se4ParserTestFilePaths,
-  },
-]
 
 type BlockOutputParamDefinition = {
   key: string
@@ -249,21 +23,14 @@ type BlockOutputVariantDefinition = {
 }
 
 export type BlockOutputFamilyDefinition = {
-  blockType: BlockType
+  parserBlockId: ParserBlockId
+  editorId: BlogEditorId
+  astBlockType: BlockType
   label: string
   description: string
-  previewCapabilityId: ParserCapabilityId
   previewBlock: AstBlock
   variants: BlockOutputVariantDefinition[]
   params?: BlockOutputParamDefinition[]
-}
-
-export type BlockOutputCapabilityOverrideDefinition = {
-  blockType: BlockType
-  capabilityId: ParserCapabilityId
-  label: string
-  description: string
-  previewBlock?: AstBlock
 }
 
 const previewImage = {
@@ -274,19 +41,75 @@ const previewImage = {
   mediaKind: "image",
 } as const
 
-export const blockOutputFamilyOrder: BlockType[] = [
-  "paragraph",
-  "heading",
-  "quote",
-  "divider",
-  "code",
-  "formula",
-  "image",
-  "imageGroup",
-  "video",
-  "linkCard",
-  "table",
-]
+const outputParserBlockIds = new Set<ParserBlockId>([
+  "naver.se2.textNode",
+  "naver.se2.bookWidget",
+  "naver.se2.table",
+  "naver.se2.divider",
+  "naver.se2.quote",
+  "naver.se2.heading",
+  "naver.se2.code",
+  "naver.se2.image",
+  "naver.se2.textElement",
+  "naver.se3.table",
+  "naver.se3.quote",
+  "naver.se3.code",
+  "naver.se3.image",
+  "naver.se3.text",
+  "naver.se4.formula",
+  "naver.se4.code",
+  "naver.se4.linkCard",
+  "naver.se4.video",
+  "naver.se4.oembed",
+  "naver.se4.map",
+  "naver.se4.table",
+  "naver.se4.imageStrip",
+  "naver.se4.imageGroup",
+  "naver.se4.sticker",
+  "naver.se4.image",
+  "naver.se4.heading",
+  "naver.se4.divider",
+  "naver.se4.quote",
+  "naver.se4.text",
+  "naver.se4.material",
+])
+
+const parserBlockAstTypeMap: Partial<Record<ParserBlockId, BlockType>> = {
+  "naver.se2.textNode": "paragraph",
+  "naver.se2.bookWidget": "paragraph",
+  "naver.se2.table": "table",
+  "naver.se2.divider": "divider",
+  "naver.se2.quote": "quote",
+  "naver.se2.heading": "heading",
+  "naver.se2.code": "code",
+  "naver.se2.image": "image",
+  "naver.se2.textElement": "paragraph",
+  "naver.se3.table": "table",
+  "naver.se3.quote": "quote",
+  "naver.se3.code": "code",
+  "naver.se3.image": "image",
+  "naver.se3.text": "paragraph",
+  "naver.se4.formula": "formula",
+  "naver.se4.code": "code",
+  "naver.se4.linkCard": "linkCard",
+  "naver.se4.video": "video",
+  "naver.se4.oembed": "linkCard",
+  "naver.se4.map": "linkCard",
+  "naver.se4.table": "table",
+  "naver.se4.imageStrip": "imageGroup",
+  "naver.se4.imageGroup": "imageGroup",
+  "naver.se4.sticker": "image",
+  "naver.se4.image": "image",
+  "naver.se4.heading": "heading",
+  "naver.se4.divider": "divider",
+  "naver.se4.quote": "quote",
+  "naver.se4.text": "paragraph",
+  "naver.se4.material": "paragraph",
+}
+
+export const blockOutputFamilyOrder: ParserBlockId[] = blogEditors.flatMap((editor) =>
+  editor.supportedBlocks.filter((parserBlockId) => outputParserBlockIds.has(parserBlockId)),
+)
 
 export const defaultBlockOutputSelections: {
   [Key in BlockType]: BlockOutputSelection<Key>
@@ -315,12 +138,15 @@ export const defaultBlockOutputSelections: {
   table: { variant: "gfm-or-html" },
 }
 
-export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
+type BaseBlockOutputFamilyDefinition = Omit<BlockOutputFamilyDefinition, "parserBlockId" | "editorId" | "astBlockType"> & {
+  astBlockType: BlockType
+}
+
+const baseBlockOutputFamilyDefinitions: BaseBlockOutputFamilyDefinition[] = [
   {
-    blockType: "paragraph",
+    astBlockType: "paragraph",
     label: "문단",
     description: "문단 텍스트를 Markdown 본문 줄로 출력합니다.",
-    previewCapabilityId: "se4-paragraph",
     previewBlock: {
       type: "paragraph",
       text: "첫 줄입니다.\n\n둘째 문단입니다.",
@@ -328,10 +154,9 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
     variants: [{ id: "markdown-paragraph", label: "Markdown 문단", description: "정규화된 문단 텍스트를 그대로 출력합니다." }],
   },
   {
-    blockType: "heading",
+    astBlockType: "heading",
     label: "제목",
     description: "제목 레벨과 텍스트를 Markdown heading으로 출력합니다.",
-    previewCapabilityId: "se4-heading",
     previewBlock: {
       type: "heading",
       level: 2,
@@ -348,10 +173,9 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
     ],
   },
   {
-    blockType: "quote",
+    astBlockType: "quote",
     label: "인용문",
     description: "인용문을 `>` prefix로 출력합니다.",
-    previewCapabilityId: "se4-quote",
     previewBlock: {
       type: "quote",
       text: "Quoted line\nsecond line",
@@ -359,10 +183,9 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
     variants: [{ id: "blockquote", label: "blockquote", description: "모든 줄 앞에 `>`를 붙입니다." }],
   },
   {
-    blockType: "divider",
+    astBlockType: "divider",
     label: "구분선",
     description: "본문 구분선을 Markdown horizontal rule로 출력합니다.",
-    previewCapabilityId: "se4-divider",
     previewBlock: {
       type: "divider",
     },
@@ -372,10 +195,9 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
     ],
   },
   {
-    blockType: "code",
+    astBlockType: "code",
     label: "코드",
     description: "코드를 fenced code block으로 출력합니다.",
-    previewCapabilityId: "se4-code",
     previewBlock: {
       type: "code",
       language: "ts",
@@ -387,10 +209,9 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
     ],
   },
   {
-    blockType: "formula",
+    astBlockType: "formula",
     label: "수식",
     description: "인라인/블록 수식을 wrapper 또는 math fence로 출력합니다.",
-    previewCapabilityId: "se4-formula",
     previewBlock: {
       type: "formula",
       formula: "x^2 + y^2 = z^2",
@@ -417,10 +238,9 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
     ],
   },
   {
-    blockType: "image",
+    astBlockType: "image",
     label: "이미지",
     description: "이미지를 Markdown 이미지, 링크 감싼 이미지, 링크만 남기기 중 하나로 출력합니다.",
-    previewCapabilityId: "se4-image",
     previewBlock: {
       type: "image",
       image: previewImage,
@@ -432,10 +252,9 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
     ],
   },
   {
-    blockType: "imageGroup",
+    astBlockType: "imageGroup",
     label: "이미지 묶음",
     description: "이미지 묶음을 개별 이미지 블록으로 출력합니다.",
-    previewCapabilityId: "se4-imageGroup",
     previewBlock: {
       type: "imageGroup",
       images: [
@@ -451,10 +270,9 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
     variants: [{ id: "split-images", label: "개별 이미지로 분해", description: "이미지 하나씩 순서대로 출력합니다." }],
   },
   {
-    blockType: "video",
+    astBlockType: "video",
     label: "비디오",
     description: "비디오를 원문 링크로 출력합니다.",
-    previewCapabilityId: "se4-video",
     previewBlock: {
       type: "video",
       video: {
@@ -470,10 +288,9 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
     variants: [{ id: "source-link", label: "원문 링크", description: "비디오 제목을 원문 URL 링크로 출력합니다." }],
   },
   {
-    blockType: "linkCard",
+    astBlockType: "linkCard",
     label: "링크 카드",
     description: "링크 카드 제목을 Markdown 링크로 출력합니다.",
-    previewCapabilityId: "se4-linkCard",
     previewBlock: {
       type: "linkCard",
       card: {
@@ -486,10 +303,9 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
     variants: [{ id: "title-link", label: "제목 링크", description: "카드 제목을 링크로 출력합니다." }],
   },
   {
-    blockType: "table",
+    astBlockType: "table",
     label: "표",
     description: "표를 GFM 우선 또는 HTML 유지로 출력합니다.",
-    previewCapabilityId: "se4-table",
     previewBlock: {
       type: "table",
       complex: false,
@@ -506,28 +322,44 @@ export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = [
   },
 ]
 
-export const blockOutputCapabilityOverrideDefinitions: BlockOutputCapabilityOverrideDefinition[] = [
-  {
-    blockType: "formula",
-    capabilityId: "se4-formula",
-    label: "SE4 수식",
-    description: "ONE 수식 블록만 다른 출력 정책을 줄 때 사용합니다.",
-  },
-]
+const baseBlockOutputFamilyDefinitionMap = new Map(
+  baseBlockOutputFamilyDefinitions.map((definition) => [definition.astBlockType, definition]),
+)
+
+export const blockOutputFamilyDefinitions: BlockOutputFamilyDefinition[] = blockOutputFamilyOrder.flatMap((parserBlockId) => {
+  const astBlockType = parserBlockAstTypeMap[parserBlockId]
+  const editorId = parserBlockId.split(".").slice(0, 2).join(".") as BlogEditorId
+  if (!astBlockType) {
+    return []
+  }
+
+  const baseDefinition = baseBlockOutputFamilyDefinitionMap.get(astBlockType)
+
+  return baseDefinition
+    ? [
+        {
+          ...baseDefinition,
+          parserBlockId,
+          editorId,
+          astBlockType,
+        },
+      ]
+    : []
+})
 
 const blockOutputFamilyDefinitionMap = new Map(
-  blockOutputFamilyDefinitions.map((definition) => [definition.blockType, definition]),
+  blockOutputFamilyDefinitions.map((definition) => [definition.parserBlockId, definition]),
 )
 
-const blockOutputCapabilityOverrideDefinitionMap = new Map(
-  blockOutputCapabilityOverrideDefinitions.map((definition) => [definition.capabilityId, definition]),
+const astBlockTypeDefaultParserBlockIdMap = new Map(
+  blockOutputFamilyDefinitions.map((definition) => [definition.astBlockType, definition.parserBlockId]),
 )
 
-export const getBlockOutputFamilyDefinition = (blockType: BlockType) =>
-  blockOutputFamilyDefinitionMap.get(blockType)
+export const getBlockOutputFamilyDefinition = (parserBlockId: ParserBlockId) =>
+  blockOutputFamilyDefinitionMap.get(parserBlockId)
 
-export const getBlockOutputCapabilityOverrideDefinition = (capabilityId: ParserCapabilityId) =>
-  blockOutputCapabilityOverrideDefinitionMap.get(capabilityId)
+export const getDefaultParserBlockIdForAstBlockType = (blockType: BlockType) =>
+  astBlockTypeDefaultParserBlockIdMap.get(blockType)
 
 const mergeBlockOutputSelection = ({
   baseSelection,
@@ -591,55 +423,34 @@ const mergeFormulaBlockOutputSelection = ({
 
 export const resolveBlockOutputSelection = <Block extends BlockType>({
   blockType,
-  capabilityId,
+  parserBlockId,
   blockOutputs,
 }: {
   blockType: Block
-  capabilityId?: ParserCapabilityId
+  parserBlockId?: ParserBlockId
   blockOutputs?: {
-    defaults?: Partial<{ [Key in BlockType]: BlockOutputSelection<Key> }>
-    overrides?: Partial<Record<ParserCapabilityId, BlockOutputSelection>>
+    defaults?: Partial<Record<ParserBlockId, BlockOutputSelection>>
   }
 }): BlockOutputSelectionByType[Block] => {
+  const selectionParserBlockId = parserBlockId ?? getDefaultParserBlockIdForAstBlockType(blockType)
+
   if (blockType === "formula") {
     const baseSelection = mergeFormulaBlockOutputSelection({
       baseSelection: defaultBlockOutputSelections.formula,
-      nextSelection: blockOutputs?.defaults?.formula,
+      nextSelection: selectionParserBlockId
+        ? (blockOutputs?.defaults?.[selectionParserBlockId] as BlockOutputSelection<"formula"> | undefined)
+        : undefined,
     })
 
-    if (!capabilityId) {
-      return baseSelection as BlockOutputSelectionByType[Block]
-    }
-
-    const overrideSelection = blockOutputs?.overrides?.[capabilityId]
-
-    if (!overrideSelection) {
-      return baseSelection as BlockOutputSelectionByType[Block]
-    }
-
-    return mergeFormulaBlockOutputSelection({
-      baseSelection,
-      nextSelection: overrideSelection as BlockOutputSelection<"formula">,
-    }) as BlockOutputSelectionByType[Block]
+    return baseSelection as BlockOutputSelectionByType[Block]
   }
 
   const baseSelection = mergeBlockOutputSelection({
     baseSelection: defaultBlockOutputSelections[blockType],
-    nextSelection: blockOutputs?.defaults?.[blockType] as BlockOutputSelection<Block> | undefined,
+    nextSelection: selectionParserBlockId
+      ? (blockOutputs?.defaults?.[selectionParserBlockId] as BlockOutputSelection<Block> | undefined)
+      : undefined,
   })
 
-  if (!capabilityId) {
-    return baseSelection as BlockOutputSelectionByType[Block]
-  }
-
-  const overrideSelection = blockOutputs?.overrides?.[capabilityId]
-
-  if (!overrideSelection) {
-    return baseSelection as BlockOutputSelectionByType[Block]
-  }
-
-  return mergeBlockOutputSelection({
-    baseSelection,
-    nextSelection: overrideSelection as BlockOutputSelection<Block>,
-  }) as BlockOutputSelectionByType[Block]
+  return baseSelection as BlockOutputSelectionByType[Block]
 }

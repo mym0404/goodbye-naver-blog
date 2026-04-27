@@ -131,7 +131,7 @@ describe("single-post cli", () => {
       JSON.stringify({
         blockOutputs: {
           defaults: {
-            heading: {
+            "naver.se4.heading": {
               variant: "markdown-heading",
               params: {
                 levelOffset: 2,
@@ -198,7 +198,7 @@ describe("single-post cli", () => {
       })
 
       expect(exportSinglePost).toHaveBeenCalledTimes(1)
-      expect(exportSinglePost.mock.calls[0][0].options.blockOutputs.defaults.heading?.params?.levelOffset).toBe(2)
+      expect(exportSinglePost.mock.calls[0][0].options.blockOutputs.defaults["naver.se4.heading"]?.params?.levelOffset).toBe(2)
       expect(Object.hasOwn(exportSinglePost.mock.calls[0][0].options, "unsupportedBlockCases")).toBe(false)
       expect(stdoutWrite).not.toHaveBeenCalled()
       expect(stderrWrite).toHaveBeenCalledWith(
@@ -306,7 +306,7 @@ describe("single-post cli", () => {
       JSON.stringify({
         blockOutputs: {
           defaults: {
-            heading: {
+            "naver.se4.heading": {
               params: {
                 levelOffset: "bad",
               },

@@ -2,15 +2,7 @@ import type { CheerioAPI } from "cheerio"
 
 import type { ExportOptions, ParsedPost } from "../../../shared/Types.js"
 import { unique } from "../../../shared/Utils.js"
-import type { ParserBlock } from "../blocks/ParserNode.js"
-import { NaverSe3CodeBlock } from "../blocks/naver-se3/CodeBlock.js"
-import { NaverSe3DocumentTitleBlock } from "../blocks/naver-se3/DocumentTitleBlock.js"
-import { NaverSe3FallbackBlock } from "../blocks/naver-se3/FallbackBlock.js"
-import { NaverSe3ImageBlock } from "../blocks/naver-se3/ImageBlock.js"
-import { NaverSe3QuoteBlock } from "../blocks/naver-se3/QuoteBlock.js"
-import { NaverSe3RepresentativeUnsupportedBlock } from "../blocks/naver-se3/RepresentativeUnsupportedBlock.js"
-import { NaverSe3TableBlock } from "../blocks/naver-se3/TableBlock.js"
-import { NaverSe3TextBlock } from "../blocks/naver-se3/TextBlock.js"
+import { createParserBlocksForEditor } from "../ParserBlockFactory.js"
 import { BaseEditor } from "./BaseEditor.js"
 
 export type ParseSe3PostInput = {
@@ -22,16 +14,7 @@ export type ParseSe3PostInput = {
 }
 
 export class NaverBlogSE3Editor extends BaseEditor<ParseSe3PostInput> {
-  protected override readonly supportedBlocks: readonly ParserBlock[] = [
-    new NaverSe3DocumentTitleBlock(),
-    new NaverSe3TableBlock(),
-    new NaverSe3QuoteBlock(),
-    new NaverSe3CodeBlock(),
-    new NaverSe3ImageBlock(),
-    new NaverSe3RepresentativeUnsupportedBlock(),
-    new NaverSe3TextBlock(),
-    new NaverSe3FallbackBlock(),
-  ]
+  protected override readonly supportedBlocks = createParserBlocksForEditor("naver.se3")
 
   parse({ $, tags, options }: ParseSe3PostInput): ParsedPost {
     const container = $("#viewTypeSelector .se_component_wrap.sect_dsc").first()
@@ -44,6 +27,7 @@ export class NaverBlogSE3Editor extends BaseEditor<ParseSe3PostInput> {
 
     return {
       editorVersion: 3,
+      editorId: "naver.se3",
       tags: unique(tags),
       body,
       blocks,

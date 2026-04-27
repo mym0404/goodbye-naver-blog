@@ -1,7 +1,7 @@
 import { constants } from "node:fs"
 import { access, readFile } from "node:fs/promises"
 
-import { parserCapabilities } from "../../src/shared/ParserCapabilities.js"
+import { blogEditors } from "../../src/modules/blog/BlogRegistry.js"
 import { sampleCorpus } from "../../src/shared/SampleCorpus.js"
 import { buildGeneratedDocs } from "./lib/report-generation.js"
 import { collectParserStatus } from "./lib/parser-status.js"
@@ -19,12 +19,11 @@ const run = async () => {
     ...parserStatus.missingParserFixtureBlockTypes.map(
       (blockType) => `missing parser fixture: ${blockType}`,
     ),
-    ...parserStatus.missingCapabilityTestMappings.map(
-      (capabilityId) => `missing parser test mapping: ${capabilityId}`,
+    ...parserStatus.missingParserBlockTestMappings.map(
+      (parserBlockId) => `missing parser test mapping: ${parserBlockId}`,
     ),
-    ...parserStatus.invalidCapabilityTestFileLinks,
-    ...parserStatus.invalidSampleLinks,
-    ...parserStatus.invalidExpectedCapabilityIds,
+    ...parserStatus.invalidParserBlockTestFileLinks,
+    ...parserStatus.invalidExpectedParserBlockIds,
     ...parserStatus.missingSampleSourceFixtures.map(
       (sampleId) => `missing sample source fixture: ${sampleId}`,
     ),
@@ -71,8 +70,10 @@ const run = async () => {
     }
   }
 
-  if (parserCapabilities.length !== new Set(parserCapabilities.map((item) => item.id)).size) {
-    failures.push("parser capability id must be unique")
+  const parserBlockIds = blogEditors.flatMap((editor) => editor.supportedBlocks)
+
+  if (parserBlockIds.length !== new Set(parserBlockIds).size) {
+    failures.push("parser block id must be unique")
   }
 
   if (sampleCorpus.length !== new Set(sampleCorpus.map((item) => item.id)).size) {
@@ -84,7 +85,7 @@ const run = async () => {
   }
 
   console.log(
-    `parser:check passed (${parserCapabilities.length} capabilities, ${sampleCorpus.length} samples, ${parserStatus.sampleGapCapabilityIds.length} sample gaps, ${parserStatus.parserFixtureOnlyCapabilityIds.length} parser-fixture only capabilities)`,
+    `parser:check passed (${parserBlockIds.length} parser blocks, ${sampleCorpus.length} samples, ${parserStatus.sampleGapParserBlockIds.length} sample gaps)`,
   )
 }
 

@@ -1,6 +1,7 @@
 import { load } from "cheerio"
 
-import type { EditorVersion, ExportOptions } from "../../shared/Types.js"
+import type { ExportOptions } from "../../shared/Types.js"
+import type { BlogEditorId, NaverEditorKey } from "../blog/BlogTypes.js"
 import { unique } from "../../shared/Utils.js"
 import { withParsedPostBody } from "./blocks/BodyNodeUtils.js"
 import { NaverBlogSE2Editor } from "./editors/NaverBlogSe2Editor.js"
@@ -20,31 +21,36 @@ const extractTags = (html: string) => {
   return unique(tags)
 }
 
-export const detectEditorVersionFromHtml = (html: string): EditorVersion => {
+export const detectNaverEditorKeyFromHtml = (html: string): NaverEditorKey => {
   const versionMatch = html.replaceAll("&#034;", "\"").match(editorVersionPattern)
 
   if (versionMatch?.[1] === "2") {
-    return 2
+    return "se2"
   }
 
   if (versionMatch?.[1] === "3") {
-    return 3
+    return "se3"
   }
 
   if (versionMatch?.[1] === "4") {
-    return 4
+    return "se4"
   }
 
   if (html.includes('class="se-component')) {
-    return 4
+    return "se4"
   }
 
   if (html.includes('class="se_component')) {
-    return 3
+    return "se3"
   }
 
-  return 2
+  return "se2"
 }
+
+export const detectEditorVersionFromHtml = (html: string) =>
+  Number(detectNaverEditorKeyFromHtml(html).replace("se", ""))
+
+const getNaverEditorId = (editorKey: NaverEditorKey): BlogEditorId => `naver.${editorKey}`
 
 export const parsePostHtml = ({
   html,
@@ -57,11 +63,12 @@ export const parsePostHtml = ({
     resolveLinkUrl?: (url: string) => string
   }
 }) => {
-  const editorVersion = detectEditorVersionFromHtml(html)
+  const editorKey = detectNaverEditorKeyFromHtml(html)
+  const editorId = getNaverEditorId(editorKey)
   const tags = extractTags(html)
   const $ = load(html)
 
-  if (editorVersion === 4) {
+  if (editorId === "naver.se4") {
     return withParsedPostBody(
       new NaverBlogSE4Editor().parse({
         $,
@@ -72,7 +79,7 @@ export const parsePostHtml = ({
     )
   }
 
-  if (editorVersion === 3) {
+  if (editorId === "naver.se3") {
     return withParsedPostBody(
       new NaverBlogSE3Editor().parse({
         $,

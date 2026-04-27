@@ -45,7 +45,13 @@ describe("post-parser routing", () => {
     expect(parsed.editorVersion).toBe(4)
     expect(parsed.tags).toEqual(["algo", "math"])
     expect(parsed.blocks).toEqual([{ type: "paragraph", text: "SE4 text" }])
-    expect(parsed.body).toEqual([{ kind: "block", block: { type: "paragraph", text: "SE4 text" } }])
+    expect(parsed.body).toEqual([
+      {
+        kind: "block",
+        parserBlockId: "naver.se4.text",
+        block: { type: "paragraph", text: "SE4 text" },
+      },
+    ])
   })
 
   it("rewrites same-blog links before paragraph markdown is finalized", () => {

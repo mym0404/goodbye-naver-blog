@@ -66,6 +66,7 @@ const createAssetRecord = ({
 
 const parsedPost: ParsedPost = {
   editorVersion: 4,
+  editorId: "naver.se4",
   tags: ["algo"],
   warnings: [],
   videos: [
@@ -190,7 +191,7 @@ describe("renderMarkdownPost", () => {
   it("renders custom formula wrappers and image asset references", async () => {
     const options = defaultExportOptions()
 
-    options.blockOutputs.defaults.formula = {
+    options.blockOutputs.defaults["naver.se4.formula"] = {
       variant: "wrapper",
       params: {
         inlineWrapper: "\\(...\\)",
@@ -373,7 +374,7 @@ describe("renderMarkdownPost", () => {
 
     options.frontmatter.enabled = false
     options.markdown.linkStyle = "referenced"
-    options.blockOutputs.defaults.image = {
+    options.blockOutputs.defaults["naver.se4.image"] = {
       variant: "source-only",
     }
 
@@ -431,19 +432,19 @@ describe("renderMarkdownPost", () => {
   it("renders fallback warnings for image-group and table edge cases while keeping videos as plain links", async () => {
     const options = defaultExportOptions()
 
-    options.blockOutputs.defaults.formula = {
+    options.blockOutputs.defaults["naver.se4.formula"] = {
       variant: "math-fence",
       params: {
         inlineWrapper: "$",
       },
     }
-    options.blockOutputs.defaults.code = {
+    options.blockOutputs.defaults["naver.se4.code"] = {
       variant: "tilde-fence",
     }
-    options.blockOutputs.defaults.divider = {
+    options.blockOutputs.defaults["naver.se4.divider"] = {
       variant: "asterisk-rule",
     }
-    options.blockOutputs.defaults.table = {
+    options.blockOutputs.defaults["naver.se4.table"] = {
       variant: "html-only",
     }
 

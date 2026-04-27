@@ -4,12 +4,11 @@ import {
   resolveBlockOutputSelection,
 } from "../../src/shared/BlockRegistry.js"
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
-import { parserCapabilities } from "../../src/shared/ParserCapabilities.js"
+import type { ParserBlockId } from "../../src/modules/blog/BlogTypes.js"
 import type {
   BlockOutputSelection,
   BlockOutputSelectionByType,
   ExportOptions,
-  ParserCapabilityId,
 } from "../../src/shared/Types.js"
 
 const entrypoint = "pnpm exec tsx scripts/export-single-post.ts"
@@ -49,7 +48,7 @@ const allowedFrontmatterFieldKeys = [
 const allowedMarkdownKeys = [
   "linkStyle",
 ] as const
-const allowedBlockOutputsKeys = ["defaults", "overrides"] as const
+const allowedBlockOutputsKeys = ["defaults"] as const
 const allowedAssetsKeys = [
   "imageHandlingMode",
   "compressionEnabled",
@@ -70,12 +69,8 @@ const imageHandlingModes = ["download", "remote", "download-and-upload"] as cons
 const stickerAssetModes = ["ignore", "download-original"] as const
 const thumbnailSources = ["post-list-first", "first-body-image", "none"] as const
 const sameBlogPostModes = ["keep-source", "custom-url", "relative-filepath"] as const
-const parserCapabilityIdSet = new Set(parserCapabilities.map((capability) => capability.id))
-const parserCapabilityBlockTypeMap = new Map(
-  parserCapabilities.map((capability) => [capability.id, capability.blockType]),
-)
 const blockOutputFamilyDefinitionMap = new Map(
-  blockOutputFamilyDefinitions.map((definition) => [definition.blockType, definition]),
+  blockOutputFamilyDefinitions.map((definition) => [definition.parserBlockId, definition]),
 )
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
@@ -349,22 +344,24 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
   value,
   context,
   optionsPath,
-  blockType,
+  parserBlockId,
 }: {
   value: unknown
   context: string
   optionsPath: string
-  blockType: Block
+  parserBlockId: ParserBlockId
 }) => {
   assertPlainObject(value, context, optionsPath)
   assertAllowedKeys(value, ["variant", "params"], context, optionsPath)
 
   const definition =
-    blockOutputFamilyDefinitionMap.get(blockType) ??
-    failOptions(optionsPath, `${context} references unknown block type: ${blockType}`)
+    blockOutputFamilyDefinitionMap.get(parserBlockId) ??
+    failOptions(optionsPath, `${context} references unknown parser block: ${parserBlockId}`)
+  const blockType = definition.astBlockType as Block
 
   const nextSelection = resolveBlockOutputSelection({
     blockType,
+    parserBlockId,
   })
 
   if ("variant" in value) {
@@ -417,26 +414,14 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
 
 const assignBlockOutputDefault = <Block extends SupportedBlockOutputType>({
   defaults,
-  blockType,
+  parserBlockId,
   selection,
 }: {
   defaults: ExportOptions["blockOutputs"]["defaults"]
-  blockType: Block
+  parserBlockId: ParserBlockId
   selection: BlockOutputSelection<Block>
 }) => {
-  defaults[blockType] = selection
-}
-
-const assignBlockOutputOverride = <CapabilityId extends ParserCapabilityId>({
-  overrides,
-  capabilityId,
-  selection,
-}: {
-  overrides: ExportOptions["blockOutputs"]["overrides"]
-  capabilityId: CapabilityId
-  selection: ExportOptions["blockOutputs"]["overrides"][CapabilityId]
-}) => {
-  overrides[capabilityId] = selection
+  defaults[parserBlockId] = selection
 }
 
 const validateBlockOutputsOptions = (value: unknown, optionsPath: string) => {
@@ -454,57 +439,22 @@ const validateBlockOutputsOptions = (value: unknown, optionsPath: string) => {
       ...blockOutputs.defaults,
     }
 
-    for (const blockType of blockOutputFamilyOrder) {
-      if (blockType in defaultsValue) {
+    for (const parserBlockId of blockOutputFamilyOrder) {
+      if (parserBlockId in defaultsValue) {
         assignBlockOutputDefault({
           defaults: nextDefaults,
-          blockType,
+          parserBlockId,
           selection: validateBlockOutputSelection({
-            value: defaultsValue[blockType],
-            context: `blockOutputs.defaults.${blockType}`,
+            value: defaultsValue[parserBlockId],
+            context: `blockOutputs.defaults.${parserBlockId}`,
             optionsPath,
-            blockType,
+            parserBlockId,
           }),
         })
       }
     }
 
     blockOutputs.defaults = nextDefaults
-  }
-
-  if ("overrides" in value) {
-    const overridesValue = value.overrides
-    assertPlainObject(overridesValue, "blockOutputs.overrides", optionsPath)
-    assertAllowedKeys(
-      overridesValue,
-      Array.from(parserCapabilityIdSet),
-      "blockOutputs.overrides",
-      optionsPath,
-    )
-
-    const nextOverrides: ExportOptions["blockOutputs"]["overrides"] = {
-      ...blockOutputs.overrides,
-    }
-
-    for (const [capabilityId, selection] of Object.entries(overridesValue)) {
-      const typedCapabilityId = capabilityId as ParserCapabilityId
-      const blockType =
-        parserCapabilityBlockTypeMap.get(typedCapabilityId) ??
-        failOptions(optionsPath, `blockOutputs.overrides.${capabilityId} references unknown capability`)
-
-      assignBlockOutputOverride({
-        overrides: nextOverrides,
-        capabilityId: typedCapabilityId,
-        selection: validateBlockOutputSelection({
-          value: selection,
-          context: `blockOutputs.overrides.${capabilityId}`,
-          optionsPath,
-          blockType,
-        }) as ExportOptions["blockOutputs"]["overrides"][typeof typedCapabilityId],
-      })
-    }
-
-    blockOutputs.overrides = nextOverrides
   }
 
   return blockOutputs

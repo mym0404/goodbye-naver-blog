@@ -16,5 +16,5 @@
 - 구조 변경이 다른 계층에 번지는 범위를 판단해야 할 때
 
 ## 검증
-- `pnpm parser:check`: parser capability와 generated knowledge projection이 sample, fixture, 테스트와 여전히 맞는지 확인할 때 실행한다.
+- `pnpm parser:check`: parser block와 generated knowledge projection이 sample, fixture, 테스트와 여전히 맞는지 확인할 때 실행한다.
 - `pnpm check:local`: 작은 구조 수정 뒤 같은 로컬 기준선을 다시 확인할 때 실행한다.

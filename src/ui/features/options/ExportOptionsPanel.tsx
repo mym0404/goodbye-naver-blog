@@ -5,13 +5,10 @@ import type {
   FrontmatterFieldMeta,
   FrontmatterFieldName,
   OptionDescriptionMap,
-  ParserCapabilityId,
   PostSummary,
 } from "../../../shared/Types.js"
 import {
-  blockOutputCapabilityOverrideDefinitions,
   blockOutputFamilyDefinitions,
-  getBlockOutputFamilyDefinition,
   resolveBlockOutputSelection,
 } from "../../../shared/BlockRegistry.js"
 import { renderBlockOutputPreview } from "../../../shared/BlockOutputPreview.js"
@@ -507,53 +504,33 @@ const BlockOutputPreview = ({
 const BlockOutputCard = ({
   options,
   family,
-  overrideCapabilityId,
   onOptionsChange,
 }: {
   options: ExportOptions
   family: (typeof blockOutputFamilyDefinitions)[number]
-  overrideCapabilityId?: ParserCapabilityId
   onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
 }) => {
   const selection = resolveBlockOutputSelection({
-    blockType: family.blockType,
-    capabilityId: overrideCapabilityId,
+    blockType: family.astBlockType,
+    parserBlockId: family.parserBlockId,
     blockOutputs: options.blockOutputs,
   })
-  const overrideDefinition = overrideCapabilityId
-    ? blockOutputCapabilityOverrideDefinitions.find((item) => item.capabilityId === overrideCapabilityId)
-    : null
   const previewSnippet = renderBlockOutputPreview({
-    block: overrideCapabilityId
-      ? (overrideDefinition?.previewBlock ?? family.previewBlock)
-      : family.previewBlock,
+    block: family.previewBlock,
     selection,
     linkStyle: options.markdown.linkStyle,
     includeImageCaptions: options.assets.includeImageCaptions,
     imageHandlingMode: options.assets.imageHandlingMode,
   })
-  const optionKeyPrefix = overrideCapabilityId ? `blockOutputs-overrides-${overrideCapabilityId}` : `blockOutputs-defaults-${family.blockType}`
+  const optionKeyPrefix = `blockOutputs-defaults-${family.parserBlockId.replaceAll(".", "-")}`
   const updateSelection = (updater: (current: NonNullable<typeof selection>) => NonNullable<typeof selection>) => {
     onOptionsChange((current) => {
       const currentSelection = resolveBlockOutputSelection({
-        blockType: family.blockType,
-        capabilityId: overrideCapabilityId,
+        blockType: family.astBlockType,
+        parserBlockId: family.parserBlockId,
         blockOutputs: current.blockOutputs,
       })
       const nextSelection = updater(currentSelection)
-
-      if (overrideCapabilityId) {
-        return {
-          ...current,
-          blockOutputs: {
-            ...current.blockOutputs,
-            overrides: {
-              ...current.blockOutputs.overrides,
-              [overrideCapabilityId]: nextSelection,
-            },
-          },
-        }
-      }
 
       return {
         ...current,
@@ -561,7 +538,7 @@ const BlockOutputCard = ({
           ...current.blockOutputs,
           defaults: {
             ...current.blockOutputs.defaults,
-            [family.blockType]: nextSelection,
+            [family.parserBlockId]: nextSelection,
           },
         },
       }
@@ -569,22 +546,18 @@ const BlockOutputCard = ({
   }
 
   return (
-    <Card className={blockOutputCardClass} data-block-output-card={overrideCapabilityId ?? family.blockType}>
+    <Card className={blockOutputCardClass} data-block-output-card={family.parserBlockId}>
       <CardHeader className="gap-2 px-0 pb-0">
         <div className="flex items-start justify-between gap-3">
           <div className="grid gap-1">
             <CardTitle className="text-base tracking-[-0.03em]">
-              {overrideCapabilityId
-                ? overrideDefinition?.label ?? family.label
-                : family.label}
+              {family.label}
             </CardTitle>
             <CardDescription className="text-sm leading-6">
-              {overrideCapabilityId
-                ? overrideDefinition?.description ?? family.description
-                : family.description}
+              {family.description}
             </CardDescription>
           </div>
-          {overrideCapabilityId ? <Badge variant="secondary">{overrideCapabilityId}</Badge> : <Badge variant="outline">{family.blockType}</Badge>}
+          <Badge variant="outline">{family.parserBlockId}</Badge>
         </div>
       </CardHeader>
       <CardContent className="grid content-start gap-4 px-0 pb-0">
@@ -1202,39 +1175,12 @@ export const ExportOptionsPanel = ({
       </OptionField>
       {blockOutputFamilyDefinitions.map((family) => (
         <BlockOutputCard
-          key={family.blockType}
+          key={family.parserBlockId}
           options={options}
           family={family}
           onOptionsChange={onOptionsChange}
         />
       ))}
-      <div className="field-card grid gap-3 rounded-[1.5rem] px-4 py-4 xl:col-span-2">
-        <div className="grid gap-1">
-          <p className="text-sm font-semibold text-foreground">Capability override</p>
-          <p className="field-help text-sm leading-6">
-            기본 블록 출력과 다르게 처리할 capability만 별도로 덮어씁니다.
-          </p>
-        </div>
-        <div className="grid gap-4">
-          {blockOutputCapabilityOverrideDefinitions.map((overrideDefinition) => {
-            const family = getBlockOutputFamilyDefinition(overrideDefinition.blockType)
-
-            if (!family) {
-              return null
-            }
-
-            return (
-              <BlockOutputCard
-                key={overrideDefinition.capabilityId}
-                options={options}
-                family={family}
-                overrideCapabilityId={overrideDefinition.capabilityId}
-                onOptionsChange={onOptionsChange}
-              />
-            )
-          })}
-        </div>
-      </div>
     </OptionSection>
   )
 

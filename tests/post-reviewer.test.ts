@@ -4,6 +4,7 @@ import { reviewParsedPost } from "../src/modules/reviewer/PostReviewer.js"
 import type { ParsedPost } from "../src/shared/Types.js"
 
 const createParsedPost = (overrides?: Partial<ParsedPost>): ParsedPost => ({
+  editorId: "naver.se4",
   editorVersion: 4,
   tags: [],
   videos: [],

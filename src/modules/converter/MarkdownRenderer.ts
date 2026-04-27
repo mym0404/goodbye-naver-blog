@@ -12,6 +12,7 @@ import type {
   UnknownRecord,
   ParsedPostFallbackHtmlBodyNode,
   ParsedPost,
+  ParsedPostStructuredBodyNode,
   PostSummary,
   StructuredAstBlock,
 } from "../../shared/Types.js"
@@ -32,7 +33,6 @@ import {
   renderQuote,
 } from "../../shared/BlockMarkdown.js"
 import { getFrontmatterExportKey } from "../../shared/ExportOptions.js"
-import { getParserCapabilityId } from "../../shared/ParserCapabilities.js"
 import { unique } from "../../shared/Utils.js"
 import {
   getFallbackHtmlBodyNodeWarnings,
@@ -252,14 +252,13 @@ export const renderMarkdownPost = async ({
     })
   }
 
-  const renderTableBlock = (block: Extract<StructuredAstBlock, { type: "table" }>) => {
-    const capabilityId = getParserCapabilityId({
-      editorVersion: parsedPost.editorVersion,
-      blockType: "table",
-    })
+  const renderTableBlock = (
+    block: Extract<StructuredAstBlock, { type: "table" }>,
+    parserBlockId: ParsedPostStructuredBodyNode["parserBlockId"],
+  ) => {
     const selection = resolveBlockOutputSelection({
       blockType: "table",
-      capabilityId,
+      parserBlockId,
       blockOutputs: options.blockOutputs,
     })
 
@@ -294,10 +293,7 @@ export const renderMarkdownPost = async ({
     if (block.type === "heading") {
       const selection = resolveBlockOutputSelection({
         blockType: "heading",
-        capabilityId: getParserCapabilityId({
-          editorVersion: parsedPost.editorVersion,
-          blockType: "heading",
-        }),
+        parserBlockId: bodyNode.parserBlockId,
         blockOutputs: options.blockOutputs,
       })
       const adjustedLevel = Math.min(
@@ -317,10 +313,7 @@ export const renderMarkdownPost = async ({
     if (block.type === "divider") {
       const selection = resolveBlockOutputSelection({
         blockType: "divider",
-        capabilityId: getParserCapabilityId({
-          editorVersion: parsedPost.editorVersion,
-          blockType: "divider",
-        }),
+        parserBlockId: bodyNode.parserBlockId,
         blockOutputs: options.blockOutputs,
       })
       sections.push(getDividerMarker(block.outputSelection ?? selection))
@@ -330,10 +323,7 @@ export const renderMarkdownPost = async ({
     if (block.type === "code") {
       const selection = resolveBlockOutputSelection({
         blockType: "code",
-        capabilityId: getParserCapabilityId({
-          editorVersion: parsedPost.editorVersion,
-          blockType: "code",
-        }),
+        parserBlockId: bodyNode.parserBlockId,
         blockOutputs: options.blockOutputs,
       })
       sections.push(
@@ -349,10 +339,7 @@ export const renderMarkdownPost = async ({
     if (block.type === "formula") {
       const selection = resolveBlockOutputSelection({
         blockType: "formula",
-        capabilityId: getParserCapabilityId({
-          editorVersion: parsedPost.editorVersion,
-          blockType: "formula",
-        }),
+        parserBlockId: bodyNode.parserBlockId,
         blockOutputs: options.blockOutputs,
       })
       sections.push(
@@ -368,10 +355,7 @@ export const renderMarkdownPost = async ({
     if (block.type === "image") {
       const selection = resolveBlockOutputSelection({
         blockType: "image",
-        capabilityId: getParserCapabilityId({
-          editorVersion: parsedPost.editorVersion,
-          blockType: "image",
-        }),
+        parserBlockId: bodyNode.parserBlockId,
         blockOutputs: options.blockOutputs,
       })
       sections.push(
@@ -387,10 +371,6 @@ export const renderMarkdownPost = async ({
       const groupSections: string[] = []
       const imageSelection = resolveBlockOutputSelection({
         blockType: "image",
-        capabilityId: getParserCapabilityId({
-          editorVersion: parsedPost.editorVersion,
-          blockType: "image",
-        }),
         blockOutputs: options.blockOutputs,
       })
 
@@ -423,7 +403,7 @@ export const renderMarkdownPost = async ({
     }
 
     if (block.type === "table") {
-      sections.push(renderTableBlock(block))
+      sections.push(renderTableBlock(block, bodyNode.parserBlockId))
       continue
     }
 

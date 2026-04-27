@@ -1,6 +1,6 @@
-export type ExportProfile = "gfm"
+import type { BlogEditorId, ParserBlockId } from "../modules/blog/BlogTypes.js"
 
-export type EditorVersion = 2 | 3 | 4
+export type ExportProfile = "gfm"
 
 export type ThemePreference = "dark" | "light"
 
@@ -294,8 +294,7 @@ export type ExportOptions = {
     linkStyle: MarkdownLinkStyle
   }
   blockOutputs: {
-    defaults: Partial<{ [Key in BlockType]: BlockOutputSelection<Key> }>
-    overrides: Partial<{ [Key in ParserCapabilityId]: BlockOutputSelectionByType[Key extends `se${EditorVersion}-${infer Block}` ? Extract<Block, keyof BlockOutputSelectionByType> : never] }>
+    defaults: Partial<Record<ParserBlockId, BlockOutputSelection>>
   }
   assets: {
     imageHandlingMode: ImageHandlingMode
@@ -354,7 +353,7 @@ export type PostSummary = {
   categoryId: number
   categoryName: string
   source: string
-  editorVersion: EditorVersion | null
+  editorVersion: number | null
   thumbnailUrl: string | null
 }
 
@@ -413,6 +412,7 @@ export type StructuredAstBlock = AstBlock
 export type ParsedPostStructuredBodyNode = {
   kind: "block"
   block: StructuredAstBlock
+  parserBlockId?: ParserBlockId
 }
 
 export type ParsedPostFallbackHtmlBodyNode = {
@@ -426,34 +426,13 @@ export type ParsedPostBodyNode = ParsedPostStructuredBodyNode | ParsedPostFallba
 
 export type BlockType = AstBlock["type"]
 
-export type ParserFallbackPolicy =
-  | "structured"
-  | "best-effort"
-  | "markdown-paragraph"
-  | "raw-html"
-  | "skip"
-
-export type ParserCapabilityId = `se${EditorVersion}-${BlockType}`
-export type ParserCapabilityLookupId = ParserCapabilityId
-
-export type ParserCapabilityVerificationMode = "sample-fixture" | "parser-fixture"
-
-export type ParserCapability = {
-  id: ParserCapabilityId
-  editorVersion: EditorVersion
-  blockType: BlockType
-  fallbackPolicy: ParserFallbackPolicy
-  verificationMode: ParserCapabilityVerificationMode
-  sampleIds: string[]
-  testFilePaths: string[]
-}
-
 export type SampleCorpusEntry = {
   id: string
   blogId: string
   logNo: string
-  editorVersion: EditorVersion
-  expectedCapabilityLookupIds: ParserCapabilityLookupId[]
+  editorId: BlogEditorId
+  editorVersion: number
+  expectedParserBlockIds: ParserBlockId[]
   expectedWarnings?: {
     parser?: string[]
     reviewer?: string[]
@@ -473,7 +452,8 @@ export type SampleCorpusEntry = {
 }
 
 export type ParsedPost = {
-  editorVersion: EditorVersion
+  editorId: BlogEditorId
+  editorVersion: number
   tags: string[]
   body?: ParsedPostBodyNode[]
   blocks: AstBlock[]
@@ -499,7 +479,7 @@ export type PostManifestEntry = {
     name: string
     path: string[]
   }
-  editorVersion: EditorVersion | null
+  editorVersion: number | null
   status: "success" | "failed"
   outputPath: string | null
   assetPaths: string[]
@@ -519,7 +499,7 @@ export type ExportJobItem = {
     name: string
     path: string[]
   }
-  editorVersion?: EditorVersion | null
+  editorVersion?: number | null
   status: "success" | "failed"
   outputPath: string | null
   assetPaths: string[]

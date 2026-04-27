@@ -1,59 +1,72 @@
 # Parser Block Catalog
 
 ## 목적
-이 문서는 parser가 지원하는 capability-first 카탈로그를 정리한다. canonical 지원 단위는 공용 `blockType`이 아니라 `editorVersion + blockType` 조합이다.
+이 문서는 Blog, Editor, Parser Block 지원 관계를 정리한다. 지원 여부의 기준은 각 editor의 `supportedBlocks` 이다.
 
 ## Source Of Truth
-- 실제 기준은 `src/shared/BlockRegistry.ts` 와 `src/shared/ParserCapabilities.ts` 이다.
+- 실제 기준은 `src/modules/blog/BlogRegistry.ts` 이다.
+- output family 기준은 `src/shared/BlockRegistry.ts` 이다.
 - 이 문서는 코드에서 자동 생성되며 수동 편집하지 않는다.
 
 ## 관련 코드
+- `src/modules/blog/BlogRegistry.ts`
+- `src/modules/parser/ParserBlockFactory.ts`
 - `src/shared/BlockRegistry.ts`
-- `src/shared/ParserCapabilities.ts`
 - `src/shared/SampleCorpus.ts`
 - `src/modules/parser/PostParser.ts`
-- `src/modules/parser/editors/BaseEditor.ts`
-- `src/modules/parser/editors/NaverBlogSe2Editor.ts`
-- `src/modules/parser/editors/NaverBlogSe3Editor.ts`
-- `src/modules/parser/editors/NaverBlogSe4Editor.ts`
 
 ## 검증 방법
 - `pnpm quality:report`
 - `pnpm parser:check`
 - `pnpm samples:verify`
 
-## Capability Table
-| capabilityId | editorVersion | blockType | fallbackPolicy | verificationMode | sampleIds |
-| --- | --- | --- | --- | --- | --- |
-| `se2-paragraph` | `2` | `paragraph` | `best-effort` | `sample-fixture` | `se2-legacy`, `se2-code-image-autolayout`, `se2-table-rawhtml-navigation` |
-| `se3-paragraph` | `3` | `paragraph` | `best-effort` | `sample-fixture` | `se3-legacy`, `se3-quote-imagegroup-note9`, `se3-quote-table-vita` |
-| `se4-paragraph` | `4` | `paragraph` | `best-effort` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-heading-itinerary`, `se4-image-group` |
-| `se2-heading` | `2` | `heading` | `markdown-paragraph` | `parser-fixture` | - |
-| `se4-heading` | `4` | `heading` | `markdown-paragraph` | `sample-fixture` | `se4-heading-itinerary` |
-| `se2-quote` | `2` | `quote` | `markdown-paragraph` | `parser-fixture` | - |
-| `se3-quote` | `3` | `quote` | `markdown-paragraph` | `sample-fixture` | `se3-quote-imagegroup-note9`, `se3-quote-table-vita` |
-| `se4-quote` | `4` | `quote` | `markdown-paragraph` | `sample-fixture` | `se4-quote-formula-code` |
-| `se2-divider` | `2` | `divider` | `structured` | `parser-fixture` | - |
-| `se3-divider` | `3` | `divider` | `structured` | `parser-fixture` | - |
-| `se4-divider` | `4` | `divider` | `structured` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-image-group`, `se4-heading-itinerary` |
-| `se2-code` | `2` | `code` | `markdown-paragraph` | `sample-fixture` | `se2-code-image-autolayout` |
-| `se3-code` | `3` | `code` | `markdown-paragraph` | `parser-fixture` | - |
-| `se4-code` | `4` | `code` | `markdown-paragraph` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
-| `se4-formula` | `4` | `formula` | `skip` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-quote-formula-code` |
-| `se2-image` | `2` | `image` | `markdown-paragraph` | `sample-fixture` | `se2-code-image-autolayout`, `se2-table-rawhtml-navigation` |
-| `se3-image` | `3` | `image` | `markdown-paragraph` | `sample-fixture` | `se3-quote-imagegroup-note9`, `se3-quote-table-vita` |
-| `se4-image` | `4` | `image` | `markdown-paragraph` | `sample-fixture` | `se4-video-table`, `se4-image-legacy-link`, `se4-quote-formula-code`, `se4-heading-itinerary` |
-| `se2-imageGroup` | `2` | `imageGroup` | `markdown-paragraph` | `sample-fixture` | `se2-thumburl-image-group` |
-| `se3-imageGroup` | `3` | `imageGroup` | `markdown-paragraph` | `sample-fixture` | `se3-quote-imagegroup-note9` |
-| `se4-imageGroup` | `4` | `imageGroup` | `markdown-paragraph` | `sample-fixture` | `se4-image-group`, `se4-heading-itinerary` |
-| `se4-video` | `4` | `video` | `skip` | `sample-fixture` | `se4-video-table` |
-| `se4-linkCard` | `4` | `linkCard` | `markdown-paragraph` | `sample-fixture` | `se4-formula-code-linkcard`, `se4-quote-formula-code`, `se4-heading-itinerary` |
-| `se2-table` | `2` | `table` | `raw-html` | `sample-fixture` | `se2-table-rawhtml-navigation` |
-| `se3-table` | `3` | `table` | `raw-html` | `sample-fixture` | `se3-quote-table-vita` |
-| `se4-table` | `4` | `table` | `raw-html` | `sample-fixture` | `se4-video-table`, `se4-heading-itinerary` |
+## Blog Table
+| blogId | editors |
+| --- | --- |
+| `naver` | `naver.se2`, `naver.se3`, `naver.se4` |
+
+## Editor Table
+| editorId | blogId | supportedBlocks |
+| --- | --- | --- |
+| `naver.se2` | `naver` | `naver.se2.textNode`, `naver.se2.bookWidget`, `naver.se2.container`, `naver.se2.table`, `naver.se2.divider`, `naver.se2.lineBreak`, `naver.se2.quote`, `naver.se2.heading`, `naver.se2.code`, `naver.se2.inlineGifVideoFallback`, `naver.se2.image`, `naver.se2.spacer`, `naver.se2.textElement`, `naver.se2.fallback` |
+| `naver.se3` | `naver` | `naver.se3.documentTitle`, `naver.se3.table`, `naver.se3.quote`, `naver.se3.code`, `naver.se3.image`, `naver.se3.representativeUnsupported`, `naver.se3.text`, `naver.se3.fallback` |
+| `naver.se4` | `naver` | `naver.se4.documentTitle`, `naver.se4.formula`, `naver.se4.code`, `naver.se4.linkCard`, `naver.se4.video`, `naver.se4.oembed`, `naver.se4.map`, `naver.se4.table`, `naver.se4.imageStrip`, `naver.se4.imageGroup`, `naver.se4.sticker`, `naver.se4.image`, `naver.se4.heading`, `naver.se4.divider`, `naver.se4.quote`, `naver.se4.text`, `naver.se4.material`, `naver.se4.fallback` |
+
+## Output Families
+| parserBlockId | astBlockType | label |
+| --- | --- | --- |
+| `naver.se2.textNode` | `paragraph` | 문단 |
+| `naver.se2.bookWidget` | `paragraph` | 문단 |
+| `naver.se2.table` | `table` | 표 |
+| `naver.se2.divider` | `divider` | 구분선 |
+| `naver.se2.quote` | `quote` | 인용문 |
+| `naver.se2.heading` | `heading` | 제목 |
+| `naver.se2.code` | `code` | 코드 |
+| `naver.se2.image` | `image` | 이미지 |
+| `naver.se2.textElement` | `paragraph` | 문단 |
+| `naver.se3.table` | `table` | 표 |
+| `naver.se3.quote` | `quote` | 인용문 |
+| `naver.se3.code` | `code` | 코드 |
+| `naver.se3.image` | `image` | 이미지 |
+| `naver.se3.text` | `paragraph` | 문단 |
+| `naver.se4.formula` | `formula` | 수식 |
+| `naver.se4.code` | `code` | 코드 |
+| `naver.se4.linkCard` | `linkCard` | 링크 카드 |
+| `naver.se4.video` | `video` | 비디오 |
+| `naver.se4.oembed` | `linkCard` | 링크 카드 |
+| `naver.se4.map` | `linkCard` | 링크 카드 |
+| `naver.se4.table` | `table` | 표 |
+| `naver.se4.imageStrip` | `imageGroup` | 이미지 묶음 |
+| `naver.se4.imageGroup` | `imageGroup` | 이미지 묶음 |
+| `naver.se4.sticker` | `image` | 이미지 |
+| `naver.se4.image` | `image` | 이미지 |
+| `naver.se4.heading` | `heading` | 제목 |
+| `naver.se4.divider` | `divider` | 구분선 |
+| `naver.se4.quote` | `quote` | 인용문 |
+| `naver.se4.text` | `paragraph` | 문단 |
+| `naver.se4.material` | `paragraph` | 문단 |
 
 ## Notes
-- capability id는 parser, renderer, UI preview, generated knowledge가 함께 쓰는 공통 seam이다.
-- `sample-fixture` capability는 공개 글 fixture로 회귀를 확인한다.
-- `parser-fixture` capability는 parser unit test와 parser fixture로만 관리한다.
-- coverage gap과 parser-fixture only 목록은 `.agents/knowledge/reference/generated/sample-coverage.md` 에서 같이 본다.
+- Parser Block은 source HTML parser 단위이고 AST Block은 Markdown renderer용 공통 중간 표현이다.
+- 같은 AST Block으로 변환되더라도 Parser Block id는 editor별 source 구조를 기준으로 분리한다.
+- sample coverage gap은 `.agents/knowledge/reference/generated/sample-coverage.md` 에서 같이 본다.

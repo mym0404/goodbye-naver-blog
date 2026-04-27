@@ -17,7 +17,7 @@
     "test:network:resume-export": "node --import tsx ./scripts/harness/run-ui-live-resume-export.ts",
     "test:network:resume-export:se2-table": "FAREWELL_LIVE_RESUME_BLOG_ID=blogpeople FAREWELL_LIVE_RESUME_DATE_FROM=2013-06-26 FAREWELL_LIVE_RESUME_DATE_TO=2013-06-27 FAREWELL_LIVE_RESUME_CATEGORY_ID=21 FAREWELL_LIVE_RESUME_DELAY_LOGNO=150170710293 FAREWELL_LIVE_RESUME_EXPECTED_POSTS=4 node --import tsx ./scripts/harness/run-ui-live-resume-export.ts",
     "test:network:upload": "pnpm build:ui && node --import tsx ./scripts/harness/run-ui-live-upload.ts",
-    "parser:check": "node --import tsx ./scripts/harness/check-parser-capabilities.ts",
+    "parser:check": "node --import tsx ./scripts/harness/check-parser-blocks.ts",
     "samples:verify": "node --import tsx ./scripts/harness/verify-sample-exports.ts",
     "samples:refresh": "node --import tsx ./scripts/harness/refresh-sample-fixtures.ts",
     "smoke:ui": "pnpm build:ui && node --import tsx ./scripts/harness/run-ui-smoke-suite.ts",

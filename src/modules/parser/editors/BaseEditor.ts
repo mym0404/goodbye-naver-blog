@@ -13,11 +13,11 @@ import {
   createFallbackHtmlBodyNode,
 } from "../blocks/BodyNodeUtils.js"
 import type {
-  ParserBlock,
   ParserBlockConvertContext,
   ParserBlockOptions,
   ParserBlockResult,
 } from "../blocks/ParserNode.js"
+import type { ParserBlockBinding } from "../ParserBlockFactory.js"
 
 export type BaseEditorParseInput = {
   $: CheerioAPI
@@ -30,7 +30,7 @@ export type BaseEditorParseInput = {
 }
 
 export abstract class BaseEditor<TInput extends BaseEditorParseInput = BaseEditorParseInput> {
-  protected readonly supportedBlocks: readonly ParserBlock[] = []
+  protected readonly supportedBlocks: readonly ParserBlockBinding[] = []
 
   abstract parse(input: TInput): ParsedPost
 
@@ -65,14 +65,14 @@ export abstract class BaseEditor<TInput extends BaseEditorParseInput = BaseEdito
       body.push(...nodes)
     }
 
-    const handleResult = (result: ParserBlockResult) => {
+    const handleResult = (result: ParserBlockResult, parserBlockId: ParserBlockBinding["id"]) => {
       if (result.warnings) {
         appendWarnings(result.warnings)
       }
 
       if (result.status === "handled") {
         blocks.push(...result.blocks)
-        body.push(...createBodyNodesFromStructuredBlocks(result.blocks))
+        body.push(...createBodyNodesFromStructuredBlocks(result.blocks, parserBlockId))
         return
       }
 
@@ -104,13 +104,13 @@ export abstract class BaseEditor<TInput extends BaseEditorParseInput = BaseEdito
         appendWarnings,
         ...moduleContext?.(node),
       }
-      const block = this.supportedBlocks.find((supportedBlock) => supportedBlock.match(context))
+      const block = this.supportedBlocks.find((supportedBlock) => supportedBlock.block.match(context))
 
       if (!block) {
         return
       }
 
-      handleResult(block.convert(context))
+      handleResult(block.block.convert(context), block.id)
     }
 
     nodes.forEach(appendBlocksFromNode)

@@ -6,6 +6,7 @@ import type {
   ParsedPostStructuredBodyNode,
   StructuredAstBlock,
 } from "../../../shared/Types.js"
+import type { ParserBlockId } from "../../blog/BlogTypes.js"
 
 type LegacyHtmlAstBlock =
   | { type: "htmlFragment"; html: string }
@@ -16,9 +17,13 @@ type LegacyParsedPostBlock = AstBlock | LegacyHtmlAstBlock
 export const isStructuredAstBlock = (block: LegacyParsedPostBlock): block is StructuredAstBlock =>
   block.type !== "htmlFragment" && block.type !== "rawHtml"
 
-export const createStructuredBodyNode = (block: StructuredAstBlock): ParsedPostStructuredBodyNode => ({
+export const createStructuredBodyNode = (
+  block: StructuredAstBlock,
+  parserBlockId?: ParserBlockId,
+): ParsedPostStructuredBodyNode => ({
   kind: "block",
   block,
+  ...(parserBlockId ? { parserBlockId } : {}),
 })
 
 export const createFallbackHtmlBodyNode = ({
@@ -36,8 +41,10 @@ export const createFallbackHtmlBodyNode = ({
   warnings,
 })
 
-export const createBodyNodesFromStructuredBlocks = (blocks: StructuredAstBlock[]): ParsedPostBodyNode[] =>
-  blocks.map((block) => createStructuredBodyNode(block))
+export const createBodyNodesFromStructuredBlocks = (
+  blocks: StructuredAstBlock[],
+  parserBlockId?: ParserBlockId,
+): ParsedPostBodyNode[] => blocks.map((block) => createStructuredBodyNode(block, parserBlockId))
 
 export const createBodyNodesFromLegacyBlocks = (blocks: LegacyParsedPostBlock[]): ParsedPostBodyNode[] =>
   blocks.map((block) => {

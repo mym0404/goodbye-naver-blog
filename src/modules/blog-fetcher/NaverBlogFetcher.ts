@@ -3,7 +3,6 @@ import { writeFile } from 'node:fs/promises';
 
 import {
   type CategoryInfo,
-  type EditorVersion,
   type ScanResult,
 } from '../../shared/Types.js';
 import {
@@ -77,7 +76,7 @@ const browserHeaders = ({
   'sec-fetch-dest': 'empty',
 });
 
-const detectEditorVersion = (value: number | null): EditorVersion | null => {
+const detectEditorVersion = (value: number | null) => {
   if (value === 2 || value === 3 || value === 4) {
     return value;
   }

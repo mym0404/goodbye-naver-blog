@@ -1,4 +1,3 @@
-import { getParserCapabilityId } from "./ParserCapabilities.js"
 import type { SampleCorpusEntry } from "./Types.js"
 
 export const sampleCorpus: SampleCorpusEntry[] = [
@@ -6,11 +5,12 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se4-video-table",
     blogId: "mym0404",
     logNo: "221302086471",
+    editorId: "naver.se4",
     editorVersion: 4,
-    expectedCapabilityLookupIds: [
-      getParserCapabilityId({ editorVersion: 4, blockType: "image" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "video" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "table" }),
+    expectedParserBlockIds: [
+      "naver.se4.image",
+      "naver.se4.video",
+      "naver.se4.table",
     ],
     post: {
       title: "휴머노이드 첫 Rigging 성공 애니메이션",
@@ -29,14 +29,15 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se4-formula-code-linkcard",
     blogId: "mym0404",
     logNo: "223034929697",
+    editorId: "naver.se4",
     editorVersion: 4,
-    expectedCapabilityLookupIds: [
-      getParserCapabilityId({ editorVersion: 4, blockType: "linkCard" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "image" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "divider" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "paragraph" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "formula" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "code" }),
+    expectedParserBlockIds: [
+      "naver.se4.linkCard",
+      "naver.se4.image",
+      "naver.se4.divider",
+      "naver.se4.text",
+      "naver.se4.formula",
+      "naver.se4.code",
     ],
     post: {
       title: "[백준] 9942 하노이의 네 탑, 1607 원숭이 타워",
@@ -55,11 +56,12 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se4-image-group",
     blogId: "mym0404",
     logNo: "224056819985",
+    editorId: "naver.se4",
     editorVersion: 4,
-    expectedCapabilityLookupIds: [
-      getParserCapabilityId({ editorVersion: 4, blockType: "paragraph" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "divider" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "imageGroup" }),
+    expectedParserBlockIds: [
+      "naver.se4.text",
+      "naver.se4.divider",
+      "naver.se4.imageGroup",
     ],
     post: {
       title: "초간단 운전면허 필기 2026 - 첫 시험에서 합격하는 가장 확실한 방법",
@@ -78,15 +80,16 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se4-heading-itinerary",
     blogId: "goyamee",
     logNo: "223511986798",
+    editorId: "naver.se4",
     editorVersion: 4,
-    expectedCapabilityLookupIds: [
-      getParserCapabilityId({ editorVersion: 4, blockType: "paragraph" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "image" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "heading" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "divider" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "imageGroup" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "linkCard" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "table" }),
+    expectedParserBlockIds: [
+      "naver.se4.text",
+      "naver.se4.image",
+      "naver.se4.heading",
+      "naver.se4.divider",
+      "naver.se4.imageGroup",
+      "naver.se4.linkCard",
+      "naver.se4.table",
     ],
     post: {
       title: "전북 부안 가볼만한곳 변산반도 여행 1박2일 정산",
@@ -105,10 +108,11 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se4-image-legacy-link",
     blogId: "mym0404",
     logNo: "221589718939",
+    editorId: "naver.se4",
     editorVersion: 4,
-    expectedCapabilityLookupIds: [
-      getParserCapabilityId({ editorVersion: 4, blockType: "paragraph" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "image" }),
+    expectedParserBlockIds: [
+      "naver.se4.text",
+      "naver.se4.image",
     ],
     post: {
       title: "[Outsourcing] 외주2",
@@ -127,15 +131,16 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se4-quote-formula-code",
     blogId: "mym0404",
     logNo: "222619228134",
+    editorId: "naver.se4",
     editorVersion: 4,
-    expectedCapabilityLookupIds: [
-      getParserCapabilityId({ editorVersion: 4, blockType: "linkCard" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "image" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "divider" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "paragraph" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "quote" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "formula" }),
-      getParserCapabilityId({ editorVersion: 4, blockType: "code" }),
+    expectedParserBlockIds: [
+      "naver.se4.linkCard",
+      "naver.se4.image",
+      "naver.se4.divider",
+      "naver.se4.text",
+      "naver.se4.quote",
+      "naver.se4.formula",
+      "naver.se4.code",
     ],
     post: {
       title: "[DP] Slope trick 공부 - BOJ - 19693 Safety",
@@ -154,8 +159,9 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se2-legacy",
     blogId: "mym0404",
     logNo: "220496669802",
+    editorId: "naver.se2",
     editorVersion: 2,
-    expectedCapabilityLookupIds: [getParserCapabilityId({ editorVersion: 2, blockType: "paragraph" })],
+    expectedParserBlockIds: ["naver.se2.textElement"],
     post: {
       title: "2015년 10월 1일 오후 6시 33분에 저장한 글입니다.",
       publishedAt: "2015-10-01T18:33:19+09:00",
@@ -172,11 +178,12 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se2-code-image-autolayout",
     blogId: "mym0404",
     logNo: "221504285266",
+    editorId: "naver.se2",
     editorVersion: 2,
-    expectedCapabilityLookupIds: [
-      getParserCapabilityId({ editorVersion: 2, blockType: "paragraph" }),
-      getParserCapabilityId({ editorVersion: 2, blockType: "image" }),
-      getParserCapabilityId({ editorVersion: 2, blockType: "code" }),
+    expectedParserBlockIds: [
+      "naver.se2.textElement",
+      "naver.se2.image",
+      "naver.se2.table",
     ],
     post: {
       title: "[iOS] 오토 레이아웃을 이용할 때 기기에 따라 적절한 값을 얻어오기",
@@ -194,11 +201,12 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se2-table-rawhtml-navigation",
     blogId: "mym0404",
     logNo: "221459172607",
+    editorId: "naver.se2",
     editorVersion: 2,
-    expectedCapabilityLookupIds: [
-      getParserCapabilityId({ editorVersion: 2, blockType: "paragraph" }),
-      getParserCapabilityId({ editorVersion: 2, blockType: "image" }),
-      getParserCapabilityId({ editorVersion: 2, blockType: "table" }),
+    expectedParserBlockIds: [
+      "naver.se2.textElement",
+      "naver.se2.image",
+      "naver.se2.table",
     ],
     expectedWarnings: {
       parser: ["SE2 GIF video 블록을 구조화하지 못해 원본 HTML로 보존했습니다."],
@@ -230,10 +238,11 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se2-thumburl-image-group",
     blogId: "mym0404",
     logNo: "221425068566",
+    editorId: "naver.se2",
     editorVersion: 2,
-    expectedCapabilityLookupIds: [
-      getParserCapabilityId({ editorVersion: 2, blockType: "imageGroup" }),
-      getParserCapabilityId({ editorVersion: 2, blockType: "paragraph" }),
+    expectedParserBlockIds: [
+      "naver.se2.image",
+      "naver.se2.textElement",
     ],
     post: {
       title: "트위치 로고, 카트라이더 부스터 로고를 만들어 보았다.",
@@ -252,8 +261,9 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se3-legacy",
     blogId: "mym0404",
     logNo: "221236891086",
+    editorId: "naver.se3",
     editorVersion: 3,
-    expectedCapabilityLookupIds: [getParserCapabilityId({ editorVersion: 3, blockType: "paragraph" })],
+    expectedParserBlockIds: ["naver.se3.text"],
     post: {
       title: "3월 25일 일요일",
       publishedAt: "2018-03-25T14:38:01+09:00",
@@ -270,12 +280,13 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se3-quote-imagegroup-note9",
     blogId: "sekishin",
     logNo: "221405258251",
+    editorId: "naver.se3",
     editorVersion: 3,
-    expectedCapabilityLookupIds: [
-      getParserCapabilityId({ editorVersion: 3, blockType: "paragraph" }),
-      getParserCapabilityId({ editorVersion: 3, blockType: "image" }),
-      getParserCapabilityId({ editorVersion: 3, blockType: "quote" }),
-      getParserCapabilityId({ editorVersion: 3, blockType: "imageGroup" }),
+    expectedParserBlockIds: [
+      "naver.se3.text",
+      "naver.se3.image",
+      "naver.se3.quote",
+      "naver.se3.image",
     ],
     post: {
       title: "[Quick Review] 더 강력해진 Note- 삼성 갤럭시 노트9 (Samsung Galaxy Note9)",
@@ -294,12 +305,13 @@ export const sampleCorpus: SampleCorpusEntry[] = [
     id: "se3-quote-table-vita",
     blogId: "sekishin",
     logNo: "221290869775",
+    editorId: "naver.se3",
     editorVersion: 3,
-    expectedCapabilityLookupIds: [
-      getParserCapabilityId({ editorVersion: 3, blockType: "paragraph" }),
-      getParserCapabilityId({ editorVersion: 3, blockType: "image" }),
-      getParserCapabilityId({ editorVersion: 3, blockType: "quote" }),
-      getParserCapabilityId({ editorVersion: 3, blockType: "table" }),
+    expectedParserBlockIds: [
+      "naver.se3.text",
+      "naver.se3.image",
+      "naver.se3.quote",
+      "naver.se3.table",
     ],
     expectedWarnings: {
       parser: [

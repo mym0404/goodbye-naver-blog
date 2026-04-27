@@ -24,9 +24,9 @@ const run = async () => {
       html: fixture.html,
     })
 
-    for (const expectedCapabilityLookupId of sample.expectedCapabilityLookupIds) {
-      if (!rendered.observedCapabilityLookupIds.includes(expectedCapabilityLookupId)) {
-        failures.push(`${sample.id}: missing expected capability lookup ${expectedCapabilityLookupId}`)
+    for (const expectedParserBlockId of sample.expectedParserBlockIds) {
+      if (!rendered.observedParserBlockIds.includes(expectedParserBlockId)) {
+        failures.push(`${sample.id}: missing expected parser block ${expectedParserBlockId}`)
       }
     }
 

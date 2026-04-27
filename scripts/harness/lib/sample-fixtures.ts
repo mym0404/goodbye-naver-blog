@@ -1,10 +1,10 @@
 import path from "node:path"
 
 import { renderMarkdownPost } from "../../../src/modules/converter/MarkdownRenderer.js"
+import { getParsedPostParserBlockIds } from "../../../src/modules/parser/ParserBlockUsage.js"
 import { parsePostHtml } from "../../../src/modules/parser/PostParser.js"
 import { reviewParsedPost } from "../../../src/modules/reviewer/PostReviewer.js"
 import { defaultExportOptions } from "../../../src/shared/ExportOptions.js"
-import { getParserCapabilityLookupIds } from "../../../src/shared/ParserCapabilities.js"
 import type {
   CategoryInfo,
   ExportOptions,
@@ -95,24 +95,16 @@ export const renderSampleFixture = async ({
       uploadCandidate: null,
     }),
   })
-  const observedCapabilityLookupIds = unique([
-    ...getParserCapabilityLookupIds({
-      editorVersion: parsedPostBeforeNormalization.editorVersion,
-      blocks: parsedPostBeforeNormalization.blocks,
-      warnings: parsedPostBeforeNormalization.warnings,
-    }),
-    ...getParserCapabilityLookupIds({
-      editorVersion: parsedPost.editorVersion,
-      blocks: parsedPost.blocks,
-      warnings: parsedPost.warnings,
-    }),
+  const observedParserBlockIds = unique([
+    ...getParsedPostParserBlockIds(parsedPostBeforeNormalization),
+    ...getParsedPostParserBlockIds(parsedPost),
   ])
 
   return {
     parsedPost,
     reviewWarnings: review.warnings,
     rendered,
-    observedCapabilityLookupIds,
+    observedParserBlockIds,
     normalizedMarkdown: normalizeMarkdownFixture(rendered.markdown),
   }
 }

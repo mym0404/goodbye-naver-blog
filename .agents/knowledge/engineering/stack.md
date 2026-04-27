@@ -44,7 +44,7 @@
 - `src/modules`: fetcher, parser, reviewer, converter, exporter
 - `src/modules/parser/editors`: SE2, SE3, SE4 parser class 구현
 - `src/server`: job store와 HTTP API
-- `src/shared`: 타입, 옵션, parser capability, sample corpus, 유틸
+- `src/shared`: 타입, 옵션, parser block, sample corpus, 유틸
 - `src/ui`: React 앱 셸, `features/common` 공용 shell/hook/status, feature별 UI 조합, shadcn primitive
 - `tests`: unit, integration, smoke 보조 테스트
 - `.agents/knowledge/reference`: generated 보고서, runbook, 플랜 아카이브, 트러블슈팅

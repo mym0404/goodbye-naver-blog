@@ -152,25 +152,25 @@ describe("ExportOptionsPanel", () => {
     )
 
     await selectOption({ user, trigger: "#markdown-linkStyle", value: "referenced" })
-    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-formula-inlineWrapper"), {
+    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-naver-se4-formula-inlineWrapper"), {
       target: {
         value: "\\(...\\)",
       },
     })
-    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-formula-blockWrapper"), {
+    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-naver-se4-formula-blockWrapper"), {
       target: {
         value: "\\[...\\]",
       },
     })
-    await selectOption({ user, trigger: "#blockOutputs-defaults-image-variant", value: "linked-image" })
-    await selectOption({ user, trigger: "#blockOutputs-defaults-divider-variant", value: "asterisk-rule" })
-    await selectOption({ user, trigger: "#blockOutputs-defaults-code-variant", value: "tilde-fence" })
-    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-heading-levelOffset"), {
+    await selectOption({ user, trigger: "#blockOutputs-defaults-naver-se4-image-variant", value: "linked-image" })
+    await selectOption({ user, trigger: "#blockOutputs-defaults-naver-se4-divider-variant", value: "asterisk-rule" })
+    await selectOption({ user, trigger: "#blockOutputs-defaults-naver-se4-code-variant", value: "tilde-fence" })
+    fireEvent.change(query<HTMLInputElement>("#blockOutputs-defaults-naver-se4-heading-levelOffset"), {
       target: {
         value: "2",
       },
     })
-    await selectOption({ user, trigger: "#blockOutputs-overrides-se4-formula-variant", value: "math-fence" })
+    await selectOption({ user, trigger: "#blockOutputs-defaults-naver-se4-formula-variant", value: "math-fence" })
     cleanup()
 
     render(
@@ -265,13 +265,13 @@ describe("ExportOptionsPanel", () => {
     expect(latestOptions.frontmatter.fields.title).toBe(false)
     expect(latestOptions.frontmatter.aliases.title).toBe("headline")
     expect(latestOptions.markdown.linkStyle).toBe("referenced")
-    expect(latestOptions.blockOutputs.defaults.formula?.params?.inlineWrapper).toBe("\\(...\\)")
-    expect(latestOptions.blockOutputs.defaults.formula?.params?.blockWrapper).toBe("\\[...\\]")
-    expect(latestOptions.blockOutputs.defaults.image?.variant).toBe("linked-image")
-    expect(latestOptions.blockOutputs.defaults.divider?.variant).toBe("asterisk-rule")
-    expect(latestOptions.blockOutputs.defaults.code?.variant).toBe("tilde-fence")
-    expect(latestOptions.blockOutputs.defaults.heading?.params?.levelOffset).toBe(2)
-    expect(latestOptions.blockOutputs.overrides["se4-formula"]?.variant).toBe("math-fence")
+    expect(latestOptions.blockOutputs.defaults["naver.se4.formula"]?.params?.inlineWrapper).toBe("\\(...\\)")
+    expect(latestOptions.blockOutputs.defaults["naver.se4.formula"]?.params?.blockWrapper).toBe("\\[...\\]")
+    expect(latestOptions.blockOutputs.defaults["naver.se4.image"]?.variant).toBe("linked-image")
+    expect(latestOptions.blockOutputs.defaults["naver.se4.divider"]?.variant).toBe("asterisk-rule")
+    expect(latestOptions.blockOutputs.defaults["naver.se4.code"]?.variant).toBe("tilde-fence")
+    expect(latestOptions.blockOutputs.defaults["naver.se4.heading"]?.params?.levelOffset).toBe(2)
+    expect(latestOptions.blockOutputs.defaults["naver.se4.formula"]?.variant).toBe("math-fence")
     expect(latestOptions.assets.imageHandlingMode).toBe("remote")
     expect(latestOptions.assets.compressionEnabled).toBe(false)
     expect(latestOptions.assets.stickerAssetMode).toBe("download-original")
@@ -403,8 +403,8 @@ describe("ExportOptionsPanel", () => {
     expect(screen.queryByLabelText("Video Style")).not.toBeInTheDocument()
     expect(document.querySelector("#markdown-linkCardStyle")).toBeNull()
     expect(document.querySelector("#markdown-videoStyle")).toBeNull()
-    expect(document.querySelector('[data-block-output-card="formula"]')).not.toBeNull()
-    expect(document.querySelector('[data-block-output-card="se4-formula"]')).not.toBeNull()
+    expect(document.querySelector('[data-block-output-card="formula"]')).toBeNull()
+    expect(document.querySelector('[data-block-output-card="naver.se4.formula"]')).not.toBeNull()
   })
 
   it("updates block preview snippets when block output selections change", async () => {
@@ -426,9 +426,9 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    expect(query<HTMLElement>('[data-block-output-card="code"] pre').textContent).toContain("```ts")
+    expect(query<HTMLElement>('[data-block-output-card="naver.se4.code"] pre').textContent).toContain("```ts")
 
-    await selectOption({ user, trigger: "#blockOutputs-defaults-code-variant", value: "tilde-fence" })
+    await selectOption({ user, trigger: "#blockOutputs-defaults-naver-se4-code-variant", value: "tilde-fence" })
 
     cleanup()
 
@@ -447,7 +447,7 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    expect(query<HTMLElement>('[data-block-output-card="code"] pre').textContent).toContain("~~~ts")
+    expect(query<HTMLElement>('[data-block-output-card="naver.se4.code"] pre').textContent).toContain("~~~ts")
   })
 
   it("keeps block output controls top-aligned next to the preview", () => {
@@ -464,9 +464,9 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    const blockCard = query<HTMLElement>('[data-block-output-card="se4-formula"]')
+    const blockCard = query<HTMLElement>('[data-block-output-card="naver.se4.formula"]')
     const twoColumnLayout = blockCard.querySelector(".lg\\:grid-cols-\\[minmax\\(0\\,0\\.8fr\\)_minmax\\(0\\,1fr\\)\\]")
-    const optionField = blockCard.querySelector('[data-option-key="blockOutputs-overrides-se4-formula-variant"]')
+    const optionField = blockCard.querySelector('[data-option-key="blockOutputs-defaults-naver-se4-formula-variant"]')
     const preview = blockCard.querySelector("pre")
 
     expect(twoColumnLayout).toHaveClass("items-start")
@@ -490,7 +490,7 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    expect(query<HTMLElement>('[data-block-output-card="image"] pre').textContent).toContain("../../public/image.png")
+    expect(query<HTMLElement>('[data-block-output-card="naver.se4.image"] pre').textContent).toContain("../../public/image.png")
 
     cleanup()
 
@@ -509,7 +509,7 @@ describe("ExportOptionsPanel", () => {
       />,
     )
 
-    expect(query<HTMLElement>('[data-block-output-card="image"] pre').textContent).toContain("https://example.com/image.png")
+    expect(query<HTMLElement>('[data-block-output-card="naver.se4.image"] pre').textContent).toContain("https://example.com/image.png")
   })
 
   it("does not render raw html or unsupported representative controls", () => {

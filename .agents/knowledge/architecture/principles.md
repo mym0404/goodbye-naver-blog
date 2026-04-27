@@ -17,12 +17,12 @@
 
 ## Core Principles
 - fetch, parse, review, render, write, manifest 단계를 분리한 파이프라인 구조를 유지한다.
-- parser capability와 sample corpus를 구조 계약의 일부로 취급한다.
+- parser block와 sample corpus를 구조 계약의 일부로 취급한다.
 - UI는 내부 모듈을 직접 읽지 않고 HTTP API만 호출한다.
 - generated 보고서는 상태 요약이지 source of truth가 아니다.
 
 ## Change Implications
-- parser 규약을 바꾸면 capability 선언, 샘플 corpus, parser 테스트, sample verification이 같이 바뀌어야 한다.
+- parser 규약을 바꾸면 parser block 선언, 샘플 corpus, parser 테스트, sample verification이 같이 바뀌어야 한다.
 - converter/renderer 규약을 바꾸면 Markdown 출력, frontmatter, export spec, smoke 흐름을 같이 봐야 한다.
 - exporter 변경은 manifest invariants와 UI job status까지 연결된다.
 - server와 React UI는 DOM id, API payload, polling 흐름의 계약을 공유한다.

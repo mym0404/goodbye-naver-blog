@@ -4,12 +4,12 @@
 - 런타임, 주요 의존성, 진입점: `.agents/knowledge/engineering/stack.md`
 - 구현 우선순위와 문서 경계: `.agents/knowledge/engineering/coding-guidelines.md`
 - 패키지 스크립트, verification bundle, 훅, CI, 재검증 루프: `.agents/knowledge/engineering/validation.md`
-- capability/sample/UI harness 역할: `.agents/knowledge/engineering/harness-engineering-notes.md`
+- parser block/sample/UI harness 역할: `.agents/knowledge/engineering/harness-engineering-notes.md`
 - shadcn 설치 목록, 현재 사용처, chooser 기준: `.agents/knowledge/engineering/shadcn-component-map.md`
 
 ## 대표 기준점
 - 저장소 명령과 검증 루프: `package.json`
-- parser 계약 점검 harness: `scripts/harness/check-parser-capabilities.ts`
+- parser 계약 점검 harness: `scripts/harness/check-parser-blocks.ts`
 - sample fixture refresh harness: `scripts/harness/refresh-sample-fixtures.ts`
 - generated 품질 보고서 생성기: `scripts/harness/generate-quality-report.ts`
 

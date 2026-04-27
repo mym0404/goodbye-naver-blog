@@ -1,17 +1,15 @@
 import type {
-  BlockType,
   ExportOptions,
   FrontmatterFieldMeta,
   FrontmatterFieldName,
   OptionDescriptionMap,
-  ParserCapabilityId,
 } from "./Types.js"
 import {
   blockOutputFamilyOrder,
-  defaultBlockOutputSelections,
+  getBlockOutputFamilyDefinition,
   resolveBlockOutputSelection,
 } from "./BlockRegistry.js"
-import { parserCapabilities } from "./ParserCapabilities.js"
+import type { ParserBlockId } from "../modules/blog/BlogTypes.js"
 
 export type PartialExportOptions = {
   scope?: Partial<ExportOptions["scope"]>
@@ -24,7 +22,6 @@ export type PartialExportOptions = {
   markdown?: Partial<ExportOptions["markdown"]>
   blockOutputs?: {
     defaults?: Partial<ExportOptions["blockOutputs"]["defaults"]>
-    overrides?: Partial<ExportOptions["blockOutputs"]["overrides"]>
   }
   assets?: Partial<ExportOptions["assets"]>
   links?: Partial<ExportOptions["links"]>
@@ -272,10 +269,7 @@ export const defaultExportOptions = (): ExportOptions => ({
     linkStyle: "inlined",
   },
   blockOutputs: {
-    defaults: Object.fromEntries(
-      blockOutputFamilyOrder.map((blockType) => [blockType, defaultBlockOutputSelections[blockType]]),
-    ) as ExportOptions["blockOutputs"]["defaults"],
-    overrides: {},
+    defaults: {},
   },
   assets: {
     imageHandlingMode: "download-and-upload",
@@ -379,18 +373,10 @@ export const sanitizePersistedExportOptions = (options?: PartialExportOptions): 
 
     if (options.blockOutputs.defaults) {
       blockOutputs.defaults = Object.fromEntries(
-        Object.entries(options.blockOutputs.defaults).filter(([blockType]) =>
-          blockOutputFamilyOrder.includes(blockType as BlockType),
+        Object.entries(options.blockOutputs.defaults).filter(([parserBlockId]) =>
+          blockOutputFamilyOrder.includes(parserBlockId as ParserBlockId),
         ),
       ) as NonNullable<PartialExportOptions["blockOutputs"]>["defaults"]
-    }
-
-    if (options.blockOutputs.overrides) {
-      blockOutputs.overrides = Object.fromEntries(
-        Object.entries(options.blockOutputs.overrides).filter(([capabilityId]) =>
-          parserCapabilityBlockTypeMap.has(capabilityId as ParserCapabilityId),
-        ),
-      ) as NonNullable<PartialExportOptions["blockOutputs"]>["overrides"]
     }
 
     if (Object.keys(blockOutputs).length > 0) {
@@ -425,68 +411,25 @@ const coerceAssetOptions = (options: ExportOptions["assets"]) => {
   return options
 }
 
-const parserCapabilityBlockTypeMap = new Map(
-  parserCapabilities.map((capability) => [capability.id, capability.blockType]),
-)
-
-const assignBlockOutputOverride = <CapabilityId extends ParserCapabilityId>({
-  overrides,
-  capabilityId,
-  selection,
-}: {
-  overrides: ExportOptions["blockOutputs"]["overrides"]
-  capabilityId: CapabilityId
-  selection: ExportOptions["blockOutputs"]["overrides"][CapabilityId]
-}) => {
-  overrides[capabilityId] = selection
-}
-
 const buildDefaultBlockOutputs = (options?: PartialExportOptions["blockOutputs"]) =>
   Object.fromEntries(
-    blockOutputFamilyOrder.map((blockType) => [
-      blockType,
-      resolveBlockOutputSelection({
-        blockType,
-        blockOutputs: options,
-      }),
-    ]),
+    blockOutputFamilyOrder.flatMap((parserBlockId) => {
+      const family = getBlockOutputFamilyDefinition(parserBlockId)
+
+      return family
+        ? [
+            [
+              parserBlockId,
+              resolveBlockOutputSelection({
+                blockType: family.astBlockType,
+                parserBlockId,
+                blockOutputs: options,
+              }),
+            ],
+          ]
+        : []
+    }),
   ) as ExportOptions["blockOutputs"]["defaults"]
-
-const buildBlockOutputOverrides = ({
-  defaults,
-  overrides,
-}: {
-  defaults: ExportOptions["blockOutputs"]["defaults"]
-  overrides?: NonNullable<PartialExportOptions["blockOutputs"]>["overrides"]
-}) => {
-  const resolvedOverrides: ExportOptions["blockOutputs"]["overrides"] = {}
-
-  for (const [capabilityId, selection] of Object.entries(overrides ?? {})) {
-    const typedCapabilityId = capabilityId as ParserCapabilityId
-    const blockType = parserCapabilityBlockTypeMap.get(typedCapabilityId)
-
-    if (!blockType || !selection) {
-      continue
-    }
-
-    assignBlockOutputOverride({
-      overrides: resolvedOverrides,
-      capabilityId: typedCapabilityId,
-      selection: resolveBlockOutputSelection({
-        blockType,
-        capabilityId: typedCapabilityId,
-        blockOutputs: {
-          defaults,
-          overrides: {
-            [typedCapabilityId]: selection,
-          },
-        },
-      }) as ExportOptions["blockOutputs"]["overrides"][typeof typedCapabilityId],
-    })
-  }
-
-  return resolvedOverrides
-}
 
 export const cloneExportOptions = (options?: PartialExportOptions) => {
   const defaults = defaultExportOptions()
@@ -522,10 +465,6 @@ export const cloneExportOptions = (options?: PartialExportOptions) => {
     },
     blockOutputs: {
       defaults: resolvedBlockOutputDefaults,
-      overrides: buildBlockOutputOverrides({
-        defaults: resolvedBlockOutputDefaults,
-        overrides: options?.blockOutputs?.overrides,
-      }),
     },
     assets: {
       imageHandlingMode:
