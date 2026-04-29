@@ -1,4 +1,4 @@
-status: open
+status: closed
 initial_context: "[$coplan](/Users/mj/projects/coflow/skills/coplan/SKILL.md) \n[BlockRegistry.ts](src/shared/BlockRegistry.ts)의\
   \ 구조를 변경할거야 block Output family 라는 방식으로 관리되는 옵션 선택 구조와 내부 로직까지 바꿔\n\nBaseBlock에서\
   \ outputOptions 를 가지고있게해 옵션이 보이는 기준은\n\n예를 들어 NaverBlog라면,\n\nNaverBlog 의 모든 Editor의\
@@ -7,23 +7,39 @@ initial_context: "[$coplan](/Users/mj/projects/coflow/skills/coplan/SKILL.md) \n
 non_user_answer_streak: 0
 required_tracks:
   scope:
-    status: open
-    summary: ''
+    status: closed
+    summary: '코드 탐색으로 확정
+
+      BlockRegistry, BaseBlock, UI 설정, API, exporter, fixture 사용처를 확인한 뒤 task 경계를
+      정합니다. / 피드백이 ''수정 요청''만 있어 텍스트 다듬기인지 범위·검증·제약 변경인지 특정할 수 없습니다. 승인이 아니므로 변경 요청으로
+      분류합니다.'
   non_goals:
-    status: open
-    summary: ''
+    status: closed
+    summary: 옵션 영향 반영
   outputs:
-    status: open
-    summary: ''
+    status: closed
+    summary: 'Editor+Block별 분리
+
+      같은 block도 Editor마다 독립 선택값으로 저장하고 적용합니다. / Repo 패턴 우선
+
+      기존 타입·네이밍 패턴에 맞춰 stable editor+block key를 executor가 정합니다.'
   verification:
-    status: open
-    summary: ''
+    status: closed
+    summary: 'UI+export 흐름
+
+      옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인합니다. / 기존 fixture 갱신
+
+      현재 회귀 기준선을 새 Editor+Block manifest/export 계약에 맞춰 갱신합니다.'
   constraints:
-    status: open
-    summary: ''
+    status: closed
+    summary: '깨지는 변경 허용이고 backword compat 없이해 / Manifest도 변경
+
+      export 산출물에 Editor+Block별 선택 계약이 드러나도 됩니다.'
   stop_conditions:
-    status: open
-    summary: ''
+    status: closed
+    summary: '같은 계약으로 포함
+
+      Editor+Block output option 계약에 직접 연결된 사용처라면 함께 바꿉니다.'
 rounds:
 - id: Q1
   route: user_decision
@@ -40,6 +56,92 @@ rounds:
     새 Editor별 옵션 구조에 맞춰 깨지는 변경을 허용하나요?'
   answer: 깨지는 변경 허용이고 backword compat 없이해
   source: from-user:co-flow-respond
+- id: Q3
+  route: user_decision
+  track: outputs
+  question: 'Change: 새 output option 선택값은 어떤 공개 단위로 저장·전달되어야 하나요? 예를 들어 UI 설정/API
+    요청/서버 내부 입력에서 `editor + block + option` 단위로 분리할지, 표시만 Editor별이고 선택값은 block 단위로
+    합칠지 정해야 합니다.'
+  answer: 'Editor+Block별 분리
+
+    같은 block도 Editor마다 독립 선택값으로 저장하고 적용합니다.'
+  source: from-user:co-flow-respond
+- id: Q4
+  route: user_decision
+  track: scope
+  question: 'Change: 이번 변경 범위는 BlockRegistry/BaseBlock 구조 변경을 넘어서 UI 설정 저장, HTTP API
+    payload, exporter 적용 로직까지 한 번에 새 Editor+Block 옵션 계약으로 바꾸는 것인가요?'
+  answer: '전체 경계 변경
+
+    UI 설정, API payload, 서버 적용 로직까지 새 Editor+Block 계약으로 함께 바꿉니다.'
+  source: from-user:co-flow-respond
+- id: Q5
+  route: user_decision
+  track: verification
+  question: 'Verify: 새 Editor+Block output option 계약이 맞게 적용됐는지는 어떤 공개 흐름으로 확인해야 하나요?'
+  answer: 'UI+export 흐름
+
+    옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인합니다.'
+  source: from-user:co-flow-respond
+- id: Q6
+  route: code_plus_decision
+  track: constraints
+  question: 'Repo: 현재 코드에서 outputOptions 계약을 바꿀 때 manifest/export 결과 파일 형식도 Editor+Block별
+    선택값을 드러내도록 변경해야 하나요, 아니면 manifest는 기존 공개 산출물 의미를 유지하고 내부 적용만 새 계약으로 바꾸나요?'
+  answer: 'Manifest도 변경
+
+    export 산출물에 Editor+Block별 선택 계약이 드러나도 됩니다.'
+  source: from-user:co-flow-respond
+- id: Q7
+  route: code_plus_decision
+  track: verification
+  question: 'Repo: 새 Editor+Block output option 계약을 검증할 때 기존 fixture/export snapshot을
+    새 manifest 형식까지 갱신하는 방식으로 확인할까요, 아니면 핵심 흐름을 증명하는 새 targeted fixture/test를 추가하는
+    방식으로 확인할까요?'
+  answer: '기존 fixture 갱신
+
+    현재 회귀 기준선을 새 Editor+Block manifest/export 계약에 맞춰 갱신합니다.'
+  source: from-user:co-flow-respond
+- id: Q8
+  route: code_plus_decision
+  track: scope
+  question: 'Repo: tasks 작성 전에 새 Editor+Block output option 계약의 코드 경계는 어떤 방식으로 확정할까요?'
+  answer: '코드 탐색으로 확정
+
+    BlockRegistry, BaseBlock, UI 설정, API, exporter, fixture 사용처를 확인한 뒤 task 경계를 정합니다.'
+  source: from-user:co-flow-respond
+- id: Q9
+  route: code_plus_decision
+  track: non_goals
+  question: 'Repo: 새 Editor+Block output option 계약으로 바꿀 때 manifest와 옵션 적용 외의 export
+    산출물은 어떤 범위까지 유지해야 하나요?'
+  answer: 옵션 영향 반영
+  source: from-user:co-flow-respond
+- id: Q10
+  route: code_plus_decision
+  track: stop_conditions
+  question: 'Repo: 코드 탐색 중 outputOptions 계약 사용처가 예상보다 넓어 외부 공개 API나 fixture 변경이 크게
+    늘어나면 어떻게 처리할까요?'
+  answer: '같은 계약으로 포함
+
+    Editor+Block output option 계약에 직접 연결된 사용처라면 함께 바꿉니다.'
+  source: from-user:co-flow-respond
+  purpose: closure_audit_followup
+- id: Q11
+  route: user_decision
+  track: scope
+  question: 어떤 내용을 수정해야 하나요?
+  answer: 피드백이 '수정 요청'만 있어 텍스트 다듬기인지 범위·검증·제약 변경인지 특정할 수 없습니다. 승인이 아니므로 변경 요청으로 분류합니다.
+  source: from-user:co-flow-seed-feedback
+- id: Q12
+  route: code_plus_decision
+  track: outputs
+  question: 'Repo: 새 Editor+Block selection identifier의 공개 문자열 형식은 어떻게 고정할까요?'
+  answer: 'Repo 패턴 우선
+
+    기존 타입·네이밍 패턴에 맞춰 stable editor+block key를 executor가 정합니다.'
+  source: from-user:co-flow-respond
+  purpose: closure_audit_followup
 pending_user_question: null
 agent_runs:
 - id: A1
@@ -116,44 +218,2109 @@ agent_runs:
     reason: outputOptions가 BaseBlock과 Editor별 선택 구조로 이동하면 저장 키, API 응답, 기존 설정 마이그레이션
       범위가 달라져 구현 경계가 크게 바뀝니다.
   error: null
+- id: A3
+  role: ask-next
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    action: ask_user
+    route: user_decision
+    track: outputs
+    question: 'Change: 새 output option 선택값은 어떤 공개 단위로 저장·전달되어야 하나요? 예를 들어 UI 설정/API
+      요청/서버 내부 입력에서 `editor + block + option` 단위로 분리할지, 표시만 Editor별이고 선택값은 block 단위로
+      합칠지 정해야 합니다.'
+    answer: ''
+    source: ''
+    source_refs: []
+    skip_eligible: false
+    skip_kind: decide_later
+    options:
+    - label: Editor+Block별 분리
+      description: 같은 block도 Editor마다 독립 선택값으로 저장하고 적용합니다.
+      recommended: true
+    - label: Block별 공유
+      description: UI는 Editor별로 보이지만 같은 block의 선택값은 공유합니다.
+      recommended: false
+    - label: 계약 직접 지정
+      description: 저장 키, API 요청, 서버 적용 단위를 직접 답합니다.
+      recommended: false
+    reason: Q1은 UI 표시와 적용 방향을 정했지만, 새 선택값의 공개 계약이 Editor별인지 block별인지에 따라 설정 스키마, API
+      payload, 적용 로직이 달라집니다.
+  error: null
+- id: A4
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.82
+        justification: 핵심 목표는 기존 block output family 방식 대신 BaseBlock의 outputOptions와
+          Editor+Block별 선택 구조로 바꾸는 것으로 비교적 분명하다. 같은 block의 중복 표시와 적용 단위도 사용자 답변으로
+          정리됐다.
+      constraint_clarity:
+        clarity_score: 0.76
+        justification: 기존 저장 형식/API/manifest 호환을 보존하지 않아도 된다는 제약은 명확하다. 다만 어떤 공개 표면을
+          실제 변경 범위에 포함할지는 아직 코드 기준으로 확정되지 않았다.
+      success_criteria_clarity:
+        clarity_score: 0.52
+        justification: 정렬, 그룹 표시, Editor+Block별 저장·적용이라는 결과 기준은 있다. 하지만 검증할 사용자 흐름,
+          API 계약, fixture/UI 테스트 범위가 비어 있어 executor가 검증 정책을 골라야 한다.
+      context_clarity:
+        clarity_score: 0.34
+        justification: brownfield 작업인데 실제 repo 코드 사실이 거의 없다. repo_context_pack도 대상
+          저장소의 BlockRegistry/UI/exporter 구조보다 coplan 도구 정보에 치우쳐 있어 구현 경계 판단에 약하다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: user_decision
+      track: scope
+      question: 'Change: 이번 변경 범위는 BlockRegistry/BaseBlock 구조 변경을 넘어서 UI 설정 저장, HTTP
+        API payload, exporter 적용 로직까지 한 번에 새 Editor+Block 옵션 계약으로 바꾸는 것인가요?'
+      options:
+      - label: 전체 경계 변경
+        description: UI 설정, API payload, 서버 적용 로직까지 새 Editor+Block 계약으로 함께 바꿉니다.
+        recommended: true
+      - label: Registry/parser 중심
+        description: BlockRegistry/BaseBlock과 parser 적용 로직을 우선 바꾸고 UI/API 표면은 최소 변경합니다.
+        recommended: false
+      - label: 범위 직접 지정
+        description: 포함할 파일, 화면, API, export 동작 범위를 직접 답합니다.
+        recommended: false
+    summary: 요구의 방향은 분명하지만, 기존 저장소에서 어떤 공개 표면까지 같은 계약으로 바꿀지에 대한 brownfield 경계 정보가
+      가장 약하다.
+  error: null
+- id: A5
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.88
+        justification: 핵심 목표는 BlockRegistry/BaseBlock의 outputOptions 구조를 Editor+Block별
+          선택 계약으로 바꾸는 것으로 명확하다. 중복 block 표시, Editor 그룹핑, 정렬, 적용 단위도 사용자 답변으로 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.86
+        justification: 기존 저장 형식, API, manifest 호환을 유지하지 않아도 되고 전체 경계 변경이 허용된다는 제약이
+          명확하다. 다만 세부 파일별 마이그레이션 방식은 코드 탐색 후 결정해야 한다.
+      success_criteria_clarity:
+        clarity_score: 0.68
+        justification: UI 설정, API payload, 서버 적용 로직까지 새 Editor+Block 계약으로 바뀌어야 한다는
+          완료 방향은 있다. 하지만 어떤 테스트나 사용자 흐름으로 완료를 판정할지는 아직 비어 있어 executor가 검증 범위를 선택해야
+          한다.
+      context_clarity:
+        clarity_score: 0.45
+        justification: 저장소의 큰 구조와 관련 경로는 주어졌지만, 실제 BlockRegistry, BaseBlock, UI 설정,
+          HTTP API, exporter의 현재 계약에 대한 코드 사실은 없다. brownfield 구현 경계는 코드 탐색에 의존한다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: user_decision
+      track: verification
+      question: 'Verify: 새 Editor+Block output option 계약이 맞게 적용됐는지는 어떤 공개 흐름으로 확인해야
+        하나요?'
+      options:
+      - label: UI+export 흐름
+        description: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인합니다.
+        recommended: true
+      - label: API/export 중심
+        description: UI는 최소 확인하고 payload와 exporter 적용 계약을 중심으로 확인합니다.
+        recommended: false
+      - label: 검증 직접 지정
+        description: 확인할 화면, API, fixture, export 결과를 직접 답합니다.
+        recommended: false
+    summary: 요구와 변경 경계는 충분히 정리됐지만, brownfield 코드 사실과 완료 검증 기준이 아직 약하다.
+  error: null
+- id: A6
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.9
+        justification: 핵심 목표는 BlockRegistry/BaseBlock의 outputOptions 구조를 Editor+Block별
+          선택 계약으로 바꾸는 것으로 명확하다. 중복 block은 Editor별로 표시·저장·적용하고, Editor 그룹핑과 정렬 기준도
+          정해졌다.
+      constraint_clarity:
+        clarity_score: 0.88
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고, UI 설정·API payload·서버
+          적용 로직까지 전체 경계를 바꾸기로 정해졌다. 세부 마이그레이션 방식은 구현 중 코드 패턴에 맞추면 된다.
+      success_criteria_clarity:
+        clarity_score: 0.8
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인한다는 완료 기준이 생겼다.
+          다만 어떤 fixture나 테스트 파일로 증명할지는 아직 저장소 코드 탐색에 의존한다.
+      context_clarity:
+        clarity_score: 0.47
+        justification: 대상 저장소의 큰 구조와 관련 경로는 제공됐지만, 현재 BlockRegistry, BaseBlock, UI
+          설정, HTTP API, exporter 계약에 대한 실제 코드 사실은 부족하다. brownfield executor가 코드 탐색으로
+          책임 경계와 테스트 위치를 찾아야 한다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: constraints
+      question: 'Repo: 현재 코드에서 outputOptions 계약을 바꿀 때 manifest/export 결과 파일 형식도 Editor+Block별
+        선택값을 드러내도록 변경해야 하나요, 아니면 manifest는 기존 공개 산출물 의미를 유지하고 내부 적용만 새 계약으로 바꾸나요?'
+      options:
+      - label: Manifest도 변경
+        description: export 산출물에 Editor+Block별 선택 계약이 드러나도 됩니다.
+        recommended: true
+      - label: Manifest 의미 유지
+        description: 설정/API/적용은 바꾸되 manifest 공개 의미는 가능한 유지합니다.
+        recommended: false
+      - label: 코드 기준 결정
+        description: 현재 manifest 사용처를 확인한 뒤 영향이 작은 쪽으로 정합니다.
+        recommended: false
+    summary: 요구와 검증 흐름은 실행 가능한 수준까지 정리됐지만, manifest/export 산출물 같은 brownfield 공개 계약의
+      현재 코드 경계가 가장 약하다.
+  error: null
+- id: A7
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.92
+        justification: 핵심 목표가 BaseBlock outputOptions와 Editor+Block별 선택 계약으로 명확해졌다.
+          같은 block의 Editor별 표시, 저장, 적용, 정렬 기준도 사용자 답변으로 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.91
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고, UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다.
+      success_criteria_clarity:
+        clarity_score: 0.82
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인한다는 기준이 있다. 다만 어떤
+          repo-native 테스트와 fixture 갱신을 완료 증거로 삼을지는 아직 코드 탐색에 맡겨져 있다.
+      context_clarity:
+        clarity_score: 0.53
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌지만 현재 코드의 실제 outputOptions 계약, fixture
+          구조, UI 설정 저장 위치, manifest 사용처에 대한 코드 사실은 부족하다. 실행자는 탐색으로 책임 경계와 검증 위치를 찾아야
+          한다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: verification
+      question: 'Repo: 새 Editor+Block output option 계약을 검증할 때 기존 fixture/export snapshot을
+        새 manifest 형식까지 갱신하는 방식으로 확인할까요, 아니면 핵심 흐름을 증명하는 새 targeted fixture/test를
+        추가하는 방식으로 확인할까요?'
+      options:
+      - label: 기존 fixture 갱신
+        description: 현재 회귀 기준선을 새 Editor+Block manifest/export 계약에 맞춰 갱신합니다.
+        recommended: true
+      - label: Targeted test 추가
+        description: 기존 fixture churn을 줄이고 새 계약을 증명하는 좁은 테스트를 추가합니다.
+        recommended: false
+      - label: 코드 기준 결정
+        description: 현재 fixture와 테스트 구조를 확인한 뒤 가장 작은 검증 변경으로 정합니다.
+        recommended: false
+    summary: 요구, 제약, 공개 산출물 변경 범위는 실행 가능한 수준이다. 남은 약점은 brownfield 코드 사실과 fixture 기반
+      검증 경계다.
+  error: null
+- id: A8
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.93
+        justification: 핵심 목표가 BaseBlock outputOptions와 Editor+Block별 선택 계약으로 명확하다.
+          같은 block의 Editor별 표시, 저장, 적용, 정렬 기준도 사용자 답변으로 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.92
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고 UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다.
+      success_criteria_clarity:
+        clarity_score: 0.87
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인하고 기존 fixture/export
+          snapshot을 새 manifest 형식에 맞춰 갱신한다는 검증 방향이 정해졌다.
+      context_clarity:
+        clarity_score: 0.56
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌지만 현재 코드의 실제 outputOptions 계약, UI 설정
+          저장 위치, API payload 타입, exporter 적용 지점, fixture 구조에 대한 코드 사실은 아직 부족하다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: scope
+      question: 'Repo: tasks 작성 전에 새 Editor+Block output option 계약의 코드 경계는 어떤 방식으로
+        확정할까요?'
+      options:
+      - label: 코드 탐색으로 확정
+        description: BlockRegistry, BaseBlock, UI 설정, API, exporter, fixture 사용처를
+          확인한 뒤 task 경계를 정합니다.
+        recommended: true
+      - label: 지정 경로 중심
+        description: 이미 언급된 주요 경로만 기준으로 task를 작성하고 주변 사용처는 실행 중 확인합니다.
+        recommended: false
+      - label: 사용처 전체 검색
+        description: outputOptions와 manifest 관련 사용처를 전역 검색한 결과를 기준으로 더 넓게 task를 잡습니다.
+        recommended: false
+    summary: 요구, 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 사용처 기반의 brownfield 경계 정보다.
+  error: null
+- id: A9
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.94
+        justification: 핵심 목표는 BaseBlock이 outputOptions를 소유하고 Editor+Block별 선택 계약으로
+          UI 표시, 저장, API 전달, export 적용을 바꾸는 것으로 명확하다. 같은 block의 Editor별 그룹 표시, 정렬,
+          독립 적용 기준도 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.93
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고 UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다.
+      success_criteria_clarity:
+        clarity_score: 0.88
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인하고 기존 fixture/export
+          snapshot을 새 manifest 형식에 맞춰 갱신한다는 검증 방향이 정해졌다. 다만 Markdown/frontmatter/assets
+          같은 export 산출물의 보존 범위는 명시되지 않았다.
+      context_clarity:
+        clarity_score: 0.58
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌고 코드 탐색으로 경계를 확정하기로 했다. 하지만 실제 outputOptions
+          계약, UI 설정 저장 위치, API payload 타입, exporter 적용 지점, fixture 구조에 대한 코드 사실은 아직
+          제공되지 않았다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: non_goals
+      question: 'Repo: 새 Editor+Block output option 계약으로 바꿀 때 manifest와 옵션 적용 외의 export
+        산출물은 어떤 범위까지 유지해야 하나요?'
+      options:
+      - label: 본문 산출물 보존
+        description: Markdown, frontmatter, assets 내용은 기존 fixture 의미를 유지하고 manifest와
+          옵션 계약만 바꿉니다.
+        recommended: true
+      - label: 옵션 영향 반영
+        description: Editor+Block별 option 적용 결과라면 Markdown/frontmatter/assets 변경도
+          허용합니다.
+        recommended: false
+      - label: 코드 기준 결정
+        description: 현재 renderer/exporter와 fixture를 확인한 뒤 산출물별 보존 범위를 정합니다.
+        recommended: false
+    summary: 요구, 제약, 검증 방향은 대부분 실행 가능하다. 남은 약점은 실제 코드 사실과 manifest 외 export 산출물 보존
+      범위다.
+  error: null
+- id: A10
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.94
+        justification: 핵심 목표는 BaseBlock이 outputOptions를 소유하고 Editor+Block별 선택 계약으로
+          UI 표시, 설정 저장, API 전달, export 적용을 바꾸는 것으로 명확하다. 같은 block의 Editor별 그룹 표시,
+          정렬, 독립 저장·적용 기준도 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.94
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고 UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다. manifest 외 export 산출물도 옵션 적용 결과라면
+          변경 가능하다는 방향이 정해졌다.
+      success_criteria_clarity:
+        clarity_score: 0.9
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인하고 기존 fixture/export
+          snapshot을 새 manifest 형식에 맞춰 갱신한다는 검증 방향이 정해졌다. repo-native 검증 명령과 정확한 테스트
+          위치는 코드 탐색으로 확정하면 된다.
+      context_clarity:
+        clarity_score: 0.62
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌고 코드 탐색으로 BlockRegistry, BaseBlock, UI
+          설정, API, exporter, fixture 사용처를 확정하기로 했다. 다만 실제 outputOptions 계약, API 타입,
+          fixture 구조에 대한 코드 사실은 아직 제공되지 않아 brownfield 실행자는 초기 탐색을 통해 세부 경계를 잡아야 한다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: stop_conditions
+      question: 'Repo: 코드 탐색 중 outputOptions 계약 사용처가 예상보다 넓어 외부 공개 API나 fixture 변경이
+        크게 늘어나면 어떻게 처리할까요?'
+      options:
+      - label: 같은 계약으로 포함
+        description: Editor+Block output option 계약에 직접 연결된 사용처라면 함께 바꿉니다.
+        recommended: true
+      - label: 중단 후 확인
+        description: 예상보다 큰 공개 동작 변경이 보이면 구현 전 사용자 확인을 받습니다.
+        recommended: false
+      - label: 핵심 흐름만 변경
+        description: UI 설정, API 전달, exporter 적용, manifest 검증에 필요한 범위로 제한합니다.
+        recommended: false
+    summary: 요구와 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 구조를 아직 보지 못한 brownfield context
+      gap이다.
+  error: null
+- id: A11
+  role: ask-next
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    action: ready_for_score
+    route: code_plus_decision
+    track: stop_conditions
+    question: ''
+    answer: 요구, 공개 계약, 검증 흐름, 호환성 포기, manifest/export 산출물 변경 허용 범위가 이미 사용자 답변으로 정리되어
+      실행 계획 평가로 넘어갈 수 있습니다.
+    source: transcript
+    source_refs: []
+    skip_eligible: false
+    skip_kind: decide_later
+    options:
+    - label: 평가 진행
+      description: 현재 답변들을 기준으로 계획 준비도를 평가합니다.
+      recommended: true
+    - label: 질문 추가
+      description: 남은 구현 변경 가능성이 보이면 추가 질문을 진행합니다.
+      recommended: false
+    reason: 9개의 답변 라운드가 있고 ambiguity latest가 ready=true입니다. 남은 약점은 코드 탐색으로 해결할 brownfield
+      context gap이며, 사용자 판단이 필요한 새 구현 경계는 보이지 않습니다.
+  error: null
+- id: A12
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.94
+        justification: 핵심 목표는 BaseBlock이 outputOptions를 소유하고 Editor+Block별 선택 계약으로
+          UI 표시, 설정 저장, API 전달, export 적용을 바꾸는 것으로 명확하다. 같은 block의 Editor별 그룹 표시,
+          정렬, 독립 저장·적용 기준도 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.94
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고 UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다. manifest 외 export 산출물도 옵션 적용 결과라면
+          변경 가능하다는 방향이 정해졌다.
+      success_criteria_clarity:
+        clarity_score: 0.9
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인하고 기존 fixture/export
+          snapshot을 새 manifest 형식에 맞춰 갱신한다는 검증 방향이 정해졌다. repo-native 검증 명령과 정확한 테스트
+          위치는 코드 탐색으로 확정하면 된다.
+      context_clarity:
+        clarity_score: 0.62
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌고 코드 탐색으로 BlockRegistry, BaseBlock, UI
+          설정, API, exporter, fixture 사용처를 확정하기로 했다. 다만 실제 outputOptions 계약, API 타입,
+          fixture 구조에 대한 코드 사실은 아직 제공되지 않아 brownfield 실행자는 초기 탐색을 통해 세부 경계를 잡아야 한다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: stop_conditions
+      question: 'Repo: 코드 탐색 중 outputOptions 계약 사용처가 예상보다 넓어 외부 공개 API나 fixture 변경이
+        크게 늘어나면 어떻게 처리할까요?'
+      options:
+      - label: 같은 계약으로 포함
+        description: Editor+Block output option 계약에 직접 연결된 사용처라면 함께 바꿉니다.
+        recommended: true
+      - label: 중단 후 확인
+        description: 예상보다 큰 공개 동작 변경이 보이면 구현 전 사용자 확인을 받습니다.
+        recommended: false
+      - label: 핵심 흐름만 변경
+        description: UI 설정, API 전달, exporter 적용, manifest 검증에 필요한 범위로 제한합니다.
+        recommended: false
+    summary: 요구와 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 구조를 아직 보지 못한 brownfield context
+      gap이다.
+  error: null
+- id: A13
+  role: closure_auditor
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    action: ask_user
+    route: code_plus_decision
+    track: stop_conditions
+    question: 'Repo: 코드 탐색 중 outputOptions 계약 사용처가 예상보다 넓어 외부 공개 API나 fixture 변경이
+      크게 늘어나면 어떻게 처리할까요?'
+    summary: 대부분의 계약은 확정됐지만, 예상보다 넓은 공개 표면이 발견될 때 포함할지 중단할지에 따라 실행 경계가 달라집니다.
+    material_blockers:
+    - outputOptions 계약 사용처가 예상보다 넓을 때의 실행 경계와 중단 조건이 아직 확정되지 않았습니다.
+    skip_eligible: false
+    skip_kind: decide_later
+    options:
+    - label: 같은 계약으로 포함
+      description: Editor+Block output option 계약에 직접 연결된 사용처라면 함께 바꿉니다.
+      recommended: true
+    - label: 중단 후 확인
+      description: 예상보다 큰 공개 동작 변경이 보이면 구현 전 사용자 확인을 받습니다.
+      recommended: false
+    - label: 핵심 흐름만 변경
+      description: UI 설정, API 전달, exporter 적용, manifest 검증에 필요한 범위로 제한합니다.
+      recommended: false
+  error: null
+- id: A14
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.94
+        justification: 핵심 목표는 BaseBlock이 outputOptions를 소유하고 Editor+Block별 선택 계약으로
+          UI 표시, 설정 저장, API 전달, export 적용을 바꾸는 것으로 명확하다. 같은 block의 Editor별 그룹 표시,
+          정렬, 독립 저장·적용 기준도 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.94
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고 UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다. manifest 외 export 산출물도 옵션 적용 결과라면
+          변경 가능하다.
+      success_criteria_clarity:
+        clarity_score: 0.9
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인하고 기존 fixture/export
+          snapshot을 새 manifest 형식에 맞춰 갱신한다는 검증 방향이 정해졌다. 정확한 repo-native 테스트 위치와 명령은
+          코드 탐색으로 확정하면 된다.
+      context_clarity:
+        clarity_score: 0.62
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌고 코드 탐색으로 BlockRegistry, BaseBlock, UI
+          설정, API, exporter, fixture 사용처를 확정하기로 했다. 다만 실제 outputOptions 계약, API 타입,
+          fixture 구조에 대한 코드 사실은 아직 제공되지 않아 초기 탐색이 필요하다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: scope
+      question: 'Repo: 실제 코드 탐색에서 새 Editor+Block output option 계약의 task 경계는 어떤 사용처까지
+        포함해야 하나요?'
+      options:
+      - label: 직접 연결 포함
+        description: outputOptions 계약에 직접 연결된 UI, API, exporter, manifest, fixture
+          사용처를 함께 바꿉니다.
+        recommended: true
+      - label: 핵심 흐름 제한
+        description: 옵션 표시, 설정 저장, API 전달, export 적용, manifest 검증에 필요한 범위로 제한합니다.
+        recommended: false
+      - label: 중단 후 확인
+        description: 예상보다 큰 공개 동작 변경이 보이면 구현 전 사용자 확인을 받습니다.
+        recommended: false
+    summary: 요구와 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 구조를 아직 보지 못한 brownfield context
+      gap이다.
+  error: null
+- id: A15
+  role: ask-next
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    action: ready_for_score
+    route: code_plus_decision
+    track: scope
+    question: ''
+    answer: 이미 사용자 답변으로 변경 목표, 공개 계약, 호환성 포기, manifest/export 영향, 검증 흐름, 예상보다 넓은 직접
+      연결 사용처 포함 기준까지 정해졌습니다. 남은 불확실성은 코드 탐색으로 해결할 brownfield context gap이며, 구현 방향을
+      바꿀 추가 사용자 판단은 보이지 않습니다.
+    source: transcript
+    source_refs: []
+    skip_eligible: false
+    skip_kind: decide_later
+    options:
+    - label: 평가 진행
+      description: 현재 답변들을 기준으로 계획 준비도를 평가합니다.
+      recommended: true
+    - label: 질문 추가
+      description: 구현 계약을 바꿀 새 불확실성이 발견되면 추가 질문합니다.
+      recommended: false
+    reason: 10개의 답변 라운드가 있고 ambiguity latest가 ready=true입니다. closure blocker로 제시된
+      넓은 사용처 처리도 Q10에서 직접 연결된 사용처는 함께 바꾼다고 답변되어 있습니다.
+  error: null
+- id: A16
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.94
+        justification: 핵심 목표는 BaseBlock이 outputOptions를 소유하고 Editor+Block별 선택 계약으로
+          UI 표시, 설정 저장, API 전달, export 적용을 바꾸는 것으로 명확하다. 같은 block의 Editor별 그룹 표시,
+          정렬, 독립 저장·적용 기준도 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.94
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고 UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다. manifest 외 export 산출물도 옵션 적용 결과라면
+          변경 가능하다.
+      success_criteria_clarity:
+        clarity_score: 0.9
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인하고 기존 fixture/export
+          snapshot을 새 manifest 형식에 맞춰 갱신한다는 검증 방향이 정해졌다. 정확한 repo-native 테스트 위치와 명령은
+          코드 탐색으로 확정하면 된다.
+      context_clarity:
+        clarity_score: 0.62
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌고 코드 탐색으로 BlockRegistry, BaseBlock, UI
+          설정, API, exporter, fixture 사용처를 확정하기로 했다. 다만 실제 outputOptions 계약, API 타입,
+          fixture 구조에 대한 코드 사실은 아직 제공되지 않아 초기 탐색이 필요하다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: scope
+      question: 'Repo: 실제 코드 탐색에서 새 Editor+Block output option 계약의 task 경계는 어떤 사용처까지
+        포함해야 하나요?'
+      options:
+      - label: 직접 연결 포함
+        description: outputOptions 계약에 직접 연결된 UI, API, exporter, manifest, fixture
+          사용처를 함께 바꿉니다.
+        recommended: true
+      - label: 핵심 흐름 제한
+        description: 옵션 표시, 설정 저장, API 전달, export 적용, manifest 검증에 필요한 범위로 제한합니다.
+        recommended: false
+      - label: 중단 후 확인
+        description: 예상보다 큰 공개 동작 변경이 보이면 구현 전 사용자 확인을 받습니다.
+        recommended: false
+    summary: 요구와 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 구조를 아직 보지 못한 brownfield context
+      gap이다.
+  error: null
+- id: A17
+  role: closure_auditor
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    action: pass
+    route: code_plus_decision
+    track: scope
+    question: ''
+    summary: 인터뷰는 plan_seed extraction과 bundle authoring으로 넘어갈 준비가 됐습니다. ownership/source
+      of truth, API/protocol, lifecycle/recovery, migration, cross-client impact,
+      execution boundaries, verification expectations에 구현 방향을 바꿀 미결정 사항이 남아 있지 않습니다.
+    material_blockers: []
+    skip_eligible: false
+    skip_kind: decide_later
+    options:
+    - label: 진행
+      description: 현재 확정된 인터뷰 답변으로 plan_seed와 bundle authoring을 진행합니다.
+      recommended: true
+    - label: 보류
+      description: 새로운 사용자 판단 사항이 발견되면 다시 질문합니다.
+      recommended: false
+  error: null
+- id: A18
+  role: seed_architect
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    title: Block Output Options Registry
+    goal: BlockRegistry/BaseBlock의 output option 구조를 BaseBlock 소유 outputOptions와 Editor+Block별
+      선택 계약으로 전환하고, UI 표시, 설정 저장, API payload, 서버 적용 로직, export manifest/fixture까지
+      같은 계약으로 맞춘다.
+    context:
+    - 저장소는 네이버 블로그 글을 parser block 공용 AST로 변환한 뒤 Markdown, frontmatter, 자산 파일, manifest.json으로
+      export하는 로컬 도구다.
+    - 핵심 변경 대상은 src/shared/BlockRegistry.ts, BaseBlock, parser/editor supportedBlocks,
+      UI 설정, HTTP API, exporter, fixture/export snapshot 사용처다.
+    - NaverBlog 기준으로 모든 Editor의 supportedBlocks를 기준으로 outputOptions가 2개 이상인 block만
+      옵션 선택 대상으로 노출한다.
+    - 옵션 표시 순서는 editor 타입 기준 정렬 후, 각 editor 내부 supportedBlocks 순서를 따른다.
+    - 같은 block이 여러 Editor에 포함되면 Editor별로 독립 표시, 저장, 적용한다.
+    non_goals:
+    - 기존 output option 저장 형식, API payload, manifest 형식에 대한 backward compatibility는
+      제공하지 않는다.
+    - manifest와 옵션 적용 외 export 산출물은 무조건 보존하지 않는다. Editor+Block별 option 적용 결과로 생기는
+      Markdown, frontmatter, assets 변경은 허용한다.
+    - outputOptions 계약에 직접 연결되지 않은 주변 기능이나 별도 리팩토링은 포함하지 않는다.
+    constraints:
+    - BaseBlock이 outputOptions를 가지는 구조로 변경한다.
+    - 선택값의 공개 단위는 Editor+Block별로 분리한다.
+    - Editor가 1개인 경우 UI에서 Editor grouping은 생략한다.
+    - UI 설정, API payload, 서버 적용 로직은 새 Editor+Block 계약으로 함께 변경한다.
+    - manifest도 새 Editor+Block별 선택 계약이 드러나도록 변경할 수 있다.
+    - 기존 저장값/API/manifest 호환을 위한 마이그레이션이나 compatibility layer는 만들지 않는다.
+    - repo-native 패턴과 기존 검증 명령을 우선 사용한다.
+    success_criteria:
+    - outputOptions가 BaseBlock 중심으로 정의되고, BlockRegistry가 block output family 방식 대신
+      Editor+Block별 선택 구조를 제공한다.
+    - NaverBlog 옵션 UI가 모든 Editor의 supportedBlocks에서 outputOptions 2개 이상인 항목만 노출한다.
+    - 옵션 UI가 editor 타입 정렬과 editor 내부 supportedBlocks 순서를 지킨다.
+    - 동일 block이 여러 Editor에 있으면 Editor별로 각각 표시되고, 각 Editor 글 파싱 시 독립 선택값이 적용된다.
+    - UI 설정 저장, API 요청/응답 payload, 서버 내부 입력, exporter 적용 로직이 Editor+Block별 선택값을 사용한다.
+    - manifest/export snapshot이 새 Editor+Block manifest/export 계약에 맞게 갱신된다.
+    - outputOptions 계약에 직접 연결된 UI, API, exporter, manifest, fixture 사용처가 함께 변경된다.
+    verification_expectations:
+    - 옵션 표시, 설정 저장, API 전달, export 적용까지 이어지는 UI+export 흐름으로 확인한다.
+    - 기존 fixture/export snapshot을 새 Editor+Block manifest/export 계약에 맞춰 갱신한다.
+    - repo-native 검증 명령을 코드 탐색으로 확정해 실행한다.
+    - 의미 검증은 같은 block이 여러 Editor에 있을 때 선택값이 Editor별로 독립 저장·적용되는지 확인한다.
+    - manifest에 Editor+Block별 선택 계약이 반영됐는지 확인한다.
+    execution_boundaries:
+    - 먼저 BlockRegistry, BaseBlock, UI 설정, API, exporter, fixture 사용처를 코드 탐색으로 확인해
+      task 경계를 확정한다.
+    - outputOptions 계약에 직접 연결된 사용처가 예상보다 넓어도 같은 계약 변경 범위에 포함한다.
+    - 구현 방향을 바꿀 새 사용자 판단 사항이 아니라 코드 사실 부족에서 오는 불확실성은 코드 탐색으로 해결한다.
+    - 타입/정적 검사 오류는 원인을 분석하고, 로직 훼손 없이 해결 가능한 범위에서만 수정한다.
+    - commit, branch, push, PR 생성은 사용자가 별도로 요청하지 않는 한 수행하지 않는다.
+    source_round_ids:
+    - Q1
+    - Q2
+    - Q3
+    - Q4
+    - Q5
+    - Q6
+    - Q7
+    - Q8
+    - Q9
+    - Q10
+    deferred_items: []
+    summary: BaseBlock outputOptions와 Editor+Block별 선택 계약을 source of truth로 삼아 registry,
+      UI 설정, API, exporter, manifest, fixture를 일관되게 바꾸는 계획 seed다.
+  error: null
+- id: A19
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.97
+        justification: 목표는 BaseBlock 소유 outputOptions와 Editor+Block별 선택 계약으로 registry,
+          UI, API, exporter, manifest, fixtures를 함께 전환하는 것으로 매우 명확하다. 같은 block의 Editor별
+          독립 표시·저장·적용과 정렬 기준도 정해져 있다.
+      constraint_clarity:
+        clarity_score: 0.95
+        justification: 기존 block-type-only 저장값, API, manifest에 대한 backward compatibility를
+          만들지 않는다는 제약이 분명하다. outputOptions 계약에 직접 연결된 사용처는 함께 바꾸고, unrelated behavior는
+          제외한다는 경계도 task별로 정리돼 있다.
+      success_criteria_clarity:
+        clarity_score: 0.94
+        justification: 각 task에 acceptance criteria, reopen_when, mechanical verification,
+          semantic review가 있어 완료 판정이 구체적이다. UI 노출, 설정/API 전달, exporter/manifest 반영,
+          fixture 갱신, full verification까지 흐름이 연결돼 있다.
+      context_clarity:
+        clarity_score: 0.86
+        justification: bundle_inspection에 실제 파일 탐색 결과와 현재 구조 요약이 포함되어 brownfield 경계가
+          상당히 보강됐다. 다만 공개 persisted/API/manifest key의 정확한 문자열 형식은 stable identifier
+          요구만 있고 최종 형태는 executor 판단으로 남아 있다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: outputs
+      question: 'Repo: 새 Editor+Block selection identifier의 공개 문자열 형식은 어떻게 정해야 하나요?'
+      options:
+      - label: Repo 패턴 우선
+        description: 기존 타입·네이밍 패턴에 맞춰 stable editor+block key를 executor가 정합니다.
+        recommended: true
+      - label: 명시 스키마 고정
+        description: 사용자가 원하는 공개 key 형식을 직접 지정합니다.
+        recommended: false
+      - label: 충돌 시 확인
+        description: 코드 탐색 중 안정성과 가독성이 충돌하면 구현 전 확인합니다.
+        recommended: false
+    summary: 계획은 실행 가능한 수준으로 명확하다. 남은 약점은 새 공개 key 형식의 세부 결정뿐이다.
+  error: null
+- id: A20
+  role: ask-next
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    action: ready_for_score
+    route: code_plus_decision
+    track: outputs
+    question: ''
+    answer: 이미 11개 답변 라운드와 승인된 plan seed/task bundle이 있으며, 목표, 공개 계약, 호환성 포기, manifest/export
+      영향, 검증 흐름, 직접 연결 사용처 포함 기준이 확정됐습니다. 남은 key 문자열 형식은 repo 패턴에 맞춰 정할 수 있는 구현 세부사항이라
+      추가 사용자 판단이 필요하지 않습니다.
+    source: transcript_and_bundle
+    source_refs: []
+    skip_eligible: false
+    skip_kind: decide_later
+    options:
+    - label: 평가 진행
+      description: 현재 답변과 bundle 기준으로 준비도 평가를 진행합니다.
+      recommended: true
+    - label: 질문 추가
+      description: 구현 계약을 바꿀 새 불확실성이 있으면 질문합니다.
+      recommended: false
+    reason: latest ambiguity is ready=true with ambiguity 0.059, at least three answered
+      rounds exist, and the only remaining note is stable identifier string detail
+      already bounded by existing contract requirements.
+  error: null
+- id: A21
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.97
+        justification: 목표는 BaseBlock 소유 outputOptions와 Editor+Block별 선택 계약으로 registry,
+          UI, API, 서버 적용, exporter, manifest, fixtures를 함께 전환하는 것으로 매우 명확하다. 같은 block의
+          Editor별 독립 표시·저장·적용과 정렬 기준도 확정돼 있다.
+      constraint_clarity:
+        clarity_score: 0.95
+        justification: 기존 block-type-only 저장값, API, manifest 호환을 만들지 않는다는 제약이 분명하고,
+          직접 연결된 사용처는 함께 바꾸며 unrelated behavior는 제외한다는 경계도 task별로 정리돼 있다.
+      success_criteria_clarity:
+        clarity_score: 0.94
+        justification: 각 task에 acceptance criteria, reopen_when, mechanical verification,
+          semantic review가 있어 완료 판정이 구체적이다. UI 노출, 설정/API 전달, exporter/manifest 반영,
+          fixture 갱신, full verification까지 연결돼 있다.
+      context_clarity:
+        clarity_score: 0.86
+        justification: 실제 관련 파일과 현재 구조 요약이 포함되어 brownfield 경계가 충분히 보강됐다. 다만 공개 persisted/API/manifest
+          key의 정확한 문자열 형식은 stable identifier 요구만 있고 최종 형태는 executor 판단으로 남아 있다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: outputs
+      question: 'Repo: 새 Editor+Block selection identifier의 공개 문자열 형식은 어떻게 정해야 하나요?'
+      options:
+      - label: Repo 패턴 우선
+        description: 기존 타입·네이밍 패턴에 맞춰 stable editor+block key를 executor가 정합니다.
+        recommended: true
+      - label: 명시 스키마 고정
+        description: 사용자가 원하는 공개 key 형식을 직접 지정합니다.
+        recommended: false
+      - label: 충돌 시 확인
+        description: 코드 탐색 중 안정성과 가독성이 충돌하면 구현 전 확인합니다.
+        recommended: false
+    summary: 계획은 실행 가능한 수준으로 명확하다. 남은 약점은 새 공개 key 형식의 세부 결정뿐이다.
+  error: null
+- id: A22
+  role: closure_auditor
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    action: ask_user
+    route: code_plus_decision
+    track: outputs
+    question: 'Repo: 새 Editor+Block selection identifier의 공개 문자열 형식은 어떻게 고정할까요?'
+    summary: 공개 persisted settings, API payload, manifest에 들어갈 selection key 형식이 아직
+      executor 재량으로 남아 있어 API/protocol 결정이 닫히지 않았습니다.
+    material_blockers:
+    - 새 Editor+Block selection identifier의 공개 문자열 형식은 저장값, API payload, manifest 계약을
+      바꾸므로 구현 변경 가능성이 있는 결정입니다.
+    skip_eligible: false
+    skip_kind: decide_later
+    options:
+    - label: Repo 패턴 우선
+      description: 기존 타입·네이밍 패턴에 맞춰 stable editor+block key를 executor가 정합니다.
+      recommended: true
+    - label: 명시 스키마 고정
+      description: 사용자가 원하는 공개 key 형식을 직접 지정합니다.
+      recommended: false
+    - label: 충돌 시 확인
+      description: 안정성과 가독성이 충돌하면 구현 전 다시 확인합니다.
+      recommended: false
+  error: null
+- id: A23
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.98
+        justification: 목표는 BaseBlock 소유 outputOptions와 Editor+Block별 선택 계약으로 registry,
+          UI, settings, API, server, exporter, manifest, fixtures를 함께 전환하는 것으로 매우
+          명확하다. 같은 block의 Editor별 독립 표시·저장·적용과 정렬 기준도 확정돼 있다.
+      constraint_clarity:
+        clarity_score: 0.96
+        justification: backward compatibility와 migration을 만들지 않는다는 제약, 직접 연결된 사용처는
+          포함하고 unrelated behavior는 제외한다는 경계, repo-native 검증 우선순위가 task별로 정리돼 있다.
+      success_criteria_clarity:
+        clarity_score: 0.95
+        justification: 각 task에 acceptance criteria, reopen_when, mechanical verification,
+          semantic review가 있어 완료 판정이 구체적이다. UI 노출, settings/API 전달, exporter/manifest
+          반영, fixture 갱신, full verification까지 연결돼 있다.
+      context_clarity:
+        clarity_score: 0.89
+        justification: bundle_inspection이 실제 파일과 현재 구조를 충분히 짚고 있어 brownfield 실행 경계가
+          높게 보강됐다. 남은 부분은 공개 Editor+Block selection key의 최종 문자열 형식처럼 repo 패턴을 따라 executor가
+          정하도록 승인된 구현 세부사항이다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: outputs
+      question: 'Repo: 새 Editor+Block selection identifier의 공개 문자열 형식은 어떻게 고정할까요?'
+      options:
+      - label: Repo 패턴 우선
+        description: 기존 타입·네이밍 패턴에 맞춰 stable editor+block key를 executor가 정합니다.
+        recommended: true
+      - label: 명시 스키마 고정
+        description: 사용자가 원하는 공개 key 형식을 직접 지정합니다.
+        recommended: false
+      - label: 충돌 시 확인
+        description: 안정성과 가독성이 충돌하면 구현 전 다시 확인합니다.
+        recommended: false
+    summary: 계획은 실행 가능한 수준으로 매우 명확하다. 남은 약점은 공개 selection key 문자열 형식의 최종 구현 판단뿐이며,
+      이미 repo 패턴 우선으로 처리 가능하게 경계가 잡혀 있다.
+  error: null
+- id: A24
+  role: ask-next
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    action: ready_for_score
+    route: code_plus_decision
+    track: outputs
+    question: ''
+    answer: 이미 12개 답변 라운드와 task bundle이 있으며, 목표, 공개 계약, 호환성 포기, manifest/export 영향,
+      검증 흐름, 직접 연결 사용처 포함 기준, selection identifier 결정 방식까지 정리됐습니다. 남은 불확실성은 repo 패턴에
+      맞춰 executor가 정할 수 있는 구현 세부사항입니다.
+    source: transcript_and_bundle
+    source_refs: []
+    skip_eligible: false
+    skip_kind: decide_later
+    options:
+    - label: 평가 진행
+      description: 현재 답변과 bundle 기준으로 준비도 평가를 진행합니다.
+      recommended: true
+    - label: 질문 추가
+      description: 구현 계약을 바꿀 새 불확실성이 있으면 질문합니다.
+      recommended: false
+    reason: latest ambiguity is ready=true with ambiguity 0.046, at least three answered
+      rounds exist, and no material user-owned decision remains unresolved.
+  error: null
+- id: A25
+  role: score
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    project_mode: brownfield
+    components:
+      goal_clarity:
+        clarity_score: 0.98
+        justification: 목표는 BaseBlock 소유 outputOptions와 Editor+Block별 선택 계약으로 registry,
+          UI, settings, API, server, exporter, manifest, fixtures를 함께 전환하는 것으로 매우
+          명확하다. 같은 block의 Editor별 독립 표시·저장·적용과 정렬 기준도 확정돼 있다.
+      constraint_clarity:
+        clarity_score: 0.96
+        justification: backward compatibility와 migration을 만들지 않는다는 제약, 직접 연결된 사용처는
+          포함하고 unrelated behavior는 제외한다는 경계, repo-native 검증 우선순위가 task별로 정리돼 있다.
+      success_criteria_clarity:
+        clarity_score: 0.95
+        justification: 각 task에 acceptance criteria, reopen_when, mechanical verification,
+          semantic review가 있어 완료 판정이 구체적이다. UI 노출, settings/API 전달, exporter/manifest
+          반영, fixture 갱신, full verification까지 연결돼 있다.
+      context_clarity:
+        clarity_score: 0.89
+        justification: bundle_inspection이 실제 파일과 현재 구조를 충분히 짚고 있어 brownfield 실행 경계가
+          높게 보강됐다. 남은 부분은 공개 Editor+Block selection key의 최종 문자열 형식처럼 repo 패턴을 따라 executor가
+          정하도록 승인된 구현 세부사항이다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: outputs
+      question: 'Repo: 새 Editor+Block selection identifier의 공개 문자열 형식은 어떻게 고정할까요?'
+      options:
+      - label: Repo 패턴 우선
+        description: 기존 타입·네이밍 패턴에 맞춰 stable editor+block key를 executor가 정합니다.
+        recommended: true
+      - label: 명시 스키마 고정
+        description: 사용자가 원하는 공개 key 형식을 직접 지정합니다.
+        recommended: false
+      - label: 충돌 시 확인
+        description: 안정성과 가독성이 충돌하면 구현 전 다시 확인합니다.
+        recommended: false
+    summary: 계획은 실행 가능한 수준으로 매우 명확하다. 남은 약점은 공개 selection key 문자열 형식의 최종 구현 판단뿐이며,
+      이미 repo 패턴 우선으로 처리 가능하게 경계가 잡혀 있다.
+  error: null
+- id: A26
+  role: closure_auditor
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    action: pass
+    route: code_plus_decision
+    track: scope
+    question: ''
+    summary: 인터뷰는 plan_seed extraction과 bundle authoring으로 넘어갈 준비가 됐습니다. ownership/source
+      of truth, API/protocol, lifecycle/recovery, migration, cross-client impact,
+      execution boundaries, verification expectations에 구현 방향을 바꿀 미결정 사항이 남아 있지 않습니다.
+    material_blockers: []
+    skip_eligible: false
+    skip_kind: decide_later
+    options:
+    - label: 진행
+      description: 현재 확정된 답변과 bundle 기준으로 진행합니다.
+      recommended: true
+    - label: 보류
+      description: 새로운 사용자 판단 사항이 발견되면 다시 질문합니다.
+      recommended: false
+  error: null
+- id: A27
+  role: seed_architect
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    title: Block Output Options Registry
+    goal: BlockRegistry/BaseBlock의 output option 구조를 BaseBlock 소유 outputOptions와 Editor+Block별
+      선택 계약으로 전환하고, UI 표시, 설정 저장, API payload, 서버 적용 로직, export manifest/fixture까지
+      같은 계약으로 맞춘다.
+    context:
+    - 저장소는 네이버 블로그 글을 parser block 공용 AST로 변환한 뒤 Markdown, frontmatter, 자산 파일, manifest.json으로
+      export하는 로컬 도구다.
+    - 핵심 변경 대상은 src/shared/BlockRegistry.ts, BaseBlock, parser/editor supportedBlocks,
+      UI 설정, HTTP API, exporter, fixture/export snapshot 사용처다.
+    - NaverBlog 기준으로 모든 Editor의 supportedBlocks를 기준으로 outputOptions가 2개 이상인 block만
+      옵션 선택 대상으로 노출한다.
+    - 옵션 표시 순서는 editor 타입 기준 정렬 후, 각 editor 내부 supportedBlocks 순서를 따른다.
+    - 같은 block이 여러 Editor에 포함되면 Editor별로 독립 표시, 저장, 적용한다.
+    - 새 Editor+Block selection identifier의 공개 문자열 형식은 기존 타입·네이밍 패턴에 맞춰 executor가 안정적인
+      editor+block key로 정한다.
+    non_goals:
+    - 기존 output option 저장 형식, API payload, manifest 형식에 대한 backward compatibility는
+      제공하지 않는다.
+    - manifest와 옵션 적용 외 export 산출물은 무조건 보존하지 않는다. Editor+Block별 option 적용 결과로 생기는
+      Markdown, frontmatter, assets 변경은 허용한다.
+    - outputOptions 계약에 직접 연결되지 않은 주변 기능이나 별도 리팩토링은 포함하지 않는다.
+    constraints:
+    - BaseBlock이 outputOptions를 가지는 구조로 변경한다.
+    - 선택값의 공개 단위는 Editor+Block별로 분리한다.
+    - Editor가 1개인 경우 UI에서 Editor grouping은 생략한다.
+    - UI 설정, API payload, 서버 적용 로직은 새 Editor+Block 계약으로 함께 변경한다.
+    - manifest도 새 Editor+Block별 선택 계약이 드러나도록 변경할 수 있다.
+    - 기존 저장값/API/manifest 호환을 위한 마이그레이션이나 compatibility layer는 만들지 않는다.
+    - repo-native 패턴과 기존 검증 명령을 우선 사용한다.
+    - stable Editor+Block key는 label이 아니라 editor identity와 block identity를 포함해야 한다.
+    success_criteria:
+    - outputOptions가 BaseBlock 중심으로 정의되고, BlockRegistry가 block output family 방식 대신
+      Editor+Block별 선택 구조를 제공한다.
+    - NaverBlog 옵션 UI가 모든 Editor의 supportedBlocks에서 outputOptions 2개 이상인 항목만 노출한다.
+    - 옵션 UI가 editor 타입 정렬과 editor 내부 supportedBlocks 순서를 지킨다.
+    - 동일 block이 여러 Editor에 있으면 Editor별로 각각 표시되고, 각 Editor 글 파싱 시 독립 선택값이 적용된다.
+    - UI 설정 저장, API 요청/응답 payload, 서버 내부 입력, exporter 적용 로직이 Editor+Block별 선택값을 사용한다.
+    - manifest/export snapshot이 새 Editor+Block manifest/export 계약에 맞게 갱신된다.
+    - outputOptions 계약에 직접 연결된 UI, API, exporter, manifest, fixture 사용처가 함께 변경된다.
+    - 기존 block-type-only output option public contract가 활성 public source of truth로
+      남지 않는다.
+    verification_expectations:
+    - 옵션 표시, 설정 저장, API 전달, export 적용까지 이어지는 UI+export 흐름으로 확인한다.
+    - 기존 fixture/export snapshot을 새 Editor+Block manifest/export 계약에 맞춰 갱신한다.
+    - repo-native 검증 명령을 코드 탐색으로 확정해 실행한다.
+    - 의미 검증은 같은 block이 여러 Editor에 있을 때 선택값이 Editor별로 독립 저장·적용되는지 확인한다.
+    - manifest에 Editor+Block별 선택 계약이 반영됐는지 확인한다.
+    - 최종 검증은 repo-native full local verification을 우선하고, 환경상 불가능한 경우 blocker와 대체 실행
+      명령을 명확히 보고한다.
+    execution_boundaries:
+    - 먼저 BlockRegistry, BaseBlock, UI 설정, API, exporter, fixture 사용처를 코드 탐색으로 확인해
+      task 경계를 확정한다.
+    - outputOptions 계약에 직접 연결된 사용처가 예상보다 넓어도 같은 계약 변경 범위에 포함한다.
+    - 구현 방향을 바꿀 새 사용자 판단 사항이 아니라 코드 사실 부족에서 오는 불확실성은 코드 탐색으로 해결한다.
+    - 타입/정적 검사 오류는 원인을 분석하고, 로직 훼손 없이 해결 가능한 범위에서만 수정한다.
+    - commit, branch, push, PR 생성은 사용자가 별도로 요청하지 않는 한 수행하지 않는다.
+    - Planning 단계에서는 source code 구현을 하지 않는다.
+    source_round_ids:
+    - Q1
+    - Q2
+    - Q3
+    - Q4
+    - Q5
+    - Q6
+    - Q7
+    - Q8
+    - Q9
+    - Q10
+    - Q12
+    deferred_items: []
+    summary: BaseBlock outputOptions와 Editor+Block별 선택 계약을 source of truth로 삼아 registry,
+      UI 설정, API, exporter, manifest, fixture를 일관되게 바꾸는 계획 seed다.
+  error: null
 ambiguity:
-  latest: null
-  history: []
-ambiguity_ledger: []
-completion_candidate_streak: 0
+  latest: &id001
+    id: S14
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.954
+    ambiguity: 0.046
+    ready: true
+    floor_failures: []
+    components:
+      goal_clarity:
+        clarity_score: 0.98
+        weight: 0.35
+        justification: 목표는 BaseBlock 소유 outputOptions와 Editor+Block별 선택 계약으로 registry,
+          UI, settings, API, server, exporter, manifest, fixtures를 함께 전환하는 것으로 매우
+          명확하다. 같은 block의 Editor별 독립 표시·저장·적용과 정렬 기준도 확정돼 있다.
+      constraint_clarity:
+        clarity_score: 0.96
+        weight: 0.25
+        justification: backward compatibility와 migration을 만들지 않는다는 제약, 직접 연결된 사용처는
+          포함하고 unrelated behavior는 제외한다는 경계, repo-native 검증 우선순위가 task별로 정리돼 있다.
+      success_criteria_clarity:
+        clarity_score: 0.95
+        weight: 0.25
+        justification: 각 task에 acceptance criteria, reopen_when, mechanical verification,
+          semantic review가 있어 완료 판정이 구체적이다. UI 노출, settings/API 전달, exporter/manifest
+          반영, fixture 갱신, full verification까지 연결돼 있다.
+      context_clarity:
+        clarity_score: 0.89
+        weight: 0.15
+        justification: bundle_inspection이 실제 파일과 현재 구조를 충분히 짚고 있어 brownfield 실행 경계가
+          높게 보강됐다. 남은 부분은 공개 Editor+Block selection key의 최종 문자열 형식처럼 repo 패턴을 따라 executor가
+          정하도록 승인된 구현 세부사항이다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: outputs
+      question: 'Repo: 새 Editor+Block selection identifier의 공개 문자열 형식은 어떻게 고정할까요?'
+      options:
+      - label: Repo 패턴 우선
+        description: 기존 타입·네이밍 패턴에 맞춰 stable editor+block key를 executor가 정합니다.
+        recommended: true
+      - label: 명시 스키마 고정
+        description: 사용자가 원하는 공개 key 형식을 직접 지정합니다.
+        recommended: false
+      - label: 충돌 시 확인
+        description: 안정성과 가독성이 충돌하면 구현 전 다시 확인합니다.
+        recommended: false
+    summary: 계획은 실행 가능한 수준으로 매우 명확하다. 남은 약점은 공개 selection key 문자열 형식의 최종 구현 판단뿐이며,
+      이미 repo 패턴 우선으로 처리 가능하게 경계가 잡혀 있다.
+    round_count: 12
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  history:
+  - id: S1
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.658
+    ambiguity: 0.342
+    ready: false
+    floor_failures:
+    - success_criteria_clarity 0.52 < 0.70
+    - context_clarity 0.34 < 0.60
+    components:
+      goal_clarity:
+        clarity_score: 0.82
+        weight: 0.35
+        justification: 핵심 목표는 기존 block output family 방식 대신 BaseBlock의 outputOptions와
+          Editor+Block별 선택 구조로 바꾸는 것으로 비교적 분명하다. 같은 block의 중복 표시와 적용 단위도 사용자 답변으로
+          정리됐다.
+      constraint_clarity:
+        clarity_score: 0.76
+        weight: 0.25
+        justification: 기존 저장 형식/API/manifest 호환을 보존하지 않아도 된다는 제약은 명확하다. 다만 어떤 공개 표면을
+          실제 변경 범위에 포함할지는 아직 코드 기준으로 확정되지 않았다.
+      success_criteria_clarity:
+        clarity_score: 0.52
+        weight: 0.25
+        justification: 정렬, 그룹 표시, Editor+Block별 저장·적용이라는 결과 기준은 있다. 하지만 검증할 사용자 흐름,
+          API 계약, fixture/UI 테스트 범위가 비어 있어 executor가 검증 정책을 골라야 한다.
+      context_clarity:
+        clarity_score: 0.34
+        weight: 0.15
+        justification: brownfield 작업인데 실제 repo 코드 사실이 거의 없다. repo_context_pack도 대상
+          저장소의 BlockRegistry/UI/exporter 구조보다 coplan 도구 정보에 치우쳐 있어 구현 경계 판단에 약하다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: user_decision
+      track: scope
+      question: 'Change: 이번 변경 범위는 BlockRegistry/BaseBlock 구조 변경을 넘어서 UI 설정 저장, HTTP
+        API payload, exporter 적용 로직까지 한 번에 새 Editor+Block 옵션 계약으로 바꾸는 것인가요?'
+      options:
+      - label: 전체 경계 변경
+        description: UI 설정, API payload, 서버 적용 로직까지 새 Editor+Block 계약으로 함께 바꿉니다.
+        recommended: true
+      - label: Registry/parser 중심
+        description: BlockRegistry/BaseBlock과 parser 적용 로직을 우선 바꾸고 UI/API 표면은 최소 변경합니다.
+        recommended: false
+      - label: 범위 직접 지정
+        description: 포함할 파일, 화면, API, export 동작 범위를 직접 답합니다.
+        recommended: false
+    summary: 요구의 방향은 분명하지만, 기존 저장소에서 어떤 공개 표면까지 같은 계약으로 바꿀지에 대한 brownfield 경계 정보가
+      가장 약하다.
+    round_count: 3
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - id: S2
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.7605
+    ambiguity: 0.2395
+    ready: false
+    floor_failures:
+    - success_criteria_clarity 0.68 < 0.70
+    - context_clarity 0.45 < 0.60
+    components:
+      goal_clarity:
+        clarity_score: 0.88
+        weight: 0.35
+        justification: 핵심 목표는 BlockRegistry/BaseBlock의 outputOptions 구조를 Editor+Block별
+          선택 계약으로 바꾸는 것으로 명확하다. 중복 block 표시, Editor 그룹핑, 정렬, 적용 단위도 사용자 답변으로 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.86
+        weight: 0.25
+        justification: 기존 저장 형식, API, manifest 호환을 유지하지 않아도 되고 전체 경계 변경이 허용된다는 제약이
+          명확하다. 다만 세부 파일별 마이그레이션 방식은 코드 탐색 후 결정해야 한다.
+      success_criteria_clarity:
+        clarity_score: 0.68
+        weight: 0.25
+        justification: UI 설정, API payload, 서버 적용 로직까지 새 Editor+Block 계약으로 바뀌어야 한다는
+          완료 방향은 있다. 하지만 어떤 테스트나 사용자 흐름으로 완료를 판정할지는 아직 비어 있어 executor가 검증 범위를 선택해야
+          한다.
+      context_clarity:
+        clarity_score: 0.45
+        weight: 0.15
+        justification: 저장소의 큰 구조와 관련 경로는 주어졌지만, 실제 BlockRegistry, BaseBlock, UI 설정,
+          HTTP API, exporter의 현재 계약에 대한 코드 사실은 없다. brownfield 구현 경계는 코드 탐색에 의존한다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: user_decision
+      track: verification
+      question: 'Verify: 새 Editor+Block output option 계약이 맞게 적용됐는지는 어떤 공개 흐름으로 확인해야
+        하나요?'
+      options:
+      - label: UI+export 흐름
+        description: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인합니다.
+        recommended: true
+      - label: API/export 중심
+        description: UI는 최소 확인하고 payload와 exporter 적용 계약을 중심으로 확인합니다.
+        recommended: false
+      - label: 검증 직접 지정
+        description: 확인할 화면, API, fixture, export 결과를 직접 답합니다.
+        recommended: false
+    summary: 요구와 변경 경계는 충분히 정리됐지만, brownfield 코드 사실과 완료 검증 기준이 아직 약하다.
+    round_count: 4
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - id: S3
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.8055
+    ambiguity: 0.1945
+    ready: false
+    floor_failures:
+    - context_clarity 0.47 < 0.60
+    components:
+      goal_clarity:
+        clarity_score: 0.9
+        weight: 0.35
+        justification: 핵심 목표는 BlockRegistry/BaseBlock의 outputOptions 구조를 Editor+Block별
+          선택 계약으로 바꾸는 것으로 명확하다. 중복 block은 Editor별로 표시·저장·적용하고, Editor 그룹핑과 정렬 기준도
+          정해졌다.
+      constraint_clarity:
+        clarity_score: 0.88
+        weight: 0.25
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고, UI 설정·API payload·서버
+          적용 로직까지 전체 경계를 바꾸기로 정해졌다. 세부 마이그레이션 방식은 구현 중 코드 패턴에 맞추면 된다.
+      success_criteria_clarity:
+        clarity_score: 0.8
+        weight: 0.25
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인한다는 완료 기준이 생겼다.
+          다만 어떤 fixture나 테스트 파일로 증명할지는 아직 저장소 코드 탐색에 의존한다.
+      context_clarity:
+        clarity_score: 0.47
+        weight: 0.15
+        justification: 대상 저장소의 큰 구조와 관련 경로는 제공됐지만, 현재 BlockRegistry, BaseBlock, UI
+          설정, HTTP API, exporter 계약에 대한 실제 코드 사실은 부족하다. brownfield executor가 코드 탐색으로
+          책임 경계와 테스트 위치를 찾아야 한다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: constraints
+      question: 'Repo: 현재 코드에서 outputOptions 계약을 바꿀 때 manifest/export 결과 파일 형식도 Editor+Block별
+        선택값을 드러내도록 변경해야 하나요, 아니면 manifest는 기존 공개 산출물 의미를 유지하고 내부 적용만 새 계약으로 바꾸나요?'
+      options:
+      - label: Manifest도 변경
+        description: export 산출물에 Editor+Block별 선택 계약이 드러나도 됩니다.
+        recommended: true
+      - label: Manifest 의미 유지
+        description: 설정/API/적용은 바꾸되 manifest 공개 의미는 가능한 유지합니다.
+        recommended: false
+      - label: 코드 기준 결정
+        description: 현재 manifest 사용처를 확인한 뒤 영향이 작은 쪽으로 정합니다.
+        recommended: false
+    summary: 요구와 검증 흐름은 실행 가능한 수준까지 정리됐지만, manifest/export 산출물 같은 brownfield 공개 계약의
+      현재 코드 경계가 가장 약하다.
+    round_count: 5
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - id: S4
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.834
+    ambiguity: 0.166
+    ready: false
+    floor_failures:
+    - context_clarity 0.53 < 0.60
+    components:
+      goal_clarity:
+        clarity_score: 0.92
+        weight: 0.35
+        justification: 핵심 목표가 BaseBlock outputOptions와 Editor+Block별 선택 계약으로 명확해졌다.
+          같은 block의 Editor별 표시, 저장, 적용, 정렬 기준도 사용자 답변으로 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.91
+        weight: 0.25
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고, UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다.
+      success_criteria_clarity:
+        clarity_score: 0.82
+        weight: 0.25
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인한다는 기준이 있다. 다만 어떤
+          repo-native 테스트와 fixture 갱신을 완료 증거로 삼을지는 아직 코드 탐색에 맡겨져 있다.
+      context_clarity:
+        clarity_score: 0.53
+        weight: 0.15
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌지만 현재 코드의 실제 outputOptions 계약, fixture
+          구조, UI 설정 저장 위치, manifest 사용처에 대한 코드 사실은 부족하다. 실행자는 탐색으로 책임 경계와 검증 위치를 찾아야
+          한다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: verification
+      question: 'Repo: 새 Editor+Block output option 계약을 검증할 때 기존 fixture/export snapshot을
+        새 manifest 형식까지 갱신하는 방식으로 확인할까요, 아니면 핵심 흐름을 증명하는 새 targeted fixture/test를
+        추가하는 방식으로 확인할까요?'
+      options:
+      - label: 기존 fixture 갱신
+        description: 현재 회귀 기준선을 새 Editor+Block manifest/export 계약에 맞춰 갱신합니다.
+        recommended: true
+      - label: Targeted test 추가
+        description: 기존 fixture churn을 줄이고 새 계약을 증명하는 좁은 테스트를 추가합니다.
+        recommended: false
+      - label: 코드 기준 결정
+        description: 현재 fixture와 테스트 구조를 확인한 뒤 가장 작은 검증 변경으로 정합니다.
+        recommended: false
+    summary: 요구, 제약, 공개 산출물 변경 범위는 실행 가능한 수준이다. 남은 약점은 brownfield 코드 사실과 fixture 기반
+      검증 경계다.
+    round_count: 6
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - id: S5
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.857
+    ambiguity: 0.143
+    ready: false
+    floor_failures:
+    - context_clarity 0.56 < 0.60
+    components:
+      goal_clarity:
+        clarity_score: 0.93
+        weight: 0.35
+        justification: 핵심 목표가 BaseBlock outputOptions와 Editor+Block별 선택 계약으로 명확하다.
+          같은 block의 Editor별 표시, 저장, 적용, 정렬 기준도 사용자 답변으로 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.92
+        weight: 0.25
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고 UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다.
+      success_criteria_clarity:
+        clarity_score: 0.87
+        weight: 0.25
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인하고 기존 fixture/export
+          snapshot을 새 manifest 형식에 맞춰 갱신한다는 검증 방향이 정해졌다.
+      context_clarity:
+        clarity_score: 0.56
+        weight: 0.15
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌지만 현재 코드의 실제 outputOptions 계약, UI 설정
+          저장 위치, API payload 타입, exporter 적용 지점, fixture 구조에 대한 코드 사실은 아직 부족하다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: scope
+      question: 'Repo: tasks 작성 전에 새 Editor+Block output option 계약의 코드 경계는 어떤 방식으로
+        확정할까요?'
+      options:
+      - label: 코드 탐색으로 확정
+        description: BlockRegistry, BaseBlock, UI 설정, API, exporter, fixture 사용처를
+          확인한 뒤 task 경계를 정합니다.
+        recommended: true
+      - label: 지정 경로 중심
+        description: 이미 언급된 주요 경로만 기준으로 task를 작성하고 주변 사용처는 실행 중 확인합니다.
+        recommended: false
+      - label: 사용처 전체 검색
+        description: outputOptions와 manifest 관련 사용처를 전역 검색한 결과를 기준으로 더 넓게 task를 잡습니다.
+        recommended: false
+    summary: 요구, 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 사용처 기반의 brownfield 경계 정보다.
+    round_count: 7
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - id: S6
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.8685
+    ambiguity: 0.1315
+    ready: false
+    floor_failures:
+    - context_clarity 0.58 < 0.60
+    components:
+      goal_clarity:
+        clarity_score: 0.94
+        weight: 0.35
+        justification: 핵심 목표는 BaseBlock이 outputOptions를 소유하고 Editor+Block별 선택 계약으로
+          UI 표시, 저장, API 전달, export 적용을 바꾸는 것으로 명확하다. 같은 block의 Editor별 그룹 표시, 정렬,
+          독립 적용 기준도 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.93
+        weight: 0.25
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고 UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다.
+      success_criteria_clarity:
+        clarity_score: 0.88
+        weight: 0.25
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인하고 기존 fixture/export
+          snapshot을 새 manifest 형식에 맞춰 갱신한다는 검증 방향이 정해졌다. 다만 Markdown/frontmatter/assets
+          같은 export 산출물의 보존 범위는 명시되지 않았다.
+      context_clarity:
+        clarity_score: 0.58
+        weight: 0.15
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌고 코드 탐색으로 경계를 확정하기로 했다. 하지만 실제 outputOptions
+          계약, UI 설정 저장 위치, API payload 타입, exporter 적용 지점, fixture 구조에 대한 코드 사실은 아직
+          제공되지 않았다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: non_goals
+      question: 'Repo: 새 Editor+Block output option 계약으로 바꿀 때 manifest와 옵션 적용 외의 export
+        산출물은 어떤 범위까지 유지해야 하나요?'
+      options:
+      - label: 본문 산출물 보존
+        description: Markdown, frontmatter, assets 내용은 기존 fixture 의미를 유지하고 manifest와
+          옵션 계약만 바꿉니다.
+        recommended: true
+      - label: 옵션 영향 반영
+        description: Editor+Block별 option 적용 결과라면 Markdown/frontmatter/assets 변경도
+          허용합니다.
+        recommended: false
+      - label: 코드 기준 결정
+        description: 현재 renderer/exporter와 fixture를 확인한 뒤 산출물별 보존 범위를 정합니다.
+        recommended: false
+    summary: 요구, 제약, 검증 방향은 대부분 실행 가능하다. 남은 약점은 실제 코드 사실과 manifest 외 export 산출물 보존
+      범위다.
+    round_count: 8
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - id: S7
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.882
+    ambiguity: 0.118
+    ready: true
+    floor_failures: []
+    components:
+      goal_clarity:
+        clarity_score: 0.94
+        weight: 0.35
+        justification: 핵심 목표는 BaseBlock이 outputOptions를 소유하고 Editor+Block별 선택 계약으로
+          UI 표시, 설정 저장, API 전달, export 적용을 바꾸는 것으로 명확하다. 같은 block의 Editor별 그룹 표시,
+          정렬, 독립 저장·적용 기준도 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.94
+        weight: 0.25
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고 UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다. manifest 외 export 산출물도 옵션 적용 결과라면
+          변경 가능하다는 방향이 정해졌다.
+      success_criteria_clarity:
+        clarity_score: 0.9
+        weight: 0.25
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인하고 기존 fixture/export
+          snapshot을 새 manifest 형식에 맞춰 갱신한다는 검증 방향이 정해졌다. repo-native 검증 명령과 정확한 테스트
+          위치는 코드 탐색으로 확정하면 된다.
+      context_clarity:
+        clarity_score: 0.62
+        weight: 0.15
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌고 코드 탐색으로 BlockRegistry, BaseBlock, UI
+          설정, API, exporter, fixture 사용처를 확정하기로 했다. 다만 실제 outputOptions 계약, API 타입,
+          fixture 구조에 대한 코드 사실은 아직 제공되지 않아 brownfield 실행자는 초기 탐색을 통해 세부 경계를 잡아야 한다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: stop_conditions
+      question: 'Repo: 코드 탐색 중 outputOptions 계약 사용처가 예상보다 넓어 외부 공개 API나 fixture 변경이
+        크게 늘어나면 어떻게 처리할까요?'
+      options:
+      - label: 같은 계약으로 포함
+        description: Editor+Block output option 계약에 직접 연결된 사용처라면 함께 바꿉니다.
+        recommended: true
+      - label: 중단 후 확인
+        description: 예상보다 큰 공개 동작 변경이 보이면 구현 전 사용자 확인을 받습니다.
+        recommended: false
+      - label: 핵심 흐름만 변경
+        description: UI 설정, API 전달, exporter 적용, manifest 검증에 필요한 범위로 제한합니다.
+        recommended: false
+    summary: 요구와 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 구조를 아직 보지 못한 brownfield context
+      gap이다.
+    round_count: 9
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - id: S8
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.882
+    ambiguity: 0.118
+    ready: true
+    floor_failures: []
+    components:
+      goal_clarity:
+        clarity_score: 0.94
+        weight: 0.35
+        justification: 핵심 목표는 BaseBlock이 outputOptions를 소유하고 Editor+Block별 선택 계약으로
+          UI 표시, 설정 저장, API 전달, export 적용을 바꾸는 것으로 명확하다. 같은 block의 Editor별 그룹 표시,
+          정렬, 독립 저장·적용 기준도 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.94
+        weight: 0.25
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고 UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다. manifest 외 export 산출물도 옵션 적용 결과라면
+          변경 가능하다는 방향이 정해졌다.
+      success_criteria_clarity:
+        clarity_score: 0.9
+        weight: 0.25
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인하고 기존 fixture/export
+          snapshot을 새 manifest 형식에 맞춰 갱신한다는 검증 방향이 정해졌다. repo-native 검증 명령과 정확한 테스트
+          위치는 코드 탐색으로 확정하면 된다.
+      context_clarity:
+        clarity_score: 0.62
+        weight: 0.15
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌고 코드 탐색으로 BlockRegistry, BaseBlock, UI
+          설정, API, exporter, fixture 사용처를 확정하기로 했다. 다만 실제 outputOptions 계약, API 타입,
+          fixture 구조에 대한 코드 사실은 아직 제공되지 않아 brownfield 실행자는 초기 탐색을 통해 세부 경계를 잡아야 한다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: stop_conditions
+      question: 'Repo: 코드 탐색 중 outputOptions 계약 사용처가 예상보다 넓어 외부 공개 API나 fixture 변경이
+        크게 늘어나면 어떻게 처리할까요?'
+      options:
+      - label: 같은 계약으로 포함
+        description: Editor+Block output option 계약에 직접 연결된 사용처라면 함께 바꿉니다.
+        recommended: true
+      - label: 중단 후 확인
+        description: 예상보다 큰 공개 동작 변경이 보이면 구현 전 사용자 확인을 받습니다.
+        recommended: false
+      - label: 핵심 흐름만 변경
+        description: UI 설정, API 전달, exporter 적용, manifest 검증에 필요한 범위로 제한합니다.
+        recommended: false
+    summary: 요구와 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 구조를 아직 보지 못한 brownfield context
+      gap이다.
+    round_count: 9
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - id: S9
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.882
+    ambiguity: 0.118
+    ready: true
+    floor_failures: []
+    components:
+      goal_clarity:
+        clarity_score: 0.94
+        weight: 0.35
+        justification: 핵심 목표는 BaseBlock이 outputOptions를 소유하고 Editor+Block별 선택 계약으로
+          UI 표시, 설정 저장, API 전달, export 적용을 바꾸는 것으로 명확하다. 같은 block의 Editor별 그룹 표시,
+          정렬, 독립 저장·적용 기준도 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.94
+        weight: 0.25
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고 UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다. manifest 외 export 산출물도 옵션 적용 결과라면
+          변경 가능하다.
+      success_criteria_clarity:
+        clarity_score: 0.9
+        weight: 0.25
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인하고 기존 fixture/export
+          snapshot을 새 manifest 형식에 맞춰 갱신한다는 검증 방향이 정해졌다. 정확한 repo-native 테스트 위치와 명령은
+          코드 탐색으로 확정하면 된다.
+      context_clarity:
+        clarity_score: 0.62
+        weight: 0.15
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌고 코드 탐색으로 BlockRegistry, BaseBlock, UI
+          설정, API, exporter, fixture 사용처를 확정하기로 했다. 다만 실제 outputOptions 계약, API 타입,
+          fixture 구조에 대한 코드 사실은 아직 제공되지 않아 초기 탐색이 필요하다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: scope
+      question: 'Repo: 실제 코드 탐색에서 새 Editor+Block output option 계약의 task 경계는 어떤 사용처까지
+        포함해야 하나요?'
+      options:
+      - label: 직접 연결 포함
+        description: outputOptions 계약에 직접 연결된 UI, API, exporter, manifest, fixture
+          사용처를 함께 바꿉니다.
+        recommended: true
+      - label: 핵심 흐름 제한
+        description: 옵션 표시, 설정 저장, API 전달, export 적용, manifest 검증에 필요한 범위로 제한합니다.
+        recommended: false
+      - label: 중단 후 확인
+        description: 예상보다 큰 공개 동작 변경이 보이면 구현 전 사용자 확인을 받습니다.
+        recommended: false
+    summary: 요구와 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 구조를 아직 보지 못한 brownfield context
+      gap이다.
+    round_count: 10
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - id: S10
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.882
+    ambiguity: 0.118
+    ready: true
+    floor_failures: []
+    components:
+      goal_clarity:
+        clarity_score: 0.94
+        weight: 0.35
+        justification: 핵심 목표는 BaseBlock이 outputOptions를 소유하고 Editor+Block별 선택 계약으로
+          UI 표시, 설정 저장, API 전달, export 적용을 바꾸는 것으로 명확하다. 같은 block의 Editor별 그룹 표시,
+          정렬, 독립 저장·적용 기준도 정해졌다.
+      constraint_clarity:
+        clarity_score: 0.94
+        weight: 0.25
+        justification: 기존 저장 형식, API, manifest 호환 없이 깨지는 변경을 허용하고 UI 설정, API payload,
+          서버 적용 로직, manifest까지 새 계약으로 바꾸는 범위가 확정됐다. manifest 외 export 산출물도 옵션 적용 결과라면
+          변경 가능하다.
+      success_criteria_clarity:
+        clarity_score: 0.9
+        weight: 0.25
+        justification: 옵션 표시, 설정 저장, API 전달, export 적용까지 한 흐름으로 확인하고 기존 fixture/export
+          snapshot을 새 manifest 형식에 맞춰 갱신한다는 검증 방향이 정해졌다. 정확한 repo-native 테스트 위치와 명령은
+          코드 탐색으로 확정하면 된다.
+      context_clarity:
+        clarity_score: 0.62
+        weight: 0.15
+        justification: 관련 아키텍처 경로와 변경 표면은 주어졌고 코드 탐색으로 BlockRegistry, BaseBlock, UI
+          설정, API, exporter, fixture 사용처를 확정하기로 했다. 다만 실제 outputOptions 계약, API 타입,
+          fixture 구조에 대한 코드 사실은 아직 제공되지 않아 초기 탐색이 필요하다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: scope
+      question: 'Repo: 실제 코드 탐색에서 새 Editor+Block output option 계약의 task 경계는 어떤 사용처까지
+        포함해야 하나요?'
+      options:
+      - label: 직접 연결 포함
+        description: outputOptions 계약에 직접 연결된 UI, API, exporter, manifest, fixture
+          사용처를 함께 바꿉니다.
+        recommended: true
+      - label: 핵심 흐름 제한
+        description: 옵션 표시, 설정 저장, API 전달, export 적용, manifest 검증에 필요한 범위로 제한합니다.
+        recommended: false
+      - label: 중단 후 확인
+        description: 예상보다 큰 공개 동작 변경이 보이면 구현 전 사용자 확인을 받습니다.
+        recommended: false
+    summary: 요구와 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 구조를 아직 보지 못한 brownfield context
+      gap이다.
+    round_count: 10
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - id: S11
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.941
+    ambiguity: 0.059
+    ready: true
+    floor_failures: []
+    components:
+      goal_clarity:
+        clarity_score: 0.97
+        weight: 0.35
+        justification: 목표는 BaseBlock 소유 outputOptions와 Editor+Block별 선택 계약으로 registry,
+          UI, API, exporter, manifest, fixtures를 함께 전환하는 것으로 매우 명확하다. 같은 block의 Editor별
+          독립 표시·저장·적용과 정렬 기준도 정해져 있다.
+      constraint_clarity:
+        clarity_score: 0.95
+        weight: 0.25
+        justification: 기존 block-type-only 저장값, API, manifest에 대한 backward compatibility를
+          만들지 않는다는 제약이 분명하다. outputOptions 계약에 직접 연결된 사용처는 함께 바꾸고, unrelated behavior는
+          제외한다는 경계도 task별로 정리돼 있다.
+      success_criteria_clarity:
+        clarity_score: 0.94
+        weight: 0.25
+        justification: 각 task에 acceptance criteria, reopen_when, mechanical verification,
+          semantic review가 있어 완료 판정이 구체적이다. UI 노출, 설정/API 전달, exporter/manifest 반영,
+          fixture 갱신, full verification까지 흐름이 연결돼 있다.
+      context_clarity:
+        clarity_score: 0.86
+        weight: 0.15
+        justification: bundle_inspection에 실제 파일 탐색 결과와 현재 구조 요약이 포함되어 brownfield 경계가
+          상당히 보강됐다. 다만 공개 persisted/API/manifest key의 정확한 문자열 형식은 stable identifier
+          요구만 있고 최종 형태는 executor 판단으로 남아 있다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: outputs
+      question: 'Repo: 새 Editor+Block selection identifier의 공개 문자열 형식은 어떻게 정해야 하나요?'
+      options:
+      - label: Repo 패턴 우선
+        description: 기존 타입·네이밍 패턴에 맞춰 stable editor+block key를 executor가 정합니다.
+        recommended: true
+      - label: 명시 스키마 고정
+        description: 사용자가 원하는 공개 key 형식을 직접 지정합니다.
+        recommended: false
+      - label: 충돌 시 확인
+        description: 코드 탐색 중 안정성과 가독성이 충돌하면 구현 전 확인합니다.
+        recommended: false
+    summary: 계획은 실행 가능한 수준으로 명확하다. 남은 약점은 새 공개 key 형식의 세부 결정뿐이다.
+    round_count: 11
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - id: S12
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.941
+    ambiguity: 0.059
+    ready: true
+    floor_failures: []
+    components:
+      goal_clarity:
+        clarity_score: 0.97
+        weight: 0.35
+        justification: 목표는 BaseBlock 소유 outputOptions와 Editor+Block별 선택 계약으로 registry,
+          UI, API, 서버 적용, exporter, manifest, fixtures를 함께 전환하는 것으로 매우 명확하다. 같은 block의
+          Editor별 독립 표시·저장·적용과 정렬 기준도 확정돼 있다.
+      constraint_clarity:
+        clarity_score: 0.95
+        weight: 0.25
+        justification: 기존 block-type-only 저장값, API, manifest 호환을 만들지 않는다는 제약이 분명하고,
+          직접 연결된 사용처는 함께 바꾸며 unrelated behavior는 제외한다는 경계도 task별로 정리돼 있다.
+      success_criteria_clarity:
+        clarity_score: 0.94
+        weight: 0.25
+        justification: 각 task에 acceptance criteria, reopen_when, mechanical verification,
+          semantic review가 있어 완료 판정이 구체적이다. UI 노출, 설정/API 전달, exporter/manifest 반영,
+          fixture 갱신, full verification까지 연결돼 있다.
+      context_clarity:
+        clarity_score: 0.86
+        weight: 0.15
+        justification: 실제 관련 파일과 현재 구조 요약이 포함되어 brownfield 경계가 충분히 보강됐다. 다만 공개 persisted/API/manifest
+          key의 정확한 문자열 형식은 stable identifier 요구만 있고 최종 형태는 executor 판단으로 남아 있다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: outputs
+      question: 'Repo: 새 Editor+Block selection identifier의 공개 문자열 형식은 어떻게 정해야 하나요?'
+      options:
+      - label: Repo 패턴 우선
+        description: 기존 타입·네이밍 패턴에 맞춰 stable editor+block key를 executor가 정합니다.
+        recommended: true
+      - label: 명시 스키마 고정
+        description: 사용자가 원하는 공개 key 형식을 직접 지정합니다.
+        recommended: false
+      - label: 충돌 시 확인
+        description: 코드 탐색 중 안정성과 가독성이 충돌하면 구현 전 확인합니다.
+        recommended: false
+    summary: 계획은 실행 가능한 수준으로 명확하다. 남은 약점은 새 공개 key 형식의 세부 결정뿐이다.
+    round_count: 11
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - id: S13
+    project_mode: brownfield
+    threshold: 0.2
+    weighted_clarity: 0.954
+    ambiguity: 0.046
+    ready: true
+    floor_failures: []
+    components:
+      goal_clarity:
+        clarity_score: 0.98
+        weight: 0.35
+        justification: 목표는 BaseBlock 소유 outputOptions와 Editor+Block별 선택 계약으로 registry,
+          UI, settings, API, server, exporter, manifest, fixtures를 함께 전환하는 것으로 매우
+          명확하다. 같은 block의 Editor별 독립 표시·저장·적용과 정렬 기준도 확정돼 있다.
+      constraint_clarity:
+        clarity_score: 0.96
+        weight: 0.25
+        justification: backward compatibility와 migration을 만들지 않는다는 제약, 직접 연결된 사용처는
+          포함하고 unrelated behavior는 제외한다는 경계, repo-native 검증 우선순위가 task별로 정리돼 있다.
+      success_criteria_clarity:
+        clarity_score: 0.95
+        weight: 0.25
+        justification: 각 task에 acceptance criteria, reopen_when, mechanical verification,
+          semantic review가 있어 완료 판정이 구체적이다. UI 노출, settings/API 전달, exporter/manifest
+          반영, fixture 갱신, full verification까지 연결돼 있다.
+      context_clarity:
+        clarity_score: 0.89
+        weight: 0.15
+        justification: bundle_inspection이 실제 파일과 현재 구조를 충분히 짚고 있어 brownfield 실행 경계가
+          높게 보강됐다. 남은 부분은 공개 Editor+Block selection key의 최종 문자열 형식처럼 repo 패턴을 따라 executor가
+          정하도록 승인된 구현 세부사항이다.
+    weakest_dimension: context_clarity
+    recommended_followup:
+      route: code_plus_decision
+      track: outputs
+      question: 'Repo: 새 Editor+Block selection identifier의 공개 문자열 형식은 어떻게 고정할까요?'
+      options:
+      - label: Repo 패턴 우선
+        description: 기존 타입·네이밍 패턴에 맞춰 stable editor+block key를 executor가 정합니다.
+        recommended: true
+      - label: 명시 스키마 고정
+        description: 사용자가 원하는 공개 key 형식을 직접 지정합니다.
+        recommended: false
+      - label: 충돌 시 확인
+        description: 안정성과 가독성이 충돌하면 구현 전 다시 확인합니다.
+        recommended: false
+    summary: 계획은 실행 가능한 수준으로 매우 명확하다. 남은 약점은 공개 selection key 문자열 형식의 최종 구현 판단뿐이며,
+      이미 repo 패턴 우선으로 처리 가능하게 경계가 잡혀 있다.
+    round_count: 12
+    scoring_temperature_intent: 0.1
+    model: gpt-5.5
+    reasoning_effort: medium
+  - *id001
+ambiguity_ledger:
+- score_id: S1
+  round_count: 3
+  ambiguity: 0.342
+  ready: false
+  weakest_dimension: context_clarity
+  summary: 요구의 방향은 분명하지만, 기존 저장소에서 어떤 공개 표면까지 같은 계약으로 바꿀지에 대한 brownfield 경계 정보가 가장
+    약하다.
+- score_id: S2
+  round_count: 4
+  ambiguity: 0.2395
+  ready: false
+  weakest_dimension: context_clarity
+  summary: 요구와 변경 경계는 충분히 정리됐지만, brownfield 코드 사실과 완료 검증 기준이 아직 약하다.
+- score_id: S3
+  round_count: 5
+  ambiguity: 0.1945
+  ready: false
+  weakest_dimension: context_clarity
+  summary: 요구와 검증 흐름은 실행 가능한 수준까지 정리됐지만, manifest/export 산출물 같은 brownfield 공개 계약의
+    현재 코드 경계가 가장 약하다.
+- score_id: S4
+  round_count: 6
+  ambiguity: 0.166
+  ready: false
+  weakest_dimension: context_clarity
+  summary: 요구, 제약, 공개 산출물 변경 범위는 실행 가능한 수준이다. 남은 약점은 brownfield 코드 사실과 fixture 기반
+    검증 경계다.
+- score_id: S5
+  round_count: 7
+  ambiguity: 0.143
+  ready: false
+  weakest_dimension: context_clarity
+  summary: 요구, 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 사용처 기반의 brownfield 경계 정보다.
+- score_id: S6
+  round_count: 8
+  ambiguity: 0.1315
+  ready: false
+  weakest_dimension: context_clarity
+  summary: 요구, 제약, 검증 방향은 대부분 실행 가능하다. 남은 약점은 실제 코드 사실과 manifest 외 export 산출물 보존 범위다.
+- score_id: S7
+  round_count: 9
+  ambiguity: 0.118
+  ready: true
+  weakest_dimension: context_clarity
+  summary: 요구와 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 구조를 아직 보지 못한 brownfield context
+    gap이다.
+- score_id: S8
+  round_count: 9
+  ambiguity: 0.118
+  ready: true
+  weakest_dimension: context_clarity
+  summary: 요구와 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 구조를 아직 보지 못한 brownfield context
+    gap이다.
+- score_id: S9
+  round_count: 10
+  ambiguity: 0.118
+  ready: true
+  weakest_dimension: context_clarity
+  summary: 요구와 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 구조를 아직 보지 못한 brownfield context
+    gap이다.
+- score_id: S10
+  round_count: 10
+  ambiguity: 0.118
+  ready: true
+  weakest_dimension: context_clarity
+  summary: 요구와 제약, 검증 방향은 실행 가능한 수준이다. 남은 약점은 실제 코드 구조를 아직 보지 못한 brownfield context
+    gap이다.
+- score_id: S11
+  round_count: 11
+  ambiguity: 0.059
+  ready: true
+  weakest_dimension: context_clarity
+  summary: 계획은 실행 가능한 수준으로 명확하다. 남은 약점은 새 공개 key 형식의 세부 결정뿐이다.
+- score_id: S12
+  round_count: 11
+  ambiguity: 0.059
+  ready: true
+  weakest_dimension: context_clarity
+  summary: 계획은 실행 가능한 수준으로 명확하다. 남은 약점은 새 공개 key 형식의 세부 결정뿐이다.
+- score_id: S13
+  round_count: 12
+  ambiguity: 0.046
+  ready: true
+  weakest_dimension: context_clarity
+  summary: 계획은 실행 가능한 수준으로 매우 명확하다. 남은 약점은 공개 selection key 문자열 형식의 최종 구현 판단뿐이며, 이미
+    repo 패턴 우선으로 처리 가능하게 경계가 잡혀 있다.
+- score_id: S14
+  round_count: 12
+  ambiguity: 0.046
+  ready: true
+  weakest_dimension: context_clarity
+  summary: 계획은 실행 가능한 수준으로 매우 명확하다. 남은 약점은 공개 selection key 문자열 형식의 최종 구현 판단뿐이며, 이미
+    repo 패턴 우선으로 처리 가능하게 경계가 잡혀 있다.
+completion_candidate_streak: 2
 closure_audit:
-  status: not_run
-  summary: ''
+  status: passed
+  summary: 인터뷰는 plan_seed extraction과 bundle authoring으로 넘어갈 준비가 됐습니다. ownership/source
+    of truth, API/protocol, lifecycle/recovery, migration, cross-client impact, execution
+    boundaries, verification expectations에 구현 방향을 바꿀 미결정 사항이 남아 있지 않습니다.
   material_blockers: []
   question: ''
-  round_count: 0
-  score_id: null
+  round_count: 12
+  score_id: S14
 deferred_items: []
 seed_review:
-  status: not_presented
+  status: presented
   fingerprint: null
   comment: ''
   feedback: []
 closure:
-  ready: false
-  summary: ''
+  ready: true
+  summary: 계획은 실행 가능한 수준으로 매우 명확하다. 남은 약점은 공개 selection key 문자열 형식의 최종 구현 판단뿐이며, 이미
+    repo 패턴 우선으로 처리 가능하게 경계가 잡혀 있다.
   material_blockers: []
   checks:
     desired_output_explicit:
-      passed: false
-      summary: ''
+      passed: true
+      summary: Seed captures the intended output before task authoring.
     user_tradeoffs_explicit:
-      passed: false
-      summary: ''
+      passed: true
+      summary: Material user-owned tradeoffs are settled or intentionally deferred.
     closure_audit_passed:
-      passed: false
-      summary: ''
+      passed: true
+      summary: Seed Closer audit passed before bundle authoring.
     executor_determinism:
-      passed: false
-      summary: ''
+      passed: true
+      summary: Executor inputs are deterministic enough for a static plan.
     verification_proves_behavior:
-      passed: false
-      summary: ''
+      passed: true
+      summary: Verification expectations are explicit enough for executor proof.
     no_material_questions:
-      passed: false
-      summary: ''
+      passed: true
+      summary: No material user question remains pending.

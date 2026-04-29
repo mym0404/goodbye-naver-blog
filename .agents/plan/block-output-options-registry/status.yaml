@@ -1,6 +1,78 @@
-phase: planning
+phase: seed_review
 current_task: null
-tasks: {}
+tasks:
+  registry_editor_block_contract: Todo
+  options_settings_api_contract: Todo
+  ui_editor_block_options_flow: Todo
+  exporter_parser_manifest_application: Todo
+  fixtures_snapshots_and_flow_regression: Todo
+  final_full_scope_verification: Todo
 halt: null
 bundle_inspection:
-  author: null
+  author:
+    files_read:
+    - .agents/plan/block-output-options-registry/plan_seed.yaml
+    - package.json
+    - .agents/knowledge/verification.md
+    - src/shared/BlockRegistry.ts
+    - src/modules/blocks/BaseBlock.ts
+    - src/shared/Types.ts
+    - src/modules/editor/BaseEditor.ts
+    - src/modules/editor/NaverBlogSe2Editor.ts
+    - src/modules/editor/NaverBlogSe3Editor.ts
+    - src/modules/editor/NaverBlogSe4Editor.ts
+    - src/shared/ExportOptions.ts
+    - src/ui/features/options/ExportOptionsPanel.tsx
+    - src/ui/features/common/hooks/UseExportSettingsSync.ts
+    - src/server/HttpServer.ts
+    - src/modules/exporter/NaverBlogExporter.ts
+    - src/server/ExportJobManifest.ts
+    - src/modules/parser/PostParser.ts
+    - tests/parser-block-registry.test.ts
+    - tests/sample-fixtures.test.ts
+    - tests/export-options.test.ts
+    - tests/ui/export-options-panel.test.tsx
+    - tests/fixtures/samples/se4-quote-formula-code/expected.md
+    - .agents/plan/block-output-options-registry/tasks.yaml
+    commands_considered:
+    - pwd
+    - rg --files
+    - rg --files -g 'plan_seed.yaml' -g 'tasks.yaml' .agents
+    - sed -n '1,260p' package.json
+    - sed -n '1,260p' .agents/plan/block-output-options-registry/plan_seed.yaml
+    - sed -n '1,260p' src/shared/BlockRegistry.ts
+    - sed -n '220,520p' src/shared/BlockRegistry.ts
+    - sed -n '1,220p' src/modules/blocks/BaseBlock.ts
+    - rg -n 'outputOptions|blockOutput|BlockOutput|supportedBlocks|outputSelections|blockOutputSelections'
+      src tests scripts
+    - sed -n '260,460p' src/shared/Types.ts
+    - sed -n '1,220p' src/modules/editor/BaseEditor.ts
+    - sed -n '1,160p' src/modules/editor/NaverBlogSe2Editor.ts
+    - sed -n '1,180p' src/modules/editor/NaverBlogSe3Editor.ts
+    - sed -n '1,220p' src/modules/editor/NaverBlogSe4Editor.ts
+    - sed -n '240,480p' src/shared/ExportOptions.ts
+    - sed -n '460,660p' src/ui/features/options/ExportOptionsPanel.tsx
+    - sed -n '1140,1195p' src/ui/features/options/ExportOptionsPanel.tsx
+    - sed -n '1,220p' src/ui/features/common/hooks/UseExportSettingsSync.ts
+    - rg -n 'export-settings|ExportRequest|blockOutputs|manifest|options' src/server
+      src/modules/exporter tests/http-server.test.ts tests/export-job-manifest.test.ts
+      tests/naver-blog-exporter.test.ts tests/sample-fixtures.test.ts
+    - sed -n '1020,1105p' src/server/HttpServer.ts
+    - sed -n '1500,1550p' src/server/HttpServer.ts
+    - sed -n '320,580p' src/modules/exporter/NaverBlogExporter.ts
+    - sed -n '1,220p' src/server/ExportJobManifest.ts
+    - sed -n '1,220p' src/modules/parser/PostParser.ts
+    - sed -n '1,220p' tests/parser-block-registry.test.ts
+    - sed -n '1,180p' tests/sample-fixtures.test.ts
+    - sed -n '1,220p' tests/export-options.test.ts
+    - sed -n '130,520p' tests/ui/export-options-panel.test.tsx
+    - sed -n '1,260p' .agents/plan/block-output-options-registry/tasks.yaml
+    grounding_summary: 'The approved plan seed lives under .agents/plan/block-output-options-registry.
+      Current output option source of truth is block-type family data in src/shared/BlockRegistry.ts,
+      while BaseBlock has no outputOptions. NaverBlog editors expose supportedBlocks
+      arrays in SE2, SE3, and SE4 editor classes. ExportOptions currently stores blockOutputs.defaults
+      by block type; clone/sanitize logic, HTTP settings/export endpoints, CLI validation,
+      UI option cards, exporter manifest options, renderer tests, HTTP tests, and
+      fixture tests all reference that shape. Repo-native verification commands are
+      package scripts: pnpm typecheck, pnpm test:offline, pnpm smoke:ui, pnpm check:local,
+      and pnpm check:full.'

@@ -1,1 +1,621 @@
-tasks: []
+tasks:
+- id: registry_editor_block_contract
+  kind: execution
+  title: Move output option ownership to BaseBlock and expose Editor+Block registry
+    selections
+  depends_on: []
+  start_when:
+    description: Start first. This establishes the source-of-truth contract used by
+      UI, API, parser, exporter, manifest, and fixtures.
+  files:
+    primary:
+    - src/modules/blocks/BaseBlock.ts
+    - src/shared/BlockRegistry.ts
+    - src/shared/Types.ts
+    - src/modules/blog/NaverBlog.ts
+    - src/modules/blog/BaseBlog.ts
+    - src/modules/editor/BaseEditor.ts
+    - src/modules/editor/NaverBlogSe2Editor.ts
+    - src/modules/editor/NaverBlogSe3Editor.ts
+    - src/modules/editor/NaverBlogSe4Editor.ts
+    - tests/parser-block-registry.test.ts
+    generated_incidental: []
+  context: 'Plan seed goal: change BlockRegistry/BaseBlock output option structure
+    from block output family to BaseBlock-owned outputOptions plus an Editor+Block
+    selection contract. Current code keeps block output families in src/shared/BlockRegistry.ts
+    and BaseBlock has no outputOptions. NaverBlog has three editor classes with protected
+    supportedBlocks arrays. The new public selection identifier must follow existing
+    repo naming patterns, be stable, and include editor identity plus block identity,
+    not labels. For NaverBlog, selectable options come from every editor''s supportedBlocks,
+    filtered to blocks whose BaseBlock outputOptions has at least two variants, sorted
+    by editor type and then by each editor''s supportedBlocks order. The same block
+    in multiple editors remains separate for display, storage, and application.'
+  must_do:
+  - Add BaseBlock-owned outputOptions support without moving unrelated parser behavior.
+  - Define a stable Editor+Block selection key type/shape that includes editor identity
+    and block identity and is used by registry outputs.
+  - Replace active block-type-only output family source of truth with Editor+Block
+    selection structures derived from editor supportedBlocks.
+  - 'Expose registry data needed by UI: editor identity, block identity, label/description,
+    preview block, variants, params, default selection, sort order, and whether editor
+    grouping should be shown.'
+  - Keep single-variant blocks out of selectable output options while preserving defaults
+    needed for rendering.
+  - Update parser block registry tests to prove NaverBlog editor instances, editor
+    ordering, supportedBlocks ordering, duplicate block separation by editor, and
+    absence of active block-type-only public source of truth.
+  must_not_do:
+  - Do not add backward compatibility for old blockOutputs.defaults keyed only by
+    block type.
+  - Do not create a migration layer for existing persisted settings, API payloads,
+    or manifest output.
+  - Do not include blocks with fewer than two output variants in the selectable UI
+    registry.
+  - Do not key public selections by label text.
+  - Do not refactor parser/editor code outside outputOptions and directly connected
+    registry contracts.
+  implementation_notes:
+  - Prefer existing TypeScript type aliases and named exports in src/shared/Types.ts
+    and src/shared/BlockRegistry.ts.
+  - If editor identity is not currently public, add a small explicit identity on editor
+    classes or instances rather than deriving from UI labels.
+  - Keep BaseBlock subclasses responsible only for their own output option metadata;
+    keep editor ordering in editor/supportedBlocks registry assembly.
+  - Preserve existing markdown variant semantics while changing ownership and addressing.
+  verification:
+    mechanical:
+    - id: registry_typecheck
+      command: pnpm typecheck
+      success_signal: TypeScript accepts the new BaseBlock and Editor+Block registry
+        types.
+    - id: registry_tests
+      command: pnpm exec vitest run tests/parser-block-registry.test.ts --configLoader
+        runner --silent
+      success_signal: Parser block registry tests pass with Editor+Block catalog expectations.
+    semantic:
+    - id: source_of_truth_review
+      lens: contract ownership
+      review_prompt: Review BaseBlock, BlockRegistry, editor classes, and Types. Confirm
+        outputOptions are defined on BaseBlock-derived blocks, registry selection
+        entries are derived from editor supportedBlocks, and block output family is
+        no longer the active public source of truth.
+      pass_signal: Every selectable output option is traceable to BaseBlock outputOptions
+        through a stable editor+block key.
+    - id: ordering_and_duplication_review
+      lens: NaverBlog selection semantics
+      review_prompt: Review the generated NaverBlog registry entries. Confirm entries
+        are sorted by editor type and then supportedBlocks order, include only outputOptions
+        with at least two variants, and represent the same block separately for each
+        editor.
+      pass_signal: The registry proves editor grouping and duplicate block independence
+        without relying on block type alone.
+  acceptance_criteria:
+  - BaseBlock owns outputOptions metadata for output-option-capable blocks.
+  - BlockRegistry provides Editor+Block selection structures instead of active block
+    output family selection structures.
+  - NaverBlog selectable entries are filtered to outputOptions with at least two variants.
+  - NaverBlog selectable entries are sorted by editor type and editor supportedBlocks
+    order.
+  - The same block appearing in multiple editors has separate stable selection keys.
+  - Stable public keys include editor identity and block identity, not labels.
+  - Existing block-type-only output option public contract is not left as the active
+    source of truth.
+  reopen_when:
+  - A selectable output option is still sourced only from blockOutputFamilyDefinitions
+    by block type.
+  - A public selection key can collide for the same block across editors.
+  - A block with one output variant appears in selectable registry output.
+  - Parser/editor tests do not cover ordering and duplicate editor separation.
+- id: options_settings_api_contract
+  kind: execution
+  title: Change ExportOptions, persisted settings, API payloads, and CLI validation
+    to Editor+Block selections
+  depends_on:
+  - registry_editor_block_contract
+  start_when:
+    description: Start after the registry exposes stable Editor+Block selection definitions
+      and defaults.
+  files:
+    primary:
+    - src/shared/Types.ts
+    - src/shared/ExportOptions.ts
+    - src/server/HttpServer.ts
+    - src/server/LocalStateRepository.ts
+    - src/ui/lib/Api.ts
+    - scripts/lib/single-post-cli.ts
+    - tests/export-options.test.ts
+    - tests/http-server.test.ts
+    - tests/single-post-cli.test.ts
+    generated_incidental: []
+  context: Plan seed requires UI settings, API request/response payload, server internal
+    input, and exporter input to use Editor+Block-specific selection values. Current
+    ExportOptions.blockOutputs.defaults is keyed by block type and sanitize/clone/CLI
+    validation accept block type keys. Existing persisted values/API/manifest compatibility
+    must not be provided.
+  must_do:
+  - Replace ExportOptions blockOutputs shape with the new Editor+Block selection map
+    keyed by the stable registry key.
+  - Update defaultExportOptions, cloneExportOptions, sanitizePersistedExportOptions,
+    option validation, and type declarations to accept only the new Editor+Block contract.
+  - Update /api/export-defaults, /api/export-settings, and /api/export request handling
+    so request/response payloads use the new contract.
+  - Update LocalStateRepository persisted UI state read/write to sanitize and save
+    the new contract only.
+  - Update single-post CLI option validation to accept the new Editor+Block blockOutputs
+    shape and reject unknown keys/variants/params using registry definitions.
+  - Remove tests that assert legacy block-type-only compatibility and replace them
+    with breaking-change expectations for the new contract.
+  must_not_do:
+  - Do not preserve old blockOutputs.defaults payloads or silently migrate them.
+  - Do not accept block-type-only keys as a public compatibility layer.
+  - Do not change unrelated export option sections except where type changes require
+    mechanical updates.
+  - Do not loosen validation with any or unknown casts that bypass TypeScript checks.
+  implementation_notes:
+  - Use the registry from task registry_editor_block_contract as the allowed key and
+    variant source for clone/sanitize/CLI validation.
+  - Keep PartialExportOptions behavior for other settings intact; only block output
+    options intentionally break compatibility.
+  - HTTP tests should assert saved settings and export requests contain Editor+Block
+    keys and do not retain categoryIds in persisted scope as before.
+  verification:
+    mechanical:
+    - id: options_api_typecheck
+      command: pnpm typecheck
+      success_signal: TypeScript accepts the new ExportOptions, API, settings, and
+        CLI payload types.
+    - id: options_api_tests
+      command: pnpm exec vitest run tests/export-options.test.ts tests/http-server.test.ts
+        tests/single-post-cli.test.ts --configLoader runner --silent
+      success_signal: Export options, HTTP server, and single-post CLI tests pass
+        for the new Editor+Block payload contract.
+    semantic:
+    - id: breaking_contract_review
+      lens: no backward compatibility
+      review_prompt: Review ExportOptions, sanitize/clone logic, HttpServer, LocalStateRepository,
+        CLI validation, and tests. Confirm old block-type-only settings/API/CLI payloads
+        are not treated as supported input and no migration layer was added.
+      pass_signal: Only stable Editor+Block keys are accepted or emitted for output
+        option selections.
+    - id: api_payload_review
+      lens: end-to-end payload shape
+      review_prompt: Trace /api/export-defaults, /api/export-settings, /api/export,
+        and single-post CLI input into ExportOptions. Confirm all paths use the same
+        Editor+Block selection map and registry validation.
+      pass_signal: UI settings, API request/response, server internal request, and
+        CLI input share one new contract.
+  acceptance_criteria:
+  - ExportOptions stores block output selections by stable Editor+Block key.
+  - Persisted UI settings save and load only the new Editor+Block contract.
+  - HTTP defaults/settings/export payloads use the new contract.
+  - Single-post CLI validation accepts the new contract and rejects unknown Editor+Block
+    keys, variants, and params.
+  - Old block-type-only public payloads are not supported as compatibility input.
+  - Focused options, HTTP, and CLI tests cover the new contract.
+  reopen_when:
+  - Any public setting/API/CLI path still accepts blockOutputs.defaults keyed only
+    by block type.
+  - Sanitization keeps unsupported block output keys instead of dropping or rejecting
+    according to existing repo patterns.
+  - Tests still assert old block-type-only output defaults as supported behavior.
+- id: ui_editor_block_options_flow
+  kind: execution
+  title: Render and persist NaverBlog Editor+Block output options in the UI
+  depends_on:
+  - registry_editor_block_contract
+  - options_settings_api_contract
+  start_when:
+    description: Start after the shared options contract and registry definitions
+      are available.
+  files:
+    primary:
+    - src/ui/features/options/ExportOptionsPanel.tsx
+    - src/ui/features/options/ExportOptionsSteps.ts
+    - src/ui/features/common/hooks/UseExportSettingsSync.ts
+    - src/ui/features/common/shell/WizardFlow.tsx
+    - src/shared/BlockOutputPreview.ts
+    - src/ui/lib/Api.ts
+    - scripts/harness/run-ui-smoke.ts
+    - scripts/harness/run-ui-smoke-suite.ts
+    - tests/ui/export-options-panel.test.tsx
+    - tests/ui/app.test.tsx
+    - tests/ui/api.test.ts
+    generated_incidental: []
+  context: Plan seed requires NaverBlog option UI to show every editor's supportedBlocks
+    entries whose outputOptions has at least two variants, sorted by editor type and
+    supportedBlocks order. If only one editor group exists, omit editor grouping.
+    Same block across editors must display, save, and apply independently. Current
+    UI maps blockOutputFamilyDefinitions by block type and uses DOM ids like blockOutputs-defaults-formula-*;
+    these must become stable Editor+Block-key-based controls.
+  must_do:
+  - Render output option controls from the new registry selectable entries, not old
+    block family definitions.
+  - Group option controls by editor when more than one editor has selectable output
+    options; omit editor grouping when only one editor group is present.
+  - Preserve editor type ordering and editor supportedBlocks order inside each group.
+  - Use stable Editor+Block keys in UI data attributes, input ids, select ids, persisted
+    option updates, and test selectors.
+  - Ensure selecting an option for one editor's block updates only that Editor+Block
+    selection and does not update the same block in another editor.
+  - Keep previews working with the selected variant/params for each Editor+Block entry.
+  - Update UI tests and mock smoke flow selectors to prove display, independent updates,
+    and settings persistence with the new contract.
+  must_not_do:
+  - Do not display the user's implementation instructions as UI copy.
+  - Do not add UI copy explaining migration or backward compatibility.
+  - Do not group by editor when only one editor has selectable output entries.
+  - Do not collapse duplicate blocks across editors.
+  - Do not introduce icons or decorative elements solely for this contract change.
+  implementation_notes:
+  - Keep existing shadcn/Radix style and current option section layout unless directly
+    incompatible with grouping.
+  - Use registry labels/descriptions for block/editor display, but never use labels
+    as keys.
+  - If tests need stable selectors, base them on the Editor+Block key and sanitize
+    only for DOM validity while preserving the underlying key in data attributes.
+  verification:
+    mechanical:
+    - id: ui_typecheck
+      command: pnpm typecheck
+      success_signal: TypeScript accepts UI usage of the Editor+Block options contract.
+    - id: ui_options_tests
+      command: pnpm exec vitest run tests/ui/export-options-panel.test.tsx tests/ui/app.test.tsx
+        tests/ui/api.test.ts --configLoader runner --silent
+      success_signal: UI option panel, app, and API tests pass for grouped Editor+Block
+        options.
+    - id: ui_smoke
+      command: pnpm smoke:ui
+      success_signal: Mock UI smoke flow passes with option display, settings persistence,
+        API delivery, and export flow selectors updated.
+    semantic:
+    - id: ui_grouping_review
+      lens: UI display contract
+      review_prompt: Review ExportOptionsPanel rendering and UI tests. Confirm output
+        options are derived from all NaverBlog editors, grouped only when multiple
+        editors are present, ordered by editor type then supportedBlocks order, and
+        filtered to entries with at least two variants.
+      pass_signal: The UI visibly represents the approved Editor+Block selection contract
+        without block-type deduplication.
+    - id: ui_persistence_review
+      lens: settings persistence
+      review_prompt: Trace a UI option change through onOptionsChange, persisted signature,
+        UseExportSettingsSync, and API payload. Confirm changing one editor's block
+        writes only that stable Editor+Block key and leaves another editor's same
+        block independent.
+      pass_signal: UI state persistence proves independent Editor+Block selections.
+  acceptance_criteria:
+  - Output option UI uses registry Editor+Block entries only.
+  - Entries with fewer than two output variants are not rendered as selectable output
+    options.
+  - Multiple editor groups are shown by editor; single-editor grouping is omitted.
+  - Ordering follows editor type then editor supportedBlocks order.
+  - Same block in multiple editors is rendered and updated independently.
+  - Settings persistence and API payload from the UI use stable Editor+Block keys.
+  - UI tests and smoke harness prove the UI+settings part of the requested flow.
+  reopen_when:
+  - The UI still maps old blockOutputFamilyDefinitions directly.
+  - Changing a block option updates all editors for that block type.
+  - The UI shows editor grouping when only one editor group exists.
+  - Smoke selectors or tests still use blockOutputs-defaults-{blockType} as the contract.
+- id: exporter_parser_manifest_application
+  kind: execution
+  title: Apply Editor+Block selections through parser, renderer, exporter, and manifest
+  depends_on:
+  - registry_editor_block_contract
+  - options_settings_api_contract
+  start_when:
+    description: Start after the shared options contract exists; it may run in parallel
+      with UI work only if file ownership is kept separate.
+  files:
+    primary:
+    - src/modules/parser/PostParser.ts
+    - src/modules/blog/NaverBlog.ts
+    - src/modules/blog/BaseBlog.ts
+    - src/modules/editor/BaseEditor.ts
+    - src/modules/converter/MarkdownRenderer.ts
+    - src/shared/BlockMarkdown.ts
+    - src/shared/BlockOutputPreview.ts
+    - src/modules/exporter/NaverBlogExporter.ts
+    - src/modules/exporter/SinglePostExport.ts
+    - src/server/ExportJobManifest.ts
+    - src/server/JobStore.ts
+    - src/shared/Types.ts
+    - tests/parser/post-parser.test.ts
+    - tests/markdown-renderer.test.ts
+    - tests/naver-blog-exporter.test.ts
+    - tests/export-job-manifest.test.ts
+    generated_incidental: []
+  context: Plan seed requires each Editor+Block selection to apply independently when
+    parsing/exporting each editor's post, and manifest/export snapshots to expose
+    the new Editor+Block contract. Current exporter clones options, passes only markdown
+    options into parsePostHtml, renders markdown from parsed AST, and writes manifest.options
+    from ExportOptions. Current AST includes optional outputSelection for some block
+    types and MarkdownRenderer resolves block selections by block type from options.
+  must_do:
+  - Thread the new Editor+Block selection context from ExportOptions into NaverBlog
+    parsing so each editor block can resolve its own selected output option while
+    converting.
+  - Apply selected output options to the produced AST or renderer input in a way that
+    same block types from different editors can render differently.
+  - Update MarkdownRenderer and BlockMarkdown usage so renderer respects per-block
+    Editor+Block selections before defaults, while preserving existing output semantics
+    for unchanged selections.
+  - Update exporter and single-post export paths so manifest.options and resumable
+    manifest snapshots contain the new Editor+Block selection contract.
+  - Update ExportJobManifest and JobStore resume paths so resumed jobs keep the new
+    manifest/request options shape.
+  - Add or update focused tests proving two editors can use different selections for
+    the same block type and that manifest output exposes Editor+Block selections.
+  must_not_do:
+  - Do not preserve old manifest block-type-only options for compatibility.
+  - Do not force Markdown/frontmatter/assets to match old output when changed Editor+Block
+    selections legitimately alter output.
+  - Do not change parser matching behavior except to carry/apply output option selection
+    context.
+  - Do not bypass type errors by weakening AstBlock or ExportOptions types.
+  implementation_notes:
+  - Prefer passing a narrow output option resolver through parser/editor/block context
+    instead of making blocks import UI/API code.
+  - Where AST already has outputSelection fields, extend consistently for the block
+    types that need Editor+Block-specific rendering rather than adding unrelated renderer
+    branches.
+  - Manifest changes should be explicit in ExportManifest options/request snapshots
+    and should not include migration notes.
+  verification:
+    mechanical:
+    - id: exporter_parser_typecheck
+      command: pnpm typecheck
+      success_signal: TypeScript accepts parser, renderer, exporter, and manifest
+        integration with Editor+Block selections.
+    - id: exporter_parser_tests
+      command: pnpm exec vitest run tests/parser/post-parser.test.ts tests/markdown-renderer.test.ts
+        tests/naver-blog-exporter.test.ts tests/export-job-manifest.test.ts --configLoader
+        runner --silent
+      success_signal: Parser, renderer, exporter, and manifest tests pass with the
+        new selection application contract.
+    semantic:
+    - id: independent_application_review
+      lens: runtime application
+      review_prompt: Trace a selected output option from ExportOptions through NaverBlogExporter,
+        parsePostHtml, NaverBlog editor selection, BaseEditor.runBlocks, AST outputSelection
+        or equivalent, MarkdownRenderer, and manifest writing. Confirm same block
+        type in different editors can apply different selections.
+      pass_signal: Editor identity participates in selection resolution at parse/render
+        time and block type alone cannot override all editors.
+    - id: manifest_contract_review
+      lens: manifest public contract
+      review_prompt: Review createInitialManifest, buildResumableExportManifest, JobStore
+        hydration, exporter manifest writes, and tests. Confirm manifest/request snapshots
+        expose the new Editor+Block selection contract and do not emit old block-type-only
+        defaults as the active contract.
+      pass_signal: Manifest JSON and resumable job snapshots preserve Editor+Block
+        selections end to end.
+  acceptance_criteria:
+  - Export pipeline passes Editor+Block selections from request options into parser/rendering.
+  - Each editor's block applies its own selection independently for same block types.
+  - MarkdownRenderer uses the resolved per-block selection while preserving existing
+    defaults for unchanged options.
+  - manifest.json and resumable manifest job snapshots expose the new Editor+Block
+    options contract.
+  - Focused parser, renderer, exporter, and manifest tests cover independent selection
+    application and manifest shape.
+  - Old block-type-only manifest contract is not retained as active public output.
+  reopen_when:
+  - Parser receives only markdown options and cannot see Editor+Block output selections.
+  - Renderer still resolves all selections only by block type from options.blockOutputs.defaults.
+  - Manifest options still contain only block-type keys for output selections.
+  - Resume hydration loses or rewrites Editor+Block selections.
+- id: fixtures_snapshots_and_flow_regression
+  kind: execution
+  title: Update fixtures, snapshots, and regression coverage for the new output option
+    contract
+  depends_on:
+  - ui_editor_block_options_flow
+  - exporter_parser_manifest_application
+  start_when:
+    description: Start after UI and export pipeline changes are complete enough to
+      generate deterministic expected outputs.
+  files:
+    primary:
+    - tests/fixtures/samples
+    - scripts/harness/lib/sample-fixtures.ts
+    - tests/sample-fixtures.test.ts
+    - tests/http-server.test.ts
+    - tests/naver-blog-exporter.test.ts
+    - tests/export-job-manifest.test.ts
+    - scripts/harness/run-ui-smoke.ts
+    - scripts/harness/run-ui-smoke-suite.ts
+    generated_incidental:
+    - tests/fixtures/samples/*/expected.md
+  context: Plan seed requires existing fixture/export snapshots to be updated to the
+    new Editor+Block manifest/export contract. It explicitly allows Markdown, frontmatter,
+    and assets changes when they result from Editor+Block option application. Verification
+    must prove the UI+export flow from option display, settings save, API delivery,
+    export application, and manifest shape.
+  must_do:
+  - Update existing sample fixture expected outputs only where the new Editor+Block
+    option application changes rendered Markdown/frontmatter/assets.
+  - Update export manifest expectations in tests to assert Editor+Block selection
+    keys in manifest.options and job.request.options.
+  - Update UI smoke flow to exercise at least one output option change, settings save,
+    API export payload, export application, and manifest retrieval using the new contract.
+  - Keep fixture updates deterministic and limited to outputOptions-related changes.
+  - Ensure tests cover the semantic case where the same block type appears in more
+    than one editor and selections remain independent.
+  must_not_do:
+  - Do not rewrite fixtures unrelated to outputOptions behavior.
+  - Do not add new compatibility snapshots for the old block-type-only contract.
+  - Do not mark changed Markdown/frontmatter/assets as regressions when they are the
+    direct result of Editor+Block option selection.
+  - Do not require live network tests for local fixture verification.
+  implementation_notes:
+  - Use existing sample fixture harness conventions; do not create a parallel fixture
+    runner.
+  - If current samples do not prove duplicate editor block independence, add the narrowest
+    repo-native regression test in the existing test suite rather than broad fixture
+    churn.
+  - Keep generated expected.md updates in-place and review diffs against allowed option
+    effects.
+  verification:
+    mechanical:
+    - id: fixture_tests
+      command: pnpm exec vitest run tests/sample-fixtures.test.ts tests/naver-blog-exporter.test.ts
+        tests/export-job-manifest.test.ts tests/http-server.test.ts --configLoader
+        runner --silent
+      success_signal: Fixture, exporter, manifest, and HTTP tests pass with updated
+        Editor+Block expectations.
+    - id: flow_smoke
+      command: pnpm smoke:ui
+      success_signal: UI smoke verifies option display, settings save, API transfer,
+        export application, and manifest retrieval under the new contract.
+    - id: local_baseline
+      command: pnpm check:local
+      success_signal: Repo-native local baseline passes after fixture and test updates.
+    semantic:
+    - id: fixture_diff_review
+      lens: fixture intent
+      review_prompt: Review fixture and snapshot changes. Confirm every Markdown/frontmatter/assets
+        change is caused by Editor+Block option application and not by unrelated renderer/parser
+        behavior.
+      pass_signal: Fixture diffs are limited to the approved outputOptions contract
+        change.
+    - id: flow_evidence_review
+      lens: UI to export behavior
+      review_prompt: Review tests and smoke harness. Confirm they cover option display,
+        settings persistence, API payload delivery, export rendering application,
+        manifest contract, and same-block multi-editor independence.
+      pass_signal: Regression coverage proves the full public flow requested in the
+        plan seed.
+  acceptance_criteria:
+  - Existing fixture/export snapshot expectations are updated to the new Editor+Block
+    contract.
+  - Manifest expectations assert Editor+Block selections in exported and resumable
+    manifest data.
+  - UI smoke covers option display, settings save, API payload, export application,
+    and manifest retrieval.
+  - Fixture diffs are limited to outputOptions-driven changes.
+  - Regression tests prove same block type can have independent selections per editor.
+  - Repo-native local baseline passes.
+  reopen_when:
+  - Fixtures are changed without a direct outputOptions reason.
+  - Manifest tests do not assert the new contract.
+  - UI smoke does not cover the option settings/API/export path.
+  - Same-block multi-editor independence is not covered by any regression.
+- id: final_full_scope_verification
+  kind: final_verification
+  title: Run full local verification and review plan seed fit
+  depends_on:
+  - registry_editor_block_contract
+  - options_settings_api_contract
+  - ui_editor_block_options_flow
+  - exporter_parser_manifest_application
+  - fixtures_snapshots_and_flow_regression
+  start_when:
+    description: Start only after every implementation task is complete and their
+      focused verification has passed or any environment blocker has been clearly
+      identified.
+  files:
+    primary:
+    - package.json
+    - .agents/knowledge/verification.md
+    - .agents/plan/block-output-options-registry/plan_seed.yaml
+    - src/shared/BlockRegistry.ts
+    - src/modules/blocks/BaseBlock.ts
+    - src/shared/Types.ts
+    - src/shared/ExportOptions.ts
+    - src/modules/editor/BaseEditor.ts
+    - src/modules/editor/NaverBlogSe2Editor.ts
+    - src/modules/editor/NaverBlogSe3Editor.ts
+    - src/modules/editor/NaverBlogSe4Editor.ts
+    - src/ui/features/options/ExportOptionsPanel.tsx
+    - src/server/HttpServer.ts
+    - src/modules/exporter/NaverBlogExporter.ts
+    - src/server/ExportJobManifest.ts
+    - tests
+    generated_incidental: []
+  context: Full-scope final verification for the approved plan seed. It must prove
+    registry ownership, UI settings/API contract, exporter application, manifest/fixture
+    updates, and regression risk. The repo-native broad local command is pnpm check:full.
+    If the environment cannot run a command, report the blocker and the exact replacement
+    or deferred command; do not call it passed.
+  must_do:
+  - Run broad repo-native verification with pnpm check:full.
+  - If pnpm check:full cannot run because of environment constraints, run pnpm check:local
+    plus any focused commands that can run, and report the blocker for the omitted
+    command explicitly.
+  - Review the final diff against every plan seed success criterion and constraint.
+  - Confirm old block-type-only output option public contract is not active in settings,
+    API, exporter input, or manifest.
+  - Confirm no backward compatibility or migration layer was added for old settings/API/manifest
+    contracts.
+  - Confirm tests or smoke coverage prove UI display, settings save, API delivery,
+    export application, manifest contract, fixture update, and same-block multi-editor
+    independence.
+  must_not_do:
+  - Do not skip semantic review because mechanical tests pass.
+  - Do not treat unrelated pre-existing failures as success.
+  - Do not run live network tests unless credentials/network are intentionally available
+    and the user requested or environment policy permits it.
+  - Do not commit, branch, push, or create a PR.
+  implementation_notes:
+  - 'Use .agents/knowledge/verification.md command guidance: pnpm check:full is appropriate
+    because UI state, exporter output, manifest, and shared runtime behavior are affected.'
+  - pnpm test:network remains out of the required local final verification unless
+    explicitly chosen as additional evidence with required secrets/network.
+  verification:
+    mechanical:
+    - id: full_local_verification
+      command: pnpm check:full
+      success_signal: Typecheck, offline Vitest suite, and mock UI smoke all pass.
+    - id: network_command_not_required_local
+      command: test -f package.json && node -e "const p=require('node:fs').readFileSync('package.json','utf8');
+        if(!p.includes('test:network')) process.exit(1)"
+      success_signal: Repository still documents network e2e separately; final local
+        verification does not require live network unless explicitly run.
+    semantic:
+    - id: plan_seed_fit_review
+      lens: approved seed fit
+      review_prompt: Compare the final implementation against .agents/plan/block-output-options-registry/plan_seed.yaml.
+        Confirm goal, constraints, non-goals, success criteria, execution boundaries,
+        and verification expectations were implemented without expanding, narrowing,
+        or reinterpreting the seed.
+      pass_signal: Every approved success criterion is satisfied and no non-goal or
+        constraint is violated.
+    - id: acceptance_criteria_review
+      lens: task acceptance
+      review_prompt: Review all task acceptance criteria. Confirm BaseBlock owns outputOptions,
+        registry exposes Editor+Block selections, UI/API/settings/exporter/manifest/fixtures
+        use the same contract, and same-block multi-editor independence is proven.
+      pass_signal: All non-final task acceptance criteria are met with no reopen_when
+        condition active.
+    - id: regression_risk_review
+      lens: behavioral regression
+      review_prompt: Review changed parser, renderer, exporter, UI, settings, API,
+        manifest, and fixture paths. Confirm unrelated behavior was not refactored,
+        fixture diffs are option-driven, and old block-type-only public contract was
+        removed rather than partially retained.
+      pass_signal: Residual regression risk is limited to the intentional breaking
+        outputOptions contract change.
+    - id: evidence_interpretation_review
+      lens: verification evidence
+      review_prompt: Interpret mechanical command results. Confirm failures, if any,
+        are classified as current-change regressions, unrelated existing failures,
+        or environment blockers with exact command and impact scope.
+      pass_signal: Verification evidence is clear enough for the root agent to report
+        pass/fail/blocker status without ambiguity.
+  acceptance_criteria:
+  - pnpm check:full passes, or any environment blocker is reported with exact omitted
+    command and substitute verification.
+  - All focused task checks have passed or have clearly scoped blockers.
+  - Final implementation satisfies every plan seed success criterion.
+  - No old block-type-only output option public source of truth remains active.
+  - No backward compatibility or migration layer was added for old settings/API/manifest
+    contracts.
+  - Regression risk review finds no unrelated behavior changes beyond outputOptions-driven
+    export output changes.
+  reopen_when:
+  - pnpm check:full fails due to a current-change regression.
+  - Any plan seed success criterion is not demonstrably satisfied.
+  - A compatibility layer for old block output settings/API/manifest exists.
+  - Tests do not prove same-block multi-editor independent selection application.
+  - Manifest output does not expose the new Editor+Block contract.

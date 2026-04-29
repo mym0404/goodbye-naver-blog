@@ -1,0 +1,86 @@
+status: ready
+generated_at: '2026-04-29T11:47:59.042848+00:00'
+round_count: 12
+ambiguity_score_id: S14
+closure_audit:
+  status: passed
+  summary: 인터뷰는 plan_seed extraction과 bundle authoring으로 넘어갈 준비가 됐습니다. ownership/source
+    of truth, API/protocol, lifecycle/recovery, migration, cross-client impact, execution
+    boundaries, verification expectations에 구현 방향을 바꿀 미결정 사항이 남아 있지 않습니다.
+  material_blockers: []
+  question: ''
+  round_count: 12
+  score_id: S14
+seed:
+  title: Block Output Options Registry
+  goal: BlockRegistry/BaseBlock의 output option 구조를 BaseBlock 소유 outputOptions와 Editor+Block별
+    선택 계약으로 전환하고, UI 표시, 설정 저장, API payload, 서버 적용 로직, export manifest/fixture까지 같은
+    계약으로 맞춘다.
+  context:
+  - 저장소는 네이버 블로그 글을 parser block 공용 AST로 변환한 뒤 Markdown, frontmatter, 자산 파일, manifest.json으로
+    export하는 로컬 도구다.
+  - 핵심 변경 대상은 src/shared/BlockRegistry.ts, BaseBlock, parser/editor supportedBlocks,
+    UI 설정, HTTP API, exporter, fixture/export snapshot 사용처다.
+  - NaverBlog 기준으로 모든 Editor의 supportedBlocks를 기준으로 outputOptions가 2개 이상인 block만 옵션
+    선택 대상으로 노출한다.
+  - 옵션 표시 순서는 editor 타입 기준 정렬 후, 각 editor 내부 supportedBlocks 순서를 따른다.
+  - 같은 block이 여러 Editor에 포함되면 Editor별로 독립 표시, 저장, 적용한다.
+  - 새 Editor+Block selection identifier의 공개 문자열 형식은 기존 타입·네이밍 패턴에 맞춰 executor가 안정적인
+    editor+block key로 정한다.
+  non_goals:
+  - 기존 output option 저장 형식, API payload, manifest 형식에 대한 backward compatibility는 제공하지
+    않는다.
+  - manifest와 옵션 적용 외 export 산출물은 무조건 보존하지 않는다. Editor+Block별 option 적용 결과로 생기는 Markdown,
+    frontmatter, assets 변경은 허용한다.
+  - outputOptions 계약에 직접 연결되지 않은 주변 기능이나 별도 리팩토링은 포함하지 않는다.
+  constraints:
+  - BaseBlock이 outputOptions를 가지는 구조로 변경한다.
+  - 선택값의 공개 단위는 Editor+Block별로 분리한다.
+  - Editor가 1개인 경우 UI에서 Editor grouping은 생략한다.
+  - UI 설정, API payload, 서버 적용 로직은 새 Editor+Block 계약으로 함께 변경한다.
+  - manifest도 새 Editor+Block별 선택 계약이 드러나도록 변경할 수 있다.
+  - 기존 저장값/API/manifest 호환을 위한 마이그레이션이나 compatibility layer는 만들지 않는다.
+  - repo-native 패턴과 기존 검증 명령을 우선 사용한다.
+  - stable Editor+Block key는 label이 아니라 editor identity와 block identity를 포함해야 한다.
+  success_criteria:
+  - outputOptions가 BaseBlock 중심으로 정의되고, BlockRegistry가 block output family 방식 대신 Editor+Block별
+    선택 구조를 제공한다.
+  - NaverBlog 옵션 UI가 모든 Editor의 supportedBlocks에서 outputOptions 2개 이상인 항목만 노출한다.
+  - 옵션 UI가 editor 타입 정렬과 editor 내부 supportedBlocks 순서를 지킨다.
+  - 동일 block이 여러 Editor에 있으면 Editor별로 각각 표시되고, 각 Editor 글 파싱 시 독립 선택값이 적용된다.
+  - UI 설정 저장, API 요청/응답 payload, 서버 내부 입력, exporter 적용 로직이 Editor+Block별 선택값을 사용한다.
+  - manifest/export snapshot이 새 Editor+Block manifest/export 계약에 맞게 갱신된다.
+  - outputOptions 계약에 직접 연결된 UI, API, exporter, manifest, fixture 사용처가 함께 변경된다.
+  - 기존 block-type-only output option public contract가 활성 public source of truth로 남지
+    않는다.
+  verification_expectations:
+  - 옵션 표시, 설정 저장, API 전달, export 적용까지 이어지는 UI+export 흐름으로 확인한다.
+  - 기존 fixture/export snapshot을 새 Editor+Block manifest/export 계약에 맞춰 갱신한다.
+  - repo-native 검증 명령을 코드 탐색으로 확정해 실행한다.
+  - 의미 검증은 같은 block이 여러 Editor에 있을 때 선택값이 Editor별로 독립 저장·적용되는지 확인한다.
+  - manifest에 Editor+Block별 선택 계약이 반영됐는지 확인한다.
+  - 최종 검증은 repo-native full local verification을 우선하고, 환경상 불가능한 경우 blocker와 대체 실행 명령을
+    명확히 보고한다.
+  execution_boundaries:
+  - 먼저 BlockRegistry, BaseBlock, UI 설정, API, exporter, fixture 사용처를 코드 탐색으로 확인해 task
+    경계를 확정한다.
+  - outputOptions 계약에 직접 연결된 사용처가 예상보다 넓어도 같은 계약 변경 범위에 포함한다.
+  - 구현 방향을 바꿀 새 사용자 판단 사항이 아니라 코드 사실 부족에서 오는 불확실성은 코드 탐색으로 해결한다.
+  - 타입/정적 검사 오류는 원인을 분석하고, 로직 훼손 없이 해결 가능한 범위에서만 수정한다.
+  - commit, branch, push, PR 생성은 사용자가 별도로 요청하지 않는 한 수행하지 않는다.
+  - Planning 단계에서는 source code 구현을 하지 않는다.
+  source_round_ids:
+  - Q1
+  - Q2
+  - Q3
+  - Q4
+  - Q5
+  - Q6
+  - Q7
+  - Q8
+  - Q9
+  - Q10
+  - Q12
+  deferred_items: []
+  summary: BaseBlock outputOptions와 Editor+Block별 선택 계약을 source of truth로 삼아 registry,
+    UI 설정, API, exporter, manifest, fixture를 일관되게 바꾸는 계획 seed다.
