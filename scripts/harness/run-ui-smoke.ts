@@ -6,6 +6,7 @@ import { mkdir } from "node:fs/promises"
 import { chromium } from "playwright"
 
 import { createHttpServer } from "../../src/server/HttpServer.js"
+import { NaverBlog } from "../../src/modules/blog/NaverBlog.js"
 import {
   defaultExportOptions,
   frontmatterFieldMeta,
@@ -20,6 +21,7 @@ import type {
 } from "../../src/shared/Types.js"
 
 const responseTimeoutMs = 90_000
+const blockOutputDefinitions = new NaverBlog().getBlockOutputDefinitions()
 const smokeFast = process.env.FAREWELL_SMOKE_FAST !== "0"
 const smokeDebug = process.env.FAREWELL_SMOKE_DEBUG === "1"
 const debugLog = (...args: unknown[]) => {
@@ -869,6 +871,7 @@ const run = async () => {
           frontmatterFieldOrder,
           frontmatterFieldMeta,
           optionDescriptions,
+          blockOutputDefinitions,
         }),
       )
       return

@@ -1,5 +1,4 @@
 import type { AstBlock, ParsedPost } from "@shared/Types.js"
-import { blockOutputOptionsByType } from "@shared/BlockRegistry.js"
 import { unique } from "@shared/Utils.js"
 import { NaverSe2BookWidgetBlock } from "../blocks/naver-se2/BookWidgetBlock.js"
 import { NaverSe2CodeBlock } from "../blocks/naver-se2/CodeBlock.js"
@@ -23,19 +22,19 @@ export class NaverBlogSE2Editor extends BaseEditor {
   override readonly label = "SmartEditor 2"
 
   protected override readonly supportedBlocks = [
-    new NaverSe2TextNodeBlock().withOutputOptions(blockOutputOptionsByType.paragraph),
+    new NaverSe2TextNodeBlock(),
     new NaverSe2BookWidgetBlock(),
     new NaverSe2ContainerBlock(),
-    new NaverSe2TableBlock().withOutputOptions(blockOutputOptionsByType.table),
-    new NaverSe2DividerBlock().withOutputOptions(blockOutputOptionsByType.divider),
+    new NaverSe2TableBlock(),
+    new NaverSe2DividerBlock(),
     new NaverSe2LineBreakBlock(),
-    new NaverSe2QuoteBlock().withOutputOptions(blockOutputOptionsByType.quote),
-    new NaverSe2HeadingBlock().withOutputOptions(blockOutputOptionsByType.heading),
-    new NaverSe2CodeBlock().withOutputOptions(blockOutputOptionsByType.code),
+    new NaverSe2QuoteBlock(),
+    new NaverSe2HeadingBlock(),
+    new NaverSe2CodeBlock(),
     new NaverSe2InlineGifVideoFallbackBlock(),
-    new NaverSe2ImageBlock().withOutputOptions(blockOutputOptionsByType.image),
+    new NaverSe2ImageBlock(),
     new NaverSe2SpacerBlock(),
-    new NaverSe2TextElementBlock().withOutputOptions(blockOutputOptionsByType.paragraph),
+    new NaverSe2TextElementBlock(),
     new NaverSe2FallbackBlock(),
   ]
 

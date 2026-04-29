@@ -4,7 +4,7 @@
 - Runtime entrypoint is `src/Server.ts`.
 - HTTP API, Vite middleware, job lifecycle, upload trigger/polling, and bootstrap recovery live in `src/server/HttpServer.ts`.
 - The export pipeline lives in `src/modules/exporter/NaverBlogExporter.ts` and keeps fetch, parse, review, render, write, upload, rewrite, and manifest concerns separated.
-- UI calls HTTP APIs only. It does not import server or exporter internals.
+- UI calls HTTP APIs only. It does not import server, exporter, parser, or editor internals.
 
 ## Main Flow
 - Blog scan and post HTML fetch start in `src/modules/fetcher/NaverBlogFetcher.ts`.
@@ -21,25 +21,28 @@
 - `src/modules/converter`: AST to Markdown and frontmatter.
 - `src/modules/exporter`: export orchestration, asset persistence, upload/rewrite phase, single-post export.
 - `src/server`: local HTTP server, job store, local state/cache, upload provider catalog.
-- `src/shared`: cross-boundary types, export options, block output catalog, path templates, UI/job state.
+- `src/shared`: cross-boundary types, export options, block output selection resolution, path templates, UI/job state.
 - `src/ui`: React wizard, scan/options/results/resume surfaces, shadcn primitives, API client.
 
 ## Parser Block Contract
 - Blog parser ownership starts in `src/modules/blog/BaseBlog.ts` and `src/modules/blog/NaverBlog.ts`.
 - Editor classes hold `BaseBlock[]` instances directly; there is no string id registry between blog, editor, and parser block.
 - Editor `supportedBlocks` arrays are ordered first-match lists; place more specific blocks before broader fallback blocks.
-- Parser blocks own optional `BaseBlock.outputOptions`; editor `supportedBlocks` order is the source of truth for option visibility.
-- `src/shared/BlockRegistry.ts` derives selectable output definitions from blog editors and supported blocks, filters to blocks with at least two output options, and keys selections as `EditorBlockOutputSelectionKey` (`editorType:blockId`).
+- Parser block classes own optional `BaseBlock.outputOptions` arrays. Each option describes the parser block output choice, preview, default marker, and params.
+- `src/modules/blog/BaseBlog.ts` derives selectable output definitions from its editors, and `src/modules/editor/BaseEditor.ts` filters to blocks with at least two output options and keys selections as `editorType:blockId`.
 - `src/modules/editor/BaseEditor.ts` stamps selectable AST blocks with `outputSelectionKey` and `outputSelection`; `src/modules/converter/MarkdownRenderer.ts` uses that per-block selection before renderer defaults.
+- Output option metadata stays on concrete parser block classes, even when labels or defaults are duplicated across SE2, SE3, and SE4 blocks. `src/shared/BlockRegistry.ts` only resolves selection values from parser-provided options and stored export options.
+- Server bootstrap includes `BaseBlog`-derived block output definitions for the UI. Shared export option code receives those definitions from server/exporter/CLI callers instead of importing blog or editor classes.
 - Parser block base classes are in `src/modules/blocks/BaseBlock.ts`; parser context/result types are in `src/modules/blocks/ParserNode.ts`.
-- Shared helpers are in `src/modules/blocks/common` or next to the editor-specific blocks they support.
+- Shared helpers live in `src/modules/blocks/common` only when reused across multiple parser blocks.
+- Helpers that serve one concrete parser block can stay inside that block file, even when the file becomes denser than a one-class wrapper.
 - SE2 blocks live under `src/modules/blocks/naver-se2`.
 - SE3 blocks live under `src/modules/blocks/naver-se3`.
 - SE4 blocks live under `src/modules/blocks/naver-se4`.
 - Fixture-backed sample coverage lives in `tests/fixtures/samples/*` and `tests/sample-fixtures.test.ts`.
 
 ## Important Seams
-- Parser block changes usually touch `BaseBlock.outputOptions`, an editor's `supportedBlocks`, `src/shared/BlockRegistry.ts` when output behavior changes, `src/modules/blocks/*`, focused parser tests, and `.agents/knowledge/fixtures.md`.
+- Parser block changes usually touch `BaseBlock.outputOptions`, an editor's `supportedBlocks`, `src/modules/blocks/*`, focused parser tests, and `.agents/knowledge/fixtures.md`.
 - Renderer or exporter output changes usually affect `tests/fixtures/samples/*/expected.md`, `tests/markdown-renderer.test.ts`, `tests/naver-blog-exporter.test.ts`, and UI result assumptions.
 - Job lifecycle changes usually affect `src/server/HttpServer.ts`, `src/server/JobStore.ts`, `src/server/ExportJobManifest.ts`, `src/ui/features/job-results/*`, and `.agents/knowledge/upload.md`.
 - UI shell changes usually affect `src/ui/App.tsx`, `src/ui/features/common/*`, `src/ui/styles/globals.css`, and `.agents/knowledge/DESIGN.md`.

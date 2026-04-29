@@ -6,7 +6,6 @@ import type {
   BlockOutputSelection,
   EditorBlockOutputDefinition,
   ExportOptions,
-  EditorBlockOutputSelectionKey,
   ParsedPost,
   ParsedPostBodyNode,
   UnknownRecord,
@@ -47,29 +46,23 @@ export abstract class BaseEditor {
     return this.supportedBlocks.flatMap((block) => {
       const outputOptions = block.outputOptions
 
-      if (!outputOptions || outputOptions.variants.length < 2) {
+      if (!block.outputId || !outputOptions || outputOptions.length < 2) {
         return []
       }
 
       return [
         {
-          key: this.createBlockOutputSelectionKey(outputOptions.blockId),
+          key: this.createBlockOutputSelectionKey(block.outputId),
           editorType: this.type,
           editorLabel: this.label,
-          blockId: outputOptions.blockId,
-          astBlockType: outputOptions.astBlockType,
-          label: outputOptions.label,
-          description: outputOptions.description,
-          previewBlock: outputOptions.previewBlock,
-          defaultSelection: outputOptions.defaultSelection,
-          variants: outputOptions.variants,
-          params: outputOptions.params,
+          blockId: block.outputId,
+          options: [...outputOptions],
         },
       ]
     })
   }
 
-  private createBlockOutputSelectionKey(blockId: string): EditorBlockOutputSelectionKey {
+  private createBlockOutputSelectionKey(blockId: string) {
     return `${this.type}:${blockId}`
   }
 
@@ -113,22 +106,28 @@ export abstract class BaseEditor {
     }) => {
       const outputOptions = parserBlock.outputOptions
 
-      if (!outputOptions || outputOptions.variants.length < 2 || outputOptions.astBlockType !== parsedBlock.type) {
+      if (
+        !parserBlock.outputId ||
+        !outputOptions ||
+        outputOptions.length < 2 ||
+        !outputOptions.some((option) => option.preview.type === parsedBlock.type)
+      ) {
         return parsedBlock
       }
 
-      const selectionKey = this.createBlockOutputSelectionKey(outputOptions.blockId)
+      const selectionKey = this.createBlockOutputSelectionKey(parserBlock.outputId)
 
       return {
         ...parsedBlock,
         outputSelectionKey: selectionKey,
         outputSelection: resolveBlockOutputSelection({
-          blockType: outputOptions.astBlockType,
+          blockType: parsedBlock.type,
+          outputOptions: outputOptions.filter((option) => option.preview.type === parsedBlock.type),
           blockOutputs: options.blockOutputs,
           selectionKey,
         }) as BlockOutputSelection,
       } as AstBlock & {
-        outputSelectionKey: EditorBlockOutputSelectionKey
+        outputSelectionKey: string
         outputSelection: BlockOutputSelection
       }
     }

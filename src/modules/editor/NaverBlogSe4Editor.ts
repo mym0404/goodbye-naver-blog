@@ -2,7 +2,6 @@ import type { CheerioAPI } from "cheerio"
 import type { AnyNode } from "domhandler"
 
 import type { AstBlock, ParsedPost, UnknownRecord } from "@shared/Types.js"
-import { blockOutputOptionsByType } from "@shared/BlockRegistry.js"
 import { unique } from "@shared/Utils.js"
 import { NaverSe4CodeBlock } from "../blocks/naver-se4/CodeBlock.js"
 import { NaverSe4DividerBlock } from "../blocks/naver-se4/DividerBlock.js"
@@ -56,21 +55,21 @@ export class NaverBlogSE4Editor extends BaseEditor {
 
   protected override readonly supportedBlocks = [
     new NaverSe4DocumentTitleBlock(),
-    new NaverSe4FormulaBlock().withOutputOptions(blockOutputOptionsByType.formula),
-    new NaverSe4CodeBlock().withOutputOptions(blockOutputOptionsByType.code),
-    new NaverSe4LinkCardBlock().withOutputOptions(blockOutputOptionsByType.linkCard),
-    new NaverSe4VideoBlock().withOutputOptions(blockOutputOptionsByType.video),
+    new NaverSe4FormulaBlock(),
+    new NaverSe4CodeBlock(),
+    new NaverSe4LinkCardBlock(),
+    new NaverSe4VideoBlock(),
     new NaverSe4OembedBlock(),
     new NaverSe4MapBlock(),
-    new NaverSe4TableBlock().withOutputOptions(blockOutputOptionsByType.table),
-    new NaverSe4ImageStripBlock().withOutputOptions(blockOutputOptionsByType.imageGroup),
-    new NaverSe4ImageGroupBlock().withOutputOptions(blockOutputOptionsByType.imageGroup),
+    new NaverSe4TableBlock(),
+    new NaverSe4ImageStripBlock(),
+    new NaverSe4ImageGroupBlock(),
     new NaverSe4StickerBlock(),
-    new NaverSe4ImageBlock().withOutputOptions(blockOutputOptionsByType.image),
-    new NaverSe4HeadingBlock().withOutputOptions(blockOutputOptionsByType.heading),
-    new NaverSe4DividerBlock().withOutputOptions(blockOutputOptionsByType.divider),
-    new NaverSe4QuoteBlock().withOutputOptions(blockOutputOptionsByType.quote),
-    new NaverSe4TextBlock().withOutputOptions(blockOutputOptionsByType.paragraph),
+    new NaverSe4ImageBlock(),
+    new NaverSe4HeadingBlock(),
+    new NaverSe4DividerBlock(),
+    new NaverSe4QuoteBlock(),
+    new NaverSe4TextBlock(),
     new NaverSe4MaterialBlock(),
     new NaverSe4FallbackBlock(),
   ]

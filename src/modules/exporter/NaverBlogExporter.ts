@@ -21,6 +21,7 @@ import {
   toErrorMessage,
 } from "../../shared/Utils.js"
 import { log } from "../../shared/Logger.js"
+import { NaverBlog } from "../blog/NaverBlog.js"
 import { NaverBlogFetcher } from "../fetcher/NaverBlogFetcher.js"
 import { renderMarkdownPost } from "../converter/MarkdownRenderer.js"
 import { parsePostHtml } from "../parser/PostParser.js"
@@ -327,7 +328,9 @@ export class NaverBlogExporter {
 
     const blogId = extractBlogId(this.request.blogIdOrUrl)
     const outputDir = resolveRepoPath(this.request.outputDir)
-    const options = cloneExportOptions(this.request.options)
+    const options = cloneExportOptions(this.request.options, {
+      blockOutputDefinitions: new NaverBlog().getBlockOutputDefinitions(),
+    })
     const fetcher = new NaverBlogFetcher({
       blogId,
     })

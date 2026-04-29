@@ -26,7 +26,7 @@
 - Naver media/link card/video blocks render as Markdown links when no richer Markdown form exists.
 - Simple tables render as GFM tables; complex tables can use HTML fallback.
 - Raw HTML fallback should preserve warning context and extracted text instead of silently dropping content.
-- Block output defaults use Editor+Block selection keys in `ExportOptions.blockOutputs.defaults`; `manifest.json.options` preserves those keys.
+- Block output defaults use Editor+ParserBlock selection keys in `ExportOptions.blockOutputs.defaults`; `manifest.json.options` preserves those keys.
 
 ## Frontmatter Rules
 - `category` is a display string.

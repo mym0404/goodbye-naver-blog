@@ -3,18 +3,11 @@ import type {
   ParserBlockConvertContext,
   ParserBlockResult,
 } from "./ParserNode.js"
-import type { AnyBlockOutputOptionDefinition } from "../../shared/Types.js"
+import type { OutputOption } from "../../shared/Types.js"
 
 export abstract class BaseBlock {
-  readonly outputOptions?: AnyBlockOutputOptionDefinition
-
-  withOutputOptions(outputOptions: AnyBlockOutputOptionDefinition) {
-    Object.assign(this as { outputOptions?: AnyBlockOutputOptionDefinition }, {
-      outputOptions,
-    })
-
-    return this
-  }
+  readonly outputId?: string
+  readonly outputOptions?: readonly OutputOption[]
 
   abstract match(context: ParserBlockContext): boolean
 

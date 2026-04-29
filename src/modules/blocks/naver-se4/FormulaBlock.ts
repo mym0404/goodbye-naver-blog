@@ -1,11 +1,61 @@
 import { load } from "cheerio"
 
-import type { UnknownRecord } from "../../../shared/Types.js"
+import type { OutputOption, UnknownRecord } from "../../../shared/Types.js"
 import { compactText } from "../../../shared/Utils.js"
 import { LeafBlock } from "../BaseBlock.js"
 import type { ParserBlockContext } from "../ParserNode.js"
 
 export class NaverSe4FormulaBlock extends LeafBlock {
+  override readonly outputId = "formula"
+  override readonly outputOptions = [
+    {
+      id: "wrapper",
+      label: "custom wrapper",
+      description: "인라인과 블록 수식을 wrapper 문자열로 감쌉니다.",
+      preview: {
+        type: "formula",
+        formula: "x^2 + y^2 = z^2",
+        display: true,
+      },
+      isDefault: true,
+      params: [
+        {
+          key: "inlineWrapper",
+          label: "인라인 wrapper",
+          description: "예: `$`, `\\(...\\)`",
+          input: "text",
+          defaultValue: "$",
+        },
+        {
+          key: "blockWrapper",
+          label: "블록 wrapper",
+          description: "예: `$$`, `\\[...\\]`",
+          input: "text",
+          defaultValue: "$$",
+        },
+      ],
+    },
+    {
+      id: "math-fence",
+      label: "```math fence",
+      description: "블록 수식은 `math` fence, 인라인 수식은 wrapper로 출력합니다.",
+      preview: {
+        type: "formula",
+        formula: "x^2 + y^2 = z^2",
+        display: true,
+      },
+      params: [
+        {
+          key: "inlineWrapper",
+          label: "인라인 wrapper",
+          description: "예: `$`, `\\(...\\)`",
+          input: "text",
+          defaultValue: "$",
+        },
+      ],
+    },
+  ] satisfies OutputOption<"formula">[]
+
   override match({ moduleData, moduleType }: ParserBlockContext) {
     return moduleType === "v2_formula" && Boolean(moduleData)
   }

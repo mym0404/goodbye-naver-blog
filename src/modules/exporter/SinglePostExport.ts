@@ -11,6 +11,7 @@ import type {
   AstBlock,
 } from "../../shared/Types.js"
 import { ensureDir, extractBlogId, recreateDir, resolveRepoPath } from "../../shared/Utils.js"
+import { NaverBlog } from "../blog/NaverBlog.js"
 import { NaverBlogFetcher } from "../fetcher/NaverBlogFetcher.js"
 import { renderMarkdownPost } from "../converter/MarkdownRenderer.js"
 import { parsePostHtml } from "../parser/PostParser.js"
@@ -63,7 +64,9 @@ export const exportSinglePost = async ({
   }) => SinglePostFetcher | Promise<SinglePostFetcher>
 }): Promise<ExportSinglePostDiagnostics> => {
   const resolvedOutputDir = resolveRepoPath(outputDir)
-  const resolvedOptions = cloneExportOptions(options)
+  const resolvedOptions = cloneExportOptions(options, {
+    blockOutputDefinitions: new NaverBlog().getBlockOutputDefinitions(),
+  })
   const resolvedBlogId = extractBlogId(blogId)
   const fetcher = createFetcher
     ? await createFetcher({

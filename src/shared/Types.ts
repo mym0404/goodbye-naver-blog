@@ -167,53 +167,33 @@ export type BlockOutputSelection<
   Block extends keyof BlockOutputSelectionByType = keyof BlockOutputSelectionByType,
 > = BlockOutputSelectionByType[Block]
 
-export type BlockOutputParamDefinition = {
+export type OutputOptionParam = {
   key: string
   label: string
   description: string
   input: "text" | "number"
-  whenVariants?: string[]
+  defaultValue?: BlockOutputParamValue
 }
 
-export type BlockOutputVariantDefinition = {
-  id: string
+export type OutputOption<Block extends BlockType = BlockType> = {
+  id: BlockOutputSelection<Block>["variant"]
   label: string
   description: string
+  preview: Extract<AstBlock, { type: Block }>
+  isDefault?: boolean
+  params?: OutputOptionParam[]
 }
-
-export type BlockOutputOptionDefinition<Block extends BlockType = BlockType> = {
-  blockId: string
-  astBlockType: Block
-  label: string
-  description: string
-  previewBlock: Extract<AstBlock, { type: Block }>
-  defaultSelection: BlockOutputSelection<Block>
-  variants: BlockOutputVariantDefinition[]
-  params?: BlockOutputParamDefinition[]
-}
-
-export type AnyBlockOutputOptionDefinition = {
-  [Key in BlockType]: BlockOutputOptionDefinition<Key>
-}[BlockType]
-
-export type EditorBlockOutputSelectionKey = string
 
 export type EditorBlockOutputDefinition = {
-  key: EditorBlockOutputSelectionKey
+  key: string
   editorType: string
   editorLabel: string
   blockId: string
-  astBlockType: BlockType
-  label: string
-  description: string
-  previewBlock: AstBlock
-  defaultSelection: BlockOutputSelection
-  variants: BlockOutputVariantDefinition[]
-  params?: BlockOutputParamDefinition[]
+  options: OutputOption[]
 }
 
 export type AstBlockOutputSelection<Block extends keyof BlockOutputSelectionByType> = {
-  outputSelectionKey?: EditorBlockOutputSelectionKey
+  outputSelectionKey?: string
   outputSelection?: BlockOutputSelection<Block>
 }
 
@@ -341,7 +321,7 @@ export type ExportOptions = {
   }
   blockOutputs: {
     defaults: Partial<{
-      [Key in EditorBlockOutputSelectionKey]: BlockOutputSelection
+      [Key in string]: BlockOutputSelection
     }>
   }
   assets: {

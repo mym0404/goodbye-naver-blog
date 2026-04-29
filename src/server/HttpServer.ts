@@ -9,6 +9,7 @@ import path from "node:path"
 import type { ViteDevServer } from "vite"
 
 import { NaverBlogFetcher } from "../modules/fetcher/NaverBlogFetcher.js"
+import { NaverBlog } from "../modules/blog/NaverBlog.js"
 import { NaverBlogExporter } from "../modules/exporter/NaverBlogExporter.js"
 import {
   rewriteImageUploadPost,
@@ -362,6 +363,7 @@ export const createHttpServer = ({
   let viteDevServerPromise: Promise<ViteDevServer> | null = null
   let scanCachePromise: Promise<ScanCacheMap> | null = null
   const jobScanResults = new Map<string, ScanResult | null>()
+  const blockOutputDefinitions = new NaverBlog().getBlockOutputDefinitions()
   const activeJobTasks = new Map<
     string,
     {
@@ -552,6 +554,7 @@ export const createHttpServer = ({
       legacySettingsPath: settingsPath === defaultSettingsPath ? legacySettingsPath : undefined,
       defaultOutputDir,
       defaultThemePreference,
+      blockOutputDefinitions,
     })
     const cachedScans = await ensureScanCache()
     const resumed = await loadResumedJob({
@@ -570,6 +573,7 @@ export const createHttpServer = ({
       frontmatterFieldOrder,
       frontmatterFieldMeta,
       optionDescriptions,
+      blockOutputDefinitions,
     }
   }
 
@@ -595,6 +599,7 @@ export const createHttpServer = ({
         legacySettingsPath: settingsPath === defaultSettingsPath ? legacySettingsPath : undefined,
         defaultOutputDir,
         defaultThemePreference,
+        blockOutputDefinitions,
       })
     }
 
@@ -1082,9 +1087,11 @@ export const createHttpServer = ({
         }
 
         try {
-          const sanitizedOptions = sanitizePersistedExportOptions(payload.options as PartialExportOptions)
+          const sanitizedOptions = sanitizePersistedExportOptions(payload.options as PartialExportOptions, {
+            blockOutputDefinitions,
+          })
 
-          cloneExportOptions(sanitizedOptions)
+          cloneExportOptions(sanitizedOptions, { blockOutputDefinitions })
           await writePersistedUiState({
             settingsPath,
             input: {
@@ -1097,6 +1104,7 @@ export const createHttpServer = ({
             legacySettingsPath: settingsPath === defaultSettingsPath ? legacySettingsPath : undefined,
             defaultOutputDir,
             defaultThemePreference,
+            blockOutputDefinitions,
           })
         } catch (error) {
           sendJson({
@@ -1164,6 +1172,7 @@ export const createHttpServer = ({
           legacySettingsPath: settingsPath === defaultSettingsPath ? legacySettingsPath : undefined,
           defaultOutputDir,
           defaultThemePreference,
+          blockOutputDefinitions,
         })
 
         sendJson({
@@ -1534,7 +1543,7 @@ export const createHttpServer = ({
             blogIdOrUrl: payload.blogIdOrUrl.trim(),
             outputDir: payload.outputDir.trim(),
             profile: "gfm",
-            options: cloneExportOptions(payload.options),
+            options: cloneExportOptions(payload.options, { blockOutputDefinitions }),
           }
         } catch (error) {
           sendJson({
@@ -1556,6 +1565,7 @@ export const createHttpServer = ({
           legacySettingsPath: settingsPath === defaultSettingsPath ? legacySettingsPath : undefined,
           defaultOutputDir,
           defaultThemePreference,
+          blockOutputDefinitions,
         })
 
         const job = jobStore.create(exportRequest)

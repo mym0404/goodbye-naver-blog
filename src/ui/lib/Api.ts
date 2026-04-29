@@ -5,6 +5,7 @@ import type {
   ExportResumeSummary,
   FrontmatterFieldMeta,
   FrontmatterFieldName,
+  EditorBlockOutputDefinition,
   OptionDescriptionMap,
   ScanResult,
   ThemePreference,
@@ -23,6 +24,7 @@ export type ExportBootstrapResponse = {
   frontmatterFieldOrder: FrontmatterFieldName[]
   frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterFieldMeta>
   optionDescriptions: OptionDescriptionMap
+  blockOutputDefinitions: EditorBlockOutputDefinition[]
 }
 
 export type ExportResumeLookupResponse = {

@@ -1,13 +1,9 @@
-import {
-  getEditorBlockOutputDefinitions,
-  resolveBlockOutputSelection,
-} from "../../src/shared/BlockRegistry.js"
+import { resolveBlockOutputSelection } from "../../src/shared/BlockRegistry.js"
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 import { NaverBlog } from "../../src/modules/blog/NaverBlog.js"
 import type {
   BlockOutputSelection,
   BlockOutputSelectionByType,
-  EditorBlockOutputSelectionKey,
   ExportOptions,
 } from "../../src/shared/Types.js"
 
@@ -68,7 +64,7 @@ const imageHandlingModes = ["download", "remote", "download-and-upload"] as cons
 const stickerAssetModes = ["ignore", "download-original"] as const
 const thumbnailSources = ["post-list-first", "first-body-image", "none"] as const
 const sameBlogPostModes = ["keep-source", "custom-url", "relative-filepath"] as const
-const editorBlockOutputDefinitions = getEditorBlockOutputDefinitions(new NaverBlog())
+const editorBlockOutputDefinitions = new NaverBlog().getBlockOutputDefinitions()
 const editorBlockOutputDefinitionMap = new Map(
   editorBlockOutputDefinitions.map((definition) => [definition.key, definition]),
 )
@@ -350,7 +346,7 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
   value: unknown
   context: string
   optionsPath: string
-  selectionKey: EditorBlockOutputSelectionKey
+  selectionKey: string
 }) => {
   assertPlainObject(value, context, optionsPath)
   assertAllowedKeys(value, ["variant", "params"], context, optionsPath)
@@ -358,20 +354,25 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
   const definition =
     editorBlockOutputDefinitionMap.get(selectionKey) ??
     failOptions(optionsPath, `${context} references unknown editor block output key: ${selectionKey}`)
-  const resolvedBlockType = definition.astBlockType as Block
+  const defaultOption =
+    definition.options.find((option) => option.isDefault) ??
+    definition.options[0] ??
+    failOptions(optionsPath, `${context} has no output options`)
+  const resolvedBlockType = defaultOption.preview.type as Block
 
   const nextSelection = resolveBlockOutputSelection({
     blockType: resolvedBlockType,
+    outputOptions: definition.options,
   })
 
   if ("variant" in value) {
     const variant = value.variant
     assertString(variant, `${context}.variant`, optionsPath)
 
-    if (!definition.variants.some((item) => item.id === variant)) {
+    if (!definition.options.some((item) => item.id === variant)) {
       failOptions(
         optionsPath,
-        `${context}.variant must be one of: ${definition.variants.map((item) => item.id).join(", ")}`,
+        `${context}.variant must be one of: ${definition.options.map((item) => item.id).join(", ")}`,
       )
     }
 
@@ -382,7 +383,9 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
     const paramsValue = value.params
     assertPlainObject(paramsValue, `${context}.params`, optionsPath)
 
-    const allowedParamKeys = new Set(definition.params?.map((param) => param.key) ?? [])
+    const selectedOption =
+      definition.options.find((option) => option.id === nextSelection.variant) ?? defaultOption
+    const allowedParamKeys = new Set(selectedOption.params?.map((param) => param.key) ?? [])
     assertAllowedKeys(
       paramsValue,
       Array.from(allowedParamKeys),
@@ -396,7 +399,7 @@ const validateBlockOutputSelection = <Block extends SupportedBlockOutputType>({
 
     for (const [paramKey, paramValue] of Object.entries(paramsValue)) {
       const paramDefinition =
-        definition.params?.find((param) => param.key === paramKey) ??
+        selectedOption.params?.find((param) => param.key === paramKey) ??
         failOptions(optionsPath, `${context}.params.${paramKey} is not supported`)
 
       if (paramDefinition.input === "number") {
@@ -418,7 +421,7 @@ const assignBlockOutputDefault = <Block extends SupportedBlockOutputType>({
   selection,
 }: {
   defaults: ExportOptions["blockOutputs"]["defaults"]
-  selectionKey: EditorBlockOutputSelectionKey
+  selectionKey: string
   selection: BlockOutputSelection<Block>
 }) => {
   defaults[selectionKey] = selection

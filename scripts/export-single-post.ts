@@ -5,6 +5,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { cloneExportOptions } from "../src/shared/ExportOptions.js"
+import { NaverBlog } from "../src/modules/blog/NaverBlog.js"
 import { exportSinglePost } from "../src/modules/exporter/SinglePostExport.js"
 import { createSinglePostMetadataCachingFetcher } from "./lib/single-post-metadata-cache.js"
 import {
@@ -54,6 +55,7 @@ export const runSinglePostCli = async ({
 
   const options = cloneExportOptions(
     optionsPath ? await readSinglePostOptions({ optionsPath, readFile: readFileImpl }) : undefined,
+    { blockOutputDefinitions: new NaverBlog().getBlockOutputDefinitions() },
   )
   const diagnostics = await exportSinglePostImpl({
     blogId,

@@ -12,10 +12,13 @@ export {
 } from "./PathFormat.js"
 
 const markdownLineWhitespacePattern = /[^\S\n]+/g
-const repoRootDir = fileURLToPath(new URL("../..", import.meta.url))
+let repoRootDir: string | undefined
 
-export const resolveRepoPath = (targetPath: string) =>
-  path.isAbsolute(targetPath) ? targetPath : path.resolve(repoRootDir, targetPath)
+export const resolveRepoPath = (targetPath: string) => {
+  repoRootDir ??= fileURLToPath(new URL("../..", import.meta.url))
+
+  return path.isAbsolute(targetPath) ? targetPath : path.resolve(repoRootDir, targetPath)
+}
 
 export const ensureDir = async (targetPath: string) => {
   await mkdir(targetPath, { recursive: true })

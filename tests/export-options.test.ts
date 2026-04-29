@@ -1,14 +1,21 @@
 import { describe, expect, it } from "vitest"
 
+import { NaverBlog } from "../src/modules/blog/NaverBlog.js"
 import { resolveBlockOutputSelection } from "../src/shared/BlockRegistry.js"
 import {
-  cloneExportOptions,
+  cloneExportOptions as cloneExportOptionsRaw,
   frontmatterFieldMeta,
   getFrontmatterExportKey,
   optionDescriptions,
-  sanitizePersistedExportOptions,
+  sanitizePersistedExportOptions as sanitizePersistedExportOptionsRaw,
   validateFrontmatterAliases,
 } from "../src/shared/ExportOptions.js"
+
+const blockOutputDefinitions = new NaverBlog().getBlockOutputDefinitions()
+const cloneExportOptions = (options?: Parameters<typeof cloneExportOptionsRaw>[0]) =>
+  cloneExportOptionsRaw(options, { blockOutputDefinitions })
+const sanitizePersistedExportOptions = (options?: Parameters<typeof sanitizePersistedExportOptionsRaw>[0]) =>
+  sanitizePersistedExportOptionsRaw(options, { blockOutputDefinitions })
 
 describe("export options", () => {
   it("merges frontmatter aliases with defaults", () => {
@@ -129,15 +136,14 @@ describe("export options", () => {
     expect(Object.hasOwn(options, "unsupportedBlockCases")).toBe(false)
   })
 
-  it("normalizes legacy formula open/close params into wrapper params", () => {
+  it("merges formula params with parser block option defaults", () => {
     const options = cloneExportOptions({
       blockOutputs: {
         defaults: {
           "naver-se4:formula": {
             variant: "wrapper",
             params: {
-              inlineOpen: "\\(",
-              inlineClose: "\\)",
+              inlineWrapper: "\\(...\\)",
             },
           },
         },

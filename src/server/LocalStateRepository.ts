@@ -3,11 +3,10 @@ import path from "node:path"
 
 import {
   cloneExportOptions,
-  defaultExportOptions,
   sanitizePersistedExportOptions,
   type PartialExportOptions,
 } from "../shared/ExportOptions.js"
-import type { ScanCacheMap, ThemePreference } from "../shared/Types.js"
+import type { EditorBlockOutputDefinition, ScanCacheMap, ThemePreference } from "../shared/Types.js"
 
 const readFileWithFallback = async ({
   filePath,
@@ -83,11 +82,13 @@ export const readPersistedUiState = async ({
   legacySettingsPath,
   defaultOutputDir,
   defaultThemePreference,
+  blockOutputDefinitions,
 }: {
   settingsPath: string
   legacySettingsPath?: string
   defaultOutputDir: string
   defaultThemePreference: ThemePreference
+  blockOutputDefinitions?: EditorBlockOutputDefinition[]
 }) => {
   try {
     const raw = await readFileWithFallback({
@@ -110,7 +111,9 @@ export const readPersistedUiState = async ({
             !Array.isArray(parsed.options)
             ? parsed.options
             : undefined,
+          { blockOutputDefinitions },
         ),
+        { blockOutputDefinitions },
       ),
       lastOutputDir:
         parsed &&
@@ -128,7 +131,7 @@ export const readPersistedUiState = async ({
     }
   } catch {
     return {
-      options: defaultExportOptions(),
+      options: cloneExportOptions(undefined, { blockOutputDefinitions }),
       lastOutputDir: defaultOutputDir,
       themePreference: defaultThemePreference,
     }
@@ -141,6 +144,7 @@ export const writePersistedUiState = async ({
   legacySettingsPath,
   defaultOutputDir,
   defaultThemePreference,
+  blockOutputDefinitions,
 }: {
   settingsPath: string
   input: {
@@ -151,12 +155,14 @@ export const writePersistedUiState = async ({
   legacySettingsPath?: string
   defaultOutputDir: string
   defaultThemePreference: ThemePreference
+  blockOutputDefinitions?: EditorBlockOutputDefinition[]
 }) => {
   const current = await readPersistedUiState({
     settingsPath,
     legacySettingsPath,
     defaultOutputDir,
     defaultThemePreference,
+    blockOutputDefinitions,
   })
 
   await mkdir(path.dirname(settingsPath), { recursive: true })
@@ -164,7 +170,9 @@ export const writePersistedUiState = async ({
     settingsPath,
     JSON.stringify(
       {
-        options: sanitizePersistedExportOptions(input.options ?? current.options),
+        options: sanitizePersistedExportOptions(input.options ?? current.options, {
+          blockOutputDefinitions,
+        }),
         lastOutputDir: input.lastOutputDir ?? current.lastOutputDir,
         themePreference: input.themePreference ?? current.themePreference,
       },

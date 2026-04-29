@@ -5,6 +5,7 @@ import path from "node:path"
 import { chromium } from "playwright"
 
 import { createHttpServer } from "../../src/server/HttpServer.js"
+import { NaverBlog } from "../../src/modules/blog/NaverBlog.js"
 import {
   defaultExportOptions,
   frontmatterFieldMeta,
@@ -93,6 +94,8 @@ const uploadProviderCatalog: UploadProviderCatalogResponse = {
     },
   ],
 }
+
+const blockOutputDefinitions = new NaverBlog().getBlockOutputDefinitions()
 
 const resumedScanResult: ScanResult = {
   blogId: "mym0404",
@@ -572,6 +575,7 @@ const createBootstrap = ({
   frontmatterFieldOrder,
   frontmatterFieldMeta,
   optionDescriptions,
+  blockOutputDefinitions,
 })
 
 const runScenario = async ({

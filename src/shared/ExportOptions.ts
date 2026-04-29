@@ -1,12 +1,15 @@
 import type {
-  EditorBlockOutputSelectionKey,
+  EditorBlockOutputDefinition,
   ExportOptions,
   FrontmatterFieldMeta,
   FrontmatterFieldName,
   OptionDescriptionMap,
 } from "./Types.js"
 import { resolveBlockOutputSelection } from "./BlockRegistry.js"
-import { NaverBlog } from "../modules/blog/NaverBlog.js"
+
+type ExportOptionsDefinitionContext = {
+  blockOutputDefinitions?: EditorBlockOutputDefinition[]
+}
 
 export type PartialExportOptions = {
   scope?: Partial<ExportOptions["scope"]>
@@ -40,8 +43,6 @@ export const frontmatterFieldOrder: FrontmatterFieldName[] = [
   "exportedAt",
   "assetPaths",
 ]
-
-export const getDefaultBlockOutputDefinitions = () => new NaverBlog().getBlockOutputDefinitions()
 
 export const frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterFieldMeta> = {
   title: {
@@ -278,7 +279,10 @@ export const defaultExportOptions = (): ExportOptions => ({
   },
 })
 
-export const sanitizePersistedExportOptions = (options?: PartialExportOptions): PartialExportOptions => {
+export const sanitizePersistedExportOptions = (
+  options?: PartialExportOptions,
+  context: ExportOptionsDefinitionContext = {},
+): PartialExportOptions => {
   const sanitized: PartialExportOptions = {}
 
   if (options?.scope) {
@@ -363,12 +367,12 @@ export const sanitizePersistedExportOptions = (options?: PartialExportOptions): 
     const blockOutputs: NonNullable<PartialExportOptions["blockOutputs"]> = {}
 
     if (options.blockOutputs.defaults) {
-      const allowedSelectionKeys = new Set(
-        getDefaultBlockOutputDefinitions().map((definition) => definition.key),
-      )
+      const allowedSelectionKeys = context.blockOutputDefinitions
+        ? new Set(context.blockOutputDefinitions.map((definition) => definition.key))
+        : undefined
       blockOutputs.defaults = Object.fromEntries(
         Object.entries(options.blockOutputs.defaults).filter(([selectionKey]) =>
-          allowedSelectionKeys.has(selectionKey as EditorBlockOutputSelectionKey),
+          allowedSelectionKeys ? allowedSelectionKeys.has(selectionKey) : true,
         ),
       ) as NonNullable<PartialExportOptions["blockOutputs"]>["defaults"]
     }
@@ -405,23 +409,43 @@ const coerceAssetOptions = (options: ExportOptions["assets"]) => {
   return options
 }
 
-const buildDefaultBlockOutputs = (options?: PartialExportOptions["blockOutputs"]) =>
+const buildDefaultBlockOutputs = (
+  options?: PartialExportOptions["blockOutputs"],
+  blockOutputDefinitions: EditorBlockOutputDefinition[] = [],
+) =>
   Object.fromEntries(
-    getDefaultBlockOutputDefinitions().map((definition) => [
-      definition.key,
-      resolveBlockOutputSelection({
-        blockType: definition.astBlockType,
-        blockOutputs: options,
-        selectionKey: definition.key,
-      }),
-    ]),
+    blockOutputDefinitions.flatMap((definition) => {
+      const defaultOption = definition.options.find((option) => option.isDefault) ?? definition.options[0]
+
+      if (!defaultOption) {
+        return []
+      }
+
+      return [
+        [
+          definition.key,
+          resolveBlockOutputSelection({
+            blockType: defaultOption.preview.type,
+            outputOptions: definition.options,
+            blockOutputs: options,
+            selectionKey: definition.key,
+          }),
+        ],
+      ]
+    }),
   ) as ExportOptions["blockOutputs"]["defaults"]
 
-export const cloneExportOptions = (options?: PartialExportOptions) => {
+export const cloneExportOptions = (
+  options?: PartialExportOptions,
+  context: ExportOptionsDefinitionContext = {},
+) => {
   const defaults = defaultExportOptions()
   const slugStyle = options?.structure?.slugStyle ?? defaults.structure.slugStyle
   const slugWhitespace = options?.structure?.slugWhitespace ?? getDefaultSlugWhitespace(slugStyle)
-  const resolvedBlockOutputDefaults = buildDefaultBlockOutputs(options?.blockOutputs)
+  const resolvedBlockOutputDefaults = buildDefaultBlockOutputs(
+    options?.blockOutputs,
+    context.blockOutputDefinitions,
+  )
 
   const clonedOptions = {
     scope: {

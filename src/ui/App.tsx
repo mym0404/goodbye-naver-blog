@@ -73,6 +73,7 @@ const fallbackDefaults: ExportBootstrapResponse = {
   frontmatterFieldOrder,
   frontmatterFieldMeta,
   optionDescriptions,
+  blockOutputDefinitions: [],
 }
 
 export const App = () => {
@@ -479,6 +480,7 @@ export const App = () => {
         outputDir={outputDir}
         options={options}
         optionDescriptions={defaults.optionDescriptions}
+        blockOutputDefinitions={defaults.blockOutputDefinitions ?? []}
         frontmatterFieldOrder={defaults.frontmatterFieldOrder}
         frontmatterFieldMeta={defaults.frontmatterFieldMeta}
         frontmatterValidationErrors={frontmatterValidationErrors}

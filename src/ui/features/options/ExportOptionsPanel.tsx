@@ -12,7 +12,6 @@ import { resolveBlockOutputSelection } from "../../../shared/BlockRegistry.js"
 import { renderBlockOutputPreview } from "../../../shared/BlockOutputPreview.js"
 import { formatCategorySegment } from "../../../shared/PathFormat.js"
 import {
-  getDefaultBlockOutputDefinitions,
   getDefaultSlugWhitespace,
 } from "../../../shared/ExportOptions.js"
 import {
@@ -480,17 +479,19 @@ const OptionSection = ({
 )
 
 const blockOutputCardClass = "field-card grid gap-4 rounded-[1.5rem] px-4 py-4 xl:col-span-2"
-const blockOutputDefinitions = getDefaultBlockOutputDefinitions()
-
-const isBlockOutputParamVisible = ({
-  variant,
-  variants,
-}: {
-  variant: string
-  variants?: string[]
-}) => !variants || variants.includes(variant)
 
 const toBlockOutputDomKey = (key: string) => key.replace(/[^A-Za-z0-9_-]/g, "-")
+
+const getDefaultBlockOutputOption = (options: EditorBlockOutputDefinition["options"]) =>
+  options.find((option) => option.isDefault) ?? options[0]
+
+const getSelectedBlockOutputOption = ({
+  options,
+  variant,
+}: {
+  options: EditorBlockOutputDefinition["options"]
+  variant: string
+}) => options.find((option) => option.id === variant) ?? getDefaultBlockOutputOption(options)
 
 const groupBlockOutputDefinitionsByEditor = (definitions: EditorBlockOutputDefinition[]) =>
   definitions.reduce(
@@ -539,13 +540,24 @@ const BlockOutputCard = ({
   family: EditorBlockOutputDefinition
   onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
 }) => {
+  const defaultOption = getDefaultBlockOutputOption(family.options)
+
+  if (!defaultOption) {
+    return null
+  }
+
   const selection = resolveBlockOutputSelection({
-    blockType: family.astBlockType,
+    blockType: defaultOption.preview.type,
+    outputOptions: family.options,
     blockOutputs: options.blockOutputs,
     selectionKey: family.key,
   })
+  const selectedOption = getSelectedBlockOutputOption({
+    options: family.options,
+    variant: selection.variant,
+  }) ?? defaultOption
   const previewSnippet = renderBlockOutputPreview({
-    block: family.previewBlock,
+    block: selectedOption.preview,
     selection,
     linkStyle: options.markdown.linkStyle,
     includeImageCaptions: options.assets.includeImageCaptions,
@@ -555,7 +567,8 @@ const BlockOutputCard = ({
   const updateSelection = (updater: (current: NonNullable<typeof selection>) => NonNullable<typeof selection>) => {
     onOptionsChange((current) => {
       const currentSelection = resolveBlockOutputSelection({
-        blockType: family.astBlockType,
+        blockType: selectedOption.preview.type,
+        outputOptions: family.options,
         blockOutputs: current.blockOutputs,
         selectionKey: family.key,
       })
@@ -578,17 +591,17 @@ const BlockOutputCard = ({
     <Card
       className={blockOutputCardClass}
       data-block-output-card={family.key}
-      data-block-output-block={family.astBlockType}
+      data-block-output-block={selectedOption.preview.type}
       data-block-output-editor={family.editorType}
     >
       <CardHeader className="gap-2 px-0 pb-0">
         <div className="flex items-start justify-between gap-3">
           <div className="grid gap-1">
             <CardTitle className="text-base tracking-[-0.03em]">
-              {family.label}
+              {selectedOption.label}
             </CardTitle>
             <CardDescription className="text-sm leading-6">
-              {family.description}
+              {selectedOption.description}
             </CardDescription>
           </div>
         </div>
@@ -596,7 +609,7 @@ const BlockOutputCard = ({
       <CardContent className="grid content-start gap-4 px-0 pb-0">
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)]">
           <div className="grid content-start gap-4 self-start">
-            {family.variants.length > 1 ? (
+            {family.options.length > 1 ? (
               <OptionField
                 optionKey={`${optionKeyPrefix}-variant`}
                 labelFor={`${optionKeyPrefix}-variant`}
@@ -605,9 +618,9 @@ const BlockOutputCard = ({
                 <OptionSelectField
                   inputId={`${optionKeyPrefix}-variant`}
                   value={selection.variant}
-                  options={family.variants.map((variant) => ({
-                    value: variant.id,
-                    label: variant.label,
+                  options={family.options.map((option) => ({
+                    value: option.id,
+                    label: option.label,
                   }))}
                   onValueChange={(variant) =>
                     updateSelection((current) => ({
@@ -619,14 +632,8 @@ const BlockOutputCard = ({
               </OptionField>
             ) : null}
 
-            {family.params
-              ?.filter((param) =>
-                isBlockOutputParamVisible({
-                  variant: selection.variant,
-                  variants: param.whenVariants,
-                }),
-              )
-              .map((param) => (
+            {selectedOption.params
+              ?.map((param) => (
                 <OptionField
                   key={`${optionKeyPrefix}-${param.key}`}
                   optionKey={`${optionKeyPrefix}-${param.key}`}
@@ -735,6 +742,7 @@ export const ExportOptionsPanel = ({
   outputDir,
   options,
   optionDescriptions,
+  blockOutputDefinitions = [],
   frontmatterFieldOrder,
   frontmatterFieldMeta,
   frontmatterValidationErrors,
@@ -745,6 +753,7 @@ export const ExportOptionsPanel = ({
   outputDir: string
   options: ExportOptions
   optionDescriptions: OptionDescriptionMap
+  blockOutputDefinitions?: EditorBlockOutputDefinition[]
   frontmatterFieldOrder: FrontmatterFieldName[]
   frontmatterFieldMeta: Record<FrontmatterFieldName, FrontmatterFieldMeta>
   frontmatterValidationErrors: string[]

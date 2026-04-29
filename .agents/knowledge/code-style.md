@@ -10,7 +10,8 @@
 - The repo is strict TypeScript with NodeNext ESM.
 - Use `.js` extensions in TS imports where NodeNext runtime imports require them.
 - Reuse shared types from `src/shared/*` when crossing module or server/UI boundaries.
-- Keep parser block output behavior aligned across `BaseBlock.outputOptions`, editor `supportedBlocks` arrays, and `src/shared/BlockRegistry.ts`.
+- Keep parser block output behavior aligned across `BaseBlock.outputOptions` arrays, editor `supportedBlocks` arrays, and `src/modules/blog/BaseBlog.ts`.
+- This project does not preserve local schema backward compatibility unless explicitly requested. When an option/state contract changes, prefer the current schema and remove stale aliases or migration paths.
 - Prefer `type` aliases for object shapes, unions, and inferred helper types; do not introduce `interface` unless an external API requires it.
 - For finite runtime options, define `as const` arrays or objects and derive union types from them with `typeof`.
 - Use `as const satisfies` for registries and status maps that need literal inference plus shared shape checking.
@@ -24,6 +25,7 @@
 - Keep `createX` helpers for pure value construction, binding construction, or test/harness fixtures.
 - Parser block implementations should extend `ContainerBlock` or `LeafBlock` and return literal parser results with `as const` when inference would widen status or block types.
 - Keep editor and parser block relationships as direct `BaseBlock` instances inside each editor class.
+- Keep one-block parser helper logic inside the concrete parser block file when it improves locality; split helpers only when reuse or readability clearly benefits.
 
 ## Date And Time
 - Store manifest, job, and export timestamps as ISO strings from `new Date().toISOString()`.
