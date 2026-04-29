@@ -10,6 +10,7 @@ import { NaverBlogFetcher } from "../src/modules/fetcher/NaverBlogFetcher.js"
 import { NaverBlogExporter } from "../src/modules/exporter/NaverBlogExporter.js"
 import { rewriteUploadedAssets } from "../src/modules/exporter/ImageUploadRewriter.js"
 import { defaultExportOptions } from "../src/shared/ExportOptions.js"
+import { runWithLogSink } from "../src/shared/Logger.js"
 
 const scanResult = {
   blogId: "mym0404",
@@ -288,7 +289,6 @@ describe("NaverBlogExporter", () => {
           return options
         })(),
       },
-      onLog: () => {},
       onProgress,
       onItem,
     })
@@ -354,7 +354,6 @@ describe("NaverBlogExporter", () => {
         ...scanResult,
         posts,
       },
-      onLog: () => {},
       onProgress: () => {},
       onItem: () => {},
     })
@@ -404,7 +403,6 @@ describe("NaverBlogExporter", () => {
           profile: "gfm",
           options,
         },
-        onLog: () => {},
         onProgress,
         onItem,
       })
@@ -484,7 +482,6 @@ describe("NaverBlogExporter", () => {
           profile: "gfm",
           options,
         },
-        onLog: () => {},
         onProgress: () => {},
         onItem: () => {},
       })
@@ -540,7 +537,6 @@ describe("NaverBlogExporter", () => {
         totalPostCount: parallelPosts.length,
         posts: parallelPosts,
       },
-      onLog: () => {},
       onProgress,
       onItem,
     })
@@ -620,7 +616,6 @@ describe("NaverBlogExporter", () => {
         totalPostCount: parallelPosts.length,
         posts: parallelPosts,
       },
-      onLog: () => {},
       onProgress,
       onItem,
     })
@@ -687,7 +682,6 @@ describe("NaverBlogExporter", () => {
         profile: "gfm",
         options,
       },
-      onLog: () => {},
       onProgress: () => {},
       onItem,
     })
@@ -736,7 +730,6 @@ describe("NaverBlogExporter", () => {
         profile: "gfm",
         options: defaultExportOptions(),
       },
-      onLog: () => {},
       onProgress: () => {},
     })
 
@@ -749,7 +742,7 @@ describe("NaverBlogExporter", () => {
   it("keeps existing files, logs count mismatches, and records failed job items", async () => {
     const outputDir = await mkdtemp(path.join(tmpdir(), "bulk-export-"))
     const sentinelPath = path.join(outputDir, "stale.txt")
-    const onLog = vi.fn()
+    const logSink = vi.fn()
     const onProgress = vi.fn()
     const onItem = vi.fn()
 
@@ -771,12 +764,11 @@ describe("NaverBlogExporter", () => {
         profile: "gfm",
         options: defaultExportOptions(),
       },
-      onLog,
       onProgress,
       onItem,
     })
 
-    const manifest = await exporter.run()
+    const manifest = await runWithLogSink(logSink, () => exporter.run())
     const writtenManifest = JSON.parse(
       await readFile(path.join(outputDir, "manifest.json"), "utf8"),
     ) as typeof manifest
@@ -810,8 +802,8 @@ describe("NaverBlogExporter", () => {
       failed: 1,
       warnings: 0,
     })
-    expect(onLog).toHaveBeenCalledWith(expect.stringContaining("출력 디렉터리 준비 완료"))
-    expect(onLog).toHaveBeenCalledWith(expect.stringContaining("collected=1, expected=2"))
+    expect(logSink).toHaveBeenCalledWith(expect.stringContaining("출력 디렉터리 준비 완료"))
+    expect(logSink).toHaveBeenCalledWith(expect.stringContaining("collected=1, expected=2"))
 
     await rm(outputDir, { recursive: true, force: true })
   })

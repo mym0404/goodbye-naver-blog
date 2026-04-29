@@ -10,6 +10,7 @@ import {
   sanitizeCategoryName,
   toKstDateTime,
 } from '../../shared/Utils.js';
+import { log } from '../../shared/Logger.js';
 import * as HttpUtil from './util/HttpUtil.js';
 
 type CategoryApiItem = {
@@ -74,23 +75,19 @@ const browserHeaders = ({
 
 export class NaverBlogFetcher {
   readonly blogId: string;
-  readonly onLog: ((message: string) => void) | null;
   readonly requestTimeoutMs: number;
   readonly retryDelays: number[];
 
   constructor({
     blogId,
-    onLog,
     requestTimeoutMs,
     retryDelays,
   }: {
     blogId: string;
-    onLog?: (message: string) => void;
     requestTimeoutMs?: number;
     retryDelays?: number[];
   }) {
     this.blogId = blogId;
-    this.onLog = onLog ?? null;
     this.requestTimeoutMs = requestTimeoutMs ?? defaultRequestTimeoutMs;
     this.retryDelays = retryDelays ?? defaultRetryDelays;
   }
@@ -214,7 +211,7 @@ export class NaverBlogFetcher {
               : null,
           }));
 
-        this.log(`목록 수집 ${page}페이지 완료`);
+        log(`목록 수집 ${page}페이지 완료`);
 
         return {
           page,
@@ -321,9 +318,5 @@ export class NaverBlogFetcher {
     }
 
     throw lastError ?? new Error('API 요청에 실패했습니다.');
-  }
-
-  private log(message: string) {
-    this.onLog?.(message);
   }
 }

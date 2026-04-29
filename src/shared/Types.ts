@@ -422,7 +422,7 @@ export type BlockType = AstBlock["type"]
 
 export type ParsedPost = {
   tags: string[]
-  body?: ParsedPostBodyNode[]
+  body: ParsedPostBodyNode[]
   blocks: AstBlock[]
   warnings: string[]
   videos: VideoData[]

@@ -67,7 +67,6 @@ export const runSinglePostCli = async ({
             cachePath: resolvedMetadataCachePath,
             readFile: readFileImpl,
             writeFile: writeFileImpl,
-            onLog: input.onLog,
           })
       : undefined,
   })

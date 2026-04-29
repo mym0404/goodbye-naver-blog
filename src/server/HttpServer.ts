@@ -52,6 +52,7 @@ import {
   throwIfAborted,
   toErrorMessage,
 } from "../shared/Utils.js"
+import { runWithLogSink } from "../shared/Logger.js"
 import {
   buildResumableExportManifest,
   readExportManifest,
@@ -713,10 +714,6 @@ export const createHttpServer = ({
           : null,
         writeManifestFile: false,
         abortSignal: signal,
-        onLog: (message) => {
-          jobStore.appendLog(jobId, message)
-          scheduleJobManifestPersist(jobId)
-        },
         onProgress: (progress) => {
           jobStore.updateProgress(jobId, progress)
           scheduleJobManifestPersist(jobId)
@@ -726,7 +723,13 @@ export const createHttpServer = ({
           scheduleJobManifestPersist(jobId)
         },
       })
-      const manifest = await exporter.run()
+      const manifest = await runWithLogSink(
+        (message) => {
+          jobStore.appendLog(jobId, message)
+          scheduleJobManifestPersist(jobId)
+        },
+        () => exporter.run(),
+      )
       throwIfAborted(signal)
 
       jobStore.completeExport(jobId, manifest)

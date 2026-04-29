@@ -1,0 +1,159 @@
+status: open
+initial_context: "[$coplan](/Users/mj/projects/coflow/skills/coplan/SKILL.md) \n[BlockRegistry.ts](src/shared/BlockRegistry.ts)의\
+  \ 구조를 변경할거야 block Output family 라는 방식으로 관리되는 옵션 선택 구조와 내부 로직까지 바꿔\n\nBaseBlock에서\
+  \ outputOptions 를 가지고있게해 옵션이 보이는 기준은\n\n예를 들어 NaverBlog라면,\n\nNaverBlog 의 모든 Editor의\
+  \ supportedBlocks의 집합에서 outputOptions 의 개수가 2개 이상인 것들이 editor 타입으로 정렬되어있고 그 안에서도\
+  \ editor 내부의 supportedBlocks 의 순서로 정렬되어있게 하는거야."
+non_user_answer_streak: 0
+required_tracks:
+  scope:
+    status: open
+    summary: ''
+  non_goals:
+    status: open
+    summary: ''
+  outputs:
+    status: open
+    summary: ''
+  verification:
+    status: open
+    summary: ''
+  constraints:
+    status: open
+    summary: ''
+  stop_conditions:
+    status: open
+    summary: ''
+rounds:
+- id: Q1
+  route: user_decision
+  track: scope
+  question: 'Change: 같은 block이 여러 Editor의 supportedBlocks에 동시에 들어 있고 outputOptions가
+    2개 이상이면, 옵션 선택 UI/데이터에서는 어떻게 보여야 하나요?'
+  answer: UI 에서도 옵션에서 Editor로 그루핑하고(Editor가1개인 경우엔 그루핑 X) Editor 별로 각각 표시하고  각 옵션이
+    해당 에디터 글을 파싱할 때 개별로 적용되게해
+  source: from-user:co-flow-respond
+- id: Q2
+  route: user_decision
+  track: constraints
+  question: 'Preserve: 기존 output option 선택값의 저장 형식이나 API/manifest 동작은 유지해야 하나요, 아니면
+    새 Editor별 옵션 구조에 맞춰 깨지는 변경을 허용하나요?'
+  answer: 깨지는 변경 허용이고 backword compat 없이해
+  source: from-user:co-flow-respond
+pending_user_question: null
+agent_runs:
+- id: A1
+  role: ask-next
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    action: ask_user
+    route: user_decision
+    track: scope
+    question: 'Change: 같은 block이 여러 Editor의 supportedBlocks에 동시에 들어 있고 outputOptions가
+      2개 이상이면, 옵션 선택 UI/데이터에서는 어떻게 보여야 하나요?'
+    answer: ''
+    source: ''
+    source_refs: []
+    skip_eligible: false
+    skip_kind: decide_later
+    options:
+    - label: Editor별로 각각 표시
+      description: 같은 block도 Editor 그룹마다 별도 항목으로 보여야 합니다.
+      recommended: true
+    - label: Block 기준으로 중복 제거
+      description: 같은 block은 한 번만 보여주고 Editor 정보는 보조 기준으로만 씁니다.
+      recommended: false
+    - label: 조건부 규칙 설명
+      description: 특정 block이나 Editor 조합에 따라 예외 규칙을 직접 답합니다.
+      recommended: false
+    reason: '`집합`이라는 표현은 중복 제거를 뜻할 수 있지만, 동시에 `editor 타입으로 정렬`과 `editor 내부 supportedBlocks
+      순서`를 요구해 UI 구조와 registry 키 설계가 달라질 수 있습니다.'
+  error: null
+- id: A2
+  role: ask-next
+  model: gpt-5.5
+  sandbox: read-only
+  reasoning_effort: medium
+  command_options:
+    json: true
+    skip_git_repo_check: true
+    ephemeral: true
+    sandbox: read-only
+    model: gpt-5.5
+    model_reasoning_effort: medium
+  status: passed
+  output:
+    action: ask_user
+    route: user_decision
+    track: constraints
+    question: 'Preserve: 기존 output option 선택값의 저장 형식이나 API/manifest 동작은 유지해야 하나요,
+      아니면 새 Editor별 옵션 구조에 맞춰 깨지는 변경을 허용하나요?'
+    answer: ''
+    source: ''
+    source_refs: []
+    skip_eligible: false
+    skip_kind: decide_later
+    options:
+    - label: 기존 동작 보존
+      description: 가능한 한 기존 저장값과 외부 동작을 유지하고, 내부 구조만 새 방식으로 바꿉니다.
+      recommended: true
+    - label: 깨지는 변경 허용
+      description: 새 Editor별 옵션 구조를 기준으로 저장 형식과 API 응답까지 바꿀 수 있습니다.
+      recommended: false
+    - label: 보존 범위 지정
+      description: 유지해야 할 저장값, API, manifest, UI 동작을 직접 구분해 답합니다.
+      recommended: false
+    reason: outputOptions가 BaseBlock과 Editor별 선택 구조로 이동하면 저장 키, API 응답, 기존 설정 마이그레이션
+      범위가 달라져 구현 경계가 크게 바뀝니다.
+  error: null
+ambiguity:
+  latest: null
+  history: []
+ambiguity_ledger: []
+completion_candidate_streak: 0
+closure_audit:
+  status: not_run
+  summary: ''
+  material_blockers: []
+  question: ''
+  round_count: 0
+  score_id: null
+deferred_items: []
+seed_review:
+  status: not_presented
+  fingerprint: null
+  comment: ''
+  feedback: []
+closure:
+  ready: false
+  summary: ''
+  material_blockers: []
+  checks:
+    desired_output_explicit:
+      passed: false
+      summary: ''
+    user_tradeoffs_explicit:
+      passed: false
+      summary: ''
+    closure_audit_passed:
+      passed: false
+      summary: ''
+    executor_determinism:
+      passed: false
+      summary: ''
+    verification_proves_behavior:
+      passed: false
+      summary: ''
+    no_material_questions:
+      passed: false
+      summary: ''

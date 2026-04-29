@@ -27,6 +27,7 @@
 ## Parser Block Contract
 - Blog parser ownership starts in `src/modules/blog/BaseBlog.ts` and `src/modules/blog/NaverBlog.ts`.
 - Editor classes hold `BaseBlock[]` instances directly; there is no string id registry between blog, editor, and parser block.
+- Editor `supportedBlocks` arrays are ordered first-match lists; place more specific blocks before broader fallback blocks.
 - Block output families are keyed by shared AST `BlockType` in `src/shared/BlockRegistry.ts`.
 - Parser block base classes are in `src/modules/blocks/BaseBlock.ts`; parser context/result types are in `src/modules/blocks/ParserNode.ts`.
 - Shared helpers are in `src/modules/blocks/common` or next to the editor-specific blocks they support.

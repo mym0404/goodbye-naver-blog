@@ -2,7 +2,6 @@ import { load } from "cheerio"
 
 import type { ExportOptions } from "../../shared/Types.js"
 import { unique } from "../../shared/Utils.js"
-import { withParsedPostBody } from "../blocks/BodyNodeUtils.js"
 import { NaverBlog } from "../blog/NaverBlog.js"
 
 const extractTags = (html: string) => {
@@ -30,13 +29,11 @@ export const parsePostHtml = ({
   const tags = extractTags(html)
   const $ = load(html)
 
-  return withParsedPostBody(
-    new NaverBlog().parsePost({
-      $,
-      html,
-      sourceUrl,
-      tags,
-      options,
-    }),
-  )
+  return new NaverBlog().parsePost({
+    $,
+    html,
+    sourceUrl,
+    tags,
+    options,
+  })
 }

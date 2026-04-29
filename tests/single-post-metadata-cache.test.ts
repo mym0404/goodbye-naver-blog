@@ -71,7 +71,6 @@ describe("single post metadata cache", () => {
         blogId: "mym0404",
         cachePath,
         createFetcher: () => createBaseFetcher({ scanCount, postsCount }),
-        onLog: vi.fn(),
         readFile,
       })
 
@@ -86,7 +85,6 @@ describe("single post metadata cache", () => {
         blogId: "mym0404",
         cachePath,
         createFetcher: () => createBaseFetcher({ scanCount: secondScanCount, postsCount: secondPostsCount }),
-        onLog: vi.fn(),
         readFile,
       })
 

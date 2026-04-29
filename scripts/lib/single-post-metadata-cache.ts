@@ -3,6 +3,7 @@ import path from "node:path"
 
 import { NaverBlogFetcher } from "../../src/modules/fetcher/NaverBlogFetcher.js"
 import type { SinglePostFetcher } from "../../src/modules/exporter/SinglePostExport.js"
+import { log } from "../../src/shared/Logger.js"
 import type { PostSummary, ScanResult } from "../../src/shared/Types.js"
 
 export type SinglePostMetadataCacheFile = {
@@ -16,8 +17,7 @@ type CreateSinglePostMetadataCachingFetcherArgs = {
   cachePath: string | null
   readFile: (path: string, encoding: "utf8") => Promise<string>
   writeFile?: (path: string, contents: string, encoding: "utf8") => Promise<void>
-  createFetcher?: (input: { blogId: string; onLog: (message: string) => void }) => SinglePostFetcher | Promise<SinglePostFetcher>
-  onLog: (message: string) => void
+  createFetcher?: (input: { blogId: string }) => SinglePostFetcher | Promise<SinglePostFetcher>
 }
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -85,18 +85,15 @@ export const createSinglePostMetadataCachingFetcher = async ({
   readFile: readFileImpl,
   writeFile,
   createFetcher,
-  onLog,
 }: CreateSinglePostMetadataCachingFetcherArgs): Promise<SinglePostFetcher> => {
   const resolvedCachePath = cachePath ? path.resolve(cachePath) : null
   const writeFileImpl = writeFile ?? writeFileDefault
   const baseFetcher =
     (await createFetcher?.({
       blogId,
-      onLog,
     })) ??
     new NaverBlogFetcher({
       blogId,
-      onLog,
     })
 
   let cachedScan: ScanResult | null = null
@@ -121,7 +118,7 @@ export const createSinglePostMetadataCachingFetcher = async ({
       const message = error instanceof Error ? error.message : String(error)
 
       if (!message.includes("ENOENT")) {
-        onLog(`metadata cache 재사용 실패: ${resolvedCachePath}`)
+        log(`metadata cache 재사용 실패: ${resolvedCachePath}`)
         throw new Error(`Invalid metadata cache in ${resolvedCachePath}: ${message}`)
       }
     }

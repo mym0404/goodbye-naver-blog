@@ -3,13 +3,18 @@ import { describe, expect, it } from "vitest"
 import { reviewParsedPost } from "../src/modules/reviewer/PostReviewer.js"
 import type { ParsedPost } from "../src/shared/Types.js"
 
-const createParsedPost = (overrides?: Partial<ParsedPost>): ParsedPost => ({
-  tags: [],
-  videos: [],
-  warnings: [],
-  blocks: [{ type: "paragraph", text: "ok" }],
-  ...overrides,
-})
+const createParsedPost = (overrides: Partial<ParsedPost> = {}): ParsedPost => {
+  const blocks = overrides.blocks ?? [{ type: "paragraph" as const, text: "ok" }]
+
+  return {
+    tags: [],
+    videos: [],
+    warnings: [],
+    ...overrides,
+    blocks,
+    body: overrides.body ?? blocks.map((block) => ({ kind: "block", block })),
+  }
+}
 
 describe("reviewParsedPost", () => {
   it("keeps parser warnings and adds fallback html diagnostics", () => {

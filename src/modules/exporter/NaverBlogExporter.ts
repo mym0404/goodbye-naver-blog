@@ -20,6 +20,7 @@ import {
   throwIfAborted,
   toErrorMessage,
 } from "../../shared/Utils.js"
+import { log } from "../../shared/Logger.js"
 import { NaverBlogFetcher } from "../fetcher/NaverBlogFetcher.js"
 import { renderMarkdownPost } from "../converter/MarkdownRenderer.js"
 import { parsePostHtml } from "../parser/PostParser.js"
@@ -140,7 +141,6 @@ const createPostUploadSummary = (
 
 export class NaverBlogExporter {
   readonly request: ExportRequest
-  readonly onLog: (message: string) => void
   readonly onProgress: (progress: {
     total: number
     completed: number
@@ -155,7 +155,6 @@ export class NaverBlogExporter {
 
   constructor({
     request,
-    onLog,
     onProgress,
     onItem,
     cachedScanResult,
@@ -164,7 +163,6 @@ export class NaverBlogExporter {
     abortSignal,
   }: {
     request: ExportRequest
-    onLog: (message: string) => void
     onProgress: (progress: {
       total: number
       completed: number
@@ -178,7 +176,6 @@ export class NaverBlogExporter {
     abortSignal?: AbortSignal | null
   }) {
     this.request = request
-    this.onLog = onLog
     this.onProgress = onProgress
     this.onItem = onItem ?? null
     this.cachedScanResult = cachedScanResult ?? null
@@ -333,7 +330,6 @@ export class NaverBlogExporter {
     const options = cloneExportOptions(this.request.options)
     const fetcher = new NaverBlogFetcher({
       blogId,
-      onLog: (message) => this.onLog(message),
     })
     const assetStore = new AssetStore({
       outputDir,
@@ -346,7 +342,7 @@ export class NaverBlogExporter {
     throwIfAborted(this.abortSignal)
 
     if (reused) {
-      this.onLog(`이전 스캔 결과 재사용: categories=${scan.categories.length}, posts=${posts.length}`)
+      log(`이전 스캔 결과 재사용: categories=${scan.categories.length}, posts=${posts.length}`)
     }
     const categoryMap = new Map(scan.categories.map((category) => [category.id, category]))
     const filteredPosts = filterPostsByScope({
@@ -357,7 +353,7 @@ export class NaverBlogExporter {
 
     await ensureDir(outputDir)
     throwIfAborted(this.abortSignal)
-    this.onLog(`출력 디렉터리 준비 완료: ${outputDir}`)
+    log(`출력 디렉터리 준비 완료: ${outputDir}`)
 
     const manifest = createInitialManifest({
       resumeManifest: this.resumeState?.manifest ?? null,
@@ -375,14 +371,14 @@ export class NaverBlogExporter {
     let nextResultIndex = 0
 
     if (posts.length !== scan.totalPostCount) {
-      this.onLog(
+      log(
         `목록 수집 수와 API 총계가 다릅니다. collected=${posts.length}, expected=${scan.totalPostCount}`,
       )
     }
 
-    this.onLog(`필터 적용 후 export 대상 글 수: ${filteredPosts.length}`)
+    log(`필터 적용 후 export 대상 글 수: ${filteredPosts.length}`)
     if (pendingPosts.length !== filteredPosts.length) {
-      this.onLog(`이전 진행 상태 복구: 완료 ${filteredPosts.length - pendingPosts.length}개, 남음 ${pendingPosts.length}개`)
+      log(`이전 진행 상태 복구: 완료 ${filteredPosts.length - pendingPosts.length}개, 남음 ${pendingPosts.length}개`)
     }
     const postLinkTargets = buildPostLinkTargets({
       outputDir,
@@ -444,7 +440,7 @@ export class NaverBlogExporter {
         })
 
         try {
-          this.onLog(`글 수집 시작: ${post.logNo} ${post.title}`)
+          log(`글 수집 시작: ${post.logNo} ${post.title}`)
           const markdownFilePath = buildMarkdownFilePath({
             outputDir,
             post,
@@ -516,7 +512,7 @@ export class NaverBlogExporter {
           }
 
           pendingResults.set(index, this.createFailureResult({ post, category, error }))
-          this.onLog(`글 export 실패: ${post.logNo} (${toErrorMessage(error)})`)
+          log(`글 export 실패: ${post.logNo} (${toErrorMessage(error)})`)
         }
 
         flushCompletedResults()
@@ -564,7 +560,7 @@ export class NaverBlogExporter {
         JSON.stringify(manifest, null, 2),
         "utf8",
       )
-      this.onLog(`manifest 저장 완료: ${path.join(outputDir, "manifest.json")}`)
+      log(`manifest 저장 완료: ${path.join(outputDir, "manifest.json")}`)
     }
 
     return manifest

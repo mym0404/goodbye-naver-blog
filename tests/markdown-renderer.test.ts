@@ -63,6 +63,79 @@ const createAssetRecord = ({
         : null,
   }) satisfies AssetRecord
 
+const parsedPostBlocks: ParsedPost["blocks"] = [
+  { type: "heading", level: 2, text: "섹션" },
+  { type: "paragraph", text: "본문입니다." },
+  { type: "formula", formula: "f(n)=n+1", display: true },
+  { type: "formula", formula: "g(n)=n-1", display: false },
+  { type: "code", language: "ts", code: "const a = 1" },
+  {
+    type: "imageGroup",
+    images: [
+      {
+        sourceUrl: "https://example.com/image-1.png",
+        originalSourceUrl: null,
+        alt: "one",
+        caption: null,
+        mediaKind: "image",
+      },
+      {
+        sourceUrl: "https://example.com/image-2.png",
+        originalSourceUrl: null,
+        alt: "two",
+        caption: "caption",
+        mediaKind: "image",
+      },
+    ],
+  },
+  {
+    type: "table",
+    complex: false,
+    html: "<table><tr><td>a</td></tr></table>",
+    rows: [
+      [
+        {
+          text: "col",
+          html: "col",
+          colspan: 1,
+          rowspan: 1,
+          isHeader: true,
+        },
+      ],
+      [
+        {
+          text: "value",
+          html: "value",
+          colspan: 1,
+          rowspan: 1,
+          isHeader: false,
+        },
+      ],
+    ],
+  },
+  {
+    type: "linkCard",
+    card: {
+      title: "External article",
+      description: "preview text",
+      url: "https://example.com/article",
+      imageUrl: "https://example.com/cover.png",
+    },
+  },
+  {
+    type: "video",
+    video: {
+      title: "Demo",
+      thumbnailUrl: "https://example.com/video-thumb.png",
+      sourceUrl: "https://blog.naver.com/mym0404/223034929697",
+      vid: "vid",
+      inkey: "inkey",
+      width: 640,
+      height: 360,
+    },
+  },
+]
+
 const parsedPost: ParsedPost = {
   tags: ["algo"],
   warnings: [],
@@ -77,78 +150,19 @@ const parsedPost: ParsedPost = {
       height: 360,
     },
   ],
-  blocks: [
-    { type: "heading", level: 2, text: "섹션" },
-    { type: "paragraph", text: "본문입니다." },
-    { type: "formula", formula: "f(n)=n+1", display: true },
-    { type: "formula", formula: "g(n)=n-1", display: false },
-    { type: "code", language: "ts", code: "const a = 1" },
-    {
-      type: "imageGroup",
-      images: [
-        {
-          sourceUrl: "https://example.com/image-1.png",
-          originalSourceUrl: null,
-          alt: "one",
-          caption: null,
-          mediaKind: "image",
-        },
-        {
-          sourceUrl: "https://example.com/image-2.png",
-          originalSourceUrl: null,
-          alt: "two",
-          caption: "caption",
-          mediaKind: "image",
-        },
-      ],
-    },
-    {
-      type: "table",
-      complex: false,
-      html: "<table><tr><td>a</td></tr></table>",
-      rows: [
-        [
-          {
-            text: "col",
-            html: "col",
-            colspan: 1,
-            rowspan: 1,
-            isHeader: true,
-          },
-        ],
-        [
-          {
-            text: "value",
-            html: "value",
-            colspan: 1,
-            rowspan: 1,
-            isHeader: false,
-          },
-        ],
-      ],
-    },
-    {
-      type: "linkCard",
-      card: {
-        title: "External article",
-        description: "preview text",
-        url: "https://example.com/article",
-        imageUrl: "https://example.com/cover.png",
-      },
-    },
-    {
-      type: "video",
-      video: {
-        title: "Demo",
-        thumbnailUrl: "https://example.com/video-thumb.png",
-        sourceUrl: "https://blog.naver.com/mym0404/223034929697",
-        vid: "vid",
-        inkey: "inkey",
-        width: 640,
-        height: 360,
-      },
-    },
-  ],
+  blocks: parsedPostBlocks,
+  body: parsedPostBlocks.map((block) => ({ kind: "block", block })),
+}
+
+const createParsedPost = (overrides: Partial<ParsedPost>): ParsedPost => {
+  const blocks = overrides.blocks ?? parsedPost.blocks
+
+  return {
+    ...parsedPost,
+    ...overrides,
+    blocks,
+    body: overrides.body ?? blocks.map((block) => ({ kind: "block", block })),
+  }
 }
 
 describe("renderMarkdownPost", () => {
@@ -221,10 +235,9 @@ describe("renderMarkdownPost", () => {
     const rendered = await renderMarkdownPost({
       post,
       category,
-      parsedPost: {
-        ...parsedPost,
+      parsedPost: createParsedPost({
         blocks: [{ type: "paragraph", text: "**파이썬 웹 프로그래밍**  \n작가  \n김석훈" }],
-      },
+      }),
       markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options: defaultExportOptions(),
@@ -378,8 +391,7 @@ describe("renderMarkdownPost", () => {
     const rendered = await renderMarkdownPost({
       post,
       category,
-      parsedPost: {
-        ...parsedPost,
+      parsedPost: createParsedPost({
         blocks: [
           { type: "quote", text: "인용문\n둘째 줄" },
           {
@@ -405,7 +417,7 @@ describe("renderMarkdownPost", () => {
             },
           },
         ],
-      },
+      }),
       markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options,
@@ -668,8 +680,7 @@ describe("renderMarkdownPost", () => {
     const rendered = await renderMarkdownPost({
       post,
       category,
-      parsedPost: {
-        ...parsedPost,
+      parsedPost: createParsedPost({
         blocks: [
           {
             type: "linkCard",
@@ -681,7 +692,7 @@ describe("renderMarkdownPost", () => {
             },
           },
         ],
-      },
+      }),
       markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options: defaultExportOptions(),
@@ -706,8 +717,7 @@ describe("renderMarkdownPost", () => {
     const rendered = await renderMarkdownPost({
       post,
       category,
-      parsedPost: {
-        ...parsedPost,
+      parsedPost: createParsedPost({
         blocks: [
           {
             type: "image",
@@ -720,7 +730,7 @@ describe("renderMarkdownPost", () => {
             },
           },
         ],
-      },
+      }),
       markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options,
@@ -744,8 +754,7 @@ describe("renderMarkdownPost", () => {
     const rendered = await renderMarkdownPost({
       post,
       category,
-      parsedPost: {
-        ...parsedPost,
+      parsedPost: createParsedPost({
         blocks: [
           {
             type: "image",
@@ -758,7 +767,7 @@ describe("renderMarkdownPost", () => {
             },
           },
         ],
-      },
+      }),
       markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options,
@@ -779,8 +788,7 @@ describe("renderMarkdownPost", () => {
     const rendered = await renderMarkdownPost({
       post,
       category,
-      parsedPost: {
-        ...parsedPost,
+      parsedPost: createParsedPost({
         blocks: [
           {
             type: "image",
@@ -793,7 +801,7 @@ describe("renderMarkdownPost", () => {
             },
           },
         ],
-      },
+      }),
       markdownFilePath: testMarkdownFilePath,
       reviewedWarnings: [],
       options,

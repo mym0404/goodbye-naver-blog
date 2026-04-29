@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 
 import { parsePostHtml } from "../../src/modules/parser/PostParser.js"
-import { createBodyNodesFromLegacyBlocks } from "../../src/modules/blocks/BodyNodeUtils.js"
 import { defaultExportOptions } from "../../src/shared/ExportOptions.js"
 
 const parserOptions = {
@@ -93,17 +92,4 @@ describe("post-parser routing", () => {
     expect(parsed.blocks).toEqual([{ type: "heading", level: 2, text: "SE2 title" }])
   })
 
-  it("keeps raw legacy html out of structured ordered body nodes", () => {
-    const blocks: Parameters<typeof createBodyNodesFromLegacyBlocks>[0] = [
-      { type: "paragraph", text: "before" },
-      { type: "rawHtml", html: "<div>raw</div>", reason: "fallback" },
-      { type: "htmlFragment", html: "<span>fragment</span>" },
-    ]
-
-    expect(createBodyNodesFromLegacyBlocks(blocks)).toEqual([
-      { kind: "block", block: { type: "paragraph", text: "before" } },
-      { kind: "fallbackHtml", html: "<div>raw</div>", reason: "fallback", warnings: [] },
-      { kind: "fallbackHtml", html: "<span>fragment</span>", reason: "html-fragment", warnings: [] },
-    ])
-  })
 })

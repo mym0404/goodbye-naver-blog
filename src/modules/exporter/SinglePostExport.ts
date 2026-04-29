@@ -60,7 +60,6 @@ export const exportSinglePost = async ({
   options: ExportOptions
   createFetcher?: (input: {
     blogId: string
-    onLog: (message: string) => void
   }) => SinglePostFetcher | Promise<SinglePostFetcher>
 }): Promise<ExportSinglePostDiagnostics> => {
   const resolvedOutputDir = resolveRepoPath(outputDir)
@@ -69,7 +68,6 @@ export const exportSinglePost = async ({
   const fetcher = createFetcher
     ? await createFetcher({
         blogId: resolvedBlogId,
-        onLog: () => {},
       })
     : new NaverBlogFetcher({
         blogId: resolvedBlogId,
