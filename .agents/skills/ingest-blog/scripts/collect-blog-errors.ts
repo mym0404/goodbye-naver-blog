@@ -17,13 +17,15 @@ import type { ReusableIngestOutput } from "../../../../scripts/post-evidence/ing
 
 import type { SupportUnitFailureGroup } from "./lib/ingest-focus.js"
 
-import { NaverBlogExporter } from "../../../../packages/blog-naver/src/exporting/NaverBlogExporter.js"
 import { inspectSinglePost } from "../../../../packages/blog-naver/src/exporting/SinglePostInspect.js"
-import { NaverBlogFetcher } from "../../../../packages/blog-naver/src/integrations/naver-blog/NaverBlogFetcher.js"
-import { extractSourceId } from "../../../../packages/blog-naver/src/NaverUrl.js"
+import { createNaverBlog } from "../../../../packages/blog-naver/src/NaverBlog.js"
+import { createTistoryBlog } from "../../../../packages/blog-tistory/src/TistoryBlog.js"
 import { defaultExportOptions } from "../../../../packages/domain/src/export-options/ExportOptions.js"
+import { createBlogRegistry } from "../../../../packages/engine/src/blog/BlogRegistry.js"
+import { BlogExportWorkflow } from "../../../../packages/engine/src/exporting/blog/BlogExportWorkflow.js"
 import { runWithLogSink } from "../../../../packages/engine/src/infra/runtime/Logger.js"
 import { toErrorMessage } from "../../../../packages/engine/src/shared/error/util/toErrorMessage.js"
+import { createPostHtmlCache } from "../../../../packages/server/src/state/PostHtmlCache.js"
 import {
   capturePostEvidence,
   createEvidenceMarkdownSections,
@@ -102,8 +104,8 @@ const allIngestReuseModes = ["full", "rerun-failures", "completed-no-failures"] 
 type IngestReuseMode = (typeof allIngestReuseModes)[number]
 
 const usage = () => `Usage:
-  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogKey naver --sourceInput <sourceInput> [--outputDir tmp/harness/ingest-blog/<runId>]
-  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogKey naver --sourceInput <sourceInput> --reuseOutputDir /absolute/path/to/tmp/harness/ingest-blog/<runId> --rerunFailures
+  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogKey <blogKey> --sourceInput <sourceInput> [--outputDir tmp/harness/ingest-blog/<runId>]
+  bun .agents/skills/ingest-blog/scripts/collect-blog-errors.ts --blogKey <blogKey> --sourceInput <sourceInput> --reuseOutputDir /absolute/path/to/tmp/harness/ingest-blog/<runId> --rerunFailures
 
 Options:
   --reuseOutputDir <dir>  Reuse a completed ingest output and rerun only failed posts.
@@ -513,37 +515,31 @@ const createPostSummaryFromManifestPost = ({
   thumbnailUrl: livePost?.thumbnailUrl ?? null,
 })
 
-const createFailureRerunScanResult = async ({
+const createFailureRerunScanResult = ({
+  blogKey,
   sourceId,
   manifest,
 }: {
+  blogKey: string
   sourceId: string
   manifest: ExportManifest
-}): Promise<ScanResult> => {
-  const fetcher = new NaverBlogFetcher({
-    sourceId,
-  })
-  const liveScan = await fetcher.scanBlog({
-    includePosts: true,
-  })
-  const livePostMap = new Map((liveScan.posts ?? []).map((post) => [post.postId, post]))
-
+}): ScanResult => {
   return {
-    blogKey: "naver",
+    blogKey,
     sourceId,
     totalPostCount: manifest.totalPosts,
-    categories: liveScan.categories.length > 0 ? liveScan.categories : manifest.categories,
+    categories: manifest.categories,
     posts: manifest.posts.map((post) =>
       createPostSummaryFromManifestPost({
         sourceId,
         post,
-        livePost: livePostMap.get(post.postId),
       }),
     ),
   }
 }
 
 const runExporter = async ({
+  blogKey,
   sourceInput,
   outputDir,
   options,
@@ -551,6 +547,7 @@ const runExporter = async ({
   reusableOutput,
   cachedScanResult,
 }: {
+  blogKey: string
   sourceInput: string
   outputDir: string
   options: ReturnType<typeof createIngestOptions>
@@ -558,9 +555,11 @@ const runExporter = async ({
   reusableOutput?: ReusableIngestOutput
   cachedScanResult?: ScanResult
 }) => {
-  const exporter = new NaverBlogExporter({
+  const blog = createBlogRegistry([createNaverBlog(), createTistoryBlog()]).require(blogKey)
+  const exporter = new BlogExportWorkflow({
+    blog,
     request: {
-      blogKey: "naver",
+      blogKey,
       sourceInput,
       outputDir,
       profile: "gfm",
@@ -570,6 +569,9 @@ const runExporter = async ({
       ? createFailureRerunResumeState(reusableOutput.manifest)
       : undefined,
     cachedScanResult,
+    postContentCache: createPostHtmlCache({
+      cacheDir: path.join(resolveRepoPath(outputDir), "html-cache"),
+    }),
     onProgress: ({ total, completed, failed }) => {
       console.error(
         `progress: ${completed + failed}/${total} completed=${completed} failed=${failed}`,
@@ -799,15 +801,47 @@ const renderIngestReportMarkdown = ({
 }
 
 const inspectFailedPost = async ({
+  blogKey,
   sourceId,
   failedPost,
   inspectDir,
 }: {
+  blogKey: string
   sourceId: string
   failedPost: PostManifestEntry
   inspectDir: string
 }): Promise<FailedPostReport> => {
   const reportPath = path.join(inspectDir, `${failedPost.postId}.json`)
+
+  if (blogKey !== "naver") {
+    const unsupported =
+      /Unsupported Tistory node at ([^:]+): <([\w-]+)(?:#[^.[]+)?((?:\.[^.[]+)*)/.exec(
+        failedPost.error ?? "",
+      )
+
+    return {
+      postId: failedPost.postId,
+      title: failedPost.title,
+      source: failedPost.source,
+      error: failedPost.error ?? "Unknown export failure",
+      inspectReportPath: null,
+      inspectError: null,
+      editor: unsupported ? { type: "tistory", version: null } : null,
+      parse: null,
+      unsupportedCount: unsupported ? 1 : 0,
+      firstUnsupported: unsupported
+        ? {
+            path: unsupported[1]!,
+            tagName: unsupported[2]!,
+            ...(unsupported[3]
+              ? { className: unsupported[3].split(".").filter(Boolean).join(" ") }
+              : {}),
+            text: "",
+            html: "",
+          }
+        : null,
+    }
+  }
 
   try {
     const diagnostics = await inspectSinglePost({
@@ -849,6 +883,7 @@ const inspectFailedPost = async ({
 }
 
 const createEvidenceCases = ({
+  blogKey,
   sourceId,
   failureGroups,
   previousFocusedGroups,
@@ -856,6 +891,7 @@ const createEvidenceCases = ({
   manifest,
   focusedPostIds,
 }: {
+  blogKey: string
   sourceId: string
   failureGroups: FailureGroup[]
   previousFocusedGroups: SupportUnitFailureGroup[]
@@ -868,6 +904,9 @@ const createEvidenceCases = ({
   manifest: ExportManifest
   focusedPostIds: string[]
 }): EvidenceCase[] => {
+  if (blogKey !== "naver") {
+    return []
+  }
   if (failureGroups.length > 0) {
     return failureGroups.map((group) => {
       const targetReport = group.representative
@@ -959,11 +998,10 @@ const run = async () => {
     return
   }
 
-  if (parsedArgs.blogKey !== "naver") {
-    throw new Error(`unsupported blogKey: ${parsedArgs.blogKey}`)
-  }
-
-  const sourceId = extractSourceId(parsedArgs.sourceInput)
+  const blog = createBlogRegistry([createNaverBlog(), createTistoryBlog()]).require(
+    parsedArgs.blogKey,
+  )
+  const sourceId = blog.parseSource(parsedArgs.sourceInput).sourceId
   const logs: string[] = []
   const options = createIngestOptions()
   const explicitReuseOutputDir = parsedArgs.reuseOutputDir ?? parsedArgs.outputDir
@@ -971,12 +1009,12 @@ const run = async () => {
     ? null
     : explicitReuseOutputDir
       ? await loadReusableIngestOutput({
-          blogKey: "naver",
+          blogKey: parsedArgs.blogKey,
           sourceId,
           outputDir: explicitReuseOutputDir,
         })
       : await findLatestReusableIngestOutput({
-          blogKey: "naver",
+          blogKey: parsedArgs.blogKey,
           sourceId,
         })
 
@@ -996,7 +1034,8 @@ const run = async () => {
   const previousFailedPosts = reusableOutput?.failedPosts ?? []
   const cachedScanResult =
     reuseMode === "rerun-failures" && reusableOutput
-      ? await createFailureRerunScanResult({
+      ? createFailureRerunScanResult({
+          blogKey: parsedArgs.blogKey,
           sourceId,
           manifest: reusableOutput.manifest,
         })
@@ -1005,6 +1044,7 @@ const run = async () => {
     reuseMode === "completed-no-failures" && reusableOutput
       ? reusableOutput.manifest
       : await runExporter({
+          blogKey: parsedArgs.blogKey,
           sourceInput: parsedArgs.sourceInput,
           outputDir,
           options,
@@ -1027,6 +1067,7 @@ const run = async () => {
   const failedPostReports = await Promise.all(
     failedPosts.map((failedPost) =>
       inspectFailedPost({
+        blogKey: parsedArgs.blogKey,
         sourceId,
         failedPost,
         inspectDir,
@@ -1062,6 +1103,7 @@ const run = async () => {
   const logPath = path.join(resolvedOutputDir, "ingest.log")
   const changes = await readChanges(parsedArgs.changesPath)
   const evidenceCases = createEvidenceCases({
+    blogKey: parsedArgs.blogKey,
     sourceId,
     failureGroups,
     previousFocusedGroups: focusedSelection.previousFocusedGroups,

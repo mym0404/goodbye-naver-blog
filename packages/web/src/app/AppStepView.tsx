@@ -32,6 +32,7 @@ type AppStepViewProps = {
   testUploadResult: string | null
   testUploadError: string | null
   sourceInput: string
+  blogKey: string
   outputDir: string
   scanPending: boolean
   blockScanJob: BlockScanJobState | null
@@ -56,6 +57,7 @@ type AppStepViewProps = {
   setCategorySearch: Dispatch<SetStateAction<string>>
   updateOptions: (updater: (current: ExportOptions) => ExportOptions) => void
   handleBlogInputChange: (value: string) => void
+  handleBlogKeyChange: (value: string) => void
   handleOutputDirChange: (value: string) => void
   handleOutputDirBlur: () => void
   handleSelectAllCategories: () => void
@@ -82,6 +84,7 @@ export const AppStepView = ({
   testUploadResult,
   testUploadError,
   sourceInput,
+  blogKey,
   outputDir,
   scanPending,
   blockScanJob,
@@ -103,6 +106,7 @@ export const AppStepView = ({
   setCategorySearch,
   updateOptions,
   handleBlogInputChange,
+  handleBlogKeyChange,
   handleOutputDirChange,
   handleOutputDirBlur,
   handleSelectAllCategories,
@@ -140,12 +144,15 @@ export const AppStepView = ({
   if (currentStep === "blog-input") {
     return (
       <BlogInputPanel
+        blogs={defaults.blogs}
+        blogKey={blogKey}
         sourceInput={sourceInput}
         outputDir={outputDir}
         scanPending={scanPending}
         scanStatus={scanStatus}
         scanStatusTone={scanStatusTone}
         onSourceIdOrUrlChange={handleBlogInputChange}
+        onBlogKeyChange={handleBlogKeyChange}
         onOutputDirChange={handleOutputDirChange}
         onOutputDirBlur={handleOutputDirBlur}
       />

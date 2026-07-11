@@ -7,14 +7,18 @@ import { ensureDir, resolveRepoPath } from "@exitpress/engine/infra/node/FilePat
 
 import type { AssetRecord } from "../../../../packages/domain/src/export-job/schema/UploadState.js"
 
-import { NaverBlogFetcher } from "../../../../packages/blog-naver/src/integrations/naver-blog/NaverBlogFetcher.js"
-import { extractSourceId } from "../../../../packages/blog-naver/src/NaverUrl.js"
-import { parsePostHtml } from "../../../../packages/blog-naver/src/parsing/naver-blog/core/PostParser.js"
-import { createNaverBlogDefaultBlockTemplateMap } from "../../../../packages/blog-naver/src/parsing/naver-blog/NaverBlog.js"
+import { createNaverBlog } from "../../../../packages/blog-naver/src/NaverBlog.js"
+import { createTistoryBlog } from "../../../../packages/blog-tistory/src/TistoryBlog.js"
 import { defaultExportOptions } from "../../../../packages/domain/src/export-options/ExportOptions.js"
+import { createBlogRegistry } from "../../../../packages/engine/src/blog/BlogRegistry.js"
+import {
+  mapBlogCategory,
+  mapBlogPost,
+} from "../../../../packages/engine/src/exporting/blog/BlogPostExportUnit.js"
 import { getCategoryForPost } from "../../../../packages/engine/src/exporting/paths/ExportPaths.js"
 import { renderMarkdownPost } from "../../../../packages/engine/src/markdown/util/renderMarkdownPost.js"
 import { toErrorMessage } from "../../../../packages/engine/src/shared/error/util/toErrorMessage.js"
+import { createPostHtmlCache } from "../../../../packages/server/src/state/PostHtmlCache.js"
 
 type FixtureArgs = {
   blogKey: string
@@ -25,7 +29,7 @@ type FixtureArgs = {
 }
 
 const usage = () => `Usage:
-  bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts --blogKey naver --sourceInput <sourceInput> --postId <postId> --id <fixtureId> [--force]
+  bun .agents/skills/ingest-blog/scripts/write-sample-fixture.ts --blogKey <blogKey> --sourceInput <sourceInput> --postId <postId> --id <fixtureId> [--force]
 
 Creates tests/fixtures/samples/<id>/expected.md with remote asset references and no image downloads.`
 
@@ -119,6 +123,12 @@ const resolveSampleFixtureLinkUrl = (url: string) => {
     : url
 }
 
+const normalizeFixtureMarkdown = (markdown: string) =>
+  markdown.replace(
+    /https:\/\/[^\s)]+\.kakaocdn\.net\/[^\s)?]+(?:\?[^\s)]*)?/g,
+    (url) => `${url.split("?")[0]}?credential=normalized`,
+  )
+
 const pathExists = async (targetPath: string) => {
   try {
     await access(targetPath)
@@ -144,25 +154,21 @@ const run = async () => {
 
   assertFixtureId(args.id)
 
-  if (args.blogKey !== "naver") {
-    throw new Error(`unsupported blogKey: ${args.blogKey}`)
-  }
-
-  const sourceId = extractSourceId(args.sourceInput)
-  const fetcher = new NaverBlogFetcher({
-    sourceId,
+  const blog = createBlogRegistry([createNaverBlog(), createTistoryBlog()]).require(args.blogKey)
+  const source = blog.parseSource(args.sourceInput)
+  const cache = createPostHtmlCache({
+    cacheDir: resolveRepoPath(path.join("tmp", "harness", "ingest-blog", "fixture-html-cache")),
   })
-  const scan = await fetcher.scanBlog()
-  const posts = await fetcher.getAllPosts({
-    expectedTotal: scan.totalPostCount,
-  })
-  const post = posts.find((entry) => entry.postId === args.postId)
+  const scan = await blog.scan(source, { cache })
+  const post = scan.posts.find((entry) => entry.postId === args.postId)
 
   if (!post) {
-    throw new Error(`public post metadata not found: ${sourceId}/${args.postId}`)
+    throw new Error(`public post metadata not found: ${source.sourceId}/${args.postId}`)
   }
 
-  const categoryMap = new Map(scan.categories.map((category) => [category.id, category]))
+  const categoryMap = new Map(
+    scan.categories.map((category) => [category.id, mapBlogCategory(category)]),
+  )
   const category = getCategoryForPost({
     categories: categoryMap,
     categoryId: post.categoryId,
@@ -182,20 +188,23 @@ const run = async () => {
     )
   }
 
-  const html = await fetcher.fetchPostHtml(post.postId)
-  const parsedPost = parsePostHtml({
-    html,
-    sourceUrl: post.source,
-    options: {
-      ...options,
-      resolveLinkUrl: resolveSampleFixtureLinkUrl,
-    },
-  })
-  const rendered = await renderMarkdownPost({
+  const content = await blog.loadPostContent({ source, post, cache })
+  const parsedPost = blog.parseContent({
+    source,
     post,
+    content,
+    options: { ...options, resolveLinkUrl: resolveSampleFixtureLinkUrl },
+  })
+  const mappedPost = mapBlogPost(post)
+  const rendered = await renderMarkdownPost({
+    post: args.blogKey === "tistory" ? { ...mappedPost, thumbnailUrl: null } : mappedPost,
     category,
     parsedPost,
-    defaultBlockTemplates: createNaverBlogDefaultBlockTemplateMap(),
+    defaultBlockTemplates: Object.fromEntries(
+      blog
+        .getBlockTemplateDefinitions()
+        .map((definition) => [definition.key, definition.presets[0].template]),
+    ),
     markdownFilePath: expectedMarkdownPath,
     options,
     resolveAsset: async ({ kind, sourceUrl }) =>
@@ -210,9 +219,10 @@ const run = async () => {
   })
 
   await ensureDir(fixtureDir)
+  const markdown = normalizeFixtureMarkdown(rendered.markdown)
   await writeFile(
     expectedMarkdownPath,
-    rendered.markdown.endsWith("\n") ? rendered.markdown : `${rendered.markdown}\n`,
+    markdown.endsWith("\n") ? markdown : `${markdown}\n`,
     "utf8",
   )
 
@@ -221,7 +231,7 @@ const run = async () => {
       `fixtureId: ${args.id}`,
       `expectedMarkdownPath: ${expectedMarkdownPath}`,
       `blogKey: ${args.blogKey}`,
-      `sourceId: ${sourceId}`,
+      `sourceId: ${source.sourceId}`,
       `postId: ${post.postId}`,
       `blockIds: ${parsedPost.blocks.map((block) => block.blockId).join(", ") || "(none)"}`,
       `assetRecordCount: ${rendered.assetRecords.length}`,

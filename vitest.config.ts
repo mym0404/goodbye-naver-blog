@@ -30,6 +30,7 @@ export default defineConfig({
       reporter: ["text", "json-summary", "lcov"],
       include: [
         "packages/blog-naver/src/**/*.ts",
+        "packages/blog-tistory/src/**/*.ts",
         "packages/domain/src/**/*.ts",
         "packages/engine/src/**/*.ts",
         "packages/server/src/**/*.ts",

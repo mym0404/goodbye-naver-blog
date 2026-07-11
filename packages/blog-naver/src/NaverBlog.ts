@@ -46,8 +46,8 @@ export const createNaverBlog = (): Blog => {
         input,
       }
     },
-    scan: async (source) => {
-      const fetcher = createFetcher(source.sourceId)
+    scan: async (source, options) => {
+      const fetcher = createFetcher(source.sourceId, options?.cache)
       const scan = await fetcher.scanBlog({ includePosts: true })
       const posts =
         scan.posts ??

@@ -4,7 +4,7 @@
 
 Every post deserves an exit.
 
-Exitpress는 공개 블로그 글을 스캔해 Markdown, frontmatter, 로컬 자산, 복구 가능한 `manifest.json`으로 export하는 도구입니다. 지금은 Naver Blog 공개 글 수집을 지원하며, 여러 블로그 플랫폼을 추가할 수 있는 구조를 전제로 만들고 있습니다.
+Exitpress는 공개 블로그 글을 스캔해 Markdown, frontmatter, 로컬 자산, 복구 가능한 `manifest.json`으로 export하는 도구입니다. Naver Blog와 Tistory 공개 글 수집을 지원합니다.
 
 [Demo](https://mym0404.github.io/exitpress/storybook/)
 
@@ -37,7 +37,7 @@ Exitpress는 공개 블로그 글을 스캔해 Markdown, frontmatter, 로컬 자
 
 ## 무엇을 할 수 있나요?
 
-- ✅ 현재 Naver Blog SE2, SE3, ONE(SE4) 에디터 타입 지원
+- ✅ Naver Blog SE2, SE3, ONE(SE4) 에디터와 Tistory 지원
 - ✅ 다양한 이미지 처리 옵션
   1. 기존 글의 이미지 주소로 남겨두기
   2. 다운로드, 압축 후 로컬 경로로 변환하기
@@ -77,8 +77,9 @@ pnpm start
 
 기본 흐름은 아래와 같습니다.
 
-1. 블로그 ID 또는 URL 입력
-2. 공개 글 스캔
-3. 카테고리/날짜 범위 선택
-4. export 실행
-5. `output/` 아래 결과 확인
+1. 블로그 플랫폼 선택
+2. 블로그 ID 또는 URL 입력
+3. 공개 글 스캔
+4. 카테고리/날짜 범위 선택
+5. export 실행
+6. `output/` 아래 결과 확인

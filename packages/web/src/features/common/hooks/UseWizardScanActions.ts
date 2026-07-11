@@ -6,7 +6,6 @@ import type { ExportResumeLookupResponse } from "../../../lib/Api.js"
 
 import type { WizardScanActionsArgs } from "./schema/WizardActions.js"
 
-import { defaultBlogKey } from "../../../app/AppDefaults.js"
 import { toast } from "../../../components/primer/PrimerToast.js"
 import { postJson } from "../../../lib/Api.js"
 import {
@@ -24,6 +23,7 @@ import { useWizardCategoryActions } from "./UseWizardCategoryActions.js"
 
 export const useWizardScanActions = ({
   currentScanTarget,
+  blogKey,
   outputDir,
   outputDirBaseline,
   activeScanResult,
@@ -36,6 +36,7 @@ export const useWizardScanActions = ({
   setCategorySearch,
   setSetupStep,
   setSourceIdOrUrl,
+  setBlogKey,
   setOutputDir,
   setNeutralScanStatus,
   setErrorScanStatus,
@@ -133,7 +134,7 @@ export const useWizardScanActions = ({
 
       try {
         const nextScanResult = await postJson<ScanResult>("/api/scan", {
-          blogKey: defaultBlogKey,
+          blogKey,
           sourceInput: currentScanTarget,
           forceRefresh,
         })
@@ -170,6 +171,7 @@ export const useWizardScanActions = ({
     },
     [
       activeScanResult,
+      blogKey,
       currentScanTarget,
       outputDir,
       setCategorySearch,
@@ -219,9 +221,37 @@ export const useWizardScanActions = ({
     ],
   )
 
+  const handleBlogKeyChange = useCallback(
+    (value: string) => {
+      setBlogKey(value)
+      setSetupStep("blog-input")
+      setNeutralScanStatus(
+        currentScanTarget
+          ? "블로그가 바뀌었습니다. 다음 단계에서 다시 스캔합니다."
+          : defaultScanStatus,
+      )
+      setCategoryStatus(defaultCategoryStatus)
+      setCategorySearch("")
+      setOptions((current) => ({
+        ...current,
+        scope: { ...current.scope, categoryIds: [] },
+      }))
+    },
+    [
+      currentScanTarget,
+      setBlogKey,
+      setCategorySearch,
+      setCategoryStatus,
+      setNeutralScanStatus,
+      setOptions,
+      setSetupStep,
+    ],
+  )
+
   return {
     ensureScanResult,
     handleBlogInputChange,
+    handleBlogKeyChange,
     ...categoryActions,
   }
 }

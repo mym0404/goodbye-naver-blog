@@ -1,19 +1,22 @@
 import { readdir } from "node:fs/promises"
 import path from "node:path"
 
-import { NaverBlogFetcher } from "@exitpress/blog-naver/integrations/naver-blog/NaverBlogFetcher.js"
-import { parsePostHtml } from "@exitpress/blog-naver/parsing/naver-blog/core/PostParser.js"
-import { createNaverBlogDefaultBlockTemplateMap } from "@exitpress/blog-naver/parsing/naver-blog/NaverBlog.js"
+import { createNaverBlog } from "@exitpress/blog-naver/NaverBlog.js"
+import { createTistoryBlog } from "@exitpress/blog-tistory/TistoryBlog.js"
 import { defaultExportOptions } from "@exitpress/domain/export-options/ExportOptions.js"
+import { createBlogRegistry } from "@exitpress/engine/blog/BlogRegistry.js"
 import { renderMarkdownPost } from "@exitpress/engine/markdown/util/renderMarkdownPost.js"
 import { parse as parseYaml } from "yaml"
 
-import type { NaverBlogFetcherCache } from "@exitpress/blog-naver/integrations/naver-blog/NaverBlogFetcher.js"
+import type { BlogPostContentCache } from "@exitpress/engine/blog/Blog.js"
 
 import { ensureHarnessDir, pathExists, readUtf8, repoPath, writeUtf8 } from "./e2e/paths.js"
 
+const blogRegistry = createBlogRegistry([createNaverBlog(), createTistoryBlog()])
+
 type SampleFixtureEntry = {
   id: string
+  blogKey: string
   sourceId: string
   postId: string
   expectedError?: string
@@ -29,6 +32,7 @@ type SampleFixtureEntry = {
 }
 
 type ExpectedFrontmatter = {
+  blogKey: string
   title: string
   source: string
   sourceId: string
@@ -83,6 +87,7 @@ const parseExpectedFrontmatter = (markdown: string): ExpectedFrontmatter => {
   }
 
   return {
+    blogKey: assertString(frontmatter.blogKey, "blogKey"),
     title: assertString(frontmatter.title, "title"),
     source: assertString(frontmatter.source, "source"),
     sourceId: assertString(frontmatter.sourceId, "sourceId"),
@@ -95,9 +100,20 @@ const parseExpectedFrontmatter = (markdown: string): ExpectedFrontmatter => {
   }
 }
 
-const createSamplePostHtmlCache = (cacheDir: string): NaverBlogFetcherCache => {
-  const getCachePath = ({ sourceId, postId }: { sourceId: string; postId: string }) =>
-    path.join(cacheDir, `${encodeURIComponent(sourceId)}-${encodeURIComponent(postId)}.html`)
+const createSamplePostHtmlCache = (cacheDir: string): BlogPostContentCache => {
+  const getCachePath = ({
+    blogKey,
+    sourceId,
+    postId,
+  }: {
+    blogKey: string
+    sourceId: string
+    postId: string
+  }) =>
+    path.join(
+      cacheDir,
+      `${encodeURIComponent(blogKey)}-${encodeURIComponent(sourceId)}-${encodeURIComponent(postId)}.html`,
+    )
 
   return {
     getPostHtml: async (input) => {
@@ -129,6 +145,7 @@ const readSampleFixtureEntry = async (sampleId: string): Promise<SampleFixtureEn
 
   return {
     id: sampleId,
+    blogKey: frontmatter.blogKey,
     sourceId: frontmatter.sourceId,
     postId: frontmatter.postId,
     expectedError: frontmatter.error,
@@ -178,6 +195,10 @@ const normalizeMarkdownFixture = (markdown: string) =>
   `${markdown
     .replace(/\r\n/g, "\n")
     .replace(/([?&]type=)w\d+/g, "$1w")
+    .replace(
+      /https:\/\/[^\s)]+\.kakaocdn\.net\/[^\s)?]+(?:\?[^\s)]*)?/g,
+      (url) => `${url.split("?")[0]}?credential=normalized`,
+    )
     .replace(/\n+$/g, "")}\n`
 
 const resolveSampleFixtureLinkUrl = (url: string) => {
@@ -203,17 +224,28 @@ export const renderSampleFixture = async ({
   options.frontmatter.fields.exportedAt = false
 
   const markdownFilePath = path.join(await ensureHarnessDir("samples"), `${sample.id}.md`)
-  const parsedPost = parsePostHtml({
-    html,
+  const blog = blogRegistry.require(sample.blogKey)
+  const source = blog.parseSource(sample.post.source)
+  const post = {
+    blogKey: sample.blogKey,
+    sourceId: sample.sourceId,
+    postId: sample.postId,
+    title: sample.post.title,
     sourceUrl: sample.post.source,
-    options: {
-      ...options,
-      resolveLinkUrl: resolveSampleFixtureLinkUrl,
-    },
+    publishedAt: sample.post.publishedAt,
+    categoryId: sample.post.categoryId,
+    categoryName: sample.post.categoryName,
+    thumbnailUrl: sample.post.thumbnailUrl ?? undefined,
+  }
+  const parsedPost = blog.parseContent({
+    source,
+    post,
+    content: { kind: "html", html, sourceUrl: sample.post.source, tags: [] },
+    options: { ...options, resolveLinkUrl: resolveSampleFixtureLinkUrl },
   })
   const rendered = await renderMarkdownPost({
     post: {
-      blogKey: "naver",
+      blogKey: sample.blogKey,
       sourceId: sample.sourceId,
       postId: sample.postId,
       title: sample.post.title,
@@ -234,7 +266,11 @@ export const renderSampleFixture = async ({
       depth: Math.max(sample.post.categoryPath.length - 1, 0),
     },
     parsedPost,
-    defaultBlockTemplates: createNaverBlogDefaultBlockTemplateMap(),
+    defaultBlockTemplates: Object.fromEntries(
+      blog
+        .getBlockTemplateDefinitions()
+        .map((definition) => [definition.key, definition.presets[0].template]),
+    ),
     markdownFilePath,
     options,
     resolveAsset: async ({ kind, sourceUrl }) => ({
@@ -254,13 +290,34 @@ export const renderSampleFixture = async ({
 }
 
 export const loadSampleFixture = async (sample: SampleFixtureEntry) => ({
-  html: await new NaverBlogFetcher({
-    sourceId: sample.sourceId,
-    cache:
-      process.env.CI === "true"
-        ? undefined
-        : createSamplePostHtmlCache(await ensureHarnessDir("sample-post-html-cache")),
-  }).fetchPostHtml(sample.postId),
+  html: await (async () => {
+    const blog = blogRegistry.require(sample.blogKey)
+    const source = blog.parseSource(sample.post.source)
+    const content = await blog.loadPostContent({
+      source,
+      post: {
+        blogKey: sample.blogKey,
+        sourceId: sample.sourceId,
+        postId: sample.postId,
+        title: sample.post.title,
+        sourceUrl: sample.post.source,
+        publishedAt: sample.post.publishedAt,
+        categoryId: sample.post.categoryId,
+        categoryName: sample.post.categoryName,
+        thumbnailUrl: sample.post.thumbnailUrl ?? undefined,
+      },
+      cache:
+        process.env.CI === "true"
+          ? undefined
+          : createSamplePostHtmlCache(await ensureHarnessDir("sample-post-html-cache")),
+    })
+
+    if (content.kind !== "html") {
+      throw new Error(`sample fixture requires HTML content: ${sample.id}`)
+    }
+
+    return content.html
+  })(),
   expectedMarkdown: sample.expectedError
     ? undefined
     : normalizeMarkdownFixture(await readUtf8(getSampleExpectedMarkdownPath(sample.id))),

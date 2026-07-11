@@ -1,6 +1,7 @@
 import { createServer } from "node:http"
 
 import { createNaverBlog } from "@exitpress/blog-naver/NaverBlog.js"
+import { createTistoryBlog } from "@exitpress/blog-tistory/TistoryBlog.js"
 import { createBlogRegistry } from "@exitpress/engine/blog/BlogRegistry.js"
 import { runImageUploadPhase } from "@exitpress/engine/exporting/upload/ImageUploadPhase.js"
 import {
@@ -56,7 +57,7 @@ export const createHttpServer = ({
   openLocalPath?: (targetPath: string) => Promise<void> | void
 } = {}) => {
   let httpServer: NodeHttpServer
-  const blogRegistry = createBlogRegistry([createNaverBlog()])
+  const blogRegistry = createBlogRegistry([createNaverBlog(), createTistoryBlog()])
   const blockTemplateDefinitions = blogRegistry
     .list()
     .flatMap((blog) => blog.getBlockTemplateDefinitions())
@@ -67,6 +68,7 @@ export const createHttpServer = ({
     defaultOutputDir,
     defaultThemePreference,
     blockTemplateDefinitions,
+    blogs: blogRegistry.list().map(({ key, label }) => ({ key, label })),
   })
   const postHtmlCache = createPostHtmlCache({
     cacheDir: postHtmlCacheDir,

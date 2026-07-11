@@ -11,6 +11,7 @@ import type { ThemePreference } from "@exitpress/domain/preferences/schema/Theme
 import type { BlockTemplateDefinition } from "@exitpress/domain/template/schema/BlockTemplateDefinition.js"
 
 export type ExportBootstrapResponse = {
+  blogs: { key: string; label: string }[]
   profile: "gfm"
   options: ExportOptions
   lastOutputDir: string

@@ -11,7 +11,10 @@ import type { ParserBlockOptions } from "@exitpress/domain/parser/schema/ParserB
 import type { BlockTemplateDefinition } from "@exitpress/domain/template/schema/BlockTemplateDefinition.js"
 
 export type BlogFetcher = {
-  scan: (source: BlogSource) => Promise<BlogScanResult>
+  scan: (
+    source: BlogSource,
+    options?: { cache?: BlogPostContentCache; signal?: AbortSignal },
+  ) => Promise<BlogScanResult>
   loadPostContent: (input: {
     source: BlogSource
     post: BlogPostRef

@@ -26,6 +26,7 @@ export const useWizardActions = (args: UseWizardActionsArgs) => {
   const {
     ensureScanResult,
     handleBlogInputChange,
+    handleBlogKeyChange,
     handleOutputDirChange,
     handleOutputDirBlur,
     handleCategoryToggle,
@@ -118,6 +119,7 @@ export const useWizardActions = (args: UseWizardActionsArgs) => {
   return {
     ensureScanResult,
     handleBlogInputChange,
+    handleBlogKeyChange,
     handleOutputDirChange,
     handleOutputDirBlur,
     handleCategoryToggle,

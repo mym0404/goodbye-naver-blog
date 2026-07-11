@@ -261,6 +261,9 @@ importers:
       cheerio:
         specifier: 'catalog:'
         version: 1.2.0
+      domhandler:
+        specifier: 'catalog:'
+        version: 5.0.3
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -333,6 +336,9 @@ importers:
       '@exitpress/blog-naver':
         specifier: workspace:*
         version: link:../blog-naver
+      '@exitpress/blog-tistory':
+        specifier: workspace:*
+        version: link:../blog-tistory
       '@exitpress/domain':
         specifier: workspace:*
         version: link:../domain

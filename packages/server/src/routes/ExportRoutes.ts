@@ -59,6 +59,7 @@ export const handleExportRoutes =
     blogRegistry,
     blockScanJobRunner,
     exportJobRunner,
+    postHtmlCache,
     uploadProviderSource,
   }: ApiRouteContext) =>
   async ({ request, response, method, url }: ApiRouteRequest) => {
@@ -90,7 +91,7 @@ export const handleExportRoutes =
         return true
       }
 
-      const scanResult = toScanResult(await blog.scan(source))
+      const scanResult = toScanResult(await blog.scan(source, { cache: postHtmlCache }))
       await state.updateScanCache({ scanResult })
       sendJson({ response, statusCode: 200, body: scanResult })
       return true

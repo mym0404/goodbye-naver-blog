@@ -68,15 +68,17 @@ type PostExportStep = (typeof allPostExportSteps)[number]
 
 const createErrorJobState = ({
   error,
+  blogKey,
   request,
 }: {
   error: string
+  blogKey: string
   request: { sourceInput: string; outputDir: string; options: ExportOptions }
 }) =>
   ({
     id: "failed-local",
     request: {
-      blogKey: defaultBlogKey,
+      blogKey,
       sourceInput: request.sourceInput,
       outputDir: request.outputDir,
       profile: "gfm",
@@ -150,6 +152,7 @@ const ExportApp = () => {
   const [resettingResume, setResettingResume] = useState(false)
   const [restoringResume, setRestoringResume] = useState(false)
   const [sourceInput, setSourceIdOrUrl] = useState("")
+  const [blogKey, setBlogKey] = useState(defaultBlogKey)
   const [outputDir, setOutputDir] = useState(defaultOutputDir)
   const [resumeDialog, setResumeDialog] = useState<ResumeDialogState | null>(null)
   const [scanCache, setScanCache] = useState<ScanCacheMap>({})
@@ -203,6 +206,7 @@ const ExportApp = () => {
     setOptions,
     setOutputDir,
     setSourceIdOrUrl,
+    setBlogKey,
     setCategorySearch,
     setSetupStep,
     setActiveJobFilter,
@@ -217,7 +221,8 @@ const ExportApp = () => {
   })
 
   const currentScanTarget = sourceInput.trim()
-  const activeScanResult = currentScanTarget ? (scanCache[currentScanTarget] ?? null) : null
+  const cachedScanResult = currentScanTarget ? (scanCache[currentScanTarget] ?? null) : null
+  const activeScanResult = cachedScanResult?.blogKey === blogKey ? cachedScanResult : null
   const frontmatterValidationErrors = useMemo(
     () => validateFrontmatterAliases(options.frontmatter),
     [options.frontmatter],
@@ -364,6 +369,7 @@ const ExportApp = () => {
         setJob(
           createErrorJobState({
             error: message,
+            blogKey,
             request: {
               sourceInput: currentScanTarget,
               outputDir: normalizeOutputDir(outputDir),
@@ -378,6 +384,7 @@ const ExportApp = () => {
     },
     [
       currentScanTarget,
+      blogKey,
       options,
       outputDir,
       scopedPostCount,
@@ -554,6 +561,7 @@ const ExportApp = () => {
   const {
     ensureScanResult,
     handleBlogInputChange,
+    handleBlogKeyChange,
     handleOutputDirChange,
     handleOutputDirBlur,
     handleCategoryToggle,
@@ -569,6 +577,7 @@ const ExportApp = () => {
     setupStep,
     setupStepIndex,
     currentScanTarget,
+    blogKey,
     outputDir,
     outputDirBaseline,
     activeScanResult,
@@ -596,6 +605,7 @@ const ExportApp = () => {
     setResettingResume,
     setRestoringResume,
     setSourceIdOrUrl,
+    setBlogKey,
     setOutputDir,
     setNeutralScanStatus,
     setErrorScanStatus,
@@ -664,6 +674,7 @@ const ExportApp = () => {
           testUploadResult={testUploadResult}
           testUploadError={testUploadError}
           sourceInput={sourceInput}
+          blogKey={blogKey}
           outputDir={outputDir}
           scanPending={scanPending}
           blockScanJob={blockScanJob}
@@ -685,6 +696,7 @@ const ExportApp = () => {
           setCategorySearch={setCategorySearch}
           updateOptions={updateOptions}
           handleBlogInputChange={handleBlogInputChange}
+          handleBlogKeyChange={handleBlogKeyChange}
           handleOutputDirChange={handleOutputDirChange}
           handleOutputDirBlur={handleOutputDirBlur}
           handleSelectAllCategories={handleSelectAllCategories}

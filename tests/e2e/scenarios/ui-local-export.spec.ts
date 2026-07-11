@@ -1158,6 +1158,7 @@ const runUiLocalExport = async ({ browser }: { browser: Browser }) => {
       await route.fulfill(
         buildJsonResponse({
           profile: "gfm",
+          blogs: [{ key: "naver", label: "Naver" }],
           options: defaultExportOptions(),
           lastOutputDir: outputDir,
           themePreference: mockState.themePreference,

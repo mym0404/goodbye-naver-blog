@@ -38,6 +38,7 @@ export const createHttpServerState = ({
   defaultOutputDir,
   defaultThemePreference,
   blockTemplateDefinitions,
+  blogs,
 }: {
   jobStore: JobStore
   scanCachePath: string
@@ -45,6 +46,7 @@ export const createHttpServerState = ({
   defaultOutputDir: string
   defaultThemePreference: ThemePreference
   blockTemplateDefinitions: BlockTemplateDefinition[]
+  blogs: { key: string; label: string }[]
 }) => {
   let scanCachePromise: Promise<ScanCacheMap> | null = null
   const jobScanResults = new Map<string, ScanResult | null>()
@@ -163,6 +165,7 @@ export const createHttpServerState = ({
       frontmatterFieldMeta,
       optionDescriptions,
       blockTemplateDefinitions,
+      blogs,
     }
   }
 

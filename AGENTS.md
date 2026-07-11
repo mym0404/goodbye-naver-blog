@@ -21,7 +21,7 @@
 |-- packages/domain/          # shared contracts and pure option/path logic
 |-- packages/engine/          # blog interfaces, render/export/assets/upload rewrite
 |-- packages/blog-naver/      # concrete Naver blog adapter
-|-- packages/blog-tistory/    # minimal concrete Tistory blog adapter
+|-- packages/blog-tistory/    # concrete Tistory blog adapter
 |-- packages/server/          # local HTTP API, jobs, state, upload catalog, static serving
 |-- packages/web/             # React export wizard, Storybook view, UI primitives
 |-- scripts/                  # single-post, evidence, Storybook, maintenance CLIs

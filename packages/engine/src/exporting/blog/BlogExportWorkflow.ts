@@ -142,7 +142,10 @@ export class BlogExportWorkflow {
             sourceInput: this.request.sourceInput,
             cachedScanResult: this.cachedScanResult,
           })
-        : await this.blog.scan(source)
+        : await this.blog.scan(source, {
+            ...(this.postContentCache ? { cache: this.postContentCache } : {}),
+            ...(this.abortSignal ? { signal: this.abortSignal } : {}),
+          })
 
     throwIfAborted(this.abortSignal)
 

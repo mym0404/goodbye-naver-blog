@@ -12,6 +12,10 @@ import { defaultOutputDir } from "../features/scan/ScanStatus.js"
 export const defaultBlogKey = "naver"
 
 export const fallbackDefaults: ExportBootstrapResponse = {
+  blogs: [
+    { key: "naver", label: "Naver" },
+    { key: "tistory", label: "Tistory" },
+  ],
   profile: "gfm",
   options: defaultExportOptions(),
   lastOutputDir: defaultOutputDir,

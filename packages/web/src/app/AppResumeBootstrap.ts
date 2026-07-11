@@ -18,12 +18,15 @@ import {
   restoredScanStatus,
 } from "../features/scan/ScanStatus.js"
 
+import { defaultBlogKey } from "./AppDefaults.js"
+
 export const useAppResumeBootstrap = ({
   hydrateJob,
   setDefaults,
   setOptions,
   setOutputDir,
   setSourceIdOrUrl,
+  setBlogKey,
   setCategorySearch,
   setSetupStep,
   setActiveJobFilter,
@@ -41,6 +44,7 @@ export const useAppResumeBootstrap = ({
   setOptions: Dispatch<SetStateAction<ExportOptions>>
   setOutputDir: Dispatch<SetStateAction<string>>
   setSourceIdOrUrl: Dispatch<SetStateAction<string>>
+  setBlogKey: Dispatch<SetStateAction<string>>
   setCategorySearch: Dispatch<SetStateAction<string>>
   setSetupStep: Dispatch<SetStateAction<SetupStep>>
   setActiveJobFilter: Dispatch<SetStateAction<JobFilter>>
@@ -75,6 +79,7 @@ export const useAppResumeBootstrap = ({
       setOptions(resumedJob.request.options)
       setOutputDir(normalizeOutputDir(resumedJob.request.outputDir))
       setSourceIdOrUrl(resumedJob.request.sourceInput)
+      setBlogKey(resumedJob.request.blogKey)
       setCategorySearch("")
       setSetupStep("blog-input")
       setActiveJobFilter("all")
@@ -83,7 +88,7 @@ export const useAppResumeBootstrap = ({
       if (resumedScanResult) {
         setScanCache((current) => ({
           ...current,
-          [resumedScanResult.sourceId]: resumedScanResult,
+          [resumedJob.request.sourceInput]: resumedScanResult,
         }))
         setNeutralScanStatus(`${resumedScanResult.sourceId} 스캔 결과를 불러왔습니다.`)
         setCategoryStatus(restoredCategoryStatus)
@@ -104,6 +109,7 @@ export const useAppResumeBootstrap = ({
       lastNotifiedJobKeyRef,
       setActiveJobFilter,
       setSourceIdOrUrl,
+      setBlogKey,
       setCategorySearch,
       setCategoryStatus,
       setDefaults,
@@ -137,13 +143,17 @@ export const useAppResumeBootstrap = ({
         ),
       )
       setSourceIdOrUrl(nextDefaults.resumedJob?.request.sourceInput ?? "")
+      setBlogKey(nextDefaults.resumedJob?.request.blogKey ?? defaultBlogKey)
       setCategorySearch("")
       setSetupStep("blog-input")
       setActiveJobFilter("all")
       setScanPending(false)
 
       if (nextDefaults.resumedScanResult) {
-        setScanCache({ [nextDefaults.resumedScanResult.sourceId]: nextDefaults.resumedScanResult })
+        setScanCache({
+          [nextDefaults.resumedJob?.request.sourceInput ?? nextDefaults.resumedScanResult.sourceId]:
+            nextDefaults.resumedScanResult,
+        })
         setNeutralScanStatus(`${nextDefaults.resumedScanResult.sourceId} 스캔 결과를 불러왔습니다.`)
         setCategoryStatus(restoredCategoryStatus)
       } else {
@@ -173,6 +183,7 @@ export const useAppResumeBootstrap = ({
       lastNotifiedJobKeyRef,
       setActiveJobFilter,
       setSourceIdOrUrl,
+      setBlogKey,
       setCategorySearch,
       setCategoryStatus,
       setDefaults,

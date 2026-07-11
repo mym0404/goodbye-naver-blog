@@ -1,199 +1,334 @@
+import { delay, mapConcurrent } from "@exitpress/engine/shared/async/util/AsyncTasks.js"
 import { load } from "cheerio"
 
-import type { ParsedBlock } from "@exitpress/domain/parser/schema/ParsedPost.js"
-import type { BlockTemplateDefinition } from "@exitpress/domain/template/schema/BlockTemplateDefinition.js"
+import type { BlogPostRef, BlogSource } from "@exitpress/domain/blog/schema/Blog.js"
 import type { Blog } from "@exitpress/engine/blog/Blog.js"
 
+import {
+  getTistoryBlockTemplateDefinitions,
+  parseTistoryPostHtml,
+} from "./parsing/TistoryPostParser.js"
+
 const blogKey = "tistory"
-const uncategorizedCategoryId = 0
+const uncategorized = "Uncategorized"
+const metadataConcurrency = 1
 
 type CreateTistoryBlogOptions = {
-  fetchText?: (url: string) => Promise<string>
+  fetchText?: (url: string, signal?: AbortSignal) => Promise<string>
+  fetchBinary?: (url: string, signal?: AbortSignal) => Promise<Response>
 }
 
-const defaultFetchText = async (url: string) => {
-  const response = await fetch(url)
+const defaultFetchText = async (url: string, signal?: AbortSignal) => {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const response = await fetch(url, { signal })
 
-  if (!response.ok) {
-    throw new Error(`Tistory fetch failed: ${response.status}`)
+    if (response.ok) {
+      return response.text()
+    }
+
+    if (response.status !== 429 || attempt === 3) {
+      throw new Error(`Tistory fetch failed: ${response.status} ${url}`)
+    }
+
+    const retryAfter = Number(response.headers.get("retry-after"))
+    const delayMs =
+      Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1_000 : 500 * 2 ** attempt
+
+    await delay(delayMs)
   }
 
-  return response.text()
+  throw new Error(`Tistory fetch failed: ${url}`)
 }
 
-const getPostId = (input: string) => {
-  const url = new URL(input)
-  const lastSegment = url.pathname.split("/").filter(Boolean).at(-1)
+const defaultFetchBinary = (url: string, signal?: AbortSignal) => fetch(url, { signal })
 
-  return lastSegment ?? url.href
+const getOrigin = (source: BlogSource) => new URL(source.input).origin
+
+const getPostId = (url: string) => {
+  const pathname = new URL(url).pathname.replace(/\/$/, "")
+  const segments = pathname.split("/").filter(Boolean)
+
+  return decodeURIComponent(segments.at(-1) ?? pathname)
 }
 
-const getTitle = (html: string) => {
-  const $ = load(html)
+const getCanonicalPostUrls = ({ sitemap, source }: { sitemap: string; source: BlogSource }) => {
+  const $ = load(sitemap, { xmlMode: true })
+  const sourceHost = new URL(source.input).host
+  const seen = new Set<string>()
 
-  return (
-    $('meta[property="og:title"]').attr("content")?.trim() ||
-    $("title").text().trim() ||
-    "Untitled Tistory Post"
-  )
-}
+  return $("loc")
+    .toArray()
+    .flatMap((node) => {
+      const rawUrl = $(node).text().trim()
 
-const getPublishedAt = (html: string) => {
-  const $ = load(html)
+      if (!rawUrl) {
+        return []
+      }
 
-  return (
-    $('meta[property="article:published_time"]').attr("content")?.trim() ||
-    new Date(0).toISOString()
-  )
-}
+      const url = new URL(rawUrl)
+      const pathname = url.pathname.replace(/\/$/, "")
 
-const parseHtmlBlocks = (html: string) => {
-  const $ = load(html)
-  const root = $("article").first().length > 0 ? $("article").first() : $("body")
-  const blocks: ParsedBlock[] = []
+      if (
+        url.host !== sourceHost ||
+        pathname.startsWith("/m/") ||
+        (!/^\/\d+$/.test(pathname) && !/^\/entry\/[^/]+$/.test(pathname))
+      ) {
+        return []
+      }
 
-  root.find("h1, h2, h3, p").each((_, element) => {
-    const node = $(element)
-    const text = node.text().trim()
+      url.search = ""
+      url.hash = ""
+      url.pathname = pathname
+      const canonical = url.href
 
-    if (!text) {
-      return
-    }
+      if (seen.has(canonical)) {
+        return []
+      }
 
-    const tagName = element.tagName.toLowerCase()
-
-    if (tagName === "p") {
-      blocks.push({
-        blockId: "tistory:paragraph",
-        props: {
-          text,
-        },
-      })
-      return
-    }
-
-    blocks.push({
-      blockId: "tistory:heading",
-      props: {
-        level: Number(tagName.slice(1)),
-        marker: "#".repeat(Number(tagName.slice(1))),
-        text,
-      },
+      seen.add(canonical)
+      return [canonical]
     })
-  })
-
-  return blocks
 }
 
-const blockTemplateDefinitions: BlockTemplateDefinition[] = [
-  {
-    key: "tistory:heading",
-    label: "Tistory Heading",
-    props: {
-      level: {
-        label: "level",
-        type: "number",
-      },
-      text: {
-        label: "text",
-        type: "string",
-      },
-      marker: {
-        label: "marker",
-        type: "string",
-      },
-    },
-    presets: [
-      {
-        id: "default",
-        label: "Default",
-        template: "{{ marker }} {{ text }}",
-      },
-    ],
-  },
-  {
-    key: "tistory:paragraph",
-    label: "Tistory Paragraph",
-    props: {
-      text: {
-        label: "text",
-        type: "string",
-      },
-    },
-    presets: [
-      {
-        id: "default",
-        label: "Default",
-        template: "{{ text }}",
-      },
-    ],
-  },
-]
+const getMetaContent = (html: string, selectors: string[]) => {
+  const $ = load(html)
+
+  for (const selector of selectors) {
+    const content = $(selector).first().attr("content")?.trim()
+
+    if (content) {
+      return content
+    }
+  }
+
+  return undefined
+}
+
+const getEntryInfoCategory = (html: string) => {
+  const match = /window\.T\.entryInfo\s*=\s*(\{[^\n]+\})\s*;/.exec(html)
+
+  if (!match?.[1]) {
+    return undefined
+  }
+
+  try {
+    const entryInfo = JSON.parse(match[1]) as { categoryLabel?: unknown }
+
+    return typeof entryInfo.categoryLabel === "string" ? entryInfo.categoryLabel.trim() : undefined
+  } catch {
+    return undefined
+  }
+}
+
+const parsePostMetadata = ({
+  html,
+  source,
+  sourceUrl,
+}: {
+  html: string
+  source: BlogSource
+  sourceUrl: string
+}) => {
+  const $ = load(html)
+  const postId = getPostId(sourceUrl)
+  const title =
+    getMetaContent(html, ['meta[property="og:title"]', 'meta[name="title"]']) ??
+    $("title").text().trim() ??
+    postId
+  const publishedAt =
+    getMetaContent(html, [
+      'meta[property="article:published_time"]',
+      'meta[property="og:regDate"]',
+      'meta[name="date"]',
+    ]) ??
+    $("time[datetime]").first().attr("datetime")?.trim() ??
+    new Date(0).toISOString()
+  const categoryName =
+    getMetaContent(html, ['meta[property="article:section"]', 'meta[name="category"]']) ??
+    getEntryInfoCategory(html) ??
+    $('.post-category, .content-title .category a, a[href^="/category/"]').first().text().trim() ??
+    uncategorized
+  const thumbnailUrl =
+    getMetaContent(html, ['meta[property="og:image"]', 'meta[name="twitter:image"]']) ?? undefined
+
+  return {
+    blogKey,
+    sourceId: source.sourceId,
+    postId,
+    title: title || postId,
+    sourceUrl,
+    publishedAt,
+    categoryName: categoryName.replace(/^['"]|['"]$/g, "").trim() || uncategorized,
+    thumbnailUrl,
+  }
+}
 
 export const createTistoryBlog = ({
   fetchText = defaultFetchText,
+  fetchBinary = defaultFetchBinary,
 }: CreateTistoryBlogOptions = {}): Blog => ({
   key: blogKey,
   label: "Tistory",
   parseSource: (input) => {
-    const url = new URL(input)
+    const url = new URL(input.trim())
 
     return {
       blogKey,
       sourceId: url.host,
       displayName: url.host,
-      input,
+      input: url.href,
     }
   },
-  scan: async (source) => {
-    const html = await fetchText(source.input)
-    const postId = getPostId(source.input)
-    const title = getTitle(html)
-    const categoryName = "Uncategorized"
+  scan: async (source, options) => {
+    const sitemap = await fetchText(`${getOrigin(source)}/sitemap.xml`, options?.signal)
+    const postUrls = getCanonicalPostUrls({ sitemap, source })
+
+    if (postUrls.length === 0) {
+      throw new Error(`Tistory sitemap contains no public posts: ${source.sourceId}`)
+    }
+
+    const metadata = await mapConcurrent({
+      items: postUrls,
+      concurrency: metadataConcurrency,
+      mapper: async (sourceUrl) => {
+        const postId = getPostId(sourceUrl)
+        try {
+          const cached = await options?.cache?.getPostHtml?.({
+            blogKey,
+            sourceId: source.sourceId,
+            postId,
+          })
+          const html = cached ?? (await fetchText(sourceUrl, options?.signal))
+
+          if (cached === null || cached === undefined) {
+            await options?.cache?.setPostHtml?.({
+              blogKey,
+              sourceId: source.sourceId,
+              postId,
+              html,
+            })
+          }
+
+          return parsePostMetadata({ html, source, sourceUrl })
+        } catch (error) {
+          if (
+            options?.signal?.aborted ||
+            (error instanceof Error &&
+              ("code" in error || error.message.startsWith("Tistory fetch failed: 429")))
+          ) {
+            throw error
+          }
+
+          return parsePostMetadata({ html: "", source, sourceUrl })
+        }
+      },
+    })
+    const categoryIdByPath = new Map<string, number>()
+    const getCategoryPath = (categoryName: string) =>
+      categoryName
+        .split("/")
+        .map((part) => part.trim())
+        .filter(Boolean)
+    metadata.forEach(({ categoryName }) => {
+      const pathParts = getCategoryPath(categoryName)
+
+      pathParts.forEach((_, index) => {
+        const categoryPath = pathParts.slice(0, index + 1).join("/")
+
+        if (!categoryIdByPath.has(categoryPath)) {
+          categoryIdByPath.set(categoryPath, categoryIdByPath.size)
+        }
+      })
+    })
+
+    const posts: BlogPostRef[] = metadata.map((post) => ({
+      ...post,
+      categoryId: categoryIdByPath.get(getCategoryPath(post.categoryName).join("/"))!,
+      categoryName: getCategoryPath(post.categoryName).at(-1) ?? uncategorized,
+    }))
 
     return {
       source,
-      totalPostCount: 1,
-      categories: [
-        {
-          id: uncategorizedCategoryId,
-          name: categoryName,
-          parentId: undefined,
-          postCount: 1,
-          path: [categoryName],
-          depth: 0,
-        },
-      ],
-      posts: [
-        {
-          blogKey,
-          sourceId: source.sourceId,
-          postId,
-          title,
-          sourceUrl: source.input,
-          publishedAt: getPublishedAt(html),
-          categoryId: uncategorizedCategoryId,
-          categoryName,
-          thumbnailUrl: undefined,
-        },
-      ],
+      totalPostCount: posts.length,
+      categories: [...categoryIdByPath].map(([categoryPath, id]) => {
+        const pathParts = categoryPath.split("/")
+        const parentPath = pathParts.slice(0, -1).join("/")
+
+        return {
+          id,
+          name: pathParts.at(-1)!,
+          parentId: parentPath ? categoryIdByPath.get(parentPath) : undefined,
+          postCount: metadata.filter(({ categoryName }) => {
+            const postCategoryPath = getCategoryPath(categoryName).join("/")
+
+            return (
+              postCategoryPath === categoryPath || postCategoryPath.startsWith(`${categoryPath}/`)
+            )
+          }).length,
+          path: pathParts,
+          depth: pathParts.length - 1,
+        }
+      }),
+      posts,
     }
   },
-  loadPostContent: async ({ source, post }) => ({
-    kind: "html",
-    html: await fetchText(post.sourceUrl || source.input),
-    sourceUrl: post.sourceUrl || source.input,
-    tags: [],
-  }),
-  parseContent: ({ content }) => {
+  loadPostContent: async ({ source, post, cache, signal }) => {
+    const cached = await cache?.getPostHtml?.({
+      blogKey,
+      sourceId: source.sourceId,
+      postId: post.postId,
+    })
+    const html = cached ?? (await fetchText(post.sourceUrl || source.input, signal))
+
+    if (cached === null || cached === undefined) {
+      await cache?.setPostHtml?.({
+        blogKey,
+        sourceId: source.sourceId,
+        postId: post.postId,
+        html,
+      })
+    }
+
+    const $ = load(html)
+    const tags = $('meta[property="article:tag"]')
+      .toArray()
+      .map((node) => $(node).attr("content")?.trim())
+      .filter((tag): tag is string => Boolean(tag))
+
+    return { kind: "html", html, sourceUrl: post.sourceUrl || source.input, tags }
+  },
+  parseContent: ({ content, options }) => {
     if (content.kind !== "html") {
       throw new Error(`Unsupported Tistory content kind: ${content.kind}`)
     }
 
-    return {
-      tags: content.tags,
-      blocks: parseHtmlBlocks(content.html),
+    return parseTistoryPostHtml({ html: content.html, tags: content.tags, options })
+  },
+  getBlockTemplateDefinitions: getTistoryBlockTemplateDefinitions,
+  resolvePostLinkIdentity: (value) => {
+    try {
+      const url = new URL(value)
+      const pathname = url.pathname.replace(/\/$/, "")
+
+      if (!/^\/\d+$/.test(pathname) && !/^\/entry\/[^/]+$/.test(pathname)) {
+        return undefined
+      }
+
+      return { blogKey, sourceId: url.host, postId: getPostId(url.href) }
+    } catch {
+      return undefined
     }
   },
-  getBlockTemplateDefinitions: () => blockTemplateDefinitions,
+  fetchBinary: async ({ sourceUrl }) => {
+    const response = await fetchBinary(sourceUrl)
+
+    if (!response.ok) {
+      throw new Error(`Tistory binary fetch failed: ${response.status}`)
+    }
+
+    return {
+      bytes: Buffer.from(await response.arrayBuffer()),
+      contentType: response.headers.get("content-type"),
+    }
+  },
 })

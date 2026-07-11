@@ -12,7 +12,8 @@
   "dependencies": {
     "@exitpress/domain": "workspace:*",
     "@exitpress/engine": "workspace:*",
-    "cheerio": "catalog:"
+    "cheerio": "catalog:",
+    "domhandler": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

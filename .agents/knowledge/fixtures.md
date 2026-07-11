@@ -5,10 +5,10 @@
 - Each sample must contain either `expected.md` or `expected-error.md`.
 - `tests/support/sample-fixtures.spec.ts` discovers directories dynamically.
 - `tests/support/sample-fixtures.ts` parses expected frontmatter, fetches the live source post HTML from `blogKey`, `sourceId`, and `postId`, and renders it with fixture export options.
-- Live sample HTML is cached under `tmp/harness/sample-post-html-cache` through the concrete blog fetcher cache interface outside CI.
+- Live sample HTML is cached under `tmp/harness/sample-post-html-cache` through the shared `BlogPostContentCache` interface outside CI.
 - CI fixture runs bypass the sample HTML cache and fetch live HTML directly.
 - Sample fixtures do not store source HTML files; update `blogKey`, `sourceId`, `postId`, and expected Markdown from the live post.
-- Concrete blog packages normalize volatile attachment download URLs so expected Markdown does not depend on request-specific download tokens.
+- The shared fixture harness normalizes volatile asset URLs so expected Markdown does not depend on request-specific download tokens.
 
 ## Fixture Options
 - Sample fixture rendering uses `defaultExportOptions()`.

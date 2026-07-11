@@ -15,6 +15,7 @@ export type UseWizardActionsArgs = {
   setupStep: SetupStep
   setupStepIndex: number
   currentScanTarget: string
+  blogKey: string
   outputDir: string
   outputDirBaseline: string
   activeScanResult: ScanResult | null
@@ -47,6 +48,7 @@ export type UseWizardActionsArgs = {
   setResettingResume: (value: boolean) => void
   setRestoringResume: (value: boolean) => void
   setSourceIdOrUrl: (value: string) => void
+  setBlogKey: (value: string) => void
   setOutputDir: Dispatch<SetStateAction<string>>
   setNeutralScanStatus: (message: string) => void
   setErrorScanStatus: (message: string) => void
@@ -59,6 +61,7 @@ export type UseWizardActionsArgs = {
 export type WizardScanActionsArgs = Pick<
   UseWizardActionsArgs,
   | "currentScanTarget"
+  | "blogKey"
   | "outputDir"
   | "outputDirBaseline"
   | "activeScanResult"
@@ -71,6 +74,7 @@ export type WizardScanActionsArgs = Pick<
   | "setCategorySearch"
   | "setSetupStep"
   | "setSourceIdOrUrl"
+  | "setBlogKey"
   | "setOutputDir"
   | "setNeutralScanStatus"
   | "setErrorScanStatus"

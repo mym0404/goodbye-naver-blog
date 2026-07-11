@@ -599,6 +599,7 @@ const createBootstrap = ({
   resumedJob: ExportJobState | null
 }) => ({
   profile: "gfm" as const,
+  blogs: [{ key: "naver", label: "Naver" }],
   options: defaultExportOptions(),
   lastOutputDir,
   themePreference: "dark" as const,

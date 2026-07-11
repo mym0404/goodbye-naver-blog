@@ -66,4 +66,17 @@ describe("createPostHtmlCache", () => {
       cache.getPostHtml?.({ blogKey: "naver", sourceId: "a", postId: "b-c" }),
     ).resolves.toBe("<html>a b-c</html>")
   })
+
+  it("stores post IDs longer than a filesystem path segment", async () => {
+    const cache = createPostHtmlCache({ cacheDir: await createTempDir() })
+    const input = {
+      blogKey: "tistory",
+      sourceId: "example.com",
+      postId: "긴-게시물-슬러그".repeat(30),
+    }
+
+    await cache.setPostHtml?.({ ...input, html: "<article>cached</article>" })
+
+    await expect(cache.getPostHtml?.(input)).resolves.toBe("<article>cached</article>")
+  })
 })
