@@ -49,6 +49,11 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
           label: "수식",
           presets: [
             {
+              id: "source-display",
+              label: "원문 표시 방식",
+              template: "{{ display ? `$$\\n${formula}\\n$$` : `$${formula}$` }}",
+            },
+            {
               id: "display-math",
               label: "표시 수식",
               template: "{{ `$$\\n${formula}\\n$$` }}",
@@ -125,24 +130,31 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
         inspectPath: "0",
         inputHtml:
           '<div id="viewTypeSelector">\n<div class="se-component se-oglink se-l-text" id="SE-dda2c40b-616c-45ba-ab4c-5037aa379504">\n                    <div class="se-component-content">\n                        <div class="se-section se-section-oglink se-l-text se-section-align-">\n                            <div class="se-module se-module-oglink">\n                                <a href="https://www.acmicpc.net/problem/9942" class="se-oglink-info" target="_blank">\n                                    <div class="se-oglink-info-container">\n                                        <strong class="se-oglink-title">9942번: 하노이의 네 탑</strong>\n                                        <p class="se-oglink-summary">9942번 제출 맞힌 사람 숏코딩 재채점 결과 채점 현황 질문 게시판 하노이의 네 탑 다국어 시간 제한 메모리 제한 제출 정답 맞힌 사람 정답 비율 3 초 128 MB 724 204 151 32.059% 문제 하노이의 탑 이라는 유명한 문제가 있다. 하지만 이 문제는 너무 유명한 나머지 이제는 식상하다. 그러니까 이번엔 탑을 3개가 아닌 4개로 늘려서 생각해보자! N개의 원판과 4개의 막대가 있을 때, 즉 보조 막대가 한 개가 아닌 두 개이면 몇 번 움직여서 모든 원판을 끝의 원판으로 옮길 수 있을까? 4개의 막대를 이용해서 N개의...</p>\n                                        <p class="se-oglink-url">www.acmicpc.net</p>\n                                    </div>\n                                </a>\n                            </div>\n                        </div>\n                    </div>\n                    <script type="text/data" class="__se_module_data" data-module="{&quot;type&quot;:&quot;v2_oglink&quot;, &quot;id&quot; :&quot;SE-dda2c40b-616c-45ba-ab4c-5037aa379504&quot;, &quot;data&quot; : {&quot;link&quot; : &quot;https://www.acmicpc.net/problem/9942&quot;, &quot;isVideo&quot; : &quot;false&quot;, &quot;thumbnail&quot; : &quot;https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fonlinejudgeimages.s3-ap-northeast-1.amazonaws.com%2Fimages%2Fboj-og.png%22&amp;type=ff120&quot;}}"></script>\n                </div>\n</div>',
-        markdown: "[9942번: 하노이의 네 탑](https://www.acmicpc.net/problem/9942)",
+        markdown:
+          "[9942번: 하노이의 네 탑](https://www.acmicpc.net/problem/9942)\n9942번 제출 맞힌 사람 숏코딩 재채점 결과 채점 현황 질문 게시판 하노이의 네 탑 다국어 시간 제한 메모리 제한 제출 정답 맞힌 사람 정답 비율 3 초 128 MB 724 204 151 32.059% 문제 하노이의 탑 이라는 유명한 문제가 있다. 하지만 이 문제는 너무 유명한 나머지 이제는 식상하다. 그러니까 이번엔 탑을 3개가 아닌 4개로 늘려서 생각해보자! N개의 원판과 4개의 막대가 있을 때, 즉 보조 막대가 한 개가 아닌 두 개이면 몇 번 움직여서 모든 원판을 끝의 원판으로 옮길 수 있을까? 4개의 막대를 이용해서 N개의...",
         templateDefinition: {
           label: "링크 카드",
           presets: [
             {
+              id: "card",
+              label: "썸네일·링크·설명",
+              template:
+                "{{ `${thumbnailUrl ? `![${title}](${thumbnailUrl})\\n` : ''}[${title}](${url})${description ? `\\n${description}` : ''}` }}",
+            },
+            {
               id: "link",
-              label: "링크",
+              label: "링크만",
               template: "{{ `[${title}](${url})` }}",
             },
             {
               id: "link-description",
-              label: "링크와 설명",
+              label: "링크와 설명만",
               template:
                 "{{ description ? `[${title}](${url})\\n${description}` : `[${title}](${url})` }}",
             },
             {
               id: "thumbnail-link",
-              label: "썸네일 링크",
+              label: "썸네일과 링크만",
               template:
                 "{{ thumbnailUrl ? `![${title}](${thumbnailUrl})\\n[${title}](${url})` : `[${title}](${url})` }}",
             },
@@ -225,8 +237,9 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
           presets: [
             {
               id: "default",
-              label: "링크",
-              template: "{{ `[${title}](${url})` }}",
+              label: "썸네일과 링크",
+              template:
+                "{{ thumbnailUrl ? `![${title}](${thumbnailUrl})\\n[${title}](${url})` : `[${title}](${url})` }}",
             },
           ],
           props: {
@@ -254,10 +267,6 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
               label: "비디오 ID",
               type: "string?",
             },
-            inkey: {
-              label: "접근 키",
-              type: "string?",
-            },
           },
           key: "naver-se4:video",
         },
@@ -274,18 +283,25 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
         inspectPath: "0",
         inputHtml:
           '<div id="viewTypeSelector">\n\n      <div class="se-component se-oembed">\n        <script class="__se_module_data" data-module-v2=\'{"type":"v2_oembed","data":{"inputUrl":"https://example.com/embed","title":"Embedded content","description":"Embed summary","thumbnailUrl":"https://example.com/embed-thumb.png"}}\'></script>\n      </div>\n    \n</div>',
-        markdown: "[Embedded content](https://example.com/embed)",
+        markdown:
+          "![Embedded content](https://example.com/embed-thumb.png)\n[Embedded content](https://example.com/embed)\nEmbed summary",
         templateDefinition: {
           label: "임베드",
           presets: [
             {
+              id: "card",
+              label: "썸네일·링크·설명",
+              template:
+                "{{ `${thumbnailUrl ? `![${title}](${thumbnailUrl})\\n` : ''}[${title}](${url})${description ? `\\n${description}` : ''}` }}",
+            },
+            {
               id: "link",
-              label: "링크",
+              label: "링크만",
               template: "{{ `[${title}](${url})` }}",
             },
             {
               id: "link-description",
-              label: "링크와 설명",
+              label: "링크와 설명만",
               template:
                 "{{ description ? `[${title}](${url})\\n${description}` : `[${title}](${url})` }}",
             },
@@ -338,6 +354,24 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
             places: {
               label: "장소 목록",
               type: "array",
+              items: {
+                label: "장소",
+                type: "object",
+                properties: {
+                  name: {
+                    label: "이름",
+                    type: "string",
+                  },
+                  address: {
+                    label: "주소",
+                    type: "string",
+                  },
+                  url: {
+                    label: "URL",
+                    type: "string",
+                  },
+                },
+              },
             },
           },
           key: "naver-se4:map",
@@ -418,14 +452,6 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
               label: "URL",
               type: "string",
             },
-            description: {
-              label: "설명",
-              type: "string",
-            },
-            thumbnailUrl: {
-              label: "썸네일 URL",
-              type: "string?",
-            },
           },
           key: "naver-se4:talkTalk",
         },
@@ -443,21 +469,51 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
         inputHtml:
           '<div id="viewTypeSelector">\n<div class="se-component se-table se-l-default" id="SE-bcf26bfc-7272-4855-8a52-13a1949ea70a">\n                    <div class="se-component-content">\n                        <div class="se-section se-section-table se-l-default se-section-align-center" style="width: 70%;">\n                            <div class="se-table-container">\n                                <table class="se-table-content" style="">\n                                    <tbody><tr class="se-tr"><td class="se-cell" colspan="1" rowspan="1" style="width: 50.0%; height: 43.0px;  background-color: #00a84b;">\n                                                <div class="se-module se-module-text"><p class="se-text-paragraph se-text-paragraph-align-center " style="line-height:2.4;" id="SE-7fedf11e-3f87-4341-afd7-ddc87be9114e"><span style="color:#ffffff;" class="se-fs-fs13 se-ff-nanumbarungothic   " id="SE-0EC127B0-FD19-4801-A2AE-1E3651FE06D8"><b>교통비</b></span></p></div>\n                \n                                    </td><td class="se-cell" colspan="1" rowspan="1" style="width: 50.0%; height: 43.0px;  ">\n                                                <div class="se-module se-module-text"><p class="se-text-paragraph se-text-paragraph-align-center " style="line-height:2.4;" id="SE-0d6f276d-c863-42ae-8162-7812c1cecbdc"><span style="color:#00a84b;" class="se-fs-fs13 se-ff-nanumbarungothic   " id="SE-DF2B3A4C-2FEF-4975-ABE4-858516C1DAC3"><b>41,600원</b></span></p></div>\n                \n                                    </td></tr><tr class="se-tr"><td class="se-cell" colspan="1" rowspan="1" style="width: 50.0%; height: 43.0px;  background-color: #00a84b;">\n                                                <div class="se-module se-module-text"><p class="se-text-paragraph se-text-paragraph-align-center " style="line-height:2.4;" id="SE-c3c3b020-8812-4d5c-aa86-99adf5535deb"><span style="color:#ffffff;" class="se-fs-fs13 se-ff-nanumbarungothic   " id="SE-7AAC1859-2B39-4E3E-B65C-7C906FD151C0"><b>숙박비</b></span></p></div>\n                \n                                    </td><td class="se-cell" colspan="1" rowspan="1" style="width: 50.0%; height: 43.0px;  ">\n                                                <div class="se-module se-module-text"><p class="se-text-paragraph se-text-paragraph-align-center " style="line-height:2.4;" id="SE-b4017d11-6561-4dea-8cb6-c369e7177db5"><span style="color:#00a84b;" class="se-fs-fs13 se-ff-nanumbarungothic   " id="SE-1B60C97A-FE81-44B4-9376-ED07283D4F77"><b>76,780원</b></span></p></div>\n                \n                                    </td></tr><tr class="se-tr"><td class="se-cell" colspan="1" rowspan="1" style="width: 50.0%; height: 43.0px;  background-color: #00a84b;">\n                                                <div class="se-module se-module-text"><p class="se-text-paragraph se-text-paragraph-align-center " style="line-height:2.4;" id="SE-1b9d9fc1-7ecb-4193-a31d-822afa2c2aca"><span style="color:#ffffff;" class="se-fs-fs13 se-ff-nanumbarungothic   " id="SE-054C2AF1-89D8-4ED0-B467-A3783BF75493"><b>식비</b></span></p></div>\n                \n                                    </td><td class="se-cell" colspan="1" rowspan="1" style="width: 50.0%; height: 43.0px;  ">\n                                                <div class="se-module se-module-text"><p class="se-text-paragraph se-text-paragraph-align-center " style="line-height:2.4;" id="SE-1352daf7-ef99-4cb5-b5a8-c309779d1a9a"><span style="color:#00a84b;" class="se-fs-fs13 se-ff-nanumbarungothic   " id="SE-BD87651C-56F4-453A-91A8-2B812581EE02"><b>62,290원</b></span></p></div>\n                \n                                    </td></tr><tr class="se-tr"><td class="se-cell" colspan="1" rowspan="1" style="width: 50.0%; height: 43.0px;  background-color: #00a84b;">\n                                                <div class="se-module se-module-text"><p class="se-text-paragraph se-text-paragraph-align-center " style="line-height:2.4;" id="SE-eb0c98cc-8f0e-4dd4-8a9f-dd30f6feca86"><span style="color:#ffffff;" class="se-fs- se-ff-nanumbarungothic   " id="SE-AB42F8BD-739F-4218-9E47-E29EF555F638"><b>* 합계 *</b></span></p></div>\n                \n                                    </td><td class="se-cell" colspan="1" rowspan="1" style="width: 50.0%; height: 43.0px;  ">\n                                                <div class="se-module se-module-text"><p class="se-text-paragraph se-text-paragraph-align-center " style="line-height:2.4;" id="SE-d28d976b-a618-42c5-ab00-56428de90cca"><span style="color:#00a84b;" class="se-fs- se-ff-nanumbarungothic   " id="SE-82713721-A7ED-475D-B95A-483081C09FD9"><b>180,670원</b></span></p></div>\n                \n                                    </td></tr></tbody>\n                                </table>\n                            </div>\n                        </div>\n                    </div>\n                    <script type="text/data" class="__se_module_data" data-module="{&quot;type&quot;:&quot;v2_table&quot;, &quot;id&quot; : &quot;SE-bcf26bfc-7272-4855-8a52-13a1949ea70a&quot;, &quot;data&quot;: { &quot;columnCount&quot; : &quot;2&quot; }}"></script>\n                </div>\n</div>',
         markdown:
-          "| 교통비 | 41,600원 |\n| --- | --- |\n| 숙박비 | 76,780원 |\n| 식비 | 62,290원 |\n| * 합계 * | 180,670원 |",
+          "|   |   |\n| --- | --- |\n| **교통비** | **41,600원** |\n| **숙박비** | **76,780원** |\n| **식비** | **62,290원** |\n| **\\* 합계 \\*** | **180,670원** |",
         templateDefinition: {
           label: "표",
           presets: [
             {
               id: "default",
-              label: "마크다운 표",
+              label: "표",
               template:
-                "{{ rows.length > 0 ? `| ${rows[0].map((cell) => cell.text).join(' | ')} |\\n| ${rows[0].map((cell) => '---').join(' | ')} |\\n${rows.slice(1).map((row) => '| ' + row.map((cell) => cell.text).join(' | ') + ' |').join('\\n')}` : html }}",
+                "{{ complex ? html : rows.length > 0 ? rows[0][0].isHeader ? `| ${rows[0].map(cell => cell.text).join(' | ')} |\\n| ${rows[0].map(cell => '---').join(' | ')} |${rows.slice(1).length ? `\\n${rows.slice(1).map(row => `| ${row.map(cell => cell.text).join(' | ')} |`).join('\\n')}` : ''}` : `| ${rows[0].map(cell => ' ').join(' | ')} |\\n| ${rows[0].map(cell => '---').join(' | ')} |\\n${rows.map(row => `| ${row.map(cell => cell.text).join(' | ')} |`).join('\\n')}` : html }}",
             },
           ],
           props: {
             rows: {
               label: "행",
               type: "array",
+              items: {
+                label: "셀 목록",
+                type: "array",
+                items: {
+                  label: "셀",
+                  type: "object",
+                  properties: {
+                    text: {
+                      label: "텍스트",
+                      type: "string",
+                    },
+                    html: {
+                      label: "HTML",
+                      type: "string",
+                    },
+                    colspan: {
+                      label: "열 병합 수",
+                      type: "number",
+                    },
+                    rowspan: {
+                      label: "행 병합 수",
+                      type: "number",
+                    },
+                    isHeader: {
+                      label: "머리글 여부",
+                      type: "boolean",
+                    },
+                  },
+                },
+              },
             },
             html: {
               label: "HTML",
@@ -499,6 +555,24 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
             images: {
               label: "이미지 목록",
               type: "array",
+              items: {
+                label: "이미지",
+                type: "object",
+                properties: {
+                  url: {
+                    label: "URL",
+                    type: "string",
+                  },
+                  alt: {
+                    label: "대체 텍스트",
+                    type: "string",
+                  },
+                  caption: {
+                    label: "캡션",
+                    type: "string?",
+                  },
+                },
+              },
             },
           },
           key: "naver-se4:imageStrip",
@@ -532,6 +606,24 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
             images: {
               label: "이미지 목록",
               type: "array",
+              items: {
+                label: "이미지",
+                type: "object",
+                properties: {
+                  url: {
+                    label: "URL",
+                    type: "string",
+                  },
+                  alt: {
+                    label: "대체 텍스트",
+                    type: "string",
+                  },
+                  caption: {
+                    label: "캡션",
+                    type: "string?",
+                  },
+                },
+              },
             },
           },
           key: "naver-se4:imageGroup",
@@ -595,8 +687,8 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
           presets: [
             {
               id: "default",
-              label: "이미지 마크다운",
-              template: "{{ `![${alt}](${url})` }}",
+              label: "이미지와 캡션",
+              template: "{{ caption ? `![${alt}](${url})\\n${caption}` : `![${alt}](${url})` }}",
             },
           ],
           props: {
@@ -634,29 +726,12 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
           label: "감싸는 문단",
           presets: [
             {
-              id: "default",
-              label: "이미지 또는 본문",
-              template: "{{ (url ?? '') ? `![${alt}](${url})` : text }}",
+              id: "children",
+              label: "하위 블록",
+              template: "",
             },
           ],
-          props: {
-            text: {
-              label: "본문",
-              type: "string?",
-            },
-            alt: {
-              label: "대체 텍스트",
-              type: "string?",
-            },
-            url: {
-              label: "URL",
-              type: "string?",
-            },
-            caption: {
-              label: "캡션",
-              type: "string?",
-            },
-          },
+          props: {},
           key: "naver-se4:wrappingParagraph",
         },
       },
@@ -678,11 +753,15 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
           presets: [
             {
               id: "default",
-              label: "2단계 제목",
-              template: "## {{ text }}",
+              label: "원문 제목 단계",
+              template: '{{ "#".repeat(level) }} {{ text }}',
             },
           ],
           props: {
+            level: {
+              label: "단계",
+              type: "number",
+            },
             text: {
               label: "본문",
               type: "string",
@@ -737,7 +816,7 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
             {
               id: "default",
               label: "인용문",
-              template: "> {{ text }}",
+              template: "{{ text.split('\\n').map(line => `> ${line}`).join('\\n') }}",
             },
           ],
           props: {
@@ -769,7 +848,7 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
             {
               id: "default",
               label: "인용문",
-              template: "> {{ text }}",
+              template: "{{ text.split('\\n').map(line => `> ${line}`).join('\\n') }}",
             },
           ],
           props: {
@@ -824,18 +903,24 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
         inspectPath: "0",
         inputHtml:
           '<div id="viewTypeSelector">\n\n    <div class="se-component se-material">\n      <a class="se-module-material" href="https://example.com/material" data-linkdata=\'{"link":"https://example.com/material"}\'>\n        <span class="se-material-title">자료 링크</span>\n        <span class="se-material-detail">\n          <span class="se-material-detail-title">type</span>\n          <span class="se-material-detail-description">reference</span>\n        </span>\n      </a>\n    </div>\n  \n</div>',
-        markdown: "[자료 링크](https://example.com/material)",
+        markdown: "[자료 링크](https://example.com/material)\ntype: reference",
         templateDefinition: {
           label: "자료 링크",
           presets: [
             {
+              id: "card",
+              label: "썸네일·링크·설명",
+              template:
+                "{{ `${thumbnailUrl ? `![${title}](${thumbnailUrl})\\n` : ''}[${title}](${url})${description ? `\\n${description}` : ''}` }}",
+            },
+            {
               id: "link",
-              label: "링크",
+              label: "링크만",
               template: "{{ `[${title}](${url})` }}",
             },
             {
               id: "link-description",
-              label: "링크와 설명",
+              label: "링크와 설명만",
               template:
                 "{{ description ? `[${title}](${url})\\n${description}` : `[${title}](${url})` }}",
             },
@@ -932,21 +1017,51 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
         inputHtml:
           '<div id="viewTypeSelector">\n  <div class="se_component_wrap sect_dsc">\n<div class="se_component se_table default">\n        <div class="se_sectionArea se_align-center">\n            <div class="se_editArea">\n                <div id="SEDOC-1529308581022-1623543367_table_0" data-attachment-id="" class="se_table_wrap">\n                    <div class="se_table_innerWrap">\n                        <table class="se_table_col" style="width:66%;">\n                            <tbody>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="2" rowspan="1" style="width:100.0%;height:51.0px;background-color:#fff599;">\n                                        <div class="se_cellArea"><span class="se_fs_T2 "><b>Gundam Breaker 3 BREAK EDITION</b></span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>플랫폼</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 ">PS4 / PS Vita</span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>발매일</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 ">2017년 5월 2일 (한국)</span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>개발 / 유통</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span style="color:rgb(031,031,031);" class="se_fs_T3 ">BANDAI NAMCO Entertainment</span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>심의등급</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 ">12세 이용가</span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>장르</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 ">액션</span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>언어</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 ">자막 한국어 / 음성 영어</span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>희망소비자가격</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span style="color:rgb(031,031,031);" class="se_fs_T3 ">49,800원</span><span style="color:rgb(031,031,031);" class="se_fs_T3 "> </span></div>\n                                    </td>\n                                </tr>\n                            </tbody>\n                        </table>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n  </div>\n</div>',
         markdown:
-          "| Gundam Breaker 3 BREAK EDITION |\n| --- |\n| 플랫폼 |\n| 발매일 |\n| 개발 / 유통 |\n| 심의등급 |\n| 장르 |\n| 언어 |\n| 희망소비자가격 |",
+          '<table class="se_table_col" style="width:66%;">\n                            <tbody>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="2" rowspan="1" style="width:100.0%;height:51.0px;background-color:#fff599;">\n                                        <div class="se_cellArea"><span class="se_fs_T2 "><b>Gundam Breaker 3 BREAK EDITION</b></span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>플랫폼</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 ">PS4 / PS Vita</span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>발매일</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 ">2017년 5월 2일 (한국)</span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>개발 / 유통</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span style="color:rgb(031,031,031);" class="se_fs_T3 ">BANDAI NAMCO Entertainment</span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>심의등급</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 ">12세 이용가</span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>장르</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 ">액션</span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>언어</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 ">자막 한국어 / 음성 영어</span></div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>희망소비자가격</b></span></div>\n                                    </td>\n                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">\n                                        <div class="se_cellArea"><span style="color:rgb(031,031,031);" class="se_fs_T3 ">49,800원</span><span style="color:rgb(031,031,031);" class="se_fs_T3 "> </span></div>\n                                    </td>\n                                </tr>\n                            </tbody>\n                        </table>',
         templateDefinition: {
           label: "표",
           presets: [
             {
               id: "default",
-              label: "마크다운 표",
+              label: "표",
               template:
-                "{{ rows.length > 0 ? `| ${rows[0].map((cell) => cell.text).join(' | ')} |\\n| ${rows[0].map((cell) => '---').join(' | ')} |\\n${rows.slice(1).map((row) => '| ' + row.map((cell) => cell.text).join(' | ') + ' |').join('\\n')}` : html }}",
+                "{{ complex ? html : rows.length > 0 ? rows[0][0].isHeader ? `| ${rows[0].map(cell => cell.text).join(' | ')} |\\n| ${rows[0].map(cell => '---').join(' | ')} |${rows.slice(1).length ? `\\n${rows.slice(1).map(row => `| ${row.map(cell => cell.text).join(' | ')} |`).join('\\n')}` : ''}` : `| ${rows[0].map(cell => ' ').join(' | ')} |\\n| ${rows[0].map(cell => '---').join(' | ')} |\\n${rows.map(row => `| ${row.map(cell => cell.text).join(' | ')} |`).join('\\n')}` : html }}",
             },
           ],
           props: {
             rows: {
               label: "행",
               type: "array",
+              items: {
+                label: "셀 목록",
+                type: "array",
+                items: {
+                  label: "셀",
+                  type: "object",
+                  properties: {
+                    text: {
+                      label: "텍스트",
+                      type: "string",
+                    },
+                    html: {
+                      label: "HTML",
+                      type: "string",
+                    },
+                    colspan: {
+                      label: "열 병합 수",
+                      type: "number",
+                    },
+                    rowspan: {
+                      label: "행 병합 수",
+                      type: "number",
+                    },
+                    isHeader: {
+                      label: "머리글 여부",
+                      type: "boolean",
+                    },
+                  },
+                },
+              },
             },
             html: {
               label: "HTML",
@@ -979,7 +1094,7 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
             {
               id: "default",
               label: "인용문",
-              template: "> {{ text }}",
+              template: "{{ text.split('\\n').map(line => `> ${line}`).join('\\n') }}",
             },
           ],
           props: {
@@ -1039,24 +1154,31 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
         inspectPath: "0",
         inputHtml:
           '<div id="viewTypeSelector">\n  <div class="se_component_wrap sect_dsc">\n<div class="se_component se_oglink default">\n    <div class="se_sectionArea se_align-center">\n        <div class="se_editArea" id="SEDOC-1496873041549-75843753_oglink_0">\n            <div class="se_viewArea se_og_wrap">\n                <!-- <div class="se_og_box"> -->\n                <a class="se_og_box" href="http://contest.caesar.it/index.php/en/textures-2/" target="_blank">\n                    <div class="se_og_thumb">\n                        <img src="https://dthumb-phinf.pstatic.net/?src=%22http%3A%2F%2Fcontest.caesar.it%2Fwp-content%2Fuploads%2F2017%2F03%2FCDC_Mini.png%22&amp;type=ff120" alt="">\n\t\t\t\t\t</div>\n                    <div class="se_og_txt">\n                        <div class="se_og_tit">Textures</div>\n                        <div class="se_og_desc">DISCOVER MORE  DISCOVER MORE  DISCOVER MORE  DISCOVER MORE    DISCOVER MORE  DISCOVER MORE  DISCOVER MORE  DISCOVER MORE           DISCOVER MORE  DISCOVER MORE  DISCOVER MORE          \nOnline</div>\n                        <div class="se_og_cp">contest.caesar.it</div>\n                    </div>\n                <!-- </div> -->\n                </a>\n                    <!-- <a href="http://contest.caesar.it/index.php/en/textures-2/" target="_blank" class="se_og_link">본문으로 이동</a> -->\n            </div>\n        </div>\n    </div>\n</div>\n  </div>\n</div>',
-        markdown: "[Textures](http://contest.caesar.it/index.php/en/textures-2/)",
+        markdown:
+          "![Textures](https://dthumb-phinf.pstatic.net/?src=%22http%3A%2F%2Fcontest.caesar.it%2Fwp-content%2Fuploads%2F2017%2F03%2FCDC_Mini.png%22&type=ff120)\n[Textures](http://contest.caesar.it/index.php/en/textures-2/)\nDISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE Online",
         templateDefinition: {
           label: "링크 카드",
           presets: [
             {
+              id: "card",
+              label: "썸네일·링크·설명",
+              template:
+                "{{ `${thumbnailUrl ? `![${title}](${thumbnailUrl})\\n` : ''}[${title}](${url})${description ? `\\n${description}` : ''}` }}",
+            },
+            {
               id: "link",
-              label: "링크",
+              label: "링크만",
               template: "{{ `[${title}](${url})` }}",
             },
             {
               id: "link-description",
-              label: "링크와 설명",
+              label: "링크와 설명만",
               template:
                 "{{ description ? `[${title}](${url})\\n${description}` : `[${title}](${url})` }}",
             },
             {
               id: "thumbnail-link",
-              label: "썸네일 링크",
+              label: "썸네일과 링크만",
               template:
                 "{{ thumbnailUrl ? `![${title}](${thumbnailUrl})\\n[${title}](${url})` : `[${title}](${url})` }}",
             },
@@ -1110,6 +1232,24 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
             places: {
               label: "장소 목록",
               type: "array",
+              items: {
+                label: "장소",
+                type: "object",
+                properties: {
+                  name: {
+                    label: "이름",
+                    type: "string",
+                  },
+                  address: {
+                    label: "주소",
+                    type: "string",
+                  },
+                  url: {
+                    label: "URL",
+                    type: "string",
+                  },
+                },
+              },
             },
           },
           key: "naver-se3:map",
@@ -1143,6 +1283,24 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
             places: {
               label: "장소 목록",
               type: "array",
+              items: {
+                label: "장소",
+                type: "object",
+                properties: {
+                  name: {
+                    label: "이름",
+                    type: "string",
+                  },
+                  address: {
+                    label: "주소",
+                    type: "string",
+                  },
+                  url: {
+                    label: "URL",
+                    type: "string",
+                  },
+                },
+              },
             },
           },
           key: "naver-se3:mapText",
@@ -1166,8 +1324,9 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
           presets: [
             {
               id: "default",
-              label: "링크",
-              template: "{{ `[${title}](${url})` }}",
+              label: "썸네일과 링크",
+              template:
+                "{{ thumbnailUrl ? `![${title}](${thumbnailUrl})\\n[${title}](${url})` : `[${title}](${url})` }}",
             },
           ],
           props: {
@@ -1193,10 +1352,6 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
             },
             vid: {
               label: "비디오 ID",
-              type: "string?",
-            },
-            inkey: {
-              label: "접근 키",
               type: "string?",
             },
           },
@@ -1260,29 +1415,12 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
           label: "소재 카드",
           presets: [
             {
-              id: "default",
-              label: "이미지 또는 본문",
-              template: "{{ (url ?? '') ? `![${alt}](${url})` : text }}",
+              id: "children",
+              label: "하위 블록",
+              template: "",
             },
           ],
-          props: {
-            text: {
-              label: "본문",
-              type: "string?",
-            },
-            alt: {
-              label: "대체 텍스트",
-              type: "string?",
-            },
-            url: {
-              label: "URL",
-              type: "string?",
-            },
-            caption: {
-              label: "캡션",
-              type: "string?",
-            },
-          },
+          props: {},
           key: "naver-se3:subjectMatter",
         },
       },
@@ -1404,7 +1542,7 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
         inputHtml:
           '<div id="viewTypeSelector"><div class="__se_object" s_type="db" s_subtype="music" style="display: block;  " jsonvalue="%7B%22genre%22%3A%22%EB%B0%9C%EB%9D%BC%EB%93%9C(%EA%B5%AD%EB%82%B4)%22%2C%22thumb%22%3A%22https%3A%2F%2Fimage.music.naver.com%2Falbum%2F95%2F000%2F081%2F81020.jpg%22%2C%22genreCode%22%3A%221%22%2C%22code%22%3A%2281020%22%2C%22id%22%3A%2281020%22%2C%22mode%22%3A%22music%22%2C%22type%22%3A5%2C%22genreText%22%3A%22%22%2C%22title%22%3A%22%EC%98%A4%EC%A0%95%EC%84%A0%EA%B3%A8%EB%93%A0%EB%8F%85%EC%A7%91%22%7D">\n\n \n \n\n<!-- Not Allowed Attribute Filtered ( 굴림="굴림" gulim="Gulim" applegothic="AppleGothic" applemyungjo="AppleMyungjo" sans-serif="Sans-serif") --><table style="background: rgb(53, 53, 53); width: 548px; height: 131px; text-align: left; line-height: 12px; font-family: 돋움,Dotum,;" border="0" cellspacing="0" cellpadding="0"><tbody><tr><td align="left" valign="top" style="padding: 17px 0px; width: 131px;"><a class="con_link" href="http://music.naver.com/album/index.nhn?albumId=81020" target="_blank"><img src="https://image.music.naver.com/album/95/000/081/81020.jpg" class="__se_object" s_type="attachment" s_subtype="image" style="vertical-align: top;" width="131" height="131" border="0" jsonvalue="%7B%7D" alt="오정선골든독집"></a></td><td valign="top" style="padding: 19px 19px 13px; width: 379px;">\n  <p style="margin: 0px; line-height: 20px; font-size: 16px; font-weight: bold; white-space: nowrap;"><a class="con_link" style="color: rgb(255, 255, 255); letter-spacing: -1px; text-decoration: none;" href="http://music.naver.com/album/index.nhn?albumId=81020" target="_blank">오정선골든독집</a></p>\n  <dl style="margin: 12px 0px 0px; line-height: 1.5em; overflow: hidden; font-size: 12px; _zoom: 1;">\n  <dt style="width: 56px; color: rgb(102, 102, 102); float: left; _margin-right: -5px;">아티스트</dt>\n  <dd style="margin: 0px; color: rgb(204, 204, 204); overflow: hidden; _zoom: 1;">오정선</dd>\n  <dt style="width: 32px; color: rgb(102, 102, 102); float: left; _margin-right: -5px;">발매</dt>\n  <dd style="margin: 0px; color: rgb(204, 204, 204); overflow: hidden; _zoom: 1;">1979.03.01, 한국음원제작자협회</dd>\n  <dt style="width: 32px; color: rgb(102, 102, 102); float: left; _margin-right: -5px;">장르</dt>\n  <dd style="margin: 0px; color: rgb(204, 204, 204); overflow: hidden; _zoom: 1;">발라드(국내)</dd>\n  </dl>\n  <p style="margin: 5px 0px 0px; line-height: 12px; font-size: 12px;">\n   <a class="con_link" style="color: rgb(102, 102, 102); line-height: 14px; text-decoration: underline;" href="http://music.naver.com/albumreview/index.nhn?albumId=81020&amp;loc=album" target="_blank">리뷰보기</a>\n  </p>\n </td></tr></tbody></table>\n\n\n        <!--__se_object_end --></div></div>',
         markdown:
-          "|   | 오정선골든독집 아티스트 오정선 발매 1979.03.01, 한국음원제작자협회 장르 발라드(국내) 리뷰보기 |\n| --- | --- |",
+          "|   |   |\n| --- | --- |\n| [![오정선골든독집](https://image.music.naver.com/album/95/000/081/81020.jpg)](http://music.naver.com/album/index.nhn?albumId=81020) | [오정선골든독집](http://music.naver.com/album/index.nhn?albumId=81020) 아티스트 오정선 발매 1979.03.01, 한국음원제작자협회 장르 발라드(국내) [리뷰보기](http://music.naver.com/albumreview/index.nhn?albumId=81020&loc=album) |",
         templateDefinition: {
           label: "HTML 주석",
           presets: [
@@ -1468,29 +1606,12 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
           label: "책 위젯",
           presets: [
             {
-              id: "default",
-              label: "이미지 또는 본문",
-              template: "{{ (url ?? '') ? `![${alt}](${url})` : text }}",
+              id: "children",
+              label: "하위 블록",
+              template: "",
             },
           ],
-          props: {
-            text: {
-              label: "본문",
-              type: "string?",
-            },
-            alt: {
-              label: "대체 텍스트",
-              type: "string?",
-            },
-            url: {
-              label: "URL",
-              type: "string?",
-            },
-            caption: {
-              label: "캡션",
-              type: "string?",
-            },
-          },
+          props: {},
           key: "naver-se2:bookWidget",
         },
       },
@@ -1546,15 +1667,45 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
           presets: [
             {
               id: "default",
-              label: "마크다운 표",
+              label: "표",
               template:
-                "{{ rows.length > 0 ? `| ${rows[0].map((cell) => cell.text).join(' | ')} |\\n| ${rows[0].map((cell) => '---').join(' | ')} |\\n${rows.slice(1).map((row) => '| ' + row.map((cell) => cell.text).join(' | ') + ' |').join('\\n')}` : html }}",
+                "{{ complex ? html : rows.length > 0 ? rows[0][0].isHeader ? `| ${rows[0].map(cell => cell.text).join(' | ')} |\\n| ${rows[0].map(cell => '---').join(' | ')} |${rows.slice(1).length ? `\\n${rows.slice(1).map(row => `| ${row.map(cell => cell.text).join(' | ')} |`).join('\\n')}` : ''}` : `| ${rows[0].map(cell => ' ').join(' | ')} |\\n| ${rows[0].map(cell => '---').join(' | ')} |\\n${rows.map(row => `| ${row.map(cell => cell.text).join(' | ')} |`).join('\\n')}` : html }}",
             },
           ],
           props: {
             rows: {
               label: "행",
               type: "array",
+              items: {
+                label: "셀 목록",
+                type: "array",
+                items: {
+                  label: "셀",
+                  type: "object",
+                  properties: {
+                    text: {
+                      label: "텍스트",
+                      type: "string",
+                    },
+                    html: {
+                      label: "HTML",
+                      type: "string",
+                    },
+                    colspan: {
+                      label: "열 병합 수",
+                      type: "number",
+                    },
+                    rowspan: {
+                      label: "행 병합 수",
+                      type: "number",
+                    },
+                    isHeader: {
+                      label: "머리글 여부",
+                      type: "boolean",
+                    },
+                  },
+                },
+              },
             },
             html: {
               label: "HTML",
@@ -1584,8 +1735,8 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
           label: "중첩 컨테이너",
           presets: [
             {
-              id: "ignore",
-              label: "무시",
+              id: "children",
+              label: "하위 블록",
               template: "",
             },
           ],
@@ -1661,7 +1812,7 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
             {
               id: "default",
               label: "인용문",
-              template: "> {{ text }}",
+              template: "{{ text.split('\\n').map(line => `> ${line}`).join('\\n') }}",
             },
           ],
           props: {
@@ -1690,11 +1841,15 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
           presets: [
             {
               id: "default",
-              label: "2단계 제목",
-              template: "## {{ text }}",
+              label: "원문 제목 단계",
+              template: '{{ "#".repeat(level) }} {{ text }}',
             },
           ],
           props: {
+            level: {
+              label: "단계",
+              type: "number",
+            },
             text: {
               label: "본문",
               type: "string",
@@ -1794,8 +1949,9 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
           presets: [
             {
               id: "default",
-              label: "링크",
-              template: "{{ `[${title}](${url})` }}",
+              label: "썸네일과 링크",
+              template:
+                "{{ thumbnailUrl ? `![${title}](${thumbnailUrl})\\n[${title}](${url})` : `[${title}](${url})` }}",
             },
           ],
           props: {
@@ -1806,6 +1962,22 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
             url: {
               label: "URL",
               type: "string",
+            },
+            thumbnailUrl: {
+              label: "썸네일 URL",
+              type: "string?",
+            },
+            width: {
+              label: "너비",
+              type: "number?",
+            },
+            height: {
+              label: "높이",
+              type: "number?",
+            },
+            vid: {
+              label: "비디오 ID",
+              type: "string?",
             },
           },
           key: "naver-se2:video",
@@ -1906,6 +2078,568 @@ export const generatedStorybookCatalog: StorybookEditorGroup[] = [
             },
           },
           key: "naver-se2:paragraph",
+        },
+      },
+    ],
+  },
+  {
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    stories: [
+      {
+        storyKey: "tistory-0-ignore",
+        screenshotSrc: "tistory-0-ignore.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 0,
+        blockId: "ignore",
+        blockLabel: "무시",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          '<article><div class="tt_article_useless_p_margin"><div class="another_category"><h4>관련 글</h4><a href="/2">다른 글 보기</a></div></div></article>',
+        markdown: "Markdown 출력 없음",
+        templateDefinition: {
+          key: "tistory:ignore",
+          label: "무시",
+          presets: [
+            {
+              id: "ignore",
+              label: "무시",
+              template: "",
+            },
+          ],
+          props: {},
+        },
+      },
+      {
+        storyKey: "tistory-1-tableOfContents",
+        screenshotSrc: "tistory-1-tableOfContents.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 1,
+        blockId: "tableOfContents",
+        blockLabel: "목차",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          '<article><div class="tt_article_useless_p_margin"><nav class="toc"><strong>목차</strong><a href="#intro">소개</a><a href="#details">자세히</a></nav></div></article>',
+        markdown: "- [소개](#intro)\n- [자세히](#details)",
+        templateDefinition: {
+          key: "tistory:tableOfContents",
+          label: "목차",
+          presets: [
+            {
+              id: "link-list",
+              label: "목차 링크",
+              template:
+                "{{ items.map(item => `${'  '.repeat(item.depth)}- [${item.text}](${item.url})`).join('\\n') }}",
+            },
+          ],
+          props: {
+            items: {
+              label: "목차 항목",
+              type: "array",
+              items: {
+                label: "항목",
+                type: "object",
+                properties: {
+                  depth: {
+                    label: "깊이",
+                    type: "number",
+                  },
+                  text: {
+                    label: "텍스트",
+                    type: "string",
+                  },
+                  url: {
+                    label: "URL",
+                    type: "string",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        storyKey: "tistory-2-linkCard",
+        screenshotSrc: "tistory-2-linkCard.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 2,
+        blockId: "linkCard",
+        blockLabel: "링크 카드",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          "<article><div class=\"tt_article_useless_p_margin\"><figure data-ke-type=\"opengraph\" class=\"og-link\"><a href=\"https://example.com/article\"><img src=\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20640%20360'%3E%3Crect%20width='640'%20height='360'%20fill='%232f81f7'/%3E%3Ccircle%20cx='500'%20cy='90'%20r='44'%20fill='%23f0f6fc'/%3E%3Cpath%20d='M0%20310%20190%20135%20330%20265%20430%20180%20640%20335V360H0Z'%20fill='%233fb950'/%3E%3C/svg%3E\" alt=\"\"><strong class=\"og-title\">링크 카드 제목</strong><p class=\"og-desc\">링크 카드 설명입니다.</p></a></figure></div></article>",
+        markdown:
+          "![링크 카드 제목](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20640%20360'%3E%3Crect%20width='640'%20height='360'%20fill='%232f81f7'/%3E%3Ccircle%20cx='500'%20cy='90'%20r='44'%20fill='%23f0f6fc'/%3E%3Cpath%20d='M0%20310%20190%20135%20330%20265%20430%20180%20640%20335V360H0Z'%20fill='%233fb950'/%3E%3C/svg%3E)\n[링크 카드 제목](https://example.com/article)\n링크 카드 설명입니다.",
+        templateDefinition: {
+          key: "tistory:linkCard",
+          label: "링크 카드",
+          presets: [
+            {
+              id: "link-description",
+              label: "썸네일·링크·설명",
+              template:
+                "{{ `${thumbnailUrl ? `![${title}](${thumbnailUrl})\\n` : ''}[${title}](${url})${description ? `\\n${description}` : ''}` }}",
+            },
+          ],
+          props: {
+            title: {
+              label: "제목",
+              type: "string",
+            },
+            url: {
+              label: "URL",
+              type: "string",
+            },
+            description: {
+              label: "설명",
+              type: "string",
+            },
+            thumbnailUrl: {
+              label: "썸네일 URL",
+              type: "string?",
+            },
+          },
+        },
+      },
+      {
+        storyKey: "tistory-3-file",
+        screenshotSrc: "tistory-3-file.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 3,
+        blockId: "file",
+        blockLabel: "첨부파일",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          '<article><div class="tt_article_useless_p_margin"><figure data-ke-type="file"><a href="https://example.com/attachment/guide.pdf" download="guide.pdf">guide.pdf</a></figure></div></article>',
+        markdown: "[guide.pdf](https://example.com/attachment/guide.pdf)",
+        templateDefinition: {
+          key: "tistory:file",
+          label: "첨부파일",
+          presets: [
+            {
+              id: "file-link",
+              label: "파일 링크",
+              template: "{{ `[${fileName}](${fileUrl})` }}",
+            },
+          ],
+          props: {
+            fileName: {
+              label: "파일명",
+              type: "string",
+            },
+            fileUrl: {
+              label: "파일 URL",
+              type: "string",
+            },
+          },
+        },
+      },
+      {
+        storyKey: "tistory-4-media",
+        screenshotSrc: "tistory-4-media.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 4,
+        blockId: "media",
+        blockLabel: "미디어",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          "<article><div class=\"tt_article_useless_p_margin\"><video controls title=\"튜토리얼 영상\" src=\"https://media.example.com/tutorial.mp4\" poster=\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20640%20360'%3E%3Crect%20width='640'%20height='360'%20fill='%232f81f7'/%3E%3Ccircle%20cx='500'%20cy='90'%20r='44'%20fill='%23f0f6fc'/%3E%3Cpath%20d='M0%20310%20190%20135%20330%20265%20430%20180%20640%20335V360H0Z'%20fill='%233fb950'/%3E%3C/svg%3E\"></video></div></article>",
+        markdown: "[튜토리얼 영상](https://media.example.com/tutorial.mp4)",
+        templateDefinition: {
+          key: "tistory:media",
+          label: "미디어",
+          presets: [
+            {
+              id: "media-link",
+              label: "미디어 링크",
+              template: "{{ `[${title}](${url})` }}",
+            },
+          ],
+          props: {
+            title: {
+              label: "제목",
+              type: "string",
+            },
+            url: {
+              label: "URL",
+              type: "string",
+            },
+            mediaType: {
+              label: "미디어 종류",
+              type: "string",
+            },
+          },
+        },
+      },
+      {
+        storyKey: "tistory-5-code",
+        screenshotSrc: "tistory-5-code.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 5,
+        blockId: "code",
+        blockLabel: "코드",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          '<article><div class="tt_article_useless_p_margin"><pre data-ke-language="typescript"><code>const greeting = "Hello, Tistory"\nconsole.log(greeting)</code></pre></div></article>',
+        markdown: '```typescript\nconst greeting = "Hello, Tistory"\nconsole.log(greeting)\n```',
+        templateDefinition: {
+          key: "tistory:code",
+          label: "코드",
+          presets: [
+            {
+              id: "fenced-code",
+              label: "코드 블록",
+              template: "{{ `\\`\\`\\`${language}\\n${code}\\n\\`\\`\\`` }}",
+            },
+          ],
+          props: {
+            language: {
+              label: "언어",
+              type: "string",
+            },
+            code: {
+              label: "코드",
+              type: "string",
+            },
+          },
+        },
+      },
+      {
+        storyKey: "tistory-6-table",
+        screenshotSrc: "tistory-6-table.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 6,
+        blockId: "table",
+        blockLabel: "표",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          '<article><div class="tt_article_useless_p_margin"><table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>제목</td><td>Tistory</td></tr><tr><td>형식</td><td>Markdown</td></tr></tbody></table></div></article>',
+        markdown: "| 항목 | 값 |\n| --- | --- |\n| 제목 | Tistory |\n| 형식 | Markdown |",
+        templateDefinition: {
+          key: "tistory:table",
+          label: "표",
+          presets: [
+            {
+              id: "markdown-table",
+              label: "표",
+              template:
+                "{{ complex ? html : `| ${headers.join(' | ')} |\\n| ${headers.map(header => '---').join(' | ')} |${rows.length ? `\\n${rows.map(row => `| ${row.join(' | ')} |`).join('\\n')}` : ''}` }}",
+            },
+          ],
+          props: {
+            headers: {
+              label: "머리글",
+              type: "array",
+              items: {
+                label: "셀",
+                type: "string",
+              },
+            },
+            rows: {
+              label: "행",
+              type: "array",
+              items: {
+                label: "셀 목록",
+                type: "array",
+                items: {
+                  label: "셀",
+                  type: "string",
+                },
+              },
+            },
+            html: {
+              label: "HTML",
+              type: "string",
+            },
+            complex: {
+              label: "복합 표",
+              type: "boolean",
+            },
+          },
+        },
+      },
+      {
+        storyKey: "tistory-7-divider",
+        screenshotSrc: "tistory-7-divider.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 7,
+        blockId: "divider",
+        blockLabel: "구분선",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          '<article><div class="tt_article_useless_p_margin"><hr data-ke-type="horizontalRule"></div></article>',
+        markdown: "---",
+        templateDefinition: {
+          key: "tistory:divider",
+          label: "구분선",
+          presets: [
+            {
+              id: "horizontal-rule",
+              label: "Markdown 구분선",
+              template: "---",
+            },
+          ],
+          props: {},
+        },
+      },
+      {
+        storyKey: "tistory-8-image",
+        screenshotSrc: "tistory-8-image.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 8,
+        blockId: "image",
+        blockLabel: "이미지",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          "<article><div class=\"tt_article_useless_p_margin\"><figure data-ke-type=\"image\"><img src=\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20640%20360'%3E%3Crect%20width='640'%20height='360'%20fill='%232f81f7'/%3E%3Ccircle%20cx='500'%20cy='90'%20r='44'%20fill='%23f0f6fc'/%3E%3Cpath%20d='M0%20310%20190%20135%20330%20265%20430%20180%20640%20335V360H0Z'%20fill='%233fb950'/%3E%3C/svg%3E\" alt=\"푸른 하늘과 산\"><figcaption>대표 이미지 캡션</figcaption></figure></div></article>",
+        markdown:
+          "![푸른 하늘과 산](data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20640%20360'%3E%3Crect%20width='640'%20height='360'%20fill='%232f81f7'/%3E%3Ccircle%20cx='500'%20cy='90'%20r='44'%20fill='%23f0f6fc'/%3E%3Cpath%20d='M0%20310%20190%20135%20330%20265%20430%20180%20640%20335V360H0Z'%20fill='%233fb950'/%3E%3C/svg%3E)\n대표 이미지 캡션",
+        templateDefinition: {
+          key: "tistory:image",
+          label: "이미지",
+          presets: [
+            {
+              id: "image-markdown",
+              label: "이미지 Markdown",
+              template:
+                "{{ images.map(image => image.caption ? `![${image.alt}](${image.url})\\n${image.caption}` : `![${image.alt}](${image.url})`).join('\\n\\n') }}",
+            },
+          ],
+          props: {
+            images: {
+              label: "이미지 목록",
+              type: "array",
+              items: {
+                label: "이미지",
+                type: "object",
+                properties: {
+                  url: {
+                    label: "URL",
+                    type: "string",
+                  },
+                  alt: {
+                    label: "대체 텍스트",
+                    type: "string",
+                  },
+                  caption: {
+                    label: "캡션",
+                    type: "string?",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        storyKey: "tistory-9-heading",
+        screenshotSrc: "tistory-9-heading.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 9,
+        blockId: "heading",
+        blockLabel: "제목",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          '<article><div class="tt_article_useless_p_margin"><h2 id="intro">Tistory 내보내기</h2></div></article>',
+        markdown: "## Tistory 내보내기",
+        templateDefinition: {
+          key: "tistory:heading",
+          label: "제목",
+          presets: [
+            {
+              id: "heading",
+              label: "Markdown 제목",
+              template: '{{ "#".repeat(level) }} {{ text }}',
+            },
+          ],
+          props: {
+            level: {
+              label: "단계",
+              type: "number",
+            },
+            text: {
+              label: "제목",
+              type: "string",
+            },
+          },
+        },
+      },
+      {
+        storyKey: "tistory-10-quote",
+        screenshotSrc: "tistory-10-quote.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 10,
+        blockId: "quote",
+        blockLabel: "인용",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          '<article><div class="tt_article_useless_p_margin"><blockquote>좋은 글은 읽는 사람에게 오래 남습니다.\n원문의 의미를 그대로 옮깁니다.</blockquote></div></article>',
+        markdown: "> 좋은 글은 읽는 사람에게 오래 남습니다.\n> 원문의 의미를 그대로 옮깁니다.",
+        templateDefinition: {
+          key: "tistory:quote",
+          label: "인용",
+          presets: [
+            {
+              id: "blockquote",
+              label: "Markdown 인용",
+              template: "{{ text.split('\\n').map(line => `> ${line}`).join('\\n') }}",
+            },
+          ],
+          props: {
+            text: {
+              label: "인용문",
+              type: "string",
+            },
+          },
+        },
+      },
+      {
+        storyKey: "tistory-11-list",
+        screenshotSrc: "tistory-11-list.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 11,
+        blockId: "list",
+        blockLabel: "목록",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          '<article><div class="tt_article_useless_p_margin"><ul><li>글 스캔</li><li>Markdown 변환<ol><li>본문 확인</li><li>파일 저장</li></ol></li></ul></div></article>',
+        markdown: "- 글 스캔\n- Markdown 변환\n  1. 본문 확인\n  2. 파일 저장",
+        templateDefinition: {
+          key: "tistory:list",
+          label: "목록",
+          presets: [
+            {
+              id: "markdown-list",
+              label: "Markdown 목록",
+              template:
+                "{{ items.map(item => `${'  '.repeat(item.depth)}${item.ordered ? `${item.index}.` : '-'} ${item.text}`).join('\\n') }}",
+            },
+          ],
+          props: {
+            items: {
+              label: "목록 항목",
+              type: "array",
+              items: {
+                label: "항목",
+                type: "object",
+                properties: {
+                  depth: {
+                    label: "깊이",
+                    type: "number",
+                  },
+                  ordered: {
+                    label: "순서 목록 여부",
+                    type: "boolean",
+                  },
+                  index: {
+                    label: "순서",
+                    type: "number",
+                  },
+                  text: {
+                    label: "텍스트",
+                    type: "string",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        storyKey: "tistory-12-paragraph",
+        screenshotSrc: "tistory-12-paragraph.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 12,
+        blockId: "paragraph",
+        blockLabel: "문단",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          '<article><div class="tt_article_useless_p_margin"><p>일반 문단에서 <strong>굵은 글씨</strong>와 <a href="https://example.com">링크</a>를 함께 사용합니다.</p></div></article>',
+        markdown: "일반 문단에서 **굵은 글씨**와 [링크](https://example.com)를 함께 사용합니다.",
+        templateDefinition: {
+          key: "tistory:paragraph",
+          label: "문단",
+          presets: [
+            {
+              id: "text",
+              label: "본문",
+              template: "{{ text }}",
+            },
+          ],
+          props: {
+            text: {
+              label: "본문",
+              type: "string",
+            },
+          },
+        },
+      },
+      {
+        storyKey: "tistory-13-container",
+        screenshotSrc: "tistory-13-container.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 13,
+        blockId: "container",
+        blockLabel: "컨테이너",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          '<article><div class="tt_article_useless_p_margin"><section><p>컨테이너 안의 첫 문단입니다.</p><p>하위 블록을 순서대로 변환합니다.</p></section></div></article>',
+        markdown: "컨테이너 안의 첫 문단입니다.\n\n하위 블록을 순서대로 변환합니다.",
+        templateDefinition: {
+          key: "tistory:container",
+          label: "컨테이너",
+          presets: [
+            {
+              id: "children",
+              label: "하위 블록",
+              template: "",
+            },
+          ],
+          props: {},
+        },
+      },
+      {
+        storyKey: "tistory-14-inline",
+        screenshotSrc: "tistory-14-inline.png",
+        editorType: "tistory",
+        editorLabel: "Tistory",
+        blockIndex: 14,
+        blockId: "inline",
+        blockLabel: "인라인 본문",
+        sourceUrl: "https://example.tistory.com/1",
+        inputHtml:
+          '<article><div class="tt_article_useless_p_margin"><font color="#2f81f7">레거시 인라인 <strong>본문</strong></font></div></article>',
+        markdown: "레거시 인라인 **본문**",
+        templateDefinition: {
+          key: "tistory:inline",
+          label: "인라인 본문",
+          presets: [
+            {
+              id: "text",
+              label: "본문",
+              template: "{{ text }}",
+            },
+          ],
+          props: {
+            text: {
+              label: "본문",
+              type: "string",
+            },
+          },
         },
       },
     ],

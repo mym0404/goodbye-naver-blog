@@ -8,7 +8,7 @@ export type StorybookStory = StorybookDefinition & {
   templateDefinition: BlockTemplateDefinition
 }
 
-// Storybook cases grouped by Naver editor family for the UI.
+// Storybook cases grouped by blog editor family for the UI.
 export type StorybookEditorGroup = {
   editorType: string
   editorLabel: string

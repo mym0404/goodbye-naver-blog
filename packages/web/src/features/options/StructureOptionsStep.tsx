@@ -153,12 +153,7 @@ export const StructureOptionsStep = ({
           />
 
           <EmbeddedOptionPanel>
-            <Box sx={{ display: "grid", gap: 1 }}>
-              <Text sx={{ fontSize: 1, fontWeight: "semibold" }}>실시간 폴더명 예시</Text>
-              <Text sx={{ color: "fg.muted", fontSize: 1, lineHeight: "24px" }}>
-                {structureTemplatePreviewPost.title}을 예시로 바로 표시합니다.
-              </Text>
-            </Box>
+            <Text sx={{ fontSize: 1, fontWeight: "semibold" }}>실시간 폴더명 예시</Text>
 
             <Box
               sx={{ color: "fg.muted", display: "grid", fontSize: 1, gap: 2, lineHeight: "24px" }}

@@ -1,0 +1,202 @@
+import type { StorybookDefinition } from "../schema/StorybookDefinition.js"
+
+const sourceUrl = "https://example.tistory.com/1"
+const sampleImage =
+  "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20640%20360'%3E%3Crect%20width='640'%20height='360'%20fill='%232f81f7'/%3E%3Ccircle%20cx='500'%20cy='90'%20r='44'%20fill='%23f0f6fc'/%3E%3Cpath%20d='M0%20310%20190%20135%20330%20265%20430%20180%20640%20335V360H0Z'%20fill='%233fb950'/%3E%3C/svg%3E"
+
+const wrapTistoryContent = (content: string) =>
+  `<article><div class="tt_article_useless_p_margin">${content}</div></article>`
+
+export const tistoryStorybookDefinitions = [
+  {
+    storyKey: "tistory-0-ignore",
+    screenshotSrc: "tistory-0-ignore.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 0,
+    blockId: "ignore",
+    blockLabel: "무시",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      '<div class="another_category"><h4>관련 글</h4><a href="/2">다른 글 보기</a></div>',
+    ),
+  },
+  {
+    storyKey: "tistory-1-tableOfContents",
+    screenshotSrc: "tistory-1-tableOfContents.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 1,
+    blockId: "tableOfContents",
+    blockLabel: "목차",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      '<nav class="toc"><strong>목차</strong><a href="#intro">소개</a><a href="#details">자세히</a></nav>',
+    ),
+  },
+  {
+    storyKey: "tistory-2-linkCard",
+    screenshotSrc: "tistory-2-linkCard.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 2,
+    blockId: "linkCard",
+    blockLabel: "링크 카드",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      `<figure data-ke-type="opengraph" class="og-link"><a href="https://example.com/article"><img src="${sampleImage}" alt=""><strong class="og-title">링크 카드 제목</strong><p class="og-desc">링크 카드 설명입니다.</p></a></figure>`,
+    ),
+  },
+  {
+    storyKey: "tistory-3-file",
+    screenshotSrc: "tistory-3-file.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 3,
+    blockId: "file",
+    blockLabel: "첨부파일",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      '<figure data-ke-type="file"><a href="https://example.com/attachment/guide.pdf" download="guide.pdf">guide.pdf</a></figure>',
+    ),
+  },
+  {
+    storyKey: "tistory-4-media",
+    screenshotSrc: "tistory-4-media.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 4,
+    blockId: "media",
+    blockLabel: "미디어",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      `<video controls title="튜토리얼 영상" src="https://media.example.com/tutorial.mp4" poster="${sampleImage}"></video>`,
+    ),
+  },
+  {
+    storyKey: "tistory-5-code",
+    screenshotSrc: "tistory-5-code.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 5,
+    blockId: "code",
+    blockLabel: "코드",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      '<pre data-ke-language="typescript"><code>const greeting = "Hello, Tistory"\nconsole.log(greeting)</code></pre>',
+    ),
+  },
+  {
+    storyKey: "tistory-6-table",
+    screenshotSrc: "tistory-6-table.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 6,
+    blockId: "table",
+    blockLabel: "표",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      "<table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>제목</td><td>Tistory</td></tr><tr><td>형식</td><td>Markdown</td></tr></tbody></table>",
+    ),
+  },
+  {
+    storyKey: "tistory-7-divider",
+    screenshotSrc: "tistory-7-divider.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 7,
+    blockId: "divider",
+    blockLabel: "구분선",
+    sourceUrl,
+    inputHtml: wrapTistoryContent('<hr data-ke-type="horizontalRule">'),
+  },
+  {
+    storyKey: "tistory-8-image",
+    screenshotSrc: "tistory-8-image.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 8,
+    blockId: "image",
+    blockLabel: "이미지",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      `<figure data-ke-type="image"><img src="${sampleImage}" alt="푸른 하늘과 산"><figcaption>대표 이미지 캡션</figcaption></figure>`,
+    ),
+  },
+  {
+    storyKey: "tistory-9-heading",
+    screenshotSrc: "tistory-9-heading.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 9,
+    blockId: "heading",
+    blockLabel: "제목",
+    sourceUrl,
+    inputHtml: wrapTistoryContent('<h2 id="intro">Tistory 내보내기</h2>'),
+  },
+  {
+    storyKey: "tistory-10-quote",
+    screenshotSrc: "tistory-10-quote.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 10,
+    blockId: "quote",
+    blockLabel: "인용",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      "<blockquote>좋은 글은 읽는 사람에게 오래 남습니다.\n원문의 의미를 그대로 옮깁니다.</blockquote>",
+    ),
+  },
+  {
+    storyKey: "tistory-11-list",
+    screenshotSrc: "tistory-11-list.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 11,
+    blockId: "list",
+    blockLabel: "목록",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      "<ul><li>글 스캔</li><li>Markdown 변환<ol><li>본문 확인</li><li>파일 저장</li></ol></li></ul>",
+    ),
+  },
+  {
+    storyKey: "tistory-12-paragraph",
+    screenshotSrc: "tistory-12-paragraph.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 12,
+    blockId: "paragraph",
+    blockLabel: "문단",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      '<p>일반 문단에서 <strong>굵은 글씨</strong>와 <a href="https://example.com">링크</a>를 함께 사용합니다.</p>',
+    ),
+  },
+  {
+    storyKey: "tistory-13-container",
+    screenshotSrc: "tistory-13-container.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 13,
+    blockId: "container",
+    blockLabel: "컨테이너",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      "<section><p>컨테이너 안의 첫 문단입니다.</p><p>하위 블록을 순서대로 변환합니다.</p></section>",
+    ),
+  },
+  {
+    storyKey: "tistory-14-inline",
+    screenshotSrc: "tistory-14-inline.png",
+    editorType: "tistory",
+    editorLabel: "Tistory",
+    blockIndex: 14,
+    blockId: "inline",
+    blockLabel: "인라인 본문",
+    sourceUrl,
+    inputHtml: wrapTistoryContent(
+      '<font color="#2f81f7">레거시 인라인 <strong>본문</strong></font>',
+    ),
+  },
+] satisfies StorybookDefinition[]

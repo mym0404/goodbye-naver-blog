@@ -1625,8 +1625,8 @@ const runUiLocalExport = async ({ browser }: { browser: Browser }) => {
           labelText: label.textContent?.trim(),
           exampleText: example.textContent?.trim(),
           exampleFontSize: exampleStyle.fontSize,
-          inputIsRightOfLabel: inputRect.left > labelRect.right,
-          sameRow: Math.abs(inputRect.top - labelRect.top) < 8,
+          inputIsBelowLabel: inputRect.top >= labelRect.bottom,
+          sameColumn: Math.abs(inputRect.left - labelRect.left) < 8,
         }
       })
 
@@ -1636,10 +1636,8 @@ const runUiLocalExport = async ({ browser }: { browser: Browser }) => {
       )
     }
 
-    if (!frontmatterAliasLayout.inputIsRightOfLabel || !frontmatterAliasLayout.sameRow) {
-      throw new Error(
-        "frontmatter alias input should render on the same row to the right of its label",
-      )
+    if (!frontmatterAliasLayout.inputIsBelowLabel || !frontmatterAliasLayout.sameColumn) {
+      throw new Error("frontmatter alias input should render below its label in one column")
     }
 
     if (

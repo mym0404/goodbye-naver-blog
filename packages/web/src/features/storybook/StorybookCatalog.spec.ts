@@ -1,6 +1,9 @@
 import { parsePostHtml } from "@exitpress/blog-naver/parsing/naver-blog/core/PostParser.js"
 import { NaverBlog } from "@exitpress/blog-naver/parsing/naver-blog/NaverBlog.js"
-import { createNaverBlogDefaultBlockTemplateMap } from "@exitpress/blog-naver/parsing/naver-blog/NaverBlog.js"
+import {
+  getTistoryBlockTemplateDefinitions,
+  parseTistoryPostHtml,
+} from "@exitpress/blog-tistory/parsing/TistoryPostParser.js"
 import { resolveParsedBlockAssetsForRender } from "@exitpress/engine/exporting/assets/ParsedBlockAssetResolver.js"
 import { renderBlockTemplates } from "@exitpress/engine/markdown/util/renderBlockTemplates.js"
 import { load } from "cheerio"
@@ -12,14 +15,26 @@ import { storybookCaptureAssets } from "./StorybookAssets.js"
 import { storybookCatalog } from "./StorybookCatalog.js"
 
 const storybookOptions = { blockOutputs: { templates: {} } }
-const defaultBlockTemplates = createNaverBlogDefaultBlockTemplateMap()
+const tistoryTemplateDefinitions = getTistoryBlockTemplateDefinitions()
+const defaultBlockTemplates = Object.fromEntries(
+  [...new NaverBlog().getBlockTemplateDefinitions(), ...tistoryTemplateDefinitions].map(
+    (definition) => [definition.key, definition.presets[0].template],
+  ),
+)
 
-const renderExpectedStoryMarkdown = async (story: { inputHtml: string; sourceUrl: string }) => {
-  const parsedPost = parsePostHtml({
-    html: story.inputHtml,
-    sourceUrl: story.sourceUrl,
-    options: storybookOptions,
-  })
+const renderExpectedStoryMarkdown = async (story: {
+  inputHtml: string
+  sourceUrl: string
+  editorType: string
+}) => {
+  const parsedPost =
+    story.editorType === "tistory"
+      ? parseTistoryPostHtml({ html: story.inputHtml, options: storybookOptions })
+      : parsePostHtml({
+          html: story.inputHtml,
+          sourceUrl: story.sourceUrl,
+          options: storybookOptions,
+        })
   const resolved = await resolveParsedBlockAssetsForRender({
     blocks: parsedPost.blocks,
     resolveAsset: async ({ role, sourceUrl }) => ({
@@ -59,8 +74,9 @@ describe("storybook catalog", () => {
       "SmartEditor 4",
       "SmartEditor 3",
       "SmartEditor 2",
+      "Tistory",
     ])
-    expect(stories).toHaveLength(52)
+    expect(stories).toHaveLength(67)
     expect(stories.every((story) => story.inputHtml.trim())).toBe(true)
     expect(stories.every((story) => story.markdown.trim())).toBe(true)
     expect(stories.every((story) => story.templateDefinition)).toBe(true)
@@ -72,37 +88,57 @@ describe("storybook catalog", () => {
     )
     expect(stories.every((story) => !Object.hasOwn(story, "markdownVariants"))).toBe(true)
 
-    stories.forEach((story) => {
-      const editor = blog.getEditorForHtml(story.inputHtml)
-      const $ = load(story.inputHtml)
-      const matchedInspection = editor
-        ? flattenInspections(
-            editor.inspect({
-              $,
-              sourceUrl: story.sourceUrl,
-              tags: [],
-              options: storybookOptions,
-            }),
-          ).find((inspection) => inspection.path === story.inspectPath)
-        : undefined
+    stories
+      .filter((story) => story.editorType !== "tistory")
+      .forEach((story) => {
+        const editor = blog.getEditorForHtml(story.inputHtml)
+        const $ = load(story.inputHtml)
+        const matchedInspection = editor
+          ? flattenInspections(
+              editor.inspect({
+                $,
+                sourceUrl: story.sourceUrl,
+                tags: [],
+                options: storybookOptions,
+              }),
+            ).find((inspection) => inspection.path === story.inspectPath)
+          : undefined
 
-      expect(editor?.type).toBe(story.editorType)
-      expect(matchedInspection).toMatchObject({
-        matchedBlockId: story.blockId,
-        matchedBlockLabel: story.blockLabel,
+        expect(editor?.type).toBe(story.editorType)
+        expect(matchedInspection).toMatchObject({
+          matchedBlockId: story.blockId,
+          matchedBlockLabel: story.blockLabel,
+        })
       })
-    })
 
     stories.forEach((story) => {
       expect(storybookCaptureAssets[story.storyKey]).toBe(story.screenshotSrc)
     })
 
-    const imageStory = stories.find((story) => story.blockId === "image")
+    const tistoryStories = stories.filter((story) => story.editorType === "tistory")
 
-    if (!imageStory) {
-      throw new Error("missing image story")
-    }
+    expect(tistoryStories.map((story) => `tistory:${story.blockId}`)).toEqual(
+      tistoryTemplateDefinitions.map((definition) => definition.key),
+    )
 
-    expect(imageStory.markdown).toBe(await renderExpectedStoryMarkdown(imageStory))
+    tistoryStories.forEach((story) => {
+      const parsed = parseTistoryPostHtml({ html: story.inputHtml, options: storybookOptions })
+
+      if (story.blockId === "ignore") {
+        expect(parsed.blocks).toEqual([])
+      } else if (story.blockId === "container") {
+        expect(parsed.blocks.length).toBeGreaterThan(0)
+      } else {
+        expect(parsed.blocks.some((block) => block.blockId === `tistory:${story.blockId}`)).toBe(
+          true,
+        )
+      }
+    })
+
+    await Promise.all(
+      stories.map(async (story) => {
+        expect(story.markdown).toBe(await renderExpectedStoryMarkdown(story))
+      }),
+    )
   })
 })

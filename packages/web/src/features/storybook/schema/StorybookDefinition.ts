@@ -7,7 +7,7 @@ export type StorybookDefinition = {
   blockId: string
   blockLabel: string
   sourceUrl: string
-  inspectPath: string
+  inspectPath?: string
   inputHtml: string
   screenshotSrc: string
 }

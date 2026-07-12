@@ -6,7 +6,6 @@ import type { ReactNode, RefObject } from "react"
 import type { SetupStep, WizardStep } from "../features/common/shell/WizardFlow.js"
 import type { ResumeDialogState } from "../features/resume/ResumeState.js"
 
-import { primerPageMaxWidth } from "../components/primer/PrimerPage.js"
 import { PrimerToastViewport } from "../components/primer/PrimerToast.js"
 import { stepMeta } from "../features/common/shell/WizardFlow.js"
 import { WizardHeader } from "../features/common/shell/WizardHeader.js"
@@ -191,8 +190,6 @@ export const AppShell = ({
     >
       <Box
         sx={{
-          maxWidth: primerPageMaxWidth,
-          mx: "auto",
           px: [3, 4],
         }}
       >

@@ -50,6 +50,7 @@ import { naverSe418Quote } from "./naver-se4-18-quote.js"
 import { naverSe419MrBlog } from "./naver-se4-19-mrBlog.js"
 import { naverSe420Paragraph } from "./naver-se4-20-paragraph.js"
 import { naverSe421Material } from "./naver-se4-21-material.js"
+import { tistoryStorybookDefinitions } from "./TistoryStorybookDefinitions.js"
 
 export const storybookDefinitions = [
   naverSe40DocumentTitle,
@@ -104,4 +105,5 @@ export const storybookDefinitions = [
   naverSe214Image,
   naverSe215Spacer,
   naverSe216Paragraph,
+  ...tistoryStorybookDefinitions,
 ]

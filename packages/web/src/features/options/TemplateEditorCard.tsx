@@ -15,6 +15,7 @@ import type {
 import type { ComponentPropsWithoutRef } from "react"
 
 import { createTemplatePropCompletionSource } from "./TemplatePropAutocomplete.js"
+import { flattenTemplatePropDefinitions } from "./TemplatePropDefinitions.js"
 
 const allTemplateEditorSurfaces = ["card", "embedded"] as const
 type TemplateEditorSurface = (typeof allTemplateEditorSurfaces)[number]
@@ -193,7 +194,7 @@ export const TemplateEditorCard = ({
   onTemplateChange?: (template: string) => void
 }) => {
   const [syntaxDialogOpen, setSyntaxDialogOpen] = useState(false)
-  const propEntries = Object.entries(props)
+  const propEntries = flattenTemplatePropDefinitions(props)
   const templateEditorBaseExtensions = useMemo(
     () => createTemplateEditorBaseExtensions(themePreference),
     [themePreference],
@@ -290,12 +291,17 @@ export const TemplateEditorCard = ({
             </Box>
             <Box
               data-template-prop-grid
-              sx={{ display: "grid", gap: 0, gridTemplateColumns: ["1fr", "1fr 1fr"], fontSize: 0 }}
+              sx={{
+                display: "grid",
+                gap: 0,
+                gridTemplateColumns: ["1fr", null, null, "1fr 1fr"],
+                fontSize: 0,
+              }}
             >
-              {propEntries.map(([key, prop]) => (
+              {propEntries.map(({ path, definition }) => (
                 <Box
-                  key={key}
-                  data-template-prop={key}
+                  key={path}
+                  data-template-prop={path}
                   sx={{
                     alignItems: "center",
                     borderTop: "1px solid",
@@ -316,7 +322,7 @@ export const TemplateEditorCard = ({
                       fontWeight: "semibold",
                     }}
                   >
-                    {key}
+                    {path}
                   </Text>
                   <Text
                     sx={{
@@ -327,10 +333,10 @@ export const TemplateEditorCard = ({
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {prop.label}
+                    {definition.label}
                   </Text>
                   <Label size="small" sx={{ fontFamily: "mono", flexShrink: 0 }}>
-                    {prop.type}
+                    {definition.type}
                   </Label>
                 </Box>
               ))}

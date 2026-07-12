@@ -1,5 +1,11 @@
 import type { TemplatePropDefinition } from "@exitpress/domain/template/schema/BlockTemplateDefinition.js"
 
+import {
+  getTemplatePropItems,
+  getTemplatePropProperties,
+  resolveTemplatePropPath,
+} from "./TemplatePropDefinitions.js"
+
 type TemplatePropCompletionContext = {
   explicit: boolean
   pos: number
@@ -17,6 +23,10 @@ type TemplatePropCompletion = {
 }
 
 const propKeyPattern = /^[A-Za-z_][A-Za-z0-9_]*$/
+const memberExpressionPattern =
+  /([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\.([A-Za-z_][A-Za-z0-9_]*)?$/
+const mapCallbackPattern =
+  /\b([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\.map\(\s*\(?\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)?\s*=>/g
 
 const findTemplateVariableStart = ({ source, cursor }: { source: string; cursor: number }) => {
   const openIndex = source.lastIndexOf("{{", cursor)
@@ -38,11 +48,12 @@ const findTemplateVariableStart = ({ source, cursor }: { source: string; cursor:
 export const createTemplatePropCompletionSource = (
   props: Record<string, TemplatePropDefinition>,
 ) => {
-  const options: TemplatePropCompletion[] = Object.entries(props).map(([key, prop]) => ({
-    label: key,
-    type: "variable",
-    detail: `${prop.label} · ${prop.type}`,
-  }))
+  const createOptions = (definitions: Record<string, TemplatePropDefinition>) =>
+    Object.entries(definitions).map(([key, prop]) => ({
+      label: key,
+      type: "variable",
+      detail: `${prop.label} · ${prop.type}`,
+    })) satisfies TemplatePropCompletion[]
 
   return (context: TemplatePropCompletionContext) => {
     const source = context.state.doc.sliceString(0, context.pos)
@@ -55,12 +66,35 @@ export const createTemplatePropCompletionSource = (
       return null
     }
 
-    const prefix = source.slice(expressionStart, context.pos)
+    const expression = source.slice(expressionStart, context.pos)
+    const bindings = new Map<string, TemplatePropDefinition>()
+
+    for (const match of expression.matchAll(mapCallbackPattern)) {
+      const collection = resolveTemplatePropPath({
+        path: match[1] ?? "",
+        props,
+        bindings,
+      })
+      const items = collection && getTemplatePropItems(collection)
+
+      if (items && match[2]) {
+        bindings.set(match[2], items)
+      }
+    }
+
+    const memberMatch = expression.match(memberExpressionPattern)
+    const owner = memberMatch
+      ? resolveTemplatePropPath({ path: memberMatch[1] ?? "", props, bindings })
+      : undefined
+    const memberProperties = owner && getTemplatePropProperties(owner)
+    const prefix = memberProperties ? (memberMatch?.[2] ?? "") : expression
+    const definitions = memberProperties ?? props
 
     if (prefix && !propKeyPattern.test(prefix)) {
       return null
     }
 
+    const options = createOptions(definitions)
     const matchingOptions = options.filter((option) => option.label.startsWith(prefix))
 
     if (!context.explicit && matchingOptions.length === 0) {
@@ -68,7 +102,7 @@ export const createTemplatePropCompletionSource = (
     }
 
     return {
-      from: expressionStart,
+      from: context.pos - prefix.length,
       to: context.pos,
       options: matchingOptions,
       validFor: propKeyPattern,

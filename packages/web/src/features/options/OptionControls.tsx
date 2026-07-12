@@ -123,7 +123,7 @@ export const CheckField = ({
       borderRadius: 2,
       gap: 2,
       minHeight: compact ? "auto" : undefined,
-      px: 2,
+      px: 3,
       py: 2,
       "&:hover": disabled ? undefined : { bg: "neutral.subtle" },
     }}

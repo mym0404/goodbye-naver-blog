@@ -1,11 +1,10 @@
 import {
   BookIcon,
   GlobeIcon,
-  KebabHorizontalIcon,
   MarkGithubIcon,
-  RepoIcon,
   MoonIcon,
   SunIcon,
+  ThreeBarsIcon,
 } from "@primer/octicons-react"
 import {
   ActionList,
@@ -65,140 +64,136 @@ export const WizardHeader = ({
   }
   onThemeChange: (value: ThemePreference) => void
 }) => (
-  <PageHeader
-    sx={{
-      py: [2, 3],
-    }}
-  >
-    <PageHeader.LeadingAction
-      sx={{
-        display: "flex",
-        "@media screen and (min-width: 1280px)": {
-          display: "none",
-        },
-      }}
-    >
-      <ActionMenu>
-        <ActionMenu.Anchor>
-          <IconButton
-            aria-label="메뉴 열기"
-            icon={KebabHorizontalIcon}
-            size="small"
-            title="메뉴 열기"
-          />
-        </ActionMenu.Anchor>
-        <ActionMenu.Overlay>
-          <ActionList>
-            {backLink ? (
-              <ActionList.Item
-                onSelect={() => {
-                  window.location.href = backLink.href
-                }}
-              >
-                {backLink.label}
-              </ActionList.Item>
-            ) : null}
-            <ActionList.Group>
-              <ActionList.GroupHeading>Links</ActionList.GroupHeading>
-              {headerLinks.map(({ href, pathname, label }) => (
-                <ActionList.LinkItem
-                  key={href ?? pathname}
-                  href={
-                    pathname
-                      ? createAppHref({
-                          pathname,
-                          basePath: import.meta.env.BASE_URL,
-                        })
-                      : href
-                  }
-                >
-                  {label}
-                </ActionList.LinkItem>
-              ))}
-            </ActionList.Group>
-            <ActionList.Group selectionVariant="single">
-              <ActionList.GroupHeading>Theme</ActionList.GroupHeading>
-              {themeOptions.map((theme) => (
-                <ActionList.Item
-                  key={theme}
-                  selected={themePreference === theme}
-                  onSelect={() => {
-                    onThemeChange(theme)
-                  }}
-                >
-                  {theme === "dark" ? "Dark" : "Light"}
-                </ActionList.Item>
-              ))}
-            </ActionList.Group>
-          </ActionList>
-        </ActionMenu.Overlay>
-      </ActionMenu>
-    </PageHeader.LeadingAction>
-
+  <PageHeader sx={{ py: [2, 3] }}>
     <PageHeader.TitleArea variant="large">
-      <PageHeader.LeadingVisual>
-        <RepoIcon />
-      </PageHeader.LeadingVisual>
       <PageHeader.Title as="h1">{title}</PageHeader.Title>
     </PageHeader.TitleArea>
 
-    <PageHeader.Actions
-      sx={{
-        display: "none",
-        "@media screen and (min-width: 1280px)": {
+    <PageHeader.Actions>
+      <Box
+        sx={{
           display: "flex",
-        },
-      }}
-    >
-      {headerLinks.map(({ href, pathname, Icon, external, label }) => (
-        <Link
-          key={href ?? pathname}
-          href={
-            pathname
-              ? createAppHref({
-                  pathname,
-                  basePath: import.meta.env.BASE_URL,
-                })
-              : href
-          }
-          target={external ? "_blank" : undefined}
-          rel={external ? "noreferrer" : undefined}
-          sx={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 1,
-            color: "fg.muted",
-            fontSize: 0,
-            fontWeight: "semibold",
-            whiteSpace: "nowrap",
-          }}
-        >
-          <Icon size={14} aria-hidden="true" />
-          {label}
-        </Link>
-      ))}
-      <SegmentedControl
-        aria-label="테마 선택"
-        size="small"
-        onChange={(selectedIndex) => {
-          const nextTheme = themeOptions[selectedIndex]
-
-          if (nextTheme) {
-            onThemeChange(nextTheme)
-          }
+          "@media screen and (min-width: 1280px)": {
+            display: "none",
+          },
         }}
       >
-        <SegmentedControl.IconButton
-          aria-label="다크"
-          icon={MoonIcon}
-          selected={themePreference === "dark"}
-        />
-        <SegmentedControl.IconButton
-          aria-label="라이트"
-          icon={SunIcon}
-          selected={themePreference === "light"}
-        />
-      </SegmentedControl>
+        <ActionMenu>
+          <ActionMenu.Anchor>
+            <IconButton
+              aria-label="메뉴 열기"
+              icon={ThreeBarsIcon}
+              size="small"
+              title="메뉴 열기"
+            />
+          </ActionMenu.Anchor>
+          <ActionMenu.Overlay align="end">
+            <ActionList>
+              {backLink ? (
+                <ActionList.Item
+                  onSelect={() => {
+                    window.location.href = backLink.href
+                  }}
+                >
+                  {backLink.label}
+                </ActionList.Item>
+              ) : null}
+              <ActionList.Group>
+                <ActionList.GroupHeading>Links</ActionList.GroupHeading>
+                {headerLinks.map(({ href, pathname, label }) => (
+                  <ActionList.LinkItem
+                    key={href ?? pathname}
+                    href={
+                      pathname
+                        ? createAppHref({
+                            pathname,
+                            basePath: import.meta.env.BASE_URL,
+                          })
+                        : href
+                    }
+                  >
+                    {label}
+                  </ActionList.LinkItem>
+                ))}
+              </ActionList.Group>
+              <ActionList.Group selectionVariant="single">
+                <ActionList.GroupHeading>Theme</ActionList.GroupHeading>
+                {themeOptions.map((theme) => (
+                  <ActionList.Item
+                    key={theme}
+                    selected={themePreference === theme}
+                    onSelect={() => {
+                      onThemeChange(theme)
+                    }}
+                  >
+                    {theme === "dark" ? "Dark" : "Light"}
+                  </ActionList.Item>
+                ))}
+              </ActionList.Group>
+            </ActionList>
+          </ActionMenu.Overlay>
+        </ActionMenu>
+      </Box>
+      <Box
+        sx={{
+          display: "none",
+          alignItems: "center",
+          gap: 2,
+          "@media screen and (min-width: 1280px)": {
+            display: "flex",
+          },
+        }}
+      >
+        {headerLinks.map(({ href, pathname, Icon, external, label }) => (
+          <Link
+            key={href ?? pathname}
+            href={
+              pathname
+                ? createAppHref({
+                    pathname,
+                    basePath: import.meta.env.BASE_URL,
+                  })
+                : href
+            }
+            target={external ? "_blank" : undefined}
+            rel={external ? "noreferrer" : undefined}
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 1,
+              color: "fg.muted",
+              fontSize: 0,
+              fontWeight: "semibold",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Icon size={14} aria-hidden="true" />
+            {label}
+          </Link>
+        ))}
+        <SegmentedControl
+          aria-label="테마 선택"
+          size="small"
+          onChange={(selectedIndex) => {
+            const nextTheme = themeOptions[selectedIndex]
+
+            if (nextTheme) {
+              onThemeChange(nextTheme)
+            }
+          }}
+        >
+          <SegmentedControl.IconButton
+            aria-label="다크"
+            icon={MoonIcon}
+            selected={themePreference === "dark"}
+          />
+          <SegmentedControl.IconButton
+            aria-label="라이트"
+            icon={SunIcon}
+            selected={themePreference === "light"}
+          />
+        </SegmentedControl>
+      </Box>
     </PageHeader.Actions>
 
     <PageHeader.Navigation as="div">

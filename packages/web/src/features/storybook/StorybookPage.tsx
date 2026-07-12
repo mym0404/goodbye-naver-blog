@@ -525,8 +525,6 @@ export const StorybookPage = () => {
           <Box
             sx={{
               width: "100%",
-              maxWidth: primerPageMaxWidth,
-              mx: "auto",
               px: [3, 4],
             }}
           >

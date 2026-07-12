@@ -4,10 +4,11 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { parsePostHtml } from "@exitpress/blog-naver/parsing/naver-blog/core/PostParser.js"
+import { NaverBlog } from "@exitpress/blog-naver/parsing/naver-blog/NaverBlog.js"
 import {
-  createNaverBlogDefaultBlockTemplateMap,
-  NaverBlog,
-} from "@exitpress/blog-naver/parsing/naver-blog/NaverBlog.js"
+  getTistoryBlockTemplateDefinitions,
+  parseTistoryPostHtml,
+} from "@exitpress/blog-tistory/parsing/TistoryPostParser.js"
 import { renderBlockTemplates } from "@exitpress/engine/markdown/util/renderBlockTemplates.js"
 import { storybookDefinitions } from "@exitpress/web/features/storybook/data/StorybookDefinitions.js"
 
@@ -22,8 +23,13 @@ const outputPath = path.join(
 )
 const emptyOutputMarkdown = "Markdown 출력 없음"
 const storybookOptions = { blockOutputs: { templates: {} } }
-const defaultBlockTemplates = createNaverBlogDefaultBlockTemplateMap()
-const blockTemplateDefinitions = new NaverBlog().getBlockTemplateDefinitions()
+const blockTemplateDefinitions = [
+  ...new NaverBlog().getBlockTemplateDefinitions(),
+  ...getTistoryBlockTemplateDefinitions(),
+]
+const defaultBlockTemplates = Object.fromEntries(
+  blockTemplateDefinitions.map((definition) => [definition.key, definition.presets[0].template]),
+)
 const blockTemplateDefinitionByKey = Object.fromEntries(
   blockTemplateDefinitions.map((definition) => [definition.key, definition]),
 )
@@ -39,11 +45,14 @@ const resolveStoryBlockProps = (block: ParsedBlock) => {
 }
 
 const renderStoryMarkdown = (definition: StorybookDefinition) => {
-  const parsedPost = parsePostHtml({
-    html: definition.inputHtml,
-    sourceUrl: definition.sourceUrl,
-    options: storybookOptions,
-  })
+  const parsedPost =
+    definition.editorType === "tistory"
+      ? parseTistoryPostHtml({ html: definition.inputHtml, options: storybookOptions })
+      : parsePostHtml({
+          html: definition.inputHtml,
+          sourceUrl: definition.sourceUrl,
+          options: storybookOptions,
+        })
   const markdown = renderBlockTemplates(
     parsedPost.blocks.map((block) => {
       const template = defaultBlockTemplates[block.blockId]
