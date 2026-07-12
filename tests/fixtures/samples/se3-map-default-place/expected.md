@@ -120,7 +120,9 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxODEwMDRfMTM2/MDAxNTM4NjUyNzU
 ** [https://blog.naver.com/chungangwon](https://blog.naver.com/chungangwon)**[](https://blog.naver.com/chungangwon)  
 **| 청강원 프로그램 예약하기**** 약초차 명인과 티테라피
 
+![[네이버 예약] 지리산 청강원](https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fldb-phinf.pstatic.net%2F20181002_63%2F15384470252828F1oR_JPEG%2F%25BE%25F7%25C3%25BC%25BB%25E7%25C1%25F83.jpg%3Ftype%3Df804_408%22&type=ff500_300)
 [[네이버 예약] 지리산 청강원](https://booking.naver.com/booking/6/bizes/186432)
+마고할미가 사는 지리산 천왕봉, 그 아래 약초차 명인의 손길로 다져진 터 안에서 약초차를 마셔보세요. 나에게 맞는 약초차는 무엇일까? 나는 어떤 건강습관을 길러야 할까? 건강할 때 건강을 지켰으면 하는 어머니의 마음으로 차를 만들고 약초차 티테라피를 진행합니다.
 
 ---
 

@@ -1,4 +1,8 @@
-import { getTemplateExpressions } from "@exitpress/domain/template/util/renderTemplateExpressions.js"
+import {
+  getTemplateExpressions,
+  renderTemplateExpressions,
+} from "@exitpress/domain/template/util/renderTemplateExpressions.js"
+import { expectBlockTemplateCatalog } from "@tests/support/parser-test-utils.js"
 import { describe, expect, it } from "vitest"
 
 import { NaverBlog } from "./NaverBlog.js"
@@ -75,6 +79,7 @@ describe("parser block catalog", () => {
     expect(templateDefinitions.every((definition) => definition.presets[0]?.label !== "기본")).toBe(
       true,
     )
+    expectBlockTemplateCatalog(templateDefinitions)
     expect(
       templateDefinitions.find((definition) => definition.key === "naver-se4:documentTitle"),
     ).toMatchObject({
@@ -107,6 +112,98 @@ describe("parser block catalog", () => {
             `${definition.key}:${preset.id} has unsupported interpolation outside {{ expression }}`,
           ).toBe(true)
         })
+      })
+    })
+  })
+
+  it("preserves source semantics in changed parser presets", () => {
+    const definitions = new Map(
+      new NaverBlog()
+        .getBlockTemplateDefinitions()
+        .map((definition) => [definition.key, definition]),
+    )
+    const render = (key: string, props: Parameters<typeof renderTemplateExpressions>[0]["props"]) =>
+      definitions
+        .get(key)!
+        .presets.map(({ template }) => renderTemplateExpressions({ template, props }))
+
+    expect(render("naver-se2:heading", { level: 3, text: "Heading" })).toEqual(["### Heading"])
+    expect(render("naver-se4:formula", { formula: "x+y", display: false })).toEqual([
+      "$x+y$",
+      "$$\nx+y\n$$",
+      "$x+y$",
+      "```math\nx+y\n```",
+    ])
+    expect(
+      render("naver-se4:image", {
+        alt: "Alt",
+        url: "https://example.com/image.png",
+        caption: "Caption",
+      }),
+    ).toEqual(["![Alt](https://example.com/image.png)\nCaption"])
+
+    const cardProps = {
+      title: "Title",
+      url: "https://example.com/card",
+      description: "Description",
+      thumbnailUrl: "https://example.com/thumb.png",
+    }
+    const cardOutputs = [
+      "![Title](https://example.com/thumb.png)\n[Title](https://example.com/card)\nDescription",
+      "[Title](https://example.com/card)",
+      "[Title](https://example.com/card)\nDescription",
+      "![Title](https://example.com/thumb.png)\n[Title](https://example.com/card)",
+    ]
+
+    expect(render("naver-se3:linkCard", cardProps)).toEqual(cardOutputs)
+    expect(render("naver-se4:linkCard", cardProps)).toEqual(cardOutputs)
+    expect(render("naver-se4:oembed", cardProps)).toEqual(cardOutputs.slice(0, 3))
+    expect(render("naver-se4:material", cardProps)).toEqual(cardOutputs.slice(0, 3))
+    expect(
+      render("naver-se4:video", {
+        title: "Video",
+        url: "https://example.com/video",
+        thumbnailUrl: "https://example.com/video.png",
+        width: 640,
+        height: 360,
+        vid: "video-id",
+      }),
+    ).toEqual(["![Video](https://example.com/video.png)\n[Video](https://example.com/video)"])
+
+    ;["naver-se2:quote", "naver-se3:quote", "naver-se4:quote", "naver-se4:mrBlog"].forEach((key) =>
+      expect(render(key, { text: "First\nSecond" })).toEqual(["> First\n> Second"]),
+    )
+
+    const cell = (text: string, isHeader: boolean) => ({
+      text,
+      html: text,
+      colspan: 1,
+      rowspan: 1,
+      isHeader,
+    })
+    const tableProps = {
+      rows: [
+        [cell("Name", true), cell("Value", true)],
+        [cell("A", false), cell("1", false)],
+      ],
+      html: "<table>complex</table>",
+      complex: false,
+    }
+
+    ;["naver-se2:table", "naver-se3:table", "naver-se4:table"].forEach((key) => {
+      expect(render(key, tableProps)).toEqual(["| Name | Value |\n| --- | --- |\n| A | 1 |"])
+      expect(render(key, { ...tableProps, complex: true })).toEqual(["<table>complex</table>"])
+    })
+
+    ;[
+      "naver-se2:bookWidget",
+      "naver-se2:container",
+      "naver-se3:subjectMatter",
+      "naver-se4:wrappingParagraph",
+    ].forEach((key) => {
+      expect(definitions.get(key)).toMatchObject({
+        presets: [{ id: "children", label: "하위 블록", template: "" }],
+        props: {},
       })
     })
   })

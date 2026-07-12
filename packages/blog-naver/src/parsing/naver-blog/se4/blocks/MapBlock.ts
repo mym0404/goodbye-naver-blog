@@ -24,7 +24,19 @@ export class NaverSe4MapBlock extends LeafParserBlock {
       },
     ],
     props: {
-      places: { label: "장소 목록", type: "array" },
+      places: {
+        label: "장소 목록",
+        type: "array",
+        items: {
+          label: "장소",
+          type: "object",
+          properties: {
+            name: { label: "이름", type: "string" },
+            address: { label: "주소", type: "string" },
+            url: { label: "URL", type: "string" },
+          },
+        },
+      },
     },
   } satisfies ParserBlockTemplateDefinition
 

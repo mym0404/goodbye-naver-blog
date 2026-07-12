@@ -21,16 +21,22 @@ export class NaverSe4LinkCardBlock extends LeafParserBlock {
   override readonly templateDefinition = {
     label: this.label,
     presets: [
-      { id: "link", label: "링크", template: "{{ `[${title}](${url})` }}" },
+      {
+        id: "card",
+        label: "썸네일·링크·설명",
+        template:
+          "{{ `${thumbnailUrl ? `![${title}](${thumbnailUrl})\\n` : ''}[${title}](${url})${description ? `\\n${description}` : ''}` }}",
+      },
+      { id: "link", label: "링크만", template: "{{ `[${title}](${url})` }}" },
       {
         id: "link-description",
-        label: "링크와 설명",
+        label: "링크와 설명만",
         template:
           "{{ description ? `[${title}](${url})\\n${description}` : `[${title}](${url})` }}",
       },
       {
         id: "thumbnail-link",
-        label: "썸네일 링크",
+        label: "썸네일과 링크만",
         template:
           "{{ thumbnailUrl ? `![${title}](${thumbnailUrl})\\n[${title}](${url})` : `[${title}](${url})` }}",
       },

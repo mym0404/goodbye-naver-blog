@@ -20,7 +20,21 @@ export class TistoryImageBlock extends TistoryParserBlock {
           "{{ images.map(image => image.caption ? `![${image.alt}](${image.url})\\n${image.caption}` : `![${image.alt}](${image.url})`).join('\\n\\n') }}",
       },
     ],
-    props: { images: { label: "이미지 목록", type: "array" } },
+    props: {
+      images: {
+        label: "이미지 목록",
+        type: "array",
+        items: {
+          label: "이미지",
+          type: "object",
+          properties: {
+            url: { label: "URL", type: "string" },
+            alt: { label: "대체 텍스트", type: "string" },
+            caption: { label: "캡션", type: "string?" },
+          },
+        },
+      },
+    },
   } as const
 
   match({ $node, node }: TistoryParserBlockContext) {

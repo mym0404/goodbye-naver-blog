@@ -38,8 +38,22 @@ thumbnail: https://blog.kakaocdn.net/dna/x7dUS/btr7eXpSDSG/AAAAAAAAAAAAAAAAAAAAA
 
 더보기
 
-> - 뉴 MS 엣지(Edge): PDF 파일 다운로드 또는 열기- 뉴 MS 엣지(Edge): 오프라인 설치하기- 뉴 MS 엣지(Edge): 브라우저에 저장된 암호(Password) 확인하기- 뉴 MS 엣지(Edge): 엣지 닫혔을 때 백그라운드 앱 실행 정지하기- 뉴 MS 엣지(Edge): 팝업 차단/허용 설정하기- 뉴 MS 엣지(Edge): 업데이트(Update) 하기
+> - [뉴 MS 엣지(Edge): PDF 파일 다운로드 또는 열기](https://tame.tistory.com/808)
+> - [뉴 MS 엣지(Edge): 오프라인 설치하기](https://tame.tistory.com/806)
+> - [뉴 MS 엣지(Edge): 브라우저에 저장된 암호(Password) 확인하기](https://tame.tistory.com/796)
+> - [뉴 MS 엣지(Edge): 엣지 닫혔을 때 백그라운드 앱 실행 정지하기](https://tame.tistory.com/794)
+> - [뉴 MS 엣지(Edge): 팝업 차단/허용 설정하기](https://tame.tistory.com/785)
+> - [뉴 MS 엣지(Edge): 업데이트(Update) 하기](https://tame.tistory.com/782)
 
-> - MS 엣지(Edge): 크로미움(Chromium) 정식 버전 출시- MS 엣지(Edge): 크로미움(Chromium) 버전 공개
+> - [MS 엣지(Edge): 크로미움(Chromium) 정식 버전 출시](https://tame.tistory.com/773)
+> - [MS 엣지(Edge): 크로미움(Chromium) 버전 공개](https://tame.tistory.com/756)
 
-> - MS 엣지(Edge): 즐겨찾기(Favorites) 백업/복원 하기- MS 엣지(Edge): 속도 향상 시키기 - TCP Fast Open- MS 엣지(Edge): 텝 미리보기 기능 사용하지 않기- MS 엣지(Edge): 확장기능(Extensions) 사용하기- MS 엣지(Edge): 기본 다운로드 위치 변경하기- MS 엣지(Edge): 기본 브라우저로 IE11 사용하기- MS 엣지(Edge): 'IE11에서 열기' 페이지 보이지 않게 하기- MS 엣지(Edge): 즐겨찾기(Favorites) 위치- MS 엣지(Edge): 기본 검색 엔진 변경하기
+> - [MS 엣지(Edge): 즐겨찾기(Favorites) 백업/복원 하기](https://tame.tistory.com/667)
+> - [MS 엣지(Edge): 속도 향상 시키기 - TCP Fast Open](https://tame.tistory.com/659)
+> - [MS 엣지(Edge): 텝 미리보기 기능 사용하지 않기](https://tame.tistory.com/657)
+> - [MS 엣지(Edge): 확장기능(Extensions) 사용하기](https://tame.tistory.com/644)
+> - [MS 엣지(Edge): 기본 다운로드 위치 변경하기](https://tame.tistory.com/627)
+> - [MS 엣지(Edge): 기본 브라우저로 IE11 사용하기](https://tame.tistory.com/623)
+> - [MS 엣지(Edge): 'IE11에서 열기' 페이지 보이지 않게 하기](https://tame.tistory.com/621)
+> - [MS 엣지(Edge): 즐겨찾기(Favorites) 위치](https://tame.tistory.com/620)
+> - [MS 엣지(Edge): 기본 검색 엔진 변경하기](https://tame.tistory.com/616)

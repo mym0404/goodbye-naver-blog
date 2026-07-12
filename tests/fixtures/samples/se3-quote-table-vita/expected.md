@@ -18,15 +18,71 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxODA2MDNfMjI1/MDAxNTI4MDM0NTQ
 
 ##### 건담 브레이커 3 브레이크 에디션
 
-| Gundam Breaker 3 BREAK EDITION |
-| --- |
-| 플랫폼 |
-| 발매일 |
-| 개발 / 유통 |
-| 심의등급 |
-| 장르 |
-| 언어 |
-| 희망소비자가격 |
+<table class="se_table_col" style="width:66%;">
+                            <tbody>
+                                <tr>
+                                    <td class="se_cell se_align-center" colspan="2" rowspan="1" style="width:100.0%;height:51.0px;background-color:#fff599;">
+                                        <div class="se_cellArea"><span class="se_fs_T2 "><b>Gundam Breaker 3 BREAK EDITION</b></span></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>플랫폼</b></span></div>
+                                    </td>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 ">PS4 / PS Vita</span></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>발매일</b></span></div>
+                                    </td>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 ">2017년 5월 2일 (한국)</span></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>개발 / 유통</b></span></div>
+                                    </td>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span style="color:rgb(031,031,031);" class="se_fs_T3 ">BANDAI NAMCO Entertainment</span></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>심의등급</b></span></div>
+                                    </td>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 ">12세 이용가</span></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>장르</b></span></div>
+                                    </td>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 ">액션</span></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>언어</b></span></div>
+                                    </td>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 ">자막 한국어 / 음성 영어</span></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:28.571428%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 "><b>희망소비자가격</b></span></div>
+                                    </td>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.35944%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span style="color:rgb(031,031,031);" class="se_fs_T3 ">49,800원</span><span style="color:rgb(031,031,031);" class="se_fs_T3 "> </span></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
 
 안녕하세요. 게임최고 RedSoul입니다.  
 오랜만에 게임 리뷰를 해볼까 합니다. 이번 리뷰할 게임은 6월에 신작이 나올 예정인 현 최신작 **건담 브레이커 3 브레이크** **에디션**입니다. 제가 플레이한 기종은 **PS Vita**이기에 PS Vita 기준으로 하는 리뷰라는 점 알고 봐주시기 바랍니다.
@@ -41,8 +97,15 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxODA2MDNfMjI1/MDAxNTI4MDM0NTQ
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAxODA2MDNfMyAg/MDAxNTI4MDM0NTM0NjM2.xMy_WTBLRpzH8dOJCX15hL2csJiukNDpI7-9FNwFVscg.eKMM-kQveJhbgByaQrIig1MFpBdHeejCC72IP6YzUXkg.JPEG.is02019/image_3695535571528028609980.jpg?type=w)
 
-| 우주 엘리베이터가 완성된지 1년.어느 게임센터에서 놀고있던 당신은 미사라는 소녀를 알게 된다. 『우리 아야토 상점가 건프라 팀에 너를 스카우트 하고 싶어!』 미사가 사는 지역은 오래된 상점가.그녀는 이 아야토 상점가를 부흥시키기 위해 건프라 팀으로 홍보에 나서려고 한다.미사와 당신은 지역 대회부터 전국 대회까지의 여정을 함께하게 되는데… |
-| --- |
+<table class="se_table_col" style="width:100%;">
+                            <tbody>
+                                <tr>
+                                    <td class="se_cell se_align-left" colspan="3" rowspan="1" style="width:100.0%;height:186.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T4 ">우주 엘리베이터가 완성된지 1년.</span><br><span class="se_fs_T4 ">어느 게임센터에서 놀고있던 당신은 미사라는 소녀를 알게 된다.</span><br><span class="se_fs_T4 "> </span><br><span class="se_fs_T4 ">『우리 아야토 상점가 건프라 팀에 너를 스카우트 하고 싶어!』</span><br><span class="se_fs_T4 "> </span><br><span class="se_fs_T4 ">미사가 사는 지역은 오래된 상점가.</span><br><span class="se_fs_T4 ">그녀는 이 아야토 상점가를 부흥시키기 위해 건프라 팀으로 홍보에 나서려고 한다.</span><br><span class="se_fs_T4 ">미사와 당신은 지역 대회부터 전국 대회까지의 여정을 함께하게 되는데…</span></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
 
 스토리는 간단하게 말씀드립니다. **건담 빌드** **파이터즈**처럼 주인공이 전국 대회에 출전해서 사건사고 해결하는 내용입니다. 흔한 일본 애니메이션 스토리이며 특별한 맛이 없는 항상 먹던 준비된 밥과 반찬입니다. 국이 있으면 더 먹기 좋은 밥상이 되지 않을까 생각이 들며 DLC가 국 같은 느낌이었습니다. 있으면 좋은데 기본이 아닌 것입니다. 하지만 이번 리뷰에 소개하는 브레이크 에디션은 국이 포함되어있는 밥상이었습니다.
 
@@ -87,14 +150,36 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxODA2MDNfMjI1/MDAxNTI4MDM0NTQ
 \- 단순하고 반복적인 게임 진행  
 \- 자유도가 높은 커스터마이징(최대 장점)
 
-| 평점 기준 |
+|   |
 | --- |
-| ★★★★★ 강력추천!!★★★★☆ 재미는있다★★★☆☆ 할만한게임★★☆☆☆ 부족한재미★☆☆☆☆ 하지마라!! |
+| **평점 기준** |
+| **★★★★★ 강력추천!!** **★★★★☆ 재미는있다** **★★★☆☆ 할만한게임** **★★☆☆☆ 부족한재미** **★☆☆☆☆ 하지마라!!** |
 
-| 평점 | ★★★☆☆ |
-| --- | --- |
-| 게임은 반복적이고 지루하지만 건프라는 자유다!! |   |
-| 패미통 점수 | 34/40 |
+<table class="se_table_col" style="width:74%;">
+                            <tbody>
+                                <tr>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:33.333332%;height:54.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T2 "><b>평점</b></span></div>
+                                    </td>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:66.666664%;height:54.0px;background-color:;">
+                                        <div class="se_cellArea"> <span style="color:rgb(000,000,000);" class="se_fs_T2 "><b>★★★</b></span><span style="color:rgb(000,000,000);" class="se_fs_T2 "><b>☆</b></span><span style="color:rgb(000,000,000);" class="se_fs_T2 "><b>☆</b></span></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="se_cell se_align-center" colspan="2" rowspan="1" style="width:100.0%;height:46.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T3 ">게임은 반복적이고 지루하지만 건프라는 자유다!!</span><br></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:31.836735%;height:59.0px;background-color:;">
+                                        <div class="se_cellArea"><span style="color:rgb(241,047,034);" class="se_fs_T2 "><b>패미통</b></span><span class="se_fs_T2 "><b> 점수</b></span></div>
+                                    </td>
+                                    <td class="se_cell se_align-center" colspan="1" rowspan="1" style="width:63.67347%;height:59.0px;background-color:;">
+                                        <div class="se_cellArea"><span class="se_fs_T2"><b>34/40</b></span></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
 
 ---
 
@@ -105,4 +190,6 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxODA2MDNfMjI1/MDAxNTI4MDM0NTQ
 또 리뷰를 오랜만에 하게 되었습니다. 학교 복학 이후로 리뷰를 하고 싶어도 과제와의 싸움으로 힘들어지더군요. 그래서 건담 브레이커 3 브레이크 에디션 리뷰를 늦게 작성하게 되었습니다. 늦은 리뷰 죄송합니다. 그리고 6월 21일 **뉴 건담 브레이커**가 출시 예정이니 건담을 좋아하시거나 게임에 관심 있으신 분들은 플레이 전에 건담 브레이커 3을 플레이 해보시는 것을 추천드립니다. 일반판 같은 경우는 덤핑 되어 쓰니 가격이 매우 착하더군요.  
 이상 리뷰를 마치도록 하겠습니다. 부족한 글이었지만 봐주셔서 진심으로 감사합니다.
 
+![[Review PS Vita Part1] 비타는 삶이다 - 소니 PS Vita](https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fblogthumb.pstatic.net%2FMjAxNzA4MTVfNDMg%2FMDAxNTAyODA0MjkzODM1.u5F0sCir7QjJker3XId4S2BkVVyNvQybMU57vAhOJTUg.49IPaap9vWSaeUoAuLHe8QB4NkcLreJd3KGY60lHuPYg.JPEG.is02019%2F20170811_230234.jpg%3Ftype%3Dw2%22&type=ff500_300)
 [[Review PS Vita Part1] 비타는 삶이다 - 소니 PS Vita](https://blog.naver.com/is02019/221072284462)
+SONY PS Vita안녕하세요. 게임최고RedSoul입니다. 이번에는 PS Vita를 리뷰해볼까합니다. 원래...

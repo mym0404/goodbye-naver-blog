@@ -75,7 +75,9 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxNzA2MDdfNjkg/MDAxNDk2ODIxMjQ
 여러분들의 개성있는 작품을 완성시켜보세요.  
 \[ ▼ CAESAR(시저) 타일디자인 \]
 
+![Textures](https://dthumb-phinf.pstatic.net/?src=%22http%3A%2F%2Fcontest.caesar.it%2Fwp-content%2Fuploads%2F2017%2F03%2FCDC_Mini.png%22&type=ff120)
 [Textures](http://contest.caesar.it/index.php/en/textures-2/)
+DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE DISCOVER MORE Online
 
 .  
 .  

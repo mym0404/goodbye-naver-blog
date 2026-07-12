@@ -35,7 +35,7 @@ describe("NaverSe2BookWidgetBlock", () => {
 
     expect(parsed.blocks).toEqual([
       {
-        blockId: "naver-se2:bookWidget",
+        blockId: "naver-se2:image",
         props: {
           url: "https://bookthumb-phinf.pstatic.net/cover/136/172/13617242.jpg?type=w150&udate=20180619",
           alt: "섬네일",
@@ -51,7 +51,7 @@ describe("NaverSe2BookWidgetBlock", () => {
         },
       },
       {
-        blockId: "naver-se2:bookWidget",
+        blockId: "naver-se2:paragraph",
         props: {
           text: [
             "**코틀린을 이용한 안드로이드 개발**",
@@ -65,7 +65,7 @@ describe("NaverSe2BookWidgetBlock", () => {
         },
       },
       {
-        blockId: "naver-se2:bookWidget",
+        blockId: "naver-se2:paragraph",
         props: {
           text: "[리뷰보기](http://book.naver.com/bookdb/book_detail.php?bid=13617242)",
         },
@@ -94,13 +94,13 @@ describe("NaverSe2BookWidgetBlock", () => {
 
     expect(parsed.blocks).toEqual([
       {
-        blockId: "naver-se2:bookWidget",
+        blockId: "naver-se2:paragraph",
         props: {
           text: "**Fallback Book**",
         },
       },
       {
-        blockId: "naver-se2:bookWidget",
+        blockId: "naver-se2:paragraph",
         props: {
           text: "[Fallback Book](https://example.com/book)",
         },
@@ -117,7 +117,7 @@ describe("NaverSe2BookWidgetBlock", () => {
 
     expect(parsed.blocks).toEqual([
       {
-        blockId: "naver-se2:bookWidget",
+        blockId: "naver-se2:image",
         props: {
           url: "https://example.com/book.png",
           alt: "",

@@ -20,11 +20,13 @@ thumbnail: https://blogthumb.pstatic.net/20090825_8/naver_diary_1251166367893k3x
 | --- |
 |   |
 |   |
+|   |
 
 ![](https://mblogthumb-phinf.pstatic.net/data43/2009/4/6/24/bullet_1_naver_diary.jpg?type=w) **건전한 국내 웹 환경 발전을 위해 NHN이 가진 정보 플랫폼 기술을 공개합니다.**
 
 |   |
 | --- |
+|   |
 
 ![](https://mblogthumb-phinf.pstatic.net/data41/2009/3/19/33/slice_9_naver_blog.jpg?type=w)  
 <NHN DeView 2009 BI(Brand Identity)\>
@@ -39,6 +41,7 @@ DeView는 Developer's View의 축약형으로서 '내일을 향한 개발자의 
 
 |   |
 | --- |
+|   |
 
 ![](https://mblogthumb-phinf.pstatic.net/data41/2009/3/19/33/slice_9_naver_blog.jpg?type=w)  
 <NHN DeView2009 행사 슬로건\>
@@ -47,6 +50,7 @@ DeView는 Developer's View의 축약형으로서 '내일을 향한 개발자의 
 
 |   |
 | --- |
+|   |
 
 ![](https://mblogthumb-phinf.pstatic.net/data41/2009/3/19/33/slice_9_naver_blog.jpg?type=w)  
 <[행사 프로그램 및 발표자](http://deview.naver.com/programs/courses)\>
@@ -57,6 +61,7 @@ DeView는 Developer's View의 축약형으로서 '내일을 향한 개발자의 
 
 |   |
 | --- |
+|   |
 
 ![](https://mblogthumb-phinf.pstatic.net/data41/2009/3/19/33/slice_9_naver_blog.jpg?type=w)  
 <참가 신청자들이 [DeView 미투데이](http://me2day.net/deview)에 남긴 댓글 \>
@@ -65,6 +70,7 @@ DeView는 Developer's View의 축약형으로서 '내일을 향한 개발자의 
 
 |   |
 | --- |
+|   |
 
 ![](https://mblogthumb-phinf.pstatic.net/data41/2009/3/19/33/slice_9_naver_blog.jpg?type=w)  
 <[참가자 네트워크를](http://deview.naver.com/network/index) 시각화한 이미지\>
@@ -86,3 +92,4 @@ DeView는 Developer's View의 축약형으로서 '내일을 향한 개발자의 
 
 |   |
 | --- |
+|   |

@@ -45,7 +45,9 @@ thumbnail: https://blogthumb.pstatic.net/MjAxODEwMjZfNDUg/MDAxNTQwNTQwMDczMDE4.d
 **[](https://blog.naver.com/naver_diary/221361626695)****** [https://blog.naver.com/naver\_diary/221361626695](https://blog.naver.com/naver_diary/221361626695)****  
 **ㅣ**슬지제빵소** 찐빵 구매하기******
 
+![슬지네찐빵v우리밀단팥찐빵 : 네이버쇼핑 스마트스토어](https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fshop-phinf.pstatic.net%2F20160826_299%2Fseuljine2000_1472212491742Nf0Cx_JPEG%2FSINE2000.jpg%22&type=ff120)
 [슬지네찐빵v우리밀단팥찐빵 : 네이버쇼핑 스마트스토어](https://smartstore.naver.com/seuljine2000?NaPm=ct%3Djmbycgou%7Cci%3Dcheckout%7Ctr%3Dds%7Ctrx%3D%7Chk%3D4e33ad3c10d03a25d8c2321c0225d50611c2b8e4)
+슬지제빵소, 찐빵, 팥앙금, 우리밀빵, 쌀빵, 쌀찐빵, 오색찐빵, 빙수팥, 팥물, 팥가루
 
 [슬지네찐빵 슬지제빵소](https://map.naver.com/p/search/%EC%8A%AC%EC%A7%80%EB%84%A4%EC%B0%90%EB%B9%B5%20%EC%8A%AC%EC%A7%80%EC%A0%9C%EB%B9%B5%EC%86%8C)
 전라북도 부안군 진서면 청자로 1076 슬지제빵소
@@ -135,7 +137,9 @@ thumbnail: https://blogthumb.pstatic.net/MjAxODEwMjZfNDUg/MDAxNTQwNTQwMDczMDE4.d
 ****** [https://blog.naver.com/naver\_diary/221372376514](https://blog.naver.com/naver_diary/221372376514)  
 **ㅣ**나드리** 프로그램 예약하기********
 
+![3대째 이어온 손맛 나드리 비빔쫄면 냉쫄면 5인분세트](https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fshop-phinf.pstatic.net%2F20180921_272%2Fgarang2012_1537520007222YMED2_JPEG%2F60827186863256171_2001853942.jpg%3Ftype%3Dm450%22&type=ff120)
 [3대째 이어온 손맛 나드리 비빔쫄면 냉쫄면 5인분세트](https://shopping.naver.com/fresh/localfood/stores/1000022189/products/1002902158?NaPm=ct%3Djn1go1ag%7Cci%3D9e50c9b23b6a7faf6fc0bda912257c7d05c2260b%7Ctr%3Dslsl%7Csn%3D169446%7Cic%3D%7Chk%3Dc5a143e07dcf325489464bc454e8d61d8b20cb73)
+경북영주 정희윤
 
 [나드리](https://map.naver.com/p/search/%EB%82%98%EB%93%9C%EB%A6%AC)
 경상북도 영주시 중앙로 89 나드리

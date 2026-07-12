@@ -1,5 +1,6 @@
 import type { TistoryParserBlockContext } from "../core/TistoryParserBlock.js"
 
+import { renderTistoryInline } from "../core/TistoryInline.js"
 import { TistoryParserBlock } from "../core/TistoryParserBlock.js"
 
 export class TistoryQuoteBlock extends TistoryParserBlock {
@@ -11,13 +12,10 @@ export class TistoryQuoteBlock extends TistoryParserBlock {
       {
         id: "blockquote",
         label: "Markdown 인용",
-        template: "{{ lines.map(line => `> ${line}`).join('\\n') }}",
+        template: "{{ text.split('\\n').map(line => `> ${line}`).join('\\n') }}",
       },
     ],
-    props: {
-      text: { label: "인용문", type: "string" },
-      lines: { label: "인용문 줄", type: "array" },
-    },
+    props: { text: { label: "인용문", type: "string" } },
   } as const
 
   match({ $node, node }: TistoryParserBlockContext) {
@@ -28,12 +26,16 @@ export class TistoryQuoteBlock extends TistoryParserBlock {
     )
   }
 
-  convert({ $node }: TistoryParserBlockContext) {
+  convert({ $, $node, options }: TistoryParserBlockContext) {
     const text = $node
-      .text()
-      .replace(/\u00a0/g, " ")
-      .trim()
+      .contents()
+      .toArray()
+      .map((node) =>
+        renderTistoryInline({ $, nodes: [node], resolveLinkUrl: options.resolveLinkUrl }),
+      )
+      .filter(Boolean)
+      .join("\n")
 
-    return text ? [{ blockId: `tistory:${this.id}`, props: { text, lines: text.split("\n") } }] : []
+    return text ? [{ blockId: `tistory:${this.id}`, props: { text } }] : []
   }
 }

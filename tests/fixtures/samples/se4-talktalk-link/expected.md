@@ -94,7 +94,9 @@ data 관리의 중요성이 더 커지고 있는 지금, Notion은 제대로만 
 
 **3\. 신청폼 작성하기**
 
+![16차 무료세미나) 노션 레벨업강의](https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Flh5.googleusercontent.com%2FUiQ4GRiB4LButC1hOKiGFZqp0wiTWddOMkdt3BJk0Bi_V5vNe08DXcEj4T0kczFMk8wakVLNJR8%3Dw1200-h630-p%22&type=ff120)
 [16차 무료세미나) 노션 레벨업강의](https://m.site.naver.com/1DmIt)
+세미나 일정 📅 일정: 2025년 3월 14일 (금) 오후 9시 📍 진행 방식: 온라인 (Zoom) 💰 비용: 무료! 이번 특강에서 배우는 내용! ✔ 노션을 쉽게 쓰는 방법! 단순 메모장이 아니라, 진짜 효율적인 데이터 관리 도구로 활용하는 법을 배워봅니다. ✔ 데이터 정리를 잘하면, 시간이 절약됩니다! 하루 10분만 투자해도, 업무와 정보를 한눈에 관리할 수 있어요. ✔ AI와 노션을 결합해 자동화하기! 업무 시간을 줄이고, 효율은 극대화하는 방법을 알려드립니다. ✔ 실전에서 바로 써먹는 꿀팁 대방출! 📌 고객 관...
 
 **📢 공지사항 추가 (3월 11일 기준)**
 

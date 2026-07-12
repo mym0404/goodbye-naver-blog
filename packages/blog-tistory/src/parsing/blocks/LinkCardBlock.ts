@@ -13,9 +13,9 @@ export class TistoryLinkCardBlock extends TistoryParserBlock {
     presets: [
       {
         id: "link-description",
-        label: "링크와 설명",
+        label: "썸네일·링크·설명",
         template:
-          "{{ description ? `[${title}](${url})\\n${description}` : `[${title}](${url})` }}",
+          "{{ `${thumbnailUrl ? `![${title}](${thumbnailUrl})\\n` : ''}[${title}](${url})${description ? `\\n${description}` : ''}` }}",
       },
     ],
     props: {

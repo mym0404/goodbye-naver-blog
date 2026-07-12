@@ -18,6 +18,7 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/20100826_135/naver_diary_1282815
 | --- |
 |   |
 |   |
+|   |
 
 2주 전, [김영하의 스토리 특급](http://blog.naver.com/story_xpress)에 특급 이벤트 [공지](http://blog.naver.com/story_xpress/90093398669)가 떴습니다. 김영하 작가가 홍대 근처 카페에서 ‘글을 잘 쓴다는 것은 과연 무엇일까?’에 대한 강연을 한다는 겁니다. 370개의 덧글이 이어졌습니다. 다들 글을 꼭 잘 쓰고 싶은, 혹은 잘 써야만 하는 이유가 ‘녹아 있는’ 것들이었습니다. 네… 마음이 녹아 있는 것같이 절절한 것들이었습니다. 사연도 많고 이유도 가지가지였습니다. 그럼에도 불구하고, 세상에 글 잘 쓰고 싶은 사람이 이렇게 많았나 싶은 그 사연들을 한 줄로 엮을 수 있는 고리가 있었는데요.  
 바로 ‘**꿈**’이었습니다. 글 쓰는 사람이 되고 싶은 꿈, 마음을 움직일 수 있는 글을 쓰고 싶은 꿈...
@@ -48,6 +49,7 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/20100826_135/naver_diary_1282815
 
 |   |
 | --- |
+|   |
 
 ![](https://mblogthumb-phinf.pstatic.net/data41/2009/3/19/33/slice_9_naver_blog.jpg?type=w)  
 <'재미난 강연' 중인 김영하 작가\>
@@ -71,6 +73,7 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/20100826_135/naver_diary_1282815
 
 |   |
 | --- |
+|   |
 
 ![](https://mblogthumb-phinf.pstatic.net/data41/2009/3/19/33/slice_9_naver_blog.jpg?type=w)  
 <강연을 청취하고 있는 블로거들\>
@@ -91,6 +94,7 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/20100826_135/naver_diary_1282815
 
 |   |
 | --- |
+|   |
 
 ![](https://mblogthumb-phinf.pstatic.net/data41/2009/3/19/33/slice_9_naver_blog.jpg?type=w)  
 <강연 중인 김영하 작가\>
@@ -110,6 +114,7 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/20100826_135/naver_diary_1282815
 
 |   |
 | --- |
+|   |
 
 ![](https://mblogthumb-phinf.pstatic.net/data41/2009/3/19/33/slice_9_naver_blog.jpg?type=w)  
 <강연에 몰입한 블로거들\>
@@ -135,13 +140,31 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/20100826_135/naver_diary_1282815
 
 |   |
 | --- |
-
-| 내안의 괴물을 꺼내야 한다는 말이 굉장히 인상 깊었어요. 제가 자신을 잃고 글을 못 쓰는 이유가 바로 괴물을 외면하려 했기 때문이거든요. 오늘 강연을 듣고 나니 마음이 편안해지네요. 가뭄에 단비 같았다고 할까요? 자신을 발견하는데 소중한 계기가 됐습니다. - 나르치스님 아이티 사태를 보고 안타까운 마음은 들었지만 직접 뭘 해보겠다는 생각까지는 못 했어요. 이번에 김영하 작가님 인터뷰 내용을 보며 많은 생각을 했고, 콩도 기부하게 됐어요. 앞으로도 기회가 닿으면 더 많이 참여해 보고 싶습니다. - 노을님 블로그에 주로 나눔을 주제로 포스팅 하고 있는데요. 글이 딱딱해 지고 건조해 진다는 느낌이 있어서 제 글을 좀 부드럽게 만들고 싶어서 강연 듣게 됐어요. 강연 들으면서 내면에 대해서 많이 생각하게 됐습니다. - 앙카렐라님 시나리오 작가 지망생입니다. 작가님 팬이고요. 블로그 통해서 기부도 하고 좋은 얘기도 들을 수 있어서 좋았어요. 또 이런 기회가 있었으면 합니다 - 윤블님 강연을 들으신 분들의 소감입니다. 작가가 되면 네이버 블로그에 다시 재능기부하겠냐는 질문에 돌아온 답은, “영광입니다! ” 그 한마디가 작가를 꿈꾸는 길에 담대한 첫 문장이 되길 기원합니다. ^^ |
-| --- |
 |   |
 
+<table border="0" cellspacing="2" cellpadding="0" width="100%" bgcolor="#ebebeb"><tbody><tr><td>
+
+
+
+
+<table border="0" cellspacing="20" cellpadding="0" width="100%" bgcolor="#ffffff"><tbody><tr valign="top"><td width="32"><font face=""><img src="https://mblogthumb-phinf.pstatic.net/data41/2009/3/18/46/bloom_naver_blog.jpg?type=w" alt="" class="fx _postImage" largesrc="javascript:location.href='https://mblogthumb-phinf.pstatic.net/data41/2009/3/18/46/bloom_naver_blog.jpg?type=w';"></font></td><td>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="left"><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt">&nbsp; 내안의 괴물을 꺼내야 한다는 말이 굉장히 인상 깊었어요. 제가 자신을 잃고 글을 못 쓰는 이유가 바로 괴물을 외면하려 했기 때문이거든요. 오늘 강연을 듣고 나니 마음이 편안해지네요. 가뭄에 단비 같았다고 할까요? 자신을 발견하는데 소중한 계기가 됐습니다. </span></span></span></span></font></font><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"></span></span></span></span></font></font></p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="right"><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt">- 나르치스님 </span></span></span></span></font></font></p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="justify"><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"></span></span></span></span></font></font>&nbsp;</p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="justify"><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt">아이티 사태를 보고 안타까운 마음은 들었지만 직접 뭘 해보겠다는 생각까지는 못 했어요. 이번에 김영하 작가님 인터뷰 내용을 보며 많은 생각을 했고, 콩도 기부하게 됐어요. 앞으로도 기회가 닿으면 더 많이 참여해 보고 싶습니다.</span></span></span></span></font></font></p><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"></span></span></span></span></font></font><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt">
+<p style="" _foo="LINE-HEIGHT: 1.8" align="right"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt">- 노을님</span><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"> </span></p></span></span></span></span></font></font>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="justify"><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"></span></span></span></span></font></font>&nbsp;</p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="left"><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt">블로그에 주로 나눔을 주제로 포스팅 하고 있는데요. 글이 딱딱해 지고 건조해 진다는 느낌이 있어서 제 글을 좀 부드럽게 만들고 싶어서 강연 듣게 됐어요. 강연 들으면서 내면에 대해서 많이 생각하게 됐습니다. </span></span></span></span></font></font></p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="right"><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt">- 앙카렐라님 </span></span></span></span></font></font></p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="justify">&nbsp;</p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="left"><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt">시나리오 작가 지망생입니다. 작가님 팬이고요. 블로그 통해서 기부도 하고 좋은 얘기도 들을 수 있어서 좋았어요. 또 이런 기회가 있었으면 합니다</span></span></span></span></font></font></p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="right"><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt">-&nbsp;윤블님</span></span></span></span></font></font></p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="right"><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"></span></span></span></span></font></font>&nbsp;</p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="left"><font color="#7d7d7d"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt">강연을 들으신 분들의 소감입니다. <br>작가가 되면 네이버 블로그에 다시 재능기부하겠냐는 질문에 돌아온 답은, “영광입니다! ” <br>그 한마디가 작가를 꿈꾸는 길에 담대한 첫 문장이 되길 기원합니다. ^^&nbsp;&nbsp;</span></span></span></span></font></font></p></td></tr></tbody></table></td></tr></tbody></table>
+
 |   |
 | --- |
+|   |
 
 ![](https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fpostfiles.pstatic.net%2Fdata43%2F2009%2F4%2F6%2F24%2Fbullet_1_naver_diary.jpg%3Ftype%3Dw3%22&type=w) **김영하 작가의 재능기부, 유엔난민기구 표창 받아**  
 ![](https://mblogthumb-phinf.pstatic.net/data41/2009/3/25/283/slice_naver_blog.jpg?type=w)  
@@ -149,19 +172,31 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/20100826_135/naver_diary_1282815
 
 |   |
 | --- |
+|   |
 
 ![](https://mblogthumb-phinf.pstatic.net/data41/2009/3/19/33/slice_9_naver_blog.jpg?type=w)  
 <앤 메리 캠벨 유엔난민기구 한국대표(좌), 감사패를 수상한 김영하 작가(우)\>
 
 |   |
 | --- |
-
-| 평소 네이버와 해피빈을 통한 온라인 기부문화 활동이 참 인상적이었습니다. 이번에 김영하 작가님이 재능기부를 통해 아이티 지진 피해를 입은 강제이주민들을 돕고 있는 유엔난민기구의 구호 활동에 기부하신다는 소식을 듣고, 이것이 세계 난민을 향한 도움의 작은 씨앗이 될 것이라고 생각해 감사의 마음을 전달하고 싶어서 이렇게 찾아왔습니다. 아이티 지진 직후에도 해피빈 등을 통해 한국분들이 자발적으로 일어나서 돕는 모습이 참 인상적이었는데요. 특히 이번 네이버 블로그를 통한 재능기부에도 많은 감동을 받았습니다. 젊은 세대들이 중요한 이슈를 스스로 알고자 노력하고 자신이 가진 재능을 통해 나눔을 실천한다는 것이 참 뜻 깊은 것 같습니다. 또한 이런 나눔과 실천을 서로 배워 나가는 과정인 듯하여 더욱 인상적이었습니다. 6.25 전쟁으로 비롯한 폭력과 강제 이주의 고통을 경험한 한국인들은 지금 이 시간에도 유사한 상황에 놓인 난민들의 절박한 상황에 대해서 누구보다도 더 깊이 공감하실 수 있다고 생각합니다. 3천 4백만명이 넘는 난민 문제에 앞으로도 지속적인 관심과 후원 부탁드리고, 네이버와 해피빈을 통해 나눔과 기부가 더욱 확산되길 바랍니다. 감사합니다. 앤 메리 캠벨 유엔난민기구 한국대표 유엔난민기구(UNHCR) 바로가기 유엔난민기구(UNHCR) 블로그 바로가기 |
-| --- |
 |   |
 
+<table border="0" cellspacing="2" cellpadding="0" width="100%" bgcolor="#ebebeb"><tbody><tr><td>
+
+
+
+
+<table border="0" cellspacing="20" cellpadding="0" width="100%" bgcolor="#ffffff"><tbody><tr valign="top"><td width="32"><font face=""><img src="https://mblogthumb-phinf.pstatic.net/data41/2009/3/18/46/bloom_naver_blog.jpg?type=w" alt="" class="fx _postImage" largesrc="javascript:location.href='https://mblogthumb-phinf.pstatic.net/data41/2009/3/18/46/bloom_naver_blog.jpg?type=w';"></font></td><td>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="justify"><font color="#464646"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><font color="#7d7d7d"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt">&nbsp; 평소 네이버와 해피빈을 통한 온라인 기부문화 활동이 참 인상적이었습니다. 이번에 김영하 작가님이 재능기부를 통해 아이티 지진 피해를 입은 강제이주민들을 돕고 있는 유엔난민기구의 구호 활동에 기부하신다는 소식을 듣고, 이것이 세계 난민을 향한 도움의 작은 씨앗이 될 것이라고 생각해 감사의 마음을 전달하고 싶어서 이렇게 찾아왔습니다.<br>&nbsp;<br>아이티 지진 직후에도 해피빈 등을 통해 한국분들이 자발적으로 일어나서 돕는 모습이 참 인상적이었는데요. 특히 이번 네이버 블로그를 통한 재능기부에도 많은 감동을 받았습니다. 젊은 세대들이 중요한 이슈를 스스로 알고자 노력하고 자신이 가진 재능을 통해 나눔을 실천한다는 것이 참 뜻 깊은 것 같습니다. 또한 이런 나눔과 실천을 서로 배워 나가는 과정인 듯하여 더욱 인상적이었습니다.<br>&nbsp;<br>6.25 전쟁으로 비롯한 폭력과 강제 이주의 고통을 경험한 한국인들은 지금 이 시간에도 유사한 상황에 놓인 난민들의 절박한 상황에 대해서 누구보다도 더 깊이 공감하실 수 있다고 생각합니다. 3천 4백만명이 넘는 난민 문제에 앞으로도 지속적인 관심과 후원 부탁드리고, 네이버와 해피빈을 통해 나눔과 기부가 더욱 확산되길 바랍니다. 감사합니다.</span></span></span></font></span></font></font></p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="justify"><font color="#464646"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><font color="#7d7d7d"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"></span></span></span></font></span></font></font>&nbsp;</p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="right"><font color="#464646"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><font color="#7d7d7d"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt">앤 메리 캠벨 유엔난민기구 한국대표</span></span></span></font></span></font></font></p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="right"><font color="#464646"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><font color="#7d7d7d"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"></span></span></span></font></span></font></font>&nbsp;</p>
+<p style="" _foo="LINE-HEIGHT: 1.8" align="left"><font color="#464646"><font face=""><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><font color="#7d7d7d"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:11pt;" _foo="FONT-SIZE: 11pt"><span style="font-size:8pt;" _foo="FONT-SIZE: 8pt"><span style="font-size:11pt;" _foo="FONT-SIZE: 11pt"><span style="font-size:8pt;" _foo="FONT-SIZE: 8pt"><span style="font-size:11pt;" _foo="FONT-SIZE: 11pt"><span style="font-size:8pt;" _foo="FONT-SIZE: 8pt"><span style="font-size:11pt;" _foo="FONT-SIZE: 11pt"><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><font color="#464646"><img src="https://mblogthumb-phinf.pstatic.net/data44/2009/3/25/125/bullet_3_naver_blog.jpg?type=w" alt="" class="fx _postImage" largesrc="javascript:location.href='https://mblogthumb-phinf.pstatic.net/data44/2009/3/25/125/bullet_3_naver_blog.jpg?type=w';"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><font face="">&nbsp;<a _foo="con_link" href="http://www.unhcr.or.kr/unhcr/main/index.jsp" target="_blank"><font color="#009e25">유엔</font></a></font></span></font></span></span></span></span></span></span></span></span><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><font color="#464646"><font color="#009e25" face=""><font color="#009e25"><font color="#009e25"><a _foo="con_link" href="http://www.unhcr.or.kr/unhcr/main/index.jsp" target="_blank"><font color="#009e25">난민기구(UNHCR) </font></a></font></font><font color="#636363">바로가기</font></font></font></span></span></span></span></span></span></span></span></span></span></span></font></span></font></font></p>
+<div _foo="autosourcing-stub-saved"><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:9pt;" _foo="FONT-SIZE: 9pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><font color="#636363" face=""><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><span style="font-size:11pt;" _foo="FONT-SIZE: 11pt"><span style="font-size:8pt;" _foo="FONT-SIZE: 8pt"><span style="font-size:11pt;" _foo="FONT-SIZE: 11pt"><span style="font-size:8pt;" _foo="FONT-SIZE: 8pt"><span style="font-size:11pt;" _foo="FONT-SIZE: 11pt"><span style="font-size:8pt;" _foo="FONT-SIZE: 8pt"><span style="font-size:11pt;" _foo="FONT-SIZE: 11pt"><span style="font-size:9pt;" _foo="FONT-FAMILY: 나눔고딕, 돋움; FONT-SIZE: 9pt"><font color="#464646"><img src="https://mblogthumb-phinf.pstatic.net/data44/2009/3/25/125/bullet_3_naver_blog.jpg?type=w" alt="" class="fx _postImage" largesrc="javascript:location.href='https://mblogthumb-phinf.pstatic.net/data44/2009/3/25/125/bullet_3_naver_blog.jpg?type=w';"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><font face="">&nbsp;<a _foo="con_link" href="http://unhcr_korea.blog.me/" target="_blank"><font color="#009e25">유엔</font></a></font></span></font></span></span></span></span></span></span></span></span></span></span></span></font><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><span style="font-size:10pt;" _foo="FONT-SIZE: 10pt"><font color="#009e25" face=""><font color="#009e25"><a _foo="con_link" href="http://unhcr_korea.blog.me/" target="_blank"><font color="#009e25">난민기구(UNHCR) 블로그</font></a> </font><font color="#636363">바로가기 </font></font></span></span></span></span></span></span></span></span></div></td></tr></tbody></table></td></tr></tbody></table>
+
 |   |
 | --- |
+|   |
 
 **![](https://mblogthumb-phinf.pstatic.net/data41/2009/3/17/83/bullet_3_naver_blog.jpg?type=w) 김영하의 강연 동영상**
 
@@ -187,3 +222,4 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/20100826_135/naver_diary_1282815
 
 |   |
 | --- |
+|   |

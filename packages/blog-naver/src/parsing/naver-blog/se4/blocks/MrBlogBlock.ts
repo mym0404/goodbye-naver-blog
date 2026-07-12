@@ -10,7 +10,13 @@ export class NaverSe4MrBlogBlock extends LeafParserBlock {
   override readonly label = "블로그씨 질문"
   override readonly templateDefinition = {
     label: this.label,
-    presets: [{ id: "default", label: "인용문", template: "> {{ text }}" }],
+    presets: [
+      {
+        id: "default",
+        label: "인용문",
+        template: "{{ text.split('\\n').map(line => `> ${line}`).join('\\n') }}",
+      },
+    ],
     props: {
       text: { label: "본문", type: "string" },
     },

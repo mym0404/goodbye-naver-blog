@@ -32,6 +32,7 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/20120220_160/naver_diary_1329704
 |   |
 | --- |
 |   |
+|   |
 
 ![](https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fpostfiles.pstatic.net%2Fdata43%2F2009%2F4%2F6%2F24%2Fbullet_1_naver_diary.jpg%3Ftype%3Dw3%22&type=w) **현실에 부동산 정보를 덧붙이는 여러 가지 방법들**
 

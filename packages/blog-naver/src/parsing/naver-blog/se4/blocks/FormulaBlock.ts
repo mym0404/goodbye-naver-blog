@@ -15,6 +15,11 @@ export class NaverSe4FormulaBlock extends LeafParserBlock {
     label: this.label,
     presets: [
       {
+        id: "source-display",
+        label: "원문 표시 방식",
+        template: "{{ display ? `$$\\n${formula}\\n$$` : `$${formula}$` }}",
+      },
+      {
         id: "display-math",
         label: "표시 수식",
         template: "{{ `$$\\n${formula}\\n$$` }}",

@@ -15,19 +15,8 @@ export class NaverSe3SubjectMatterBlock extends LeafParserBlock {
   override readonly label = "소재 카드"
   override readonly templateDefinition = {
     label: this.label,
-    presets: [
-      {
-        id: "default",
-        label: "이미지 또는 본문",
-        template: "{{ (url ?? '') ? `![${alt}](${url})` : text }}",
-      },
-    ],
-    props: {
-      text: { label: "본문", type: "string?" },
-      alt: { label: "대체 텍스트", type: "string?" },
-      url: { label: "URL", type: "string?" },
-      caption: { label: "캡션", type: "string?" },
-    },
+    presets: [{ id: "children", label: "하위 블록", template: "" }],
+    props: {},
   } satisfies ParserBlockTemplateDefinition
 
   override match({ $node }: ParserBlockContext) {
@@ -36,6 +25,12 @@ export class NaverSe3SubjectMatterBlock extends LeafParserBlock {
 
   override convert({ $, $node, options, blockId }: Parameters<LeafParserBlock["convert"]>[0]) {
     const blocks = []
+    const imageBlockId = blockId
+      .replace(/:subjectMatter$/, ":image")
+      .replace(/^subjectMatter$/, "image")
+    const paragraphBlockId = blockId
+      .replace(/:subjectMatter$/, ":paragraph")
+      .replace(/^subjectMatter$/, "paragraph")
     const imageNode = findInComponentRoot({
       $,
       $component: $node,
@@ -45,7 +40,7 @@ export class NaverSe3SubjectMatterBlock extends LeafParserBlock {
 
     if (imageSource?.trim()) {
       const imageBlock = createImageBlock({
-        blockId,
+        blockId: imageBlockId,
         options,
         image: {
           sourceUrl: normalizeAssetUrl(imageSource),
@@ -87,7 +82,9 @@ export class NaverSe3SubjectMatterBlock extends LeafParserBlock {
     const summaryLines = [title ? `**${title}**` : "", ...details].filter(Boolean)
 
     if (summaryLines.length > 0) {
-      blocks.push(createParagraphBlock({ blockId, text: summaryLines.join("  \n") }))
+      blocks.push(
+        createParagraphBlock({ blockId: paragraphBlockId, text: summaryLines.join("  \n") }),
+      )
     }
 
     const detailLink = findInComponentRoot({
@@ -101,7 +98,7 @@ export class NaverSe3SubjectMatterBlock extends LeafParserBlock {
       const label = compactText(detailLink.text()) || "상세보기"
       const url = options.resolveLinkUrl ? options.resolveLinkUrl(detailUrl) : detailUrl
 
-      blocks.push(createParagraphBlock({ blockId, text: `[${label}](${url})` }))
+      blocks.push(createParagraphBlock({ blockId: paragraphBlockId, text: `[${label}](${url})` }))
     }
 
     if (blocks.length === 0) {

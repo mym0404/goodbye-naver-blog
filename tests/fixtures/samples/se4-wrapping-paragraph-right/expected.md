@@ -32,7 +32,9 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxOTExMjBfMjEz/MDAxNTc0MjE4MzI
 
 ## **01\. 장인의 기술력에 브랜드를 입힌 아들,** **로우플로우**
 
+![[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.01 로우플로우](https://phinf.pstatic.net/tvcast/20190909_87/YmoZl_1568017645493eQOsU_JPEG/c704ed3b-d2d0-11e9-a941-28b4484d608c_05.jpg?type=f690_388)
 [[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.01 로우플로우](https://tv.naver.com/v/9811559)
+플레이 네이버(PLAY NAVER) | [이름을 불러주세요X조석] 애니툰 ep.01 로우플로우 정답 확인하고 이벤트 참여하세요! (~9/13) 네이버 프로젝트 꽃의 브랜드 웹툰 '이름을 불러주세요'가 애니툰으로 연재됩니다. 조석 작가와 함께 청년 사업자들의 이름을 불러주세요.
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAxOTExMThfNjIg/MDAxNTc0MDYwMzIxMzMz.R_tNadA2SR-p0b9igyFSpmY9ynZiygkKRBhaP5SWMSEg.4nwxuj7H1Y6aonSI1xXPTf8BlSU-Gp9wMu3jxyv20igg.PNG.naver_diary/image.png?type=w)
 
@@ -45,12 +47,15 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxOTExMjBfMjEz/MDAxNTc0MjE4MzI
 ▶[로우플로우 스토어 가기](https://shopping.naver.com/style/style/stores/100072967)[](https://shopping.naver.com/style/style/stores/100072967)
 
 [로우플로우 : 네이버쇼핑 스타일윈도](https://shopping.naver.com/style/style/stores/100072967)
+프로젝트 아뜰리에 P.A
 
 ## ****
 
 ## **02\. 취미를 배송하다. 따뜻한 온라인 취미 서비스** **하비풀**
 
+![[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.02 하비풀](https://phinf.pstatic.net/tvcast/20190918_28/opSZj_1568791592612iT7RL_JPEG/40436473-d9e4-11e9-9c7a-505dac8c3639_02.jpg?type=f690_388)
 [[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.02 하비풀](https://tv.naver.com/v/9899279)
+플레이 네이버(PLAY NAVER) | 네이버웹툰 조석 작가의 은밀한 취미는? 그의 나르시시즘 무엇.. 네이버 프로젝트 꽃의 ‘이름을 불러주세요’ 애니툰입니다. 조석/김규삼/이동건 작가와 함께한 웹툰 원작을 만나보고, 가업을 잇는 청년들과 혁신 사업가들의 이름을 함께 불러주세요! 퀴즈 풀고 네이버페이 포인트 받는 이벤트는 덤! (~9월 20일)
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAxOTExMThfMjIg/MDAxNTc0MDU3OTcwNTM4.OY7LlbQnhuluI92XPAbw8mbeyFm8bv918AdLZN9kSi4g.nX9Fq-S26ziOlrblHsbj-h6JrvoP4NGXvkw_CbnkqXUg.PNG.naver_diary/image.png?type=w)
 
@@ -65,12 +70,15 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxOTExMjBfMjEz/MDAxNTc0MjE4MzI
 ▶[하비풀 스토어 가기](https://shopping.naver.com/living/handmade/stores/100048824)[](https://shopping.naver.com/living/handmade/stores/100048824)
 
 [하비풀 hobbyful : 네이버쇼핑 리빙윈도](https://shopping.naver.com/living/handmade/stores/100048824)
+하비풀 공식 네이버 스토어
 
 ## ****
 
 ## **03\. 공간에 표정을 입히는 아트 프린트,** **홈어게인 아트 프린트**
 
+![[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.03 홈어게인 아트 프린트](https://phinf.pstatic.net/tvcast/20191002_168/kRnfs_1569995702181xXaSR_JPEG/071d4bb3-e4d8-11e9-ab5a-28b4484d5a96_01.jpg?type=f690_388)
 [[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.03 홈어게인 아트 프린트](https://tv.naver.com/v/10250029)
+플레이 네이버(PLAY NAVER) | 집 안에 새로움을 주기위한 애봉의 선택은? 아트프린트 시장을 개척하는 가업을 잇는 청년 이야기 네이버 프로젝트 꽃의 브랜드 웹툰 '이름을 불러주세요'의 애니툰입니다. 조석/김규삼/이동건 작가와 함께한 웹툰 원작을 만나보고, 가업을 잇는 청년들과 청년 혁신 사업가들의 이름을 함께 불러주세요!
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAxOTExMThfMiAg/MDAxNTc0MDU5MDIzNDk5.qY2N0KsaIbFnPefmWOg6EllZ9AKIK9rUhp4nR9LOygwg.S-3b1xVpRSWL74_FwAl5MM6_5_bnviZOl44syJy7HQkg.PNG.naver_diary/image.png?type=w)
 
@@ -83,12 +91,15 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxOTExMjBfMjEz/MDAxNTc0MjE4MzI
 ▶[홈어게인 아트 프린트 스토어 가기](https://shopping.naver.com/living/handmade/stores/100221186)[](https://shopping.naver.com/living/handmade/stores/100221186)
 
 [홈어게인 아트 프린트 : 네이버쇼핑 리빙윈도](https://shopping.naver.com/living/handmade/stores/100221186)
+아트 프린트 & 디자인
 
 ## ****
 
 ## **04\. 우리 반려동물의 건강, 아프기 전에 챙겨주세요.** **핏펫**
 
+![[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.04 핏펫](https://phinf.pstatic.net/tvcast/20191002_240/EfrQQ_15699959424786s356_JPEG/666b885c-e4d9-11e9-a097-505dac8c381b_03.jpg?type=f690_388)
 [[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.04 핏펫](https://tv.naver.com/v/10250111)
+플레이 네이버(PLAY NAVER) | 조석 작가 아버지가 갑자기 병원에 달려간 이유? 댕댕이 건강 챙기다 사업가가 된 청년사업가 이야기! 네이버 프로젝트 꽃의 브랜드 웹툰 '이름을 불러주세요'의 애니툰입니다. 조석/김규삼/이동건 작가와 함께한 웹툰 원작을 만나보고, 가업을 잇는 청년들과 청년 혁신 사업가들의 이름을 함께 불러주세요!
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAxOTExMThfMjI4/MDAxNTc0MDU5Njc0Mzgx.h6GxlXmVmUIO6SuwalDroWfsVCTFQwD9bCKm_5k7Qpgg.mmXJVZhD2BxflEYQmeLfSrEbRacOJQEc8hw6GfN_O3Ug.PNG.naver_diary/image.png?type=w)
 
@@ -100,13 +111,17 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxOTExMjBfMjEz/MDAxNTc0MjE4MzI
 
 ▶[핏펫 스토어 가기](https://shopping.naver.com/pet/stores/100212564)[](https://shopping.naver.com/pet/stores/100212564)
 
+![핏펫 : 네이버쇼핑 펫윈도](https://dthumb-phinf.pstatic.net/?src=%22http%3A%2F%2Fshop1.phinf.naver.net%2F20180622_16%2Fcometojayu_1529630709519bs6UC_JPEG%2F12261889050332961_1918892263.jpg%22&type=ff120)
 [핏펫 : 네이버쇼핑 펫윈도](https://shopping.naver.com/pet/stores/100212564)
+반려동물용 소변검사키트
 
 ## ****
 
 ## **05\. 뻥튀기야 누룽지야? 정답은 뻥튀기기술로 만든 누룽지,** **서초누룽지**
 
+![[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.05 서초누룽지](https://phinf.pstatic.net/tvcast/20191010_212/OdqQH_157069889742945haL_JPEG/1299f49d-eb3e-11e9-9d6f-505dac8c38f5_06.jpg?type=f690_388)
 [[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.05 서초누룽지](https://tv.naver.com/v/10362038)
+플레이 네이버(PLAY NAVER) | 뻥튀기로 누룽지를 만들 수 있다? 뻥튀기가 다이어트에 도움이 된다? 에이, 뻥 튀기시네~ 네이버 프로젝트 꽃의 브랜드 웹툰 ‘이름을 불러주세요’의 애니툰입니다. 조석/김규삼/이동건 작가와 함께한 웹툰 원작을 만나보고, 가업을 잇는 청년들과 청년 혁신사업가들의 이름을 불러주세요!
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAxOTExMThfMTgw/MDAxNTc0MDYwNDAzODE3.kANl4z-AalXa2VurgD-LjwtbTvZDvj1d7uSfWZ3xk2gg.5oRpsRf6Ougq4k3rzZCIu5YQ6aBfEdynv0dEbed9z6Qg.PNG.naver_diary/image.png?type=w)
 
@@ -118,13 +133,17 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxOTExMjBfMjEz/MDAxNTc0MjE4MzI
 
 ▶[서초누룽지 스토어 가기](https://smartstore.naver.com/seowoonrg)[](https://smartstore.naver.com/seowoonrg)
 
+![서초누룽지 : 네이버쇼핑 스마트스토어](https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fshop-phinf.pstatic.net%2F20160827_137%2Falexr1982_1472264399896sy4AB_PNG%2Ff9dd20d6-ef4a-4eae-bcd4-0fe30d5f9eab.png%22&type=ff120)
 [서초누룽지 : 네이버쇼핑 스마트스토어](https://smartstore.naver.com/seowoonrg)
+서초구에서 30년간 전통과자를 제조한 서우제과의 모든 것
 
 ## ****
 
 ## **06\. 누구에게나 흔한 전통 수제 간식을 꿈꾸다.** **정선황기약과**
 
+![[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.06 정선황기약과](https://phinf.pstatic.net/tvcast/20191017_127/9tB6i_15712912352892IXRO_JPEG/2289d544-f0a1-11e9-80b4-505dac8c385b_07.jpg?type=f690_388)
 [[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.06 정선황기약과](https://tv.naver.com/v/10457716)
+플레이 네이버(PLAY NAVER) | 아, 그..뭐지? 달콤하고 고소한 약과? 환기 약과? 한 개 약과? 흰 개..? 할머니 손맛에 ㅎㄱ를 추가한 강원도 정선의 그 약과의 이름은? 네이버 프로젝트 꽃의 브랜드 웹툰 ‘이름을 불러주세요’의 애니툰입니다. 조석/김규삼/이동건 작가와 함께한 웹툰 원작을 만나보고, 가업을 잇는 청년들과 청년 혁신사업가들의 이름을 불러주세요!
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAxOTExMThfMjkw/MDAxNTc0MDYxMzA3Mzc5.ksBSd2D0gFyIlXuK3eJoRDQXNV5nEEuQBjjUmNokb3cg.g4yyPPO-_2bc1pYhqAFfq6LXq8iTLJxBeuGaXFX--JUg.PNG.naver_diary/image.png?type=w)
 
@@ -136,11 +155,15 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxOTExMjBfMjEz/MDAxNTc0MjE4MzI
 
 ▶[정선황기약과 스토어 가기](https://smartstore.naver.com/hwanggiyackgwa)
 
+![정선황기약과 : 네이버쇼핑 스마트스토어](https://dthumb-phinf.pstatic.net/?src=%22https%3A%2F%2Fimg-shop.pstatic.net%2Fstorefarm%2Ffront%2Fcommon%2Fnoimg%2Fno_img_seller_60x60.jpg%22&type=ff120)
 [정선황기약과 : 네이버쇼핑 스마트스토어](https://smartstore.naver.com/hwanggiyackgwa)
+강원도 정선특산물 황기의 구수함이 가득 담긴 30년 장인의 비법이 담긴 고급 수제약과입니다
 
 ## **07\. 땅콩소녀가 만드는 그동안 몰랐던 땅콩의 신세계,** **고창이엠푸드**
 
+![[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.07 고창이엠푸드](https://phinf.pstatic.net/tvcast/20191024_277/rcMj7_15719097954144fSsf_JPEG/5e2830ba-f641-11e9-aa48-000000004708_07.jpg?type=f690_388)
 [[네이버 프로젝트 꽃] 이름을 불러주세요 시즌3 EP.07 고창이엠푸드](https://tv.naver.com/v/10569624)
+플레이 네이버(PLAY NAVER) | 조석, 이제 가족 공동 웹툰작업 선언? 그에게 영감을 준, 전북고창의 농업 공동체에서는 ㄸㅋ을 생산합니다! [하단 링크에서 이벤트 확인하세요] 네이버 프로젝트 꽃의 브랜드 웹툰 ‘이름을 불러주세요’의 애니툰입니다. 조석/김규삼/이동건 작가와 함께한 웹툰 원작을 만나보고, 가업을 잇는 청년들과 청년 혁신사업가들의 이름을 불러주세요!
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAxOTExMThfMzcg/MDAxNTc0MDYzMDIxNTY4.cJ0J7FOvLbNymx5jRkMufq57CNr7_fBpdSRYztP3TUkg.hDOHUDfdhDgCJUWmpTx1H2G5zG1wv1ppdpR9jeLv16Yg.PNG.naver_diary/image.png?type=w)
 
@@ -157,6 +180,7 @@ _"세상에, 이렇게 깔끔하게 정리해서 보내시기까지 얼마나 �
 ▶[고창이엠푸드 스토어 가기](https://smartstore.naver.com/emfood62)
 
 [고창이엠푸드 : 네이버쇼핑 스마트스토어](https://smartstore.naver.com/emfood62)
+62명농부와 함께하는 땅콩/땅콩새싹/보리/보리새싹/참깨 전문 - 6시내고향. 천기누설 등
 
 ## ****
 
@@ -174,7 +198,9 @@ _"세상에, 이렇게 깔끔하게 정리해서 보내시기까지 얼마나 �
 
 ▶[문배술 스토어 가기](https://shopping.naver.com/fresh/traditionalalcohol/stores/100077340)
 
+![문배술 : 네이버쇼핑 푸드윈도](https://dthumb-phinf.pstatic.net/?src=%22http%3A%2F%2Fshop1.phinf.naver.net%2F20171019_245%2FKR17203_1508393044472KDWCh_PNG%2F31700097036516971_2007546752.png%22&type=ff120)
 [문배술 : 네이버쇼핑 푸드윈도](https://shopping.naver.com/fresh/traditionalalcohol/stores/100077340)
+중요무형문화재 제86-가호
 
 ---
 

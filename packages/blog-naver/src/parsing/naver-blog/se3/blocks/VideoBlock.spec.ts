@@ -28,7 +28,6 @@ describe("NaverSe3VideoBlock", () => {
       thumbnailUrl: null,
       url: "",
       vid: "vid-1",
-      inkey: "inkey-1",
       width: 1920,
       height: 1080,
     }
@@ -52,7 +51,6 @@ describe("NaverSe3VideoBlock", () => {
         thumbnailUrl: null,
         url: "",
         vid: null,
-        inkey: null,
         width: null,
         height: null,
       },
@@ -89,7 +87,6 @@ describe("NaverSe3VideoBlock", () => {
         thumbnailUrl: null,
         url: "",
         vid: "right",
-        inkey: "matched",
         width: null,
         height: 1080,
       },
@@ -118,7 +115,6 @@ describe("NaverSe3VideoBlock", () => {
       blockId: "naver-se3:video",
       props: {
         vid: null,
-        inkey: null,
       },
     })
   })
@@ -148,7 +144,6 @@ describe("NaverSe3VideoBlock", () => {
       blockId: "naver-se3:video",
       props: {
         vid: null,
-        inkey: null,
       },
     })
   })

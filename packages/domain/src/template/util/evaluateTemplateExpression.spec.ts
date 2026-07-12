@@ -21,6 +21,10 @@ describe("evaluateTemplateExpression", () => {
     expect(
       evaluateTemplateExpression("tags.map((tag) => tag.toUpperCase()).join(', ')", props),
     ).toBe("CLASSIC, NOVEL")
+    expect(evaluateTemplateExpression("'#'.repeat(rating)", props)).toBe("####")
+    expect(evaluateTemplateExpression("name.split(' ').slice(0, 2).join(' ')", props)).toBe(
+      "The Mayor",
+    )
     expect(evaluateTemplateExpression("`${name} / ${author}`", props)).toBe(
       "The Mayor of Casterbridge / Thomas Hardy",
     )
@@ -56,7 +60,7 @@ describe("evaluateTemplateExpression", () => {
   })
 
   it("limits expression size and array work", () => {
-    expect(() => evaluateTemplateExpression("'x'.repeat(100000)", props)).toThrow(/blocked call/)
+    expect(evaluateTemplateExpression("'x'.repeat(100000)", props)).toBe("x".repeat(1000))
     expect(() => evaluateTemplateExpression("text", { text: "x".repeat(100001) })).toThrow(
       /output length limit/,
     )

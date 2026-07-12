@@ -11,11 +11,13 @@ categoryPath:
   - 음반 추천 및 소개
 ---
 
-|   | 오정선골든독집 아티스트 오정선 발매 1979.03.01, 한국음원제작자협회 장르 발라드(국내) 리뷰보기 |
+|   |   |
 | --- | --- |
+| [![오정선골든독집](https://image.music.naver.com/album/95/000/081/81020.jpg)](http://music.naver.com/album/index.nhn?albumId=81020) | [오정선골든독집](http://music.naver.com/album/index.nhn?albumId=81020) 아티스트 오정선 발매 1979.03.01, 한국음원제작자협회 장르 발라드(국내) [리뷰보기](http://music.naver.com/albumreview/index.nhn?albumId=81020&loc=album) |
 
-|   | 오토 베스트 10 Vol. 1 아티스트 Various Artists 발매 1979.06.15, 한국음원제작자협회 장르 록/포크(국내) 리뷰보기 |
+|   |   |
 | --- | --- |
+| [![오토 베스트 10 Vol. 1](https://image.music.naver.com/album/95/000/329/329305.jpg)](http://music.naver.com/album/index.nhn?albumId=329305) | [오토 베스트 10 Vol. 1](http://music.naver.com/album/index.nhn?albumId=329305) 아티스트 Various Artists 발매 1979.06.15, 한국음원제작자협회 장르 록/포크(국내) [리뷰보기](http://music.naver.com/albumreview/index.nhn?albumId=329305&loc=album) |
 
 [The Beau Brummels](https://www.youtube.com/watch?v=_Q6kkvFoN4g) - Just A Little (1965)
 

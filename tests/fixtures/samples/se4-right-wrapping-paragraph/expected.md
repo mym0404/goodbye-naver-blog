@@ -12,8 +12,9 @@ categoryPath:
 thumbnail: https://mblogthumb-phinf.pstatic.net/MjAxOTA3MTRfNzMg/MDAxNTYzMDc4MjIyMzg5.QZJXcOHYxLdf2-bryT3PhKVzdy90vENvdYFNUXvpeGkg.Pi_ZFNdlk-rurwfGAlFaFTMwq0d_Jc8iBhAScYi_sQgg.JPEG.anglekim3708/20190710_210112.jpg?type=w
 ---
 
-| Artist :: 김 은 기 태양계 안에서 이야기 |
+|   |
 | --- |
+| **Artist ::** **김 은 기** **태양계** **안에서** **이야기** |
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAxOTA3MTRfNjUg/MDAxNTYzMDc3NDY2Njcx.rn2v1MaIgP8t-RKmi38ftNQYJyW4sMhyfqcNsgxrN1Ag.MBDD_G4JL8vTx86Se8Ngx-8pX7aOVn9IUJZOKv2u4Pcg.JPEG.anglekim3708/%EA%B9%80%EC%9D%80%EA%B8%B0-1.jpg?type=w)
 

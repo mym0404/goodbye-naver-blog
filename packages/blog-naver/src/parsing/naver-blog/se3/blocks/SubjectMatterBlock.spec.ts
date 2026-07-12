@@ -50,7 +50,7 @@ describe("NaverSe3SubjectMatterBlock", () => {
 
     expect(parsed.blocks).toEqual([
       {
-        blockId: "naver-se3:subjectMatter",
+        blockId: "naver-se3:image",
         props: {
           url: "https://bookthumb-phinf.pstatic.net/cover/108/442/10844211.jpg?type=w150&udate=20160809",
           alt: "",
@@ -63,7 +63,7 @@ describe("NaverSe3SubjectMatterBlock", () => {
         },
       },
       {
-        blockId: "naver-se3:subjectMatter",
+        blockId: "naver-se3:paragraph",
         props: {
           text: [
             "**캐스터브리지의 시장**",
@@ -74,7 +74,7 @@ describe("NaverSe3SubjectMatterBlock", () => {
         },
       },
       {
-        blockId: "naver-se3:subjectMatter",
+        blockId: "naver-se3:paragraph",
         props: {
           text: "[상세보기](http://book.naver.com/bookdb/book_detail.php?bid=10844211)",
         },
@@ -125,7 +125,7 @@ describe("NaverSe3SubjectMatterBlock", () => {
 
     expect(blocks).toEqual([
       {
-        blockId: "naver-se3:subjectMatter",
+        blockId: "naver-se3:image",
         props: {
           url: "https://example.com/lazy.png",
           alt: "cover",
@@ -136,13 +136,13 @@ describe("NaverSe3SubjectMatterBlock", () => {
         },
       },
       {
-        blockId: "naver-se3:subjectMatter",
+        blockId: "naver-se3:paragraph",
         props: {
           text: "**Fallbacks**",
         },
       },
       {
-        blockId: "naver-se3:subjectMatter",
+        blockId: "naver-se3:paragraph",
         props: {
           text: "[상세보기](resolved:https://example.com/book)",
         },

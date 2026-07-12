@@ -1,4 +1,4 @@
-import { parseSe2Blocks } from "@tests/support/parser-test-utils.js"
+import { expectBlockTemplateDefinition, parseSe2Blocks } from "@tests/support/parser-test-utils.js"
 import { describe, expect, it } from "vitest"
 
 describe("NaverSe2EmbeddedVideoBlock", () => {
@@ -23,7 +23,6 @@ describe("NaverSe2EmbeddedVideoBlock", () => {
       thumbnailUrl: null,
       url: "http://videofarm.daum.net/controller/video/viewer/Video.html?vid=v855c4MLyyLL5LLBiB5MB4L&play_loc=undefined&__authenticIframe=true",
       vid: "v855c4MLyyLL5LLBiB5MB4L",
-      inkey: null,
       width: 260,
       height: 190,
     }
@@ -51,7 +50,6 @@ describe("NaverSe2EmbeddedVideoBlock", () => {
       thumbnailUrl: null,
       url: "https://example.com/embed-a",
       vid: null,
-      inkey: null,
       width: 76,
       height: 90,
     }
@@ -60,7 +58,6 @@ describe("NaverSe2EmbeddedVideoBlock", () => {
       thumbnailUrl: null,
       url: "https://example.com/embed-b",
       vid: null,
-      inkey: null,
       width: 76,
       height: 90,
     }
@@ -98,7 +95,6 @@ describe("NaverSe2EmbeddedVideoBlock", () => {
       thumbnailUrl: null,
       url: "https://example.com/embed",
       vid: null,
-      inkey: null,
       width: null,
       height: null,
     }
@@ -118,7 +114,6 @@ describe("NaverSe2EmbeddedVideoBlock", () => {
       thumbnailUrl: null,
       url: "https://example.com/embed",
       vid: null,
-      inkey: null,
       width: 260,
       height: 190,
     }
@@ -145,7 +140,6 @@ describe("NaverSe2EmbeddedVideoBlock", () => {
       thumbnailUrl: null,
       url: "https://serviceapi.rmcnmv.naver.com/flash/outKeyPlayer.nhn?vid=6E6ABC05CE7148D8961A0A965B71796E09EB&outKey=V1284d549da3f65ddf4e7",
       vid: "6E6ABC05CE7148D8961A0A965B71796E09EB",
-      inkey: null,
       width: 260,
       height: 190,
     }
@@ -168,7 +162,6 @@ describe("NaverSe2EmbeddedVideoBlock", () => {
       thumbnailUrl: null,
       url: "https://www.youtube-nocookie.com/embed/sample?__authenticIframe=true",
       vid: null,
-      inkey: null,
       width: 260,
       height: 190,
     }
@@ -194,7 +187,6 @@ describe("NaverSe2EmbeddedVideoBlock", () => {
       thumbnailUrl: null,
       url: "https://photocast.cloud.naver.com/inlineplayer/2;sample;83295?blog&__authenticIframe=true",
       vid: null,
-      inkey: null,
       width: 260,
       height: 190,
     }
@@ -230,7 +222,6 @@ describe("NaverSe2EmbeddedVideoBlock", () => {
           thumbnailUrl: null,
           url: "https://%",
           vid: null,
-          inkey: null,
           width: null,
           height: null,
         },
@@ -273,5 +264,16 @@ describe("NaverSe2EmbeddedVideoBlock", () => {
         </p>
       `),
     ).toThrow("파싱 가능한 naver-se2 block이 없습니다: p")
+  })
+
+  it("matches the video template contract", () => {
+    expectBlockTemplateDefinition({
+      editorType: "naver-se2",
+      blockId: "video",
+      parse: (blockOutputs) =>
+        parseSe2Blocks('<iframe src="https://example.com/video" title="Video"></iframe>', {
+          blockOutputs,
+        }),
+    })
   })
 })

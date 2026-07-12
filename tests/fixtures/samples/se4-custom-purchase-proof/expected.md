@@ -46,7 +46,9 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAyNTAxMDhfMjgx/MDAxNzM2MzQxMDE
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAyNTAxMDhfMjIx/MDAxNzM2MzQxMDIyNzEy.EzMluaNb3FBfSkbkrNN8ndGCGgLd7tqQK5y_qjnlwwMg._EHVeBGiCqWRr4pOIzzi120NmtmFUjlKWGdQvsEpXd0g.JPEG/SE-f2d2e1cb-152e-42ff-af9d-748445ac67c3.jpg?type=w)
 
+![[층간소음 O제로] 오쿠 저소음 두유제조기 900ml 누룽지 요거트 OCC-BM900SV](https://mblogthumb-phinf.pstatic.net/MjAyNTAxMDlfMTg3/MDAxNzM2Mzc4Mjk4Mjkz.dzmt8x8Plkp4JBjox-KmW_BTyXan0DW8pueMWVdLa0Eg.CP153JLoaCA5yWgWXy9cUqs7G0EmxKWJAAbbMuYfKlsg.JPEG/65436132333325222_876981662.jpg?type=f900_540_nanimated)
 [[층간소음 O제로] 오쿠 저소음 두유제조기 900ml 누룽지 요거트 OCC-BM900SV](https://smartstore.naver.com/main/products/10843938836)
+내돈내산 인증 쇼핑 / 2024.12.구매확정
 
 소음 때문에 구입을 미루고 있었는데
 

@@ -8,10 +8,15 @@ export class TistoryHeadingBlock extends TistoryParserBlock {
   readonly label = "제목"
   readonly templateDefinition = {
     label: this.label,
-    presets: [{ id: "heading", label: "Markdown 제목", template: "{{ marker }} {{ text }}" }],
+    presets: [
+      {
+        id: "heading",
+        label: "Markdown 제목",
+        template: '{{ "#".repeat(level) }} {{ text }}',
+      },
+    ],
     props: {
       level: { label: "단계", type: "number" },
-      marker: { label: "표시", type: "string" },
       text: { label: "제목", type: "string" },
     },
   } as const
@@ -32,8 +37,6 @@ export class TistoryHeadingBlock extends TistoryParserBlock {
       resolveLinkUrl: options.resolveLinkUrl,
     })
 
-    return text
-      ? [{ blockId: `tistory:${this.id}`, props: { level, marker: "#".repeat(level), text } }]
-      : []
+    return text ? [{ blockId: `tistory:${this.id}`, props: { level, text } }] : []
   }
 }

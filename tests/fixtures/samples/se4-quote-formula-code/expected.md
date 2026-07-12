@@ -13,6 +13,7 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAyMjAxMTFfMzAw/MDAxNjQxOTAxMTY
 ---
 
 [19693번: Safety](https://www.acmicpc.net/problem/19693)
+문제 Squeaky the Mouse has recently gained an appreciation for the visual arts, and is now attempting his own work of art to be put on display in the most prestigious visual arts festival in town. His artwork consists of many stacks of similar-sized illuminated cubes arranged to form a line. More prec...
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAyMjAxMTFfMTY4/MDAxNjQxOTAxMTc3MjAz.ViBkLBNHFFOYqzck1bULr7POLSjGzjXSe15Z74ytJXAg.HSfsBacZhWB6f4EjGF0IbdzoNTiDojX__2EoUJs34wMg.PNG.mym0404/image.png?type=w)
 
@@ -144,7 +145,9 @@ a\_i 가 넣은 뒤에 집합에서 가장 큰 원소라면 a\_i 를 빼주거�
 
 이 부분에 관련해서 좀더 이해를 도와줄 동영상이 있다.
 
+![Slope Trick Visualised](https://i.ytimg.com/vi/p8RxN6Y9OOA/hqdefault.jpg)
 [Slope Trick Visualised](https://www.youtube.com/watch?v=p8RxN6Y9OOA)
+This is a 3blue1brown styled slope trick tutorialKuroni's blog: https://codeforces.com/blog/entry/77298Problem discussed in the video: https://codeforces.com...
 
 그러면 오른쪽 구간은 아예 안보는걸까? 아니다. 이 문제는 그렇게 풀 수 없고, 이러한 multiset을 두개를 관리하면 가능하다.
 
@@ -231,3 +234,4 @@ void solve() {
 ---
 
 [그래프 개형을 이용한 DP 최적화(slope trick)](https://jwvg0425-ps.tistory.com/98)
+$N$개의 숫자로 이루어진 배열이 주어진다($N \le 3000$). 각 숫자는 $1$이상 $3000$ 이하의 정수다. 이 때, 한 번의 연산을 통해 배열에서 임의 위치의 숫자 값을 $1$ 증가시키거나 $1$ 감소시킬 수 있다. 연산을..

@@ -1,4 +1,8 @@
-import { parseSe4Blocks } from "@tests/support/parser-test-utils.js"
+import {
+  expectBlockTemplateDefinition,
+  parseSe4Blocks,
+  parseSe4BlocksWithOptions,
+} from "@tests/support/parser-test-utils.js"
 import { describe, expect, it } from "vitest"
 
 describe("NaverSe4HeadingBlock", () => {
@@ -36,5 +40,19 @@ describe("NaverSe4HeadingBlock", () => {
         <div class="se-component se-sectionTitle"></div>
       `),
     ).toThrow("SE4 heading block parsing failed.")
+  })
+
+  it("matches the heading template contract", () => {
+    expectBlockTemplateDefinition({
+      editorType: "naver-se4",
+      blockId: "heading",
+      parse: (blockOutputs) =>
+        parseSe4BlocksWithOptions({
+          blockOutputs,
+          components: [
+            '<div class="se-component se-sectionTitle"><div class="se-module-text">Title</div></div>',
+          ],
+        }),
+    })
   })
 })

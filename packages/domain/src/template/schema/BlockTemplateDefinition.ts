@@ -13,11 +13,32 @@ export const allTemplatePropTypes = [
 // Template prop shape exposed to autocomplete and documentation.
 export type TemplatePropType = (typeof allTemplatePropTypes)[number]
 
-// Label and value type for one template interpolation prop.
-export type TemplatePropDefinition = {
+type TemplateScalarPropType = Exclude<TemplatePropType, "object" | "object?" | "array" | "array?">
+
+type TemplatePropMetadata = {
   label: string
-  type: TemplatePropType
+  description?: string
 }
+
+// Recursive schema for one template interpolation prop.
+export type TemplatePropDefinition = TemplatePropMetadata &
+  (
+    | {
+        type: TemplateScalarPropType
+        properties?: never
+        items?: never
+      }
+    | {
+        type: "object" | "object?"
+        properties: Record<string, TemplatePropDefinition>
+        items?: never
+      }
+    | {
+        type: "array" | "array?"
+        items: TemplatePropDefinition
+        properties?: never
+      }
+  )
 
 export type BlockTemplatePreset = {
   id: string

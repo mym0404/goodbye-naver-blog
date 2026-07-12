@@ -35,7 +35,7 @@ describe("NaverSe4WrappingParagraphBlock", () => {
 
     expect(parsed.blocks).toEqual([
       {
-        blockId: "naver-se4:wrappingParagraph",
+        blockId: "naver-se4:image",
         props: {
           url: "https://example.com/wrapped.png",
           alt: "wrapped",
@@ -49,7 +49,7 @@ describe("NaverSe4WrappingParagraphBlock", () => {
           },
         },
       },
-      { blockId: "naver-se4:wrappingParagraph", props: { text: "Wrapped **text**" } },
+      { blockId: "naver-se4:paragraph", props: { text: "Wrapped **text**" } },
     ])
   })
 
@@ -65,7 +65,7 @@ describe("NaverSe4WrappingParagraphBlock", () => {
     `)
 
     expect(parsed.blocks).toEqual([
-      { blockId: "naver-se4:wrappingParagraph", props: { text: "작은 오른쪽 감싼 문단" } },
+      { blockId: "naver-se4:paragraph", props: { text: "작은 오른쪽 감싼 문단" } },
     ])
   })
 
@@ -96,7 +96,7 @@ describe("NaverSe4WrappingParagraphBlock", () => {
 
     expect(parsed.blocks).toEqual([
       {
-        blockId: "naver-se4:wrappingParagraph",
+        blockId: "naver-se4:image",
         props: {
           url: "https://example.com/left.png",
           alt: "left",
@@ -110,8 +110,8 @@ describe("NaverSe4WrappingParagraphBlock", () => {
           },
         },
       },
-      { blockId: "naver-se4:wrappingParagraph", props: { text: "첫 문단" } },
-      { blockId: "naver-se4:wrappingParagraph", props: { text: "**둘째 문단**" } },
+      { blockId: "naver-se4:paragraph", props: { text: "첫 문단" } },
+      { blockId: "naver-se4:paragraph", props: { text: "**둘째 문단**" } },
     ])
   })
 
@@ -127,7 +127,7 @@ describe("NaverSe4WrappingParagraphBlock", () => {
     `)
 
     expect(parsed.blocks).toEqual([
-      { blockId: "naver-se4:wrappingParagraph", props: { text: "작은 왼쪽 감싼 문단" } },
+      { blockId: "naver-se4:paragraph", props: { text: "작은 왼쪽 감싼 문단" } },
     ])
   })
 
@@ -143,7 +143,7 @@ describe("NaverSe4WrappingParagraphBlock", () => {
     `)
 
     expect(parsed.blocks).toEqual([
-      { blockId: "naver-se4:wrappingParagraph", props: { text: "본문만 있는 감싼 문단" } },
+      { blockId: "naver-se4:paragraph", props: { text: "본문만 있는 감싼 문단" } },
     ])
   })
 
@@ -160,7 +160,7 @@ describe("NaverSe4WrappingParagraphBlock", () => {
 
     expect(parsed.blocks).toEqual([
       {
-        blockId: "naver-se4:wrappingParagraph",
+        blockId: "naver-se4:image",
         props: {
           url: "https://example.com/image-only.png",
           alt: "",

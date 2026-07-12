@@ -5,7 +5,14 @@ import type { TemplateValue } from "../schema/TemplateValue.js"
 const blockedIdentifiers = new Set(["process", "require", "globalThis", "window", "document"])
 const blockedProperties = new Set(["constructor", "prototype", "__proto__"])
 const allowedArrayMethods = new Set(["filter", "join", "map", "slice"])
-const allowedStringMethods = new Set(["replace", "toLowerCase", "toUpperCase", "trim"])
+const allowedStringMethods = new Set([
+  "repeat",
+  "replace",
+  "split",
+  "toLowerCase",
+  "toUpperCase",
+  "trim",
+])
 const maxExpressionLength = 1000
 const maxEvaluationDepth = 80
 const maxArrayIterationLength = 1000
@@ -263,6 +270,14 @@ const evaluateStringMethod = ({
       toStringValue(evaluatedArgs[0] ?? ""),
       toStringValue(evaluatedArgs[1] ?? ""),
     )
+  }
+
+  if (methodName === "repeat") {
+    return target.repeat(Math.max(0, Math.min(toInteger(evaluatedArgs[0], 0), 1_000)))
+  }
+
+  if (methodName === "split") {
+    return target.split(toStringValue(evaluatedArgs[0] ?? ""))
   }
 
   if (methodName === "toLowerCase") {

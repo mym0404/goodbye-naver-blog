@@ -14,11 +14,12 @@ export class NaverSe2HeadingBlock extends LeafParserBlock {
     presets: [
       {
         id: "default",
-        label: "2단계 제목",
-        template: "## {{ text }}",
+        label: "원문 제목 단계",
+        template: '{{ "#".repeat(level) }} {{ text }}',
       },
     ],
     props: {
+      level: { label: "단계", type: "number" },
       text: { label: "본문", type: "string" },
     },
   } satisfies ParserBlockTemplateDefinition

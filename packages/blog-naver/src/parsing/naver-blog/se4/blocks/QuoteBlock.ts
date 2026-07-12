@@ -14,7 +14,7 @@ export class NaverSe4QuoteBlock extends LeafParserBlock {
       {
         id: "default",
         label: "인용문",
-        template: "> {{ text }}",
+        template: "{{ text.split('\\n').map(line => `> ${line}`).join('\\n') }}",
       },
     ],
     props: {

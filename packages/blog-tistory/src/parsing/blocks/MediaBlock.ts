@@ -46,7 +46,8 @@ export class TistoryMediaBlock extends TistoryParserBlock {
         props: {
           title: $node.attr("title")?.trim() || $node.find("figcaption").text().trim() || "Media",
           url: options.resolveLinkUrl ? options.resolveLinkUrl(rawUrl) : rawUrl,
-          mediaType: node.tagName,
+          mediaType:
+            mediaNode.prop("tagName")?.toLowerCase() || $node.attr("data-ke-type") || node.tagName,
         },
       },
     ]

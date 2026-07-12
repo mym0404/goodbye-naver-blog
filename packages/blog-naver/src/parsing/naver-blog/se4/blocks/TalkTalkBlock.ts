@@ -15,8 +15,6 @@ export class NaverSe4TalkTalkBlock extends LeafParserBlock {
     props: {
       title: { label: "제목", type: "string" },
       url: { label: "URL", type: "string" },
-      description: { label: "설명", type: "string" },
-      thumbnailUrl: { label: "썸네일 URL", type: "string?" },
     },
   } satisfies ParserBlockTemplateDefinition
 
@@ -38,8 +36,6 @@ export class NaverSe4TalkTalkBlock extends LeafParserBlock {
         props: {
           title: compactText($node.find(".se-talktalk-banner-text").text()) || url,
           url: options.resolveLinkUrl ? options.resolveLinkUrl(url) : url,
-          description: "",
-          thumbnailUrl: null,
         },
       } satisfies ParsedBlock,
     ]

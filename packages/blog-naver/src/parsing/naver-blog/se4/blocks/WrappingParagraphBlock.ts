@@ -18,19 +18,8 @@ export class NaverSe4WrappingParagraphBlock extends LeafParserBlock {
   override readonly label = "감싸는 문단"
   override readonly templateDefinition = {
     label: this.label,
-    presets: [
-      {
-        id: "default",
-        label: "이미지 또는 본문",
-        template: "{{ (url ?? '') ? `![${alt}](${url})` : text }}",
-      },
-    ],
-    props: {
-      text: { label: "본문", type: "string?" },
-      alt: { label: "대체 텍스트", type: "string?" },
-      url: { label: "URL", type: "string?" },
-      caption: { label: "캡션", type: "string?" },
-    },
+    presets: [{ id: "children", label: "하위 블록", template: "" }],
+    props: {},
   } satisfies ParserBlockTemplateDefinition
 
   override match({ $node }: ParserBlockContext) {
@@ -43,6 +32,12 @@ export class NaverSe4WrappingParagraphBlock extends LeafParserBlock {
   override convert({ $, $node, options, blockId }: Parameters<LeafParserBlock["convert"]>[0]) {
     const $imageSlot = $node.find(".se-component-slot-float").first()
     const imageBlocks = []
+    const imageBlockId = blockId
+      .replace(/:wrappingParagraph$/, ":image")
+      .replace(/^wrappingParagraph$/, "image")
+    const paragraphBlockId = blockId
+      .replace(/:wrappingParagraph$/, ":paragraph")
+      .replace(/^wrappingParagraph$/, "paragraph")
 
     if ($imageSlot.length > 0) {
       const image = parseImageLink($imageSlot.find(se4ImageLinkSelector).first())
@@ -51,7 +46,7 @@ export class NaverSe4WrappingParagraphBlock extends LeafParserBlock {
         throw new Error("SE4 wrapping paragraph image parsing failed.")
       }
 
-      const imageBlock = createImageBlock({ blockId, image, options })
+      const imageBlock = createImageBlock({ blockId: imageBlockId, image, options })
 
       if (imageBlock) {
         imageBlocks.push(imageBlock)
@@ -64,7 +59,7 @@ export class NaverSe4WrappingParagraphBlock extends LeafParserBlock {
         ? parseTextBlocks({
             $,
             $node: $textSlot,
-            blockId,
+            blockId: paragraphBlockId,
             options,
           })
         : []

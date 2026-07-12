@@ -10,7 +10,6 @@ type ListItem = {
   depth: number
   ordered: boolean
   index: number
-  prefix: string
   text: string
 }
 
@@ -23,10 +22,26 @@ export class TistoryListBlock extends TistoryParserBlock {
       {
         id: "markdown-list",
         label: "Markdown 목록",
-        template: "{{ items.map(item => `${item.prefix} ${item.text}`).join('\\n') }}",
+        template:
+          "{{ items.map(item => `${'  '.repeat(item.depth)}${item.ordered ? `${item.index}.` : '-'} ${item.text}`).join('\\n') }}",
       },
     ],
-    props: { items: { label: "목록 항목", type: "array" } },
+    props: {
+      items: {
+        label: "목록 항목",
+        type: "array",
+        items: {
+          label: "항목",
+          type: "object",
+          properties: {
+            depth: { label: "깊이", type: "number" },
+            ordered: { label: "순서 목록 여부", type: "boolean" },
+            index: { label: "순서", type: "number" },
+            text: { label: "텍스트", type: "string" },
+          },
+        },
+      },
+    },
   } as const
 
   match({ node }: TistoryParserBlockContext) {
@@ -60,7 +75,6 @@ export class TistoryListBlock extends TistoryParserBlock {
           depth,
           ordered,
           index,
-          prefix: `${"  ".repeat(depth)}${ordered ? `${index}.` : "-"}`,
           text,
         })
       }
@@ -71,10 +85,19 @@ export class TistoryListBlock extends TistoryParserBlock {
     const visit = (list: Cheerio<AnyNode>, depth: number) => {
       const listNode = list.get(0)
       const ordered = listNode?.type === "tag" && listNode.tagName === "ol"
+      const parsedStart = Number(list.attr("start") ?? "1")
+      const start = Number.isInteger(parsedStart) ? parsedStart : 1
 
-      list
-        .children("li")
-        .each((index, item) => visitItem($(item), { depth, index: index + 1, ordered }))
+      list.children("li").each((index, item) => {
+        const valueAttribute = $(item).attr("value")
+        const value = Number(valueAttribute)
+
+        visitItem($(item), {
+          depth,
+          index: valueAttribute !== undefined && Number.isInteger(value) ? value : start + index,
+          ordered,
+        })
+      })
     }
 
     if ($node.is("li")) {

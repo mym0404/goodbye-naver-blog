@@ -206,6 +206,5 @@ export const createVideoBlock = ({ blockId, video }: { blockId: string; video: V
       width: video.width,
       height: video.height,
       vid: video.vid,
-      inkey: video.inkey,
     },
   })

@@ -1,5 +1,6 @@
 import type { TistoryParserBlockContext } from "../core/TistoryParserBlock.js"
 
+import { renderTistoryInline } from "../core/TistoryInline.js"
 import { TistoryParserBlock } from "../core/TistoryParserBlock.js"
 
 const escapeCell = (value: string) => value.replace(/\|/g, "\\|").replace(/\s+/g, " ").trim()
@@ -12,14 +13,28 @@ export class TistoryTableBlock extends TistoryParserBlock {
     presets: [
       {
         id: "markdown-table",
-        label: "Markdown 표",
+        label: "표",
         template:
-          "{{ `| ${headers.join(' | ')} |\\n| ${headers.map(header => '---').join(' | ')} |${rows.length ? `\\n${rows.map(row => `| ${row.join(' | ')} |`).join('\\n')}` : ''}` }}",
+          "{{ complex ? html : `| ${headers.join(' | ')} |\\n| ${headers.map(header => '---').join(' | ')} |${rows.length ? `\\n${rows.map(row => `| ${row.join(' | ')} |`).join('\\n')}` : ''}` }}",
       },
     ],
     props: {
-      headers: { label: "머리글", type: "array" },
-      rows: { label: "행", type: "array" },
+      headers: {
+        label: "머리글",
+        type: "array",
+        items: { label: "셀", type: "string" },
+      },
+      rows: {
+        label: "행",
+        type: "array",
+        items: {
+          label: "셀 목록",
+          type: "array",
+          items: { label: "셀", type: "string" },
+        },
+      },
+      html: { label: "HTML", type: "string" },
+      complex: { label: "복합 표", type: "boolean" },
     },
   } as const
 
@@ -29,9 +44,21 @@ export class TistoryTableBlock extends TistoryParserBlock {
     )
   }
 
-  convert({ $, $node, node }: TistoryParserBlockContext) {
+  convert({ $, $node, node, options }: TistoryParserBlockContext) {
     const $table =
       node.type === "tag" && node.tagName === "table" ? $node : $node.find("table").first()
+    const htmlTable = $table.clone()
+
+    if (options.resolveLinkUrl) {
+      htmlTable.find("a[href]").each((_, anchor) => {
+        const href = $(anchor).attr("href")
+
+        if (href) {
+          $(anchor).attr("href", options.resolveLinkUrl!(href))
+        }
+      })
+    }
+
     const rows = $table
       .find("tr")
       .toArray()
@@ -39,7 +66,15 @@ export class TistoryTableBlock extends TistoryParserBlock {
         $(row)
           .children("th, td")
           .toArray()
-          .map((cell) => escapeCell($(cell).text())),
+          .map((cell) =>
+            escapeCell(
+              renderTistoryInline({
+                $,
+                nodes: $(cell).contents().toArray(),
+                resolveLinkUrl: options.resolveLinkUrl,
+              }),
+            ),
+          ),
       )
       .filter((row) => row.length > 0)
 
@@ -48,6 +83,18 @@ export class TistoryTableBlock extends TistoryParserBlock {
     }
 
     const width = Math.max(...rows.map((row) => row.length))
+    const widths = $table
+      .find("tr")
+      .toArray()
+      .map((row) =>
+        $(row)
+          .children("th, td")
+          .toArray()
+          .reduce((sum, cell) => sum + Number($(cell).attr("colspan") ?? "1"), 0),
+      )
+    const complex =
+      $table.find("th[rowspan], th[colspan], td[rowspan], td[colspan]").length > 0 ||
+      widths.some((rowWidth) => rowWidth !== widths[0])
     const normalize = (row: string[]) =>
       Array.from({ length: width }, (_, index) => row[index] ?? "")
     const firstRowHasHeaders = $table.find("tr").first().children("th").length > 0
@@ -56,6 +103,11 @@ export class TistoryTableBlock extends TistoryParserBlock {
       : Array.from({ length: width }, () => "")
     const bodyRows = (firstRowHasHeaders ? rows.slice(1) : rows).map(normalize)
 
-    return [{ blockId: `tistory:${this.id}`, props: { headers, rows: bodyRows } }]
+    return [
+      {
+        blockId: `tistory:${this.id}`,
+        props: { headers, rows: bodyRows, html: $.html(htmlTable).trim(), complex },
+      },
+    ]
   }
 }

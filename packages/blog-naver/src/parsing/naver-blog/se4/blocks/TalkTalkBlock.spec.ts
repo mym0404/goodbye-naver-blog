@@ -19,8 +19,6 @@ describe("NaverSe4TalkTalkBlock", () => {
         props: {
           title: "궁금할 땐 네이버 톡톡하세요!",
           url: "https://talk.naver.com/w42cwy?frm=mblog",
-          description: "",
-          thumbnailUrl: null,
         },
       },
     ])
@@ -39,8 +37,6 @@ describe("NaverSe4TalkTalkBlock", () => {
         props: {
           title: "https://talk.naver.com/w42cwy?frm=mblog",
           url: "https://talk.naver.com/w42cwy?frm=mblog",
-          description: "",
-          thumbnailUrl: null,
         },
       },
     ])

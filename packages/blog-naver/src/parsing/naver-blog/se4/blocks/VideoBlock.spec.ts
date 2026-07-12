@@ -29,7 +29,6 @@ describe("NaverSe4VideoBlock", () => {
           thumbnailUrl: "https://example.com/video-thumb.png",
           url: sourceUrl,
           vid: "vid-1",
-          inkey: "inkey-1",
           width: 640,
           height: 360,
         },
@@ -52,7 +51,6 @@ describe("NaverSe4VideoBlock", () => {
           thumbnailUrl: null,
           url: sourceUrl,
           vid: null,
-          inkey: null,
           width: null,
           height: null,
         },
@@ -71,7 +69,6 @@ describe("NaverSe4VideoBlock", () => {
         title: "Video",
         thumbnailUrl: null,
         vid: null,
-        inkey: null,
       },
     })
   })

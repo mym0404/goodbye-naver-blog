@@ -29,12 +29,16 @@ const parseBookWidgetBlocks = ({
   }
 
   const blocks = []
+  const imageBlockId = blockId.replace(/:bookWidget$/, ":image").replace(/^bookWidget$/, "image")
+  const paragraphBlockId = blockId
+    .replace(/:bookWidget$/, ":paragraph")
+    .replace(/^bookWidget$/, "paragraph")
   const imageNode = bookWidget.find("img").first()
   const imageSource = imageNode.attr("src")?.trim()
 
   if (imageSource) {
     const imageBlock = createImageBlock({
-      blockId,
+      blockId: imageBlockId,
       options,
       image: {
         sourceUrl: normalizeAssetUrl(imageSource),
@@ -73,7 +77,9 @@ const parseBookWidgetBlocks = ({
   const summaryLines = [title ? `**${title}**` : "", ...detailLines].filter(Boolean)
 
   if (summaryLines.length > 0) {
-    blocks.push(createParagraphBlock({ blockId, text: summaryLines.join("  \n") }))
+    blocks.push(
+      createParagraphBlock({ blockId: paragraphBlockId, text: summaryLines.join("  \n") }),
+    )
   }
 
   const reviewLink = bookWidget.find("a.link, a.con_link").last()
@@ -83,7 +89,7 @@ const parseBookWidgetBlocks = ({
   if (reviewUrl) {
     blocks.push(
       createParagraphBlock({
-        blockId,
+        blockId: paragraphBlockId,
         /* v8 ignore next */
         text: `[${reviewLabel}](${resolveLinkUrl ? resolveLinkUrl(reviewUrl) : reviewUrl})`,
       }),
@@ -98,19 +104,8 @@ export class NaverSe2BookWidgetBlock extends LeafParserBlock {
   override readonly label = "책 위젯"
   override readonly templateDefinition = {
     label: this.label,
-    presets: [
-      {
-        id: "default",
-        label: "이미지 또는 본문",
-        template: "{{ (url ?? '') ? `![${alt}](${url})` : text }}",
-      },
-    ],
-    props: {
-      text: { label: "본문", type: "string?" },
-      alt: { label: "대체 텍스트", type: "string?" },
-      url: { label: "URL", type: "string?" },
-      caption: { label: "캡션", type: "string?" },
-    },
+    presets: [{ id: "children", label: "하위 블록", template: "" }],
+    props: {},
   } satisfies ParserBlockTemplateDefinition
 
   override match({ node, $node }: ParserBlockContext) {

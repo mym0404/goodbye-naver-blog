@@ -106,7 +106,7 @@ export class NaverSe2ContainerBlock extends ContainerParserBlock {
   override readonly label = "중첩 컨테이너"
   override readonly templateDefinition = {
     label: this.label,
-    presets: [{ id: "ignore", label: "무시", template: "" }],
+    presets: [{ id: "children", label: "하위 블록", template: "" }],
     props: {},
   } satisfies ParserBlockTemplateDefinition
 

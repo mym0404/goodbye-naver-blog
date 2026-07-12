@@ -144,7 +144,9 @@ thumbnail: https://mblogthumb-phinf.pstatic.net/MjAyMDA1MTJfMjQw/MDAxNTg5MjQ4NDA
 
 [‘윤슬: 서울을 비추는 만리동’(2017)](https://blog.naver.com/anglekim3708/221958395128)
 
+![[이수완의 공공미술 산책] ⑤ SoA(강예린이재원이치훈)作 ‘윤슬: 서울을 비추는 만리동’(2017)](https://dthumb-phinf.pstatic.net/?src=%22http%3A%2F%2Fwww.cnews.co.kr%2Fphoto%2Fphoto%2F2019%2F12%2F31%2F201912311514171620954-2-136505.jpg%22&type=ff500_300)
 [[이수완의 공공미술 산책] ⑤ SoA(강예린이재원이치훈)作 ‘윤슬: 서울을 비추는 만리동’(2017)](http://www.cnews.co.kr/uhtml/read.jsp?idxno=201912311514171620954)
+이수완대표 ‘윤슬’은 햇빛이나 달빛에 비치어 반짝이는 잔물결을 뜻하는 순우리말이다. ‘잔잔한 물결이 햇살 따위에 비치는 모양’의 의미를 지닌 ‘물비늘’을 생각하면 된다. 전시 관람을 위해 많은 이들이 찾는 김해 문화의전당 윤슬 미술관의 이름도 같은 맥락에서 ...
 
 ![](https://mblogthumb-phinf.pstatic.net/MjAyMDA1MTJfNTEg/MDAxNTg5MjQ4NTgxMTA0.F0hjWaOKtuUIR51s8zI33lLGnBWFRBntVbeMjDK3qsAg.lGuBH6eulFmG5ZBn_a4HLDY2apc7eeOXsvQy7FMLQXAg.JPEG.anglekim3708/20200427_135824.jpg?type=w)
 
