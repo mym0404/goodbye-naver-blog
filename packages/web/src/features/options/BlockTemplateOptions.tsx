@@ -1,5 +1,6 @@
 import { Box } from "@primer/react"
 
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type { ExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 import type { ThemePreference } from "@exitpress/domain/preferences/schema/ThemePreference.js"
 import type { BlockTemplateDefinition } from "@exitpress/domain/template/schema/BlockTemplateDefinition.js"
@@ -42,17 +43,30 @@ const groupBlockTemplateDefinitionsByEditor = (definitions: BlockTemplateDefinit
 
 const EditableBlockTemplateCard = ({
   options,
+  profile,
   definition,
   themePreference,
   onOptionsChange,
 }: {
   options: ExportOptions
+  profile: ExportProfile
   definition: BlockTemplateDefinition
   themePreference: ThemePreference
   onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
 }) => {
-  const selectedTemplate = Object.hasOwn(options.blockOutputs.templates, definition.key)
-    ? options.blockOutputs.templates[definition.key]
+  const profileTemplates = options.blockOutputs.templates[profile] ?? {}
+  const profileDefaultTemplate = definition.outputTemplates?.[profile]
+  const displayedDefinition = profileDefaultTemplate
+    ? {
+        ...definition,
+        presets: [
+          { id: `${profile}-default`, label: "출력 형식 기본값", template: profileDefaultTemplate },
+          ...definition.presets,
+        ] as BlockTemplateDefinition["presets"],
+      }
+    : definition
+  const selectedTemplate = Object.hasOwn(profileTemplates, definition.key)
+    ? profileTemplates[definition.key]
     : undefined
   const updateTemplate = (template: string) => {
     onOptionsChange((current) => {
@@ -62,7 +76,10 @@ const EditableBlockTemplateCard = ({
           ...current.blockOutputs,
           templates: {
             ...current.blockOutputs.templates,
-            [definition.key]: template,
+            [profile]: {
+              ...current.blockOutputs.templates[profile],
+              [definition.key]: template,
+            },
           },
         },
       }
@@ -72,8 +89,9 @@ const EditableBlockTemplateCard = ({
   return (
     <div data-block-template-editor={getEditorKey(definition)}>
       <BlockTemplateCard
-        definition={definition}
+        definition={displayedDefinition}
         template={selectedTemplate}
+        defaultTemplate={profileDefaultTemplate}
         themePreference={themePreference}
         onTemplateChange={updateTemplate}
       />
@@ -83,11 +101,13 @@ const EditableBlockTemplateCard = ({
 
 export const MarkdownOptionsStep = ({
   options,
+  profile,
   blockTemplateDefinitions,
   themePreference,
   onOptionsChange,
 }: {
   options: ExportOptions
+  profile: ExportProfile
   blockTemplateDefinitions: BlockTemplateDefinition[]
   themePreference: ThemePreference
   onOptionsChange: (updater: (current: ExportOptions) => ExportOptions) => void
@@ -120,6 +140,7 @@ export const MarkdownOptionsStep = ({
               <EditableBlockTemplateCard
                 key={definition.key}
                 options={options}
+                profile={profile}
                 definition={definition}
                 themePreference={themePreference}
                 onOptionsChange={onOptionsChange}

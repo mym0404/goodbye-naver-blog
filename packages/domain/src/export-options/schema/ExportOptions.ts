@@ -1,3 +1,5 @@
+import type { ExportProfile } from "../../export-job/schema/ExportProfile.js"
+
 export const allSlugStyles = ["kebab", "snake", "keep-title"] as const
 // Title slug formatting style for generated paths.
 export type SlugStyle = (typeof allSlugStyles)[number]
@@ -74,7 +76,7 @@ export type ExportOptions = {
     aliases: Record<FrontmatterFieldName, string>
   }
   blockOutputs: {
-    templates: Partial<Record<string, string>>
+    templates: Partial<Record<ExportProfile, Partial<Record<string, string>>>>
   }
   assets: {
     imageHandlingMode: ImageHandlingMode
@@ -102,7 +104,7 @@ export type PartialExportOptions = {
     aliases?: Partial<Record<FrontmatterFieldName, string>>
   }
   blockOutputs?: {
-    templates?: Partial<Record<string, string>>
+    templates?: Partial<Record<ExportProfile, Partial<Record<string, string>>>>
   }
   assets?: Partial<ExportOptions["assets"]>
   links?: Partial<ExportOptions["links"]>

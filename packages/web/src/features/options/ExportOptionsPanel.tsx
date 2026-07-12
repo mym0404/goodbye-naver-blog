@@ -1,6 +1,7 @@
 import { Box } from "@primer/react"
 
 import type { PostSummary } from "@exitpress/domain/blog/schema/BlogScan.js"
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type {
   ExportOptions,
   FrontmatterFieldMeta,
@@ -23,6 +24,7 @@ export const ExportOptionsPanel = ({
   step,
   outputDir,
   options,
+  profile = "gfm",
   themePreference,
   optionDescriptions,
   blockTemplateDefinitions = [],
@@ -35,6 +37,7 @@ export const ExportOptionsPanel = ({
   step: ExportOptionsStep
   outputDir: string
   options: ExportOptions
+  profile?: ExportProfile
   themePreference: ThemePreference
   optionDescriptions: Record<string, string>
   blockTemplateDefinitions?: BlockTemplateDefinition[]
@@ -71,6 +74,7 @@ export const ExportOptionsPanel = ({
     markdown: (
       <MarkdownOptionsStep
         options={options}
+        profile={profile}
         blockTemplateDefinitions={blockTemplateDefinitions}
         themePreference={themePreference}
         onOptionsChange={onOptionsChange}

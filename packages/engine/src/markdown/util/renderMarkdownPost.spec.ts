@@ -121,7 +121,7 @@ describe("renderMarkdownPost", () => {
 
   it("uses custom templates by blockId", async () => {
     const options = defaultExportOptions()
-    options.blockOutputs.templates["blog:paragraph"] = "CUSTOM {{ text }}"
+    options.blockOutputs.templates.gfm!["blog:paragraph"] = "CUSTOM {{ text }}"
 
     const rendered = await render({
       options,
@@ -136,7 +136,7 @@ describe("renderMarkdownPost", () => {
 
   it("allows an empty custom block template to omit a block", async () => {
     const options = defaultExportOptions()
-    options.blockOutputs.templates["blog:video"] = ""
+    options.blockOutputs.templates.gfm!["blog:video"] = ""
 
     const rendered = await render({
       options,

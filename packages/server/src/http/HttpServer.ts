@@ -2,6 +2,7 @@ import { createServer } from "node:http"
 
 import { createNaverBlog } from "@exitpress/blog-naver/NaverBlog.js"
 import { createTistoryBlog } from "@exitpress/blog-tistory/TistoryBlog.js"
+import { allExportProfiles } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import { createBlogRegistry } from "@exitpress/engine/blog/BlogRegistry.js"
 import { runImageUploadPhase } from "@exitpress/engine/exporting/upload/ImageUploadPhase.js"
 import {
@@ -58,9 +59,18 @@ export const createHttpServer = ({
 } = {}) => {
   let httpServer: NodeHttpServer
   const blogRegistry = createBlogRegistry([createNaverBlog(), createTistoryBlog()])
-  const blockTemplateDefinitions = blogRegistry
-    .list()
-    .flatMap((blog) => blog.getBlockTemplateDefinitions())
+  const blockTemplateDefinitions = blogRegistry.list().flatMap((blog) =>
+    blog.getBlockTemplateDefinitions().map((definition) => ({
+      ...definition,
+      outputTemplates: Object.fromEntries(
+        allExportProfiles.flatMap((profile) => {
+          const template = blog.getOutputBlockTemplates?.(profile)[definition.key]
+
+          return template === undefined ? [] : [[profile, template]]
+        }),
+      ),
+    })),
+  )
   const state = createHttpServerState({
     jobStore,
     scanCachePath,

@@ -9,6 +9,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import type { BlockScanJobState } from "@exitpress/domain/block-scan/schema/BlockScanJobState.js"
 import type { ScanCacheMap, ScanResult } from "@exitpress/domain/blog/schema/BlogScan.js"
 import type { ExportJobState } from "@exitpress/domain/export-job/schema/ExportJobState.js"
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type { ExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 import type { ThemePreference } from "@exitpress/domain/preferences/schema/ThemePreference.js"
 
@@ -73,7 +74,12 @@ const createErrorJobState = ({
 }: {
   error: string
   blogKey: string
-  request: { sourceInput: string; outputDir: string; options: ExportOptions }
+  request: {
+    sourceInput: string
+    outputDir: string
+    profile: ExportProfile
+    options: ExportOptions
+  }
 }) =>
   ({
     id: "failed-local",
@@ -81,7 +87,7 @@ const createErrorJobState = ({
       blogKey,
       sourceInput: request.sourceInput,
       outputDir: request.outputDir,
-      profile: "gfm",
+      profile: request.profile,
       options: request.options,
     },
     status: JOB_STATUSES.FAILED,
@@ -154,6 +160,7 @@ const ExportApp = () => {
   const [sourceInput, setSourceIdOrUrl] = useState("")
   const [blogKey, setBlogKey] = useState(defaultBlogKey)
   const [outputDir, setOutputDir] = useState(defaultOutputDir)
+  const [profile, setProfile] = useState<ExportProfile>(fallbackDefaults.profile)
   const [resumeDialog, setResumeDialog] = useState<ResumeDialogState | null>(null)
   const [scanCache, setScanCache] = useState<ScanCacheMap>({})
   const [themePreference, setThemePreference] = useState<ThemePreference>(
@@ -207,6 +214,7 @@ const ExportApp = () => {
     setOutputDir,
     setSourceIdOrUrl,
     setBlogKey,
+    setProfile,
     setCategorySearch,
     setSetupStep,
     setActiveJobFilter,
@@ -248,8 +256,8 @@ const ExportApp = () => {
   const setupStepIndex = setupSteps.indexOf(setupStep)
   const persistedOptions = useMemo(() => sanitizePersistedExportOptions(options), [options])
   const persistedUiStateSignature = useMemo(
-    () => getPersistedUiStateSignature({ options: persistedOptions, themePreference }),
-    [persistedOptions, themePreference],
+    () => getPersistedUiStateSignature({ options: persistedOptions, themePreference, profile }),
+    [persistedOptions, profile, themePreference],
   )
   const outputDirBaseline = normalizeOutputDir(
     defaults.resumedJob?.request.outputDir ?? defaults.lastOutputDir,
@@ -304,6 +312,7 @@ const ExportApp = () => {
     persistedUiStateSignatureRef,
     latestPersistedOptionsRef,
     latestThemePreferenceRef,
+    profile,
   })
   useJobNotifications({
     job,
@@ -351,6 +360,7 @@ const ExportApp = () => {
           blogKey: scanResult.blogKey,
           sourceInput: currentScanTarget,
           outputDir: normalizeOutputDir(outputDir),
+          profile,
           options,
           scanResult,
           uploadProvider:
@@ -373,6 +383,7 @@ const ExportApp = () => {
             request: {
               sourceInput: currentScanTarget,
               outputDir: normalizeOutputDir(outputDir),
+              profile,
               options,
             },
           }),
@@ -387,6 +398,7 @@ const ExportApp = () => {
       blogKey,
       options,
       outputDir,
+      profile,
       scopedPostCount,
       setJob,
       startJob,
@@ -676,6 +688,7 @@ const ExportApp = () => {
           sourceInput={sourceInput}
           blogKey={blogKey}
           outputDir={outputDir}
+          profile={profile}
           scanPending={scanPending}
           blockScanJob={blockScanJob}
           blockScanError={blockScanError}
@@ -699,6 +712,10 @@ const ExportApp = () => {
           handleBlogKeyChange={handleBlogKeyChange}
           handleOutputDirChange={handleOutputDirChange}
           handleOutputDirBlur={handleOutputDirBlur}
+          handleProfileChange={(value) => {
+            hasUserInteractedRef.current = true
+            setProfile(value)
+          }}
           handleSelectAllCategories={handleSelectAllCategories}
           handleClearAllCategories={handleClearAllCategories}
           handleCategoryToggle={handleCategoryToggle}

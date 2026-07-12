@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import type { ScanResult } from "@exitpress/domain/blog/schema/BlogScan.js"
 import type { ExportJobPollingConfig } from "@exitpress/domain/export-job/schema/ExportJobPollingConfig.js"
 import type { ExportJobState } from "@exitpress/domain/export-job/schema/ExportJobState.js"
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type { ExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 import type { UploadProviderFields } from "@exitpress/domain/upload/schema/UploadProvider.js"
 
@@ -122,6 +123,7 @@ export const useExportJob = () => {
       blogKey,
       sourceInput,
       outputDir,
+      profile = "gfm",
       options,
       scanResult,
       uploadProvider,
@@ -129,6 +131,7 @@ export const useExportJob = () => {
       blogKey: string
       sourceInput: string
       outputDir: string
+      profile?: ExportProfile
       options: ExportOptions
       scanResult?: ScanResult | null
       uploadProvider?: UploadProviderInput
@@ -142,6 +145,7 @@ export const useExportJob = () => {
           blogKey,
           sourceInput,
           outputDir,
+          profile,
           options,
           scanResult,
           ...(uploadProvider ? { uploadProvider } : {}),

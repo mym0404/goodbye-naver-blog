@@ -93,6 +93,68 @@ afterEach(async () => {
 })
 
 describe("http server local routes", () => {
+  it("rejects unknown output profiles before mutating output", async () => {
+    const rootDir = await createTestTempDir("export-profile-invalid-")
+    const outputDir = path.join(rootDir, "output")
+    const sentinelPath = path.join(outputDir, "keep.txt")
+    const jobStore = new JobStore()
+    const options = defaultExportOptions()
+
+    options.assets.imageHandlingMode = "remote"
+    await mkdir(outputDir, { recursive: true })
+    await writeFile(sentinelPath, "keep")
+    activeServer = createTestHttpServer({ jobStore })
+    const baseUrl = await startServer(activeServer)
+
+    const response = await fetch(`${baseUrl}/api/export`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        blogKey: "naver",
+        sourceInput: "https://blog.naver.com/mym0404",
+        outputDir,
+        profile: "unknown",
+        options,
+      }),
+    })
+
+    expect(response.status).toBe(400)
+    expect(jobStore.jobs.size).toBe(0)
+    await expect(access(sentinelPath)).resolves.toBeUndefined()
+    await removeDirWithRetry(rootDir)
+  })
+
+  it("rejects non-empty output folders without an Exitpress manifest", async () => {
+    const rootDir = await createTestTempDir("export-output-unowned-")
+    const outputDir = path.join(rootDir, "fumadocs-app")
+    const sentinelPath = path.join(outputDir, "package.json")
+    const jobStore = new JobStore()
+    const options = defaultExportOptions()
+
+    options.assets.imageHandlingMode = "remote"
+    await mkdir(outputDir, { recursive: true })
+    await writeFile(sentinelPath, "{}")
+    activeServer = createTestHttpServer({ jobStore })
+    const baseUrl = await startServer(activeServer)
+
+    const response = await fetch(`${baseUrl}/api/export`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        blogKey: "naver",
+        sourceInput: "https://blog.naver.com/mym0404",
+        outputDir,
+        profile: "fumadocs",
+        options,
+      }),
+    })
+
+    expect(response.status).toBe(409)
+    expect(jobStore.jobs.size).toBe(0)
+    await expect(access(sentinelPath)).resolves.toBeUndefined()
+    await removeDirWithRetry(rootDir)
+  })
+
   it("rejects download-and-upload exports without provider settings before mutating output", async () => {
     const rootDir = await createTestTempDir("export-provider-required-")
     const outputDir = path.join(rootDir, "output")

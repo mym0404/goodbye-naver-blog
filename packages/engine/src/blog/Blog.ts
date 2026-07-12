@@ -5,6 +5,7 @@ import type {
   BlogScanResult,
   BlogSource,
 } from "@exitpress/domain/blog/schema/Blog.js"
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type { ExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 import type { ParsedBlock, ParsedPost } from "@exitpress/domain/parser/schema/ParsedPost.js"
 import type { ParserBlockOptions } from "@exitpress/domain/parser/schema/ParserBlockOptions.js"
@@ -77,5 +78,6 @@ export type Blog = BlogFetcher &
     label: string
     parseSource: (input: string) => BlogSource
     getBlockTemplateDefinitions: () => BlockTemplateDefinition[]
+    getOutputBlockTemplates?: (profile: ExportProfile) => Partial<Record<string, string>>
     resolvePostLinkIdentity?: (url: string) => BlogPostIdentity | undefined
   }

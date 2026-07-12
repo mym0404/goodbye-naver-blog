@@ -1,6 +1,8 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 
+import { allExportProfiles } from "@exitpress/domain/export-job/schema/ExportProfile.js"
+import { isExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import {
   cloneExportOptions,
   sanitizePersistedExportOptions,
@@ -8,6 +10,7 @@ import {
 import { renderTemplateExpressions } from "@exitpress/domain/template/util/renderTemplateExpressions.js"
 
 import type { ScanCacheMap } from "@exitpress/domain/blog/schema/BlogScan.js"
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type { PartialExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 import type { ThemePreference } from "@exitpress/domain/preferences/schema/ThemePreference.js"
 import type {
@@ -71,13 +74,21 @@ const filterBlockOutputTemplates = ({
     blockTemplateDefinitions.map((definition) => [definition.key, definition]),
   )
   const templates = Object.fromEntries(
-    Object.entries(options.blockOutputs.templates).filter((entry): entry is [string, string] => {
-      const [key, template] = entry
-      const definition = definitionByKey[key]
+    allExportProfiles.flatMap((profile) => {
+      const profileTemplates = Object.fromEntries(
+        Object.entries(options.blockOutputs?.templates?.[profile] ?? {}).filter(
+          (entry): entry is [string, string] => {
+            const [key, template] = entry
+            const definition = definitionByKey[key]
 
-      return typeof template === "string" && definition
-        ? templateMatchesDefinition({ template, definition })
-        : false
+            return typeof template === "string" && definition
+              ? templateMatchesDefinition({ template, definition })
+              : false
+          },
+        ),
+      )
+
+      return Object.keys(profileTemplates).length > 0 ? [[profile, profileTemplates]] : []
     }),
   )
 
@@ -145,6 +156,7 @@ export const readPersistedUiState = async ({
       options?: PartialExportOptions
       lastOutputDir?: string
       themePreference?: ThemePreference
+      profile?: ExportProfile
     }
 
     return {
@@ -175,12 +187,14 @@ export const readPersistedUiState = async ({
         (parsed.themePreference === "dark" || parsed.themePreference === "light")
           ? parsed.themePreference
           : defaultThemePreference,
+      profile: isExportProfile(parsed.profile) ? parsed.profile : "gfm",
     }
   } catch {
     return {
       options: cloneExportOptions(),
       lastOutputDir: defaultOutputDir,
       themePreference: defaultThemePreference,
+      profile: "gfm" as const,
     }
   }
 }
@@ -197,6 +211,7 @@ export const writePersistedUiState = async ({
     options?: PartialExportOptions
     lastOutputDir?: string
     themePreference?: ThemePreference
+    profile?: ExportProfile
   }
   defaultOutputDir: string
   defaultThemePreference: ThemePreference
@@ -220,6 +235,7 @@ export const writePersistedUiState = async ({
         }),
         lastOutputDir: input.lastOutputDir ?? current.lastOutputDir,
         themePreference: input.themePreference ?? current.themePreference,
+        profile: input.profile ?? current.profile,
       },
       null,
       2,

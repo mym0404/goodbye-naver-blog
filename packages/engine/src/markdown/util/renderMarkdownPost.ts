@@ -1,8 +1,13 @@
-import { getFrontmatterExportKey } from "@exitpress/domain/export-options/ExportOptions.js"
+import {
+  getBlockOutputTemplates,
+  getFrontmatterExportKey,
+} from "@exitpress/domain/export-options/ExportOptions.js"
 import { resolveParsedBlockAssetsForRender } from "@exitpress/engine/exporting/assets/ParsedBlockAssetResolver.js"
+import { getOutputAdapter } from "@exitpress/engine/exporting/profiles/OutputAdapters.js"
 import YAML from "yaml"
 
 import type { CategoryInfo, PostSummary } from "@exitpress/domain/blog/schema/BlogScan.js"
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type {
   AssetRecord,
   UploadCandidateKind,
@@ -13,6 +18,7 @@ import type {
 } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 import type { ParsedBlock } from "@exitpress/domain/parser/schema/ParsedPost.js"
 import type { ParsedPost } from "@exitpress/domain/parser/schema/ParsedPost.js"
+import type { OutputAdapter } from "@exitpress/engine/exporting/profiles/OutputAdapter.js"
 import type { UnknownRecord } from "@exitpress/engine/shared/object/UnknownRecord.js"
 
 import { renderBlockTemplates } from "./renderBlockTemplates.js"
@@ -69,6 +75,8 @@ export const renderMarkdownPost = async ({
   markdownFilePath,
   options,
   resolveAsset,
+  profile = "gfm",
+  adapter = getOutputAdapter(profile),
 }: {
   post: PostSummary
   category: CategoryInfo
@@ -76,6 +84,8 @@ export const renderMarkdownPost = async ({
   defaultBlockTemplates: Record<string, string>
   markdownFilePath: string
   options: ExportOptions
+  profile?: ExportProfile
+  adapter?: OutputAdapter
   resolveAsset: (input: {
     kind: UploadCandidateKind
     sourceUrl: string
@@ -172,7 +182,7 @@ export const renderMarkdownPost = async ({
       }
     },
   })
-  const customBlockTemplates = options.blockOutputs.templates
+  const customBlockTemplates = getBlockOutputTemplates(options, profile)
   const getBlockTemplate = (block: ParsedBlock) => {
     const template = customBlockTemplates[block.blockId] ?? defaultBlockTemplates[block.blockId]
 
@@ -185,7 +195,7 @@ export const renderMarkdownPost = async ({
   const body = renderBlockTemplates(
     resolved.blocks.map((block) => ({
       template: getBlockTemplate(block),
-      props: block.props,
+      props: adapter.prepareBlockProps(block.props),
     })),
   )
 
@@ -221,7 +231,10 @@ export const renderMarkdownPost = async ({
       })
     : null
 
-  const markdown = frontmatter ? `---\n${YAML.stringify(frontmatter)}---\n\n${body}\n` : `${body}\n`
+  const markdown = adapter.renderDocument({
+    frontmatter: frontmatter ? YAML.stringify(frontmatter) : null,
+    body,
+  })
 
   return {
     markdown,

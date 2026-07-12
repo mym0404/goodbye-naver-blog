@@ -101,7 +101,7 @@ describe("http server resume defaults", () => {
       expect(body.options.structure.slugStyle).toBe("snake")
       expect(body.options.structure.slugWhitespace).toBe("underscore")
       expect(body.options.structure.postFolderNameTemplate).toBe("{{ date }}-{{ slug }}")
-      expect(body.options.blockOutputs.templates).toEqual({})
+      expect(body.options.blockOutputs.templates).toEqual({ gfm: {}, fumadocs: {} })
       expect(body.options.assets.stickerAssetMode).toBe("ignore")
       expect(body.lastOutputDir).toBe(outputDir)
       expect(body.resumedJob).toBeNull()

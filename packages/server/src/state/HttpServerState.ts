@@ -154,7 +154,7 @@ export const createHttpServerState = ({
     })
 
     return {
-      profile: "gfm" as const,
+      profile: persistedUiState.profile,
       options: persistedUiState.options,
       lastOutputDir: persistedUiState.lastOutputDir,
       themePreference: persistedUiState.themePreference,

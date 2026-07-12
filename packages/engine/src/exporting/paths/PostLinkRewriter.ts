@@ -6,6 +6,8 @@ import {
 import type { CategoryInfo, PostSummary } from "@exitpress/domain/blog/schema/BlogScan.js"
 import type { ExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 
+import type { OutputAdapter } from "../profiles/OutputAdapter.js"
+
 import { relativePathFrom } from "../../infra/node/FilePaths.js"
 
 import { buildMarkdownFilePath, getCategoryForPost } from "./ExportPaths.js"
@@ -36,11 +38,13 @@ export const buildPostLinkTargets = ({
   posts,
   categories,
   options,
+  adapter,
 }: {
   outputDir: string
   posts: PostSummary[]
   categories: CategoryInfo[]
   options: Pick<ExportOptions, "structure">
+  adapter?: Pick<OutputAdapter, "contentRootSegments" | "documentFileName" | "formatPathSegment">
 }) => {
   const categoryMap = new Map(categories.map((category) => [category.id, category]))
 
@@ -64,6 +68,7 @@ export const buildPostLinkTargets = ({
             post,
             category,
             options,
+            adapter,
           }),
           templateValues: buildSameBlogPostTemplateValues({
             post: {

@@ -303,7 +303,7 @@ describe("single-post cli", () => {
 
       expect(exportSinglePost).toHaveBeenCalledTimes(1)
       expect(
-        exportSinglePost.mock.calls[0][0].options.blockOutputs.templates["naver-se4:image"],
+        exportSinglePost.mock.calls[0][0].options.blockOutputs.templates.gfm?.["naver-se4:image"],
       ).toBe("{{ `![${alt}](${url})` }}")
       expect(stdoutWrite).not.toHaveBeenCalled()
       expect(stderrWrite).toHaveBeenCalledWith(

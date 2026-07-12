@@ -3,6 +3,7 @@ import { sanitizePersistedExportOptions } from "@exitpress/domain/export-options
 
 import type { ScanResult } from "@exitpress/domain/blog/schema/BlogScan.js"
 import type { ExportJobState } from "@exitpress/domain/export-job/schema/ExportJobState.js"
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type { ImageHandlingMode } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 import type { PartialExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 import type { ExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
@@ -83,13 +84,16 @@ export const stepMeta: Record<WizardStep, { title: string }> = {
 export const getPersistedUiStateSignature = ({
   options,
   themePreference,
+  profile,
 }: {
   options: ExportOptions | PartialExportOptions
   themePreference: ThemePreference
+  profile?: ExportProfile
 }) =>
   JSON.stringify({
     options: sanitizePersistedExportOptions(options),
     themePreference,
+    profile,
   })
 
 export const getNextSetupStep = ({

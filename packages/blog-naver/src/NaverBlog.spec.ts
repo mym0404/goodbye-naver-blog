@@ -22,6 +22,13 @@ describe("createNaverBlog", () => {
     expect(definitionKeys).toContain("naver-se4:image")
   })
 
+  it("exposes Fumadocs-safe image and formula templates", () => {
+    const templates = createNaverBlog().getOutputBlockTemplates?.("fumadocs")
+
+    expect(templates?.["naver-se4:image"]).toContain("unoptimized")
+    expect(templates?.["naver-se4:formula"]).toContain("latex")
+  })
+
   it("resolves a Naver post URL identity", () => {
     const blog = createNaverBlog()
 

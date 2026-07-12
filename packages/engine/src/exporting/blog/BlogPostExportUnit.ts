@@ -10,6 +10,7 @@ import type {
   BlogSource,
 } from "@exitpress/domain/blog/schema/Blog.js"
 import type { CategoryInfo, PostSummary } from "@exitpress/domain/blog/schema/BlogScan.js"
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type { ExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 import type { Blog, BlogPostContentCache } from "@exitpress/engine/blog/Blog.js"
 
@@ -19,6 +20,7 @@ import { createPostUploadSummary } from "../manifest/ExportManifestProgress.js"
 import { buildMarkdownFilePath, getCategoryForPost } from "../paths/ExportPaths.js"
 import { buildPostLinkTargets, createPostLinkResolver } from "../paths/PostLinkRewriter.js"
 import { createSuccessPostResult } from "../post/PostExportResult.js"
+import { getOutputAdapter } from "../profiles/OutputAdapters.js"
 import { dedupeUploadCandidatesByLocalPath } from "../upload/util/dedupeUploadCandidatesByLocalPath.js"
 
 export const mapBlogCategory = (category: BlogCategoryRef): CategoryInfo => ({
@@ -44,12 +46,26 @@ export const mapBlogPost = (post: BlogPostRef): PostSummary => ({
   thumbnailUrl: post.thumbnailUrl ?? null,
 })
 
-const createDefaultBlockTemplateMap = (blog: Blog) =>
-  Object.fromEntries(
+const createDefaultBlockTemplateMap = ({
+  blog,
+  profile = "gfm",
+}: {
+  blog: Blog
+  profile?: ExportProfile
+}) => {
+  const defaults = Object.fromEntries(
     blog
       .getBlockTemplateDefinitions()
       .map((definition) => [definition.key, definition.presets[0].template]),
   )
+  const overrides = Object.fromEntries(
+    Object.entries(blog.getOutputBlockTemplates?.(profile) ?? {}).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string",
+    ),
+  )
+
+  return { ...defaults, ...overrides }
+}
 
 const createBlogAssetDownloader = (
   blog: Blog,
@@ -84,6 +100,7 @@ export const exportBlogPostUnit = async ({
   posts,
   categories,
   options,
+  profile = "gfm",
   uploadEnabled,
   abortSignal,
   postContentCache,
@@ -95,10 +112,12 @@ export const exportBlogPostUnit = async ({
   posts?: BlogPostRef[]
   categories: BlogCategoryRef[]
   options: ExportOptions
+  profile?: ExportProfile
   uploadEnabled: boolean
   abortSignal: AbortSignal | null
   postContentCache?: BlogPostContentCache
 }) => {
+  const adapter = getOutputAdapter(profile)
   const mappedPost = mapBlogPost(post)
   const categoryMap = new Map(
     categories.map((category) => [category.id, mapBlogCategory(category)]),
@@ -113,6 +132,7 @@ export const exportBlogPostUnit = async ({
     post: mappedPost,
     category,
     options,
+    adapter,
   })
   const resolveLinkUrl = createPostLinkResolver({
     blogKey: source.blogKey,
@@ -124,6 +144,7 @@ export const exportBlogPostUnit = async ({
       posts: (posts ?? [post]).map(mapBlogPost),
       categories: categories.map(mapBlogCategory),
       options,
+      adapter,
     }),
     resolveIdentity: (url) => mapBlogLinkIdentity({ blog, url }),
   })
@@ -131,6 +152,7 @@ export const exportBlogPostUnit = async ({
     outputDir,
     downloader: createBlogAssetDownloader(blog),
     options,
+    formatReference: adapter.formatAssetReference,
   })
   const content = await blog.loadPostContent({
     source,
@@ -155,9 +177,11 @@ export const exportBlogPostUnit = async ({
     post: mappedPost,
     category,
     parsedPost,
-    defaultBlockTemplates: createDefaultBlockTemplateMap(blog),
+    defaultBlockTemplates: createDefaultBlockTemplateMap({ blog, profile }),
     markdownFilePath,
     options,
+    profile,
+    adapter,
     resolveAsset: async (input) => assetStore.saveAsset(input),
   })
 

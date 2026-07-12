@@ -1,3 +1,5 @@
+import type { ExportProfile } from "../../export-job/schema/ExportProfile.js"
+
 export const allTemplatePropTypes = [
   "string",
   "number",
@@ -52,4 +54,5 @@ export type BlockTemplateDefinition = {
   label: string
   presets: [BlockTemplatePreset, ...BlockTemplatePreset[]]
   props: Record<string, TemplatePropDefinition>
+  outputTemplates?: Partial<Record<ExportProfile, string>>
 }

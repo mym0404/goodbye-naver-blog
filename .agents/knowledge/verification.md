@@ -29,6 +29,8 @@
 - `mise exec -- pnpm check:coverage`: full Vitest suite with V8 coverage thresholds.
 - `mise exec -- pnpm check:playwright`: Playwright local and live browser/network e2e suite against the current built web UI.
 - `mise exec -- pnpm check:playwright:ui`: Playwright UI mode for the same local and live e2e suite.
+- `mise exec -- pnpm exec playwright test tests/e2e/scenarios/output-adapters.spec.ts`: deterministic full export workflow e2e for every output adapter.
+- Fumadocs adapter integration: create an official app under repo-local `tmp/`, copy only the exported `content/docs` and `public` folders into it, run the generated app's `pnpm build`, start production mode, and open a generated `/docs/...` route. Check optional component interaction, image responses, browser errors, and console output.
 - `mise exec -- pnpm check:unused`: unused source/test/script diagnostics.
 
 ## Focused Commands
@@ -69,5 +71,6 @@
 - Moving or deleting source, test, or script files requires `check:type` and `check:unused`.
 - Parser changes require `check:test`.
 - Export, manifest, upload, resume, UI state, server API, routing, static asset serving, or job-state changes require `build:ui` followed by `check:playwright`.
+- Output-adapter changes also require the adapter e2e spec plus one real parsed post to compile in the current official Fumadocs starter. A lightweight Markdown preview does not prove MDX imports, Fumadocs components, public assets, or production routing.
 - Upload e2e changes must keep both local and live upload checks aligned with the current export-triggered upload flow.
 - Live fetch/upload changes require `build:ui` followed by `check:playwright`.

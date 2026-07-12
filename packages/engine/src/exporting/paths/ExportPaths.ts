@@ -7,6 +7,10 @@ import { buildPostFolderName } from "@exitpress/domain/export-paths/PostPathTemp
 import type { CategoryInfo, PostSummary } from "@exitpress/domain/blog/schema/BlogScan.js"
 import type { ExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 
+import type { OutputAdapter } from "../profiles/OutputAdapter.js"
+
+import { getOutputAdapter } from "../profiles/OutputAdapters.js"
+
 export const getCategoryForPost = ({
   categories,
   categoryId,
@@ -41,13 +45,16 @@ export const buildMarkdownFilePath = ({
   post,
   category,
   options,
+  adapter,
 }: {
   outputDir: string
   post: PostSummary
   category: CategoryInfo
   options: Pick<ExportOptions, "structure">
+  adapter?: Pick<OutputAdapter, "contentRootSegments" | "documentFileName" | "formatPathSegment">
 }) => {
-  const segments = [outputDir]
+  const outputAdapter = adapter ?? getOutputAdapter("gfm")
+  const segments = [outputDir, ...outputAdapter.contentRootSegments]
 
   if (options.structure.groupByCategory) {
     const categorySegments = (category.path.length > 0 ? category.path : [category.name]).map(
@@ -59,7 +66,7 @@ export const buildMarkdownFilePath = ({
         }),
     )
 
-    segments.push(...categorySegments)
+    segments.push(...categorySegments.map(outputAdapter.formatPathSegment))
   }
 
   const postFolderName = buildPostFolderName({
@@ -74,5 +81,9 @@ export const buildMarkdownFilePath = ({
     options,
   })
 
-  return path.join(...segments, postFolderName, "index.md")
+  return path.join(
+    ...segments,
+    outputAdapter.formatPathSegment(postFolderName),
+    outputAdapter.documentFileName,
+  )
 }

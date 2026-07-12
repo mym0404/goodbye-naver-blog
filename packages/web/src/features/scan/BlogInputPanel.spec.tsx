@@ -69,4 +69,34 @@ describe("BlogInputPanel", () => {
 
     expect(onBlogKeyChange).toHaveBeenCalledWith("tistory")
   })
+
+  it("selects the Fumadocs output profile", async () => {
+    const user = userEvent.setup()
+    const onProfileChange = vi.fn()
+
+    render(
+      <PrimerAppProvider themePreference="light">
+        <BlogInputPanel
+          blogs={[{ key: "naver", label: "Naver" }]}
+          blogKey="naver"
+          sourceInput=""
+          outputDir="output"
+          profile="gfm"
+          scanPending={false}
+          scanStatus="입력하세요."
+          scanStatusTone="default"
+          onBlogKeyChange={vi.fn()}
+          onSourceIdOrUrlChange={vi.fn()}
+          onOutputDirChange={vi.fn()}
+          onOutputDirBlur={vi.fn()}
+          onProfileChange={onProfileChange}
+        />
+      </PrimerAppProvider>,
+    )
+
+    await user.click(screen.getByRole("button", { name: "출력 형식" }))
+    await user.click(screen.getByRole("menuitemradio", { name: "Fumadocs (MDX)" }))
+
+    expect(onProfileChange).toHaveBeenCalledWith("fumadocs")
+  })
 })

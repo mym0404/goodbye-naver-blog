@@ -4,7 +4,7 @@
 
 Every post deserves an exit.
 
-Exitpress는 공개 블로그 글을 스캔해 Markdown, frontmatter, 로컬 자산, 복구 가능한 `manifest.json`으로 export하는 도구입니다. Naver Blog와 Tistory 공개 글 수집을 지원합니다.
+Exitpress는 공개 블로그 글을 스캔해 Markdown/MDX, frontmatter, 로컬 자산, 복구 가능한 `manifest.json`으로 export하는 도구입니다. Naver Blog와 Tistory 공개 글 수집을 지원합니다.
 
 [Demo](https://mym0404.github.io/exitpress/storybook/)
 
@@ -45,6 +45,7 @@ Exitpress는 공개 블로그 글을 스캔해 Markdown, frontmatter, 로컬 자
 - ✅ 동일한 이미지는 비교 후 **중복 다운로드 하지 않음** (예를 들어, 특정 카테고리의 고정 썸네일은 중복 다운로드되거나 업로드되지 않음)
 - ✅ 수백 가지 Html parsing ruleset이 계속 개선됨
 - ✅ 각 블록에 대한 여러 마크다운 Export 옵션
+- ✅ GFM Markdown과 Fumadocs MDX 출력 adapter 지원
 - ✅ Frontmatter 지원
 - ✅ 같은 블로그 안의 다른 글 백링크를 자유 형식으로 변환 가능(예를 들어, 새 블로그로 이전할 때 해당 블로그의 https 주소나 상대 경로로 변경 가능)
 - ✅ 그 외 다양한 옵션
@@ -83,3 +84,29 @@ pnpm start
 4. 카테고리/날짜 범위 선택
 5. export 실행
 6. `output/` 아래 결과 확인
+
+## 출력 형식
+
+Export 단계에서 출력 adapter를 고를 수 있습니다.
+
+| Adapter | 결과 | 용도 |
+| --- | --- | --- |
+| `gfm` | 카테고리/글 폴더 아래 `index.md` | GitHub Flavored Markdown 기반 이전 |
+| `fumadocs` | `content/docs/**/index.mdx`, `content/docs/**/meta.json`, `public/` | Fumadocs 프로젝트에 복사해 바로 쓰는 문서 번들 |
+
+Fumadocs adapter는 앱을 새로 만들거나 기존 앱을 덮어쓰지 않습니다. Export 결과에서 `content/docs`와 `public` 폴더만 Fumadocs 앱으로 복사해서 사용합니다.
+
+```text
+output/
+|-- content/
+|   `-- docs/
+|       |-- meta.json
+|       `-- ...
+|           |-- index.mdx
+|           `-- meta.json
+|-- public/
+|   `-- ...
+`-- manifest.json
+```
+
+Fumadocs 문서 경로는 라우팅 호환성을 위해 ASCII로 인코딩될 수 있습니다. 화면에 보이는 제목, 카테고리명, frontmatter 값은 원문 기준으로 유지됩니다.

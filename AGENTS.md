@@ -3,7 +3,7 @@
 ## Project Overview
 
 - This repository is a local export tool for public blog posts, with concrete blog packages for supported blog platforms.
-- It scans posts, parses blog/editor-specific content into blocks, renders Markdown, writes assets, and keeps resumable export state.
+- It scans posts, parses blog/editor-specific content into blocks, renders profile-specific Markdown or MDX bundles, writes assets and adapter support files, and keeps resumable export state.
 - The repo maintains a React web UI, server API, export engine, fixture regression tests, local browser e2e coverage, and live network e2e coverage.
 
 ## Tech Stack
@@ -19,7 +19,7 @@
 |-- AGENTS.md                 # agent entry and knowledge router
 |-- .agents/knowledge/        # evergreen repo-local agent knowledge
 |-- packages/domain/          # shared contracts and pure option/path logic
-|-- packages/engine/          # blog interfaces, render/export/assets/upload rewrite
+|-- packages/engine/          # blog interfaces, output adapters, render/export/assets/upload rewrite
 |-- packages/blog-naver/      # concrete Naver blog adapter
 |-- packages/blog-tistory/    # concrete Tistory blog adapter
 |-- packages/server/          # local HTTP API, jobs, state, upload catalog, static serving

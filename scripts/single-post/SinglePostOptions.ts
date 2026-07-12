@@ -266,7 +266,7 @@ const validateBlockTemplateOptions = (value: unknown, optionsPath: string) => {
     const templatesValue = value.templates
     assertPlainObject(templatesValue, "blockOutputs.templates", optionsPath)
 
-    const templates: ExportOptions["blockOutputs"]["templates"] = {}
+    const templates: Partial<Record<string, string>> = {}
 
     for (const [templateKey, template] of Object.entries(templatesValue)) {
       assertString(template, `blockOutputs.templates.${templateKey}`, optionsPath)
@@ -283,7 +283,7 @@ const validateBlockTemplateOptions = (value: unknown, optionsPath: string) => {
       }
     }
 
-    blockOutputs.templates = templates
+    blockOutputs.templates = { gfm: templates }
   }
 
   return blockOutputs

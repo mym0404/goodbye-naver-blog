@@ -42,6 +42,41 @@ describe("exportBlogPostUnit", () => {
     }
   })
 
+  it("exports a Fumadocs MDX document with profile components", async () => {
+    const tempDir = await createTestTempDir("blog-post-fumadocs-export-")
+    const mockBlog = createMarkdownMockBlog()
+    const blog: Blog = {
+      ...mockBlog,
+      getOutputBlockTemplates: (profile) =>
+        profile === "fumadocs"
+          ? { "mock:paragraph": "<Steps>\n<Step>{{ text }}</Step>\n</Steps>" }
+          : {},
+    }
+    const source = blog.parseSource("mock-blog")
+    const scan = await blog.scan(source)
+
+    try {
+      const result = await exportBlogPostUnit({
+        blog,
+        source,
+        outputDir: tempDir,
+        post: scan.posts[0],
+        categories: scan.categories,
+        options: defaultExportOptions(),
+        profile: "fumadocs",
+        uploadEnabled: false,
+        abortSignal: null,
+      })
+      const document = await readFile(result.markdownFilePath, "utf8")
+
+      expect(result.jobItem.outputPath).toMatch(/^content\/docs\/.+\/index\.mdx$/)
+      expect(document).toContain("import { Step, Steps } from 'fumadocs-ui/components/steps';")
+      expect(document).toContain("<Steps>\n<Step>Hello from markdown blog</Step>\n</Steps>")
+    } finally {
+      await rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
   it("resolves blog post links with configured same-blog link options", async () => {
     const tempDir = await createTestTempDir("blog-post-export-links-")
     const blog: Blog = {

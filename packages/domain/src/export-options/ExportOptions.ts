@@ -1,8 +1,12 @@
+import type { ExportProfile } from "../export-job/schema/ExportProfile.js"
+
 import type {
   ExportOptions,
   FrontmatterFieldName,
   PartialExportOptions,
 } from "./schema/ExportOptions.js"
+
+import { allExportProfiles } from "../export-job/schema/ExportProfile.js"
 
 import { defaultExportOptions as createDefaultExportOptions } from "./DefaultExportOptions.js"
 import {
@@ -177,10 +181,11 @@ export const sanitizePersistedExportOptions = (
 
     if (options.blockOutputs.templates) {
       blockOutputs.templates = Object.fromEntries(
-        Object.entries(options.blockOutputs.templates).filter(
-          (entry): entry is [string, string] =>
-            Boolean(entry[0].trim()) && typeof entry[1] === "string",
-        ),
+        allExportProfiles.flatMap((profile) => {
+          const templates = pickBlockTemplates(options.blockOutputs?.templates?.[profile])
+
+          return Object.keys(templates).length > 0 ? [[profile, templates]] : []
+        }),
       )
     }
 
@@ -225,13 +230,18 @@ const coerceAssetOptions = (options: ExportOptions["assets"]) => {
   return coercedOptions
 }
 
-const pickBlockTemplates = (blockOutputs?: PartialExportOptions["blockOutputs"]) =>
+const pickBlockTemplates = (templates?: Partial<Record<string, string>>) =>
   Object.fromEntries(
-    Object.entries(blockOutputs?.templates ?? {}).filter(
+    Object.entries(templates ?? {}).filter(
       (entry): entry is [string, string] =>
         Boolean(entry[0].trim()) && typeof entry[1] === "string",
     ),
-  ) satisfies ExportOptions["blockOutputs"]["templates"]
+  ) satisfies Partial<Record<string, string>>
+
+export const getBlockOutputTemplates = (
+  options: Pick<ExportOptions, "blockOutputs">,
+  profile: ExportProfile,
+) => options.blockOutputs.templates[profile] ?? {}
 
 export const cloneExportOptions = (options?: PartialExportOptions) => {
   const defaults = defaultExportOptions()
@@ -262,7 +272,12 @@ export const cloneExportOptions = (options?: PartialExportOptions) => {
       },
     },
     blockOutputs: {
-      templates: pickBlockTemplates(options?.blockOutputs),
+      templates: Object.fromEntries(
+        allExportProfiles.map((profile) => [
+          profile,
+          pickBlockTemplates(options?.blockOutputs?.templates?.[profile]),
+        ]),
+      ) as ExportOptions["blockOutputs"]["templates"],
     },
     assets: {
       imageHandlingMode: options?.assets?.imageHandlingMode ?? defaults.assets.imageHandlingMode,

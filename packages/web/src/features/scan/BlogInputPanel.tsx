@@ -1,5 +1,7 @@
 import { Box, Flash, FormControl, TextInput } from "@primer/react"
 
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
+
 import { PrimerSelectActionMenu } from "../../components/primer/PrimerSelectActionMenu.js"
 
 const allScanStatusTones = ["default", "error"] as const
@@ -10,6 +12,7 @@ export const BlogInputPanel = ({
   blogKey,
   sourceInput,
   outputDir,
+  profile = "gfm",
   scanPending,
   scanStatus,
   scanStatusTone,
@@ -17,11 +20,13 @@ export const BlogInputPanel = ({
   onBlogKeyChange,
   onOutputDirChange,
   onOutputDirBlur,
+  onProfileChange = () => {},
 }: {
   blogs: { key: string; label: string }[]
   blogKey: string
   sourceInput: string
   outputDir: string
+  profile?: ExportProfile
   scanPending: boolean
   scanStatus: string
   scanStatusTone: ScanStatusTone
@@ -29,6 +34,7 @@ export const BlogInputPanel = ({
   onBlogKeyChange: (value: string) => void
   onOutputDirChange: (value: string) => void
   onOutputDirBlur: () => void
+  onProfileChange?: (value: ExportProfile) => void
 }) => (
   <Box sx={{ display: "grid", gap: 3 }}>
     <FormControl id="blogKey" disabled={scanPending}>
@@ -66,6 +72,24 @@ export const BlogInputPanel = ({
         onBlur={onOutputDirBlur}
       />
       <FormControl.Caption>결과를 저장할 위치입니다.</FormControl.Caption>
+    </FormControl>
+    <FormControl id="outputProfile" disabled={scanPending}>
+      <FormControl.Label>출력 형식</FormControl.Label>
+      <PrimerSelectActionMenu
+        id="outputProfile"
+        value={profile}
+        options={[
+          { value: "gfm", label: "Markdown (GFM)" },
+          { value: "fumadocs", label: "Fumadocs (MDX)" },
+        ]}
+        disabled={scanPending}
+        onValueChange={(value) => onProfileChange(value as ExportProfile)}
+      />
+      <FormControl.Caption>
+        {profile === "fumadocs"
+          ? "content/docs와 public에 바로 복사할 수 있는 묶음을 만듭니다."
+          : "일반 Markdown 파일을 만듭니다."}
+      </FormControl.Caption>
     </FormControl>
     <Flash
       id="scan-status"

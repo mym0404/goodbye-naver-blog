@@ -57,6 +57,7 @@ export const useBootstrapDefaults = ({
         persistedUiStateSignatureRef.current = getPersistedUiStateSignature({
           options: normalizedDefaults.options,
           themePreference: normalizedDefaults.themePreference,
+          profile: normalizedDefaults.profile,
         })
         hasLoadedDefaultsRef.current = true
         applyBootstrapState(normalizedDefaults)
@@ -74,6 +75,7 @@ export const useBootstrapDefaults = ({
         persistedUiStateSignatureRef.current = getPersistedUiStateSignature({
           options: fallbackDefaults.options,
           themePreference: fallbackDefaults.themePreference,
+          profile: fallbackDefaults.profile,
         })
         hasLoadedDefaultsRef.current = true
         applyBootstrapState(fallbackDefaults)

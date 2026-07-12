@@ -1,10 +1,14 @@
+import { readdir } from "node:fs/promises"
+
 import { getScanCacheKey } from "@exitpress/domain/blog/schema/BlogScan.js"
 import { JOB_STATUSES } from "@exitpress/domain/export-job/ExportJobState.js"
+import { isExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import { recreateDir, resolveRepoPath } from "@exitpress/engine/infra/node/FilePaths.js"
 import { toErrorMessage } from "@exitpress/engine/shared/error/util/toErrorMessage.js"
 
 import type { BlogScanResult } from "@exitpress/domain/blog/schema/Blog.js"
 import type { ScanResult } from "@exitpress/domain/blog/schema/BlogScan.js"
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type {
   ExportRequest,
   ExportUploadProviderRequest,
@@ -14,6 +18,7 @@ import type { PartialExportOptions } from "@exitpress/domain/export-options/sche
 import type { ApiRouteContext, ApiRouteRequest } from "./ApiRouteContext.js"
 
 import { readBody, sendJson } from "../http/HttpResponse.js"
+import { readExportManifest } from "../jobs/ExportJobManifest.js"
 
 const parseJsonPayload = async <T>(request: ApiRouteRequest["request"]) => {
   return JSON.parse(await readBody(request)) as T
@@ -24,6 +29,41 @@ const uploadProviderRequiredError =
 const uploadProviderModeError =
   "uploadProvider는 download-and-upload 모드에서만 사용할 수 있습니다."
 const uploadProviderValidationError = "업로드 provider 설정을 확인하지 못했습니다."
+const unownedOutputDirectoryError =
+  "비어 있지 않은 폴더에는 내보낼 수 없습니다. Exitpress 출력 폴더를 선택하세요."
+
+const assertOutputDirectoryCanBeRecreated = async (outputDir: string) => {
+  const resolvedOutputDir = resolveRepoPath(outputDir)
+
+  try {
+    if ((await readdir(resolvedOutputDir)).length === 0) {
+      return
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return
+    }
+
+    throw error
+  }
+
+  try {
+    const manifest = await readExportManifest(outputDir)
+
+    if (
+      manifest &&
+      typeof manifest.blogKey === "string" &&
+      typeof manifest.sourceId === "string" &&
+      isExportProfile(manifest.profile)
+    ) {
+      return
+    }
+  } catch {
+    throw new Error(unownedOutputDirectoryError)
+  }
+
+  throw new Error(unownedOutputDirectoryError)
+}
 
 const toScanResult = (scan: BlogScanResult): ScanResult => ({
   blogKey: scan.source.blogKey,
@@ -176,6 +216,7 @@ export const handleExportRoutes =
         blogKey?: string
         sourceInput?: string
         outputDir?: string
+        profile?: ExportProfile
         options?: PartialExportOptions
         scanResult?: ScanResult
         uploadProvider?: {
@@ -185,6 +226,7 @@ export const handleExportRoutes =
       }>(request)
 
       const blogKey = payload.blogKey?.trim() ?? ""
+      const profile = payload.profile ?? "gfm"
 
       if (!blogKey || !payload.sourceInput?.trim() || !payload.outputDir?.trim()) {
         sendJson({
@@ -192,6 +234,11 @@ export const handleExportRoutes =
           statusCode: 400,
           body: { error: "blogKey, sourceInput, outputDir는 필수입니다." },
         })
+        return true
+      }
+
+      if (!isExportProfile(profile)) {
+        sendJson({ response, statusCode: 400, body: { error: "지원하지 않는 출력 형식입니다." } })
         return true
       }
 
@@ -260,10 +307,17 @@ export const handleExportRoutes =
         blogKey,
         sourceInput: payload.sourceInput.trim(),
         outputDir: payload.outputDir.trim(),
-        profile: "gfm",
+        profile,
         options,
       }
       const runnerRequest = uploadProvider ? { ...exportRequest, uploadProvider } : exportRequest
+
+      try {
+        await assertOutputDirectoryCanBeRecreated(exportRequest.outputDir)
+      } catch (error) {
+        sendJson({ response, statusCode: 409, body: { error: toErrorMessage(error) } })
+        return true
+      }
 
       await recreateDir(resolveRepoPath(exportRequest.outputDir))
       await state.writeLastOutputDir(exportRequest.outputDir)

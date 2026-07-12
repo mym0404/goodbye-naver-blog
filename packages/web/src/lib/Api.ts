@@ -2,6 +2,7 @@ import type { ScanResult } from "@exitpress/domain/blog/schema/BlogScan.js"
 import type { ExportJobPollingConfig } from "@exitpress/domain/export-job/schema/ExportJobPollingConfig.js"
 import type { ExportJobState } from "@exitpress/domain/export-job/schema/ExportJobState.js"
 import type { ExportResumeSummary } from "@exitpress/domain/export-job/schema/ExportManifest.js"
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type {
   ExportOptions,
   FrontmatterFieldMeta,
@@ -12,7 +13,7 @@ import type { BlockTemplateDefinition } from "@exitpress/domain/template/schema/
 
 export type ExportBootstrapResponse = {
   blogs: { key: string; label: string }[]
-  profile: "gfm"
+  profile: ExportProfile
   options: ExportOptions
   lastOutputDir: string
   themePreference: ThemePreference

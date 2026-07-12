@@ -23,10 +23,8 @@ const definition = {
 } satisfies BlockTemplateDefinition
 
 describe("getEffectiveBlockTemplate", () => {
-  it("uses the first preset when the editor template is empty", () => {
-    expect(getEffectiveBlockTemplate({ definition, template: "" })).toBe(
-      "{{ `![${alt}](${url})` }}",
-    )
+  it("keeps an empty editor template so the block can be omitted", () => {
+    expect(getEffectiveBlockTemplate({ definition, template: "" })).toBe("")
   })
 
   it("keeps a custom editor template", () => {

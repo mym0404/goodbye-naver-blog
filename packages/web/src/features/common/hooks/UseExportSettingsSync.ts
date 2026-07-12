@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type { PartialExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 import type { ThemePreference } from "@exitpress/domain/preferences/schema/ThemePreference.js"
 import type { MutableRefObject } from "react"
@@ -15,12 +16,14 @@ export const useExportSettingsSync = ({
   persistedUiStateSignatureRef,
   latestPersistedOptionsRef,
   latestThemePreferenceRef,
+  profile,
 }: {
   hasLoadedDefaultsRef: MutableRefObject<boolean>
   persistedUiStateSignature: string
   persistedUiStateSignatureRef: MutableRefObject<string | null>
   latestPersistedOptionsRef: MutableRefObject<PartialExportOptions>
   latestThemePreferenceRef: MutableRefObject<ThemePreference>
+  profile: ExportProfile
 }) => {
   useEffect(() => {
     if (!hasLoadedDefaultsRef.current) {
@@ -38,11 +41,13 @@ export const useExportSettingsSync = ({
       const nextPersistedSignature = getPersistedUiStateSignature({
         options: nextOptions,
         themePreference: nextThemePreference,
+        profile,
       })
 
       void postJsonNoContent("/api/export-settings", {
         options: nextOptions,
         themePreference: nextThemePreference,
+        profile,
       })
         .then(() => {
           if (cancelled) {
@@ -64,5 +69,6 @@ export const useExportSettingsSync = ({
     latestThemePreferenceRef,
     persistedUiStateSignature,
     persistedUiStateSignatureRef,
+    profile,
   ])
 }

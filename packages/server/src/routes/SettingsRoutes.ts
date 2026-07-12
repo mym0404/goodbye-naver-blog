@@ -1,3 +1,4 @@
+import { isExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import { sanitizePersistedExportOptions } from "@exitpress/domain/export-options/ExportOptions.js"
 import { toErrorMessage } from "@exitpress/engine/shared/error/util/toErrorMessage.js"
 
@@ -32,6 +33,7 @@ export const handleSettingsRoutes =
     const payload = await parseJsonBody<{
       options?: unknown
       themePreference?: unknown
+      profile?: unknown
     }>(request)
 
     if (
@@ -39,7 +41,8 @@ export const handleSettingsRoutes =
       !isPlainObject(payload.options) ||
       (payload.themePreference !== undefined &&
         payload.themePreference !== "dark" &&
-        payload.themePreference !== "light")
+        payload.themePreference !== "light") ||
+      (payload.profile !== undefined && !isExportProfile(payload.profile))
     ) {
       sendJson({
         response,
@@ -63,6 +66,7 @@ export const handleSettingsRoutes =
           payload.themePreference === "dark" || payload.themePreference === "light"
             ? payload.themePreference
             : undefined,
+        profile: isExportProfile(payload.profile) ? payload.profile : undefined,
       })
     } catch (error) {
       sendJson({

@@ -3,7 +3,7 @@
 ## Runtime Shape
 
 - The local server owns process startup, HTTP APIs, static serving, job state, local settings, and upload provider runtime metadata.
-- The engine owns blog runtime interfaces, blog-neutral export units, Markdown rendering, asset persistence, upload candidate handling, link rewrite, and export manifest writing.
+- The engine owns blog runtime interfaces, blog-neutral export units, output-profile adapters, document rendering, asset persistence, upload candidate handling, link rewrite, support-file generation, and export manifest writing.
 - Concrete `blog-*` packages own blog-specific source parsing, fetching adapters, parser adapters, URL identity resolution, and blog workflows.
 - The web package owns the browser wizard, Storybook surface, API client, and UI state.
 - The domain package owns shared contracts and pure deterministic logic used across packages.
@@ -13,8 +13,8 @@
 
 - Scan starts from the server API and delegates retrieval to the selected concrete blog package.
 - Blog parser routing chooses the matching editor implementation and converts supported editor blocks into parsed blocks.
-- Renderer turns parsed blocks and templates into Markdown, resolves assets, and produces manifest-ready asset records.
-- Export workflow writes Markdown/assets, updates job progress, persists resume data, and runs automatic upload/rewrite phases when `download-and-upload` is selected.
+- Renderer turns parsed blocks and profile-specific templates into Markdown or MDX, resolves assets, and produces manifest-ready asset records.
+- Export workflow writes documents/assets, lets the selected adapter create deterministic support files, updates job progress, persists resume data, and runs automatic upload/rewrite phases when `download-and-upload` is selected.
 - Web reads bootstrap/defaults, drives scan/options/upload-provider-test/export actions through HTTP APIs, and displays progress from polled job state.
 
 ## Domain Concepts
@@ -25,9 +25,11 @@
 - A scan result contains source metadata, categories, and post summaries.
 - An export selection combines category selection, date range, and search text.
 - Parsed blocks carry a stable block key, props, template definitions, and asset metadata.
-- Export options control paths, assets, Markdown templates, frontmatter, upload, and naming.
-- Export output includes Markdown, assets, manifest state, resumable state, and optional upload rewrite results.
-- Markdown paths are stable and path-safe; frontmatter includes only enabled fields under configured aliases.
+- Export options control paths, assets, profile-scoped block templates, frontmatter, upload, and naming.
+- `gfm` keeps the existing category/post `index.md` layout. `fumadocs` writes a portable bundle under `content/docs` and `public`, with `index.mdx` documents and hierarchical `meta.json` files; it does not scaffold or overwrite a Fumadocs app.
+- A new export may recreate only a missing directory, an empty directory, or an existing Exitpress output root with a valid `manifest.json`. Never point export directly at a Fumadocs application root; copy the generated `content/docs` and `public` folders instead.
+- Output adapters own document roots, extensions, path-segment compatibility, asset references, final document assembly, conditional imports, and support-file contents. Concrete blog packages own sparse target templates for their own block keys.
+- Document paths are stable and path-safe; Fumadocs encodes non-ASCII path segments to URL-safe ASCII while keeping visible titles and category metadata unchanged. Frontmatter includes only enabled fields under configured aliases.
 - Asset records distinguish local relative paths from remote URLs.
 - Manifest state must be sufficient to restore export, upload, and result screens.
 - Web state mirrors server bootstrap, scan cache, export options, job state, upload provider catalog, and theme preference.

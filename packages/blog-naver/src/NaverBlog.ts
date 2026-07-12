@@ -2,6 +2,7 @@ import { NaverBlogFetcher } from "@exitpress/blog-naver/integrations/naver-blog/
 import { extractSourceId, extractNaverBlogPostIdentity } from "@exitpress/blog-naver/NaverUrl.js"
 import { parsePostHtml } from "@exitpress/blog-naver/parsing/naver-blog/core/PostParser.js"
 import { NaverBlog } from "@exitpress/blog-naver/parsing/naver-blog/NaverBlog.js"
+import { naverFumadocsTemplates } from "@exitpress/blog-naver/profiles/NaverFumadocsTemplates.js"
 
 import type { Blog, BlogPostContentCache } from "@exitpress/engine/blog/Blog.js"
 
@@ -101,6 +102,7 @@ export const createNaverBlog = (): Blog => {
       })
     },
     getBlockTemplateDefinitions: () => new NaverBlog().getBlockTemplateDefinitions(),
+    getOutputBlockTemplates: (profile) => (profile === "fumadocs" ? naverFumadocsTemplates : {}),
     downloadBinary: (input) => createAssetFetcher().downloadBinary(input),
     fetchBinary: (input) => createAssetFetcher().fetchBinary(input),
     resolvePostLinkIdentity: (url) => {

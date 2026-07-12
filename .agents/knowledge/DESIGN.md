@@ -96,6 +96,7 @@
 ## Form Rules
 
 - Follow Primer Forms patterns for all wizard settings forms.
+- Keep output format beside the blog and output-directory controls. Changing the format switches the active template override set without overwriting overrides saved for another format.
 - A field uses `FormControl` anatomy in this order: concise label, input control, then short caption or validation message.
 - Label and input should read as one field; avoid large gaps between the label, control, and caption.
 - Do not place helper text between the label and the control.

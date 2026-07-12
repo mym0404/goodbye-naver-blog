@@ -85,6 +85,7 @@ describe("http server settings persist", () => {
           "content-type": "application/json",
         },
         body: JSON.stringify({
+          profile: "fumadocs",
           options: {
             scope: {
               categoryIds: [101],
@@ -118,6 +119,7 @@ describe("http server settings persist", () => {
           }
         }
         lastOutputDir?: string
+        profile?: string
       }
 
       expect(response.status).toBe(204)
@@ -134,6 +136,7 @@ describe("http server settings persist", () => {
         postFolderNameTemplate: "{{ date }}-{{ slug }}",
       })
       expect(saved.lastOutputDir).toBe("./output")
+      expect(saved.profile).toBe("fumadocs")
     } finally {
       await rm(rootDir, { recursive: true, force: true })
     }
@@ -149,9 +152,11 @@ describe("http server settings persist", () => {
         options: {
           blockOutputs: {
             templates: {
-              "naver-se4:linkCard": "{{ text }}",
-              "naver-se4:file": "{{ `[${fileName}${fileExtension}](${fileUrl})` }}",
-              "naver-se4:missing": "{{ title }}",
+              fumadocs: {
+                "naver-se4:linkCard": "{{ text }}",
+                "naver-se4:file": "{{ `[${fileName}${fileExtension}](${fileUrl})` }}",
+                "naver-se4:missing": "{{ title }}",
+              },
             },
           },
         },
@@ -169,14 +174,17 @@ describe("http server settings persist", () => {
       const body = (await response.json()) as {
         options: {
           blockOutputs: {
-            templates: Record<string, string>
+            templates: Record<string, Record<string, string>>
           }
         }
       }
 
       expect(response.status).toBe(200)
       expect(body.options.blockOutputs.templates).toEqual({
-        "naver-se4:file": "{{ `[${fileName}${fileExtension}](${fileUrl})` }}",
+        gfm: {},
+        fumadocs: {
+          "naver-se4:file": "{{ `[${fileName}${fileExtension}](${fileUrl})` }}",
+        },
       })
     } finally {
       await rm(rootDir, { recursive: true, force: true })

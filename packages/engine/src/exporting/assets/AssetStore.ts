@@ -39,22 +39,26 @@ export class AssetStore {
   readonly sourceUrlCache = new Map<string, string>()
   readonly inFlightSourceUrlCache = new Map<string, Promise<string>>()
   readonly compressImage: AssetCompressor
+  readonly formatReference: (relativeAssetPath: string) => string
 
   constructor({
     outputDir,
     downloader,
     options,
     compressImage,
+    formatReference,
   }: {
     outputDir: string
     downloader: AssetDownloader
     options: Pick<ExportOptions, "assets" | "structure">
     compressImage?: AssetCompressor
+    formatReference?: (relativeAssetPath: string) => string
   }) {
     this.outputDir = outputDir
     this.downloader = downloader
     this.options = options
     this.compressImage = compressImage ?? compressWithSharp
+    this.formatReference = formatReference ?? ((relativeAssetPath) => relativeAssetPath)
   }
 
   async saveAsset({
@@ -95,18 +99,19 @@ export class AssetStore {
         from: markdownFilePath,
         to: cachedBySourceUrl,
       })
+      const reference = this.formatReference(relativePath)
 
       return {
         kind,
         sourceUrl: normalizedSourceUrl,
-        reference: relativePath,
+        reference,
         relativePath,
         storageMode: "relative",
         uploadCandidate: {
           kind,
           sourceUrl: normalizedSourceUrl,
           localPath: normalizeOutputPath(path.relative(this.outputDir, cachedBySourceUrl)),
-          markdownReference: relativePath,
+          markdownReference: reference,
         },
       } satisfies AssetRecord
     }
@@ -117,18 +122,19 @@ export class AssetStore {
       from: markdownFilePath,
       to: absolutePath,
     })
+    const reference = this.formatReference(relativePath)
 
     return {
       kind,
       sourceUrl: normalizedSourceUrl,
-      reference: relativePath,
+      reference,
       relativePath,
       storageMode: "relative",
       uploadCandidate: {
         kind,
         sourceUrl: normalizedSourceUrl,
         localPath: normalizeOutputPath(path.relative(this.outputDir, absolutePath)),
-        markdownReference: relativePath,
+        markdownReference: reference,
       },
     } satisfies AssetRecord
   }

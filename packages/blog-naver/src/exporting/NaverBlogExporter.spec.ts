@@ -95,8 +95,8 @@ describe("NaverBlogExporter", () => {
     expect(writtenManifest.posts[0]?.outputPath).toMatch(/index\.md$/)
     expect(writtenManifest.posts[0]?.upload.candidateCount).toBe(0)
     expect(writtenManifest.posts[0]).not.toHaveProperty("externalPreviewUrl")
-    expect(writtenManifest.options.blockOutputs.templates["naver-se4:code"]).toBeUndefined()
-    expect(writtenManifest.options.blockOutputs.templates).not.toHaveProperty("code")
+    expect(writtenManifest.options.blockOutputs.templates.gfm?.["naver-se4:code"]).toBeUndefined()
+    expect(writtenManifest.options.blockOutputs.templates.gfm).not.toHaveProperty("code")
 
     await rm(outputDir, { recursive: true, force: true })
   })

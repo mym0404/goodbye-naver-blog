@@ -26,6 +26,7 @@ import {
 } from "../manifest/ExportManifestProgress.js"
 import { getCategoryForPost } from "../paths/ExportPaths.js"
 import { createFailedPostResult } from "../post/PostExportResult.js"
+import { getOutputAdapter } from "../profiles/OutputAdapters.js"
 import {
   completeManifestUploadSummary,
   flushCompletedPostResults,
@@ -130,6 +131,7 @@ export class BlogExportWorkflow {
     throwIfAborted(this.abortSignal)
 
     const outputDir = resolveRepoPath(this.request.outputDir)
+    const outputAdapter = getOutputAdapter(this.request.profile)
     const options = cloneExportOptions(this.request.options)
     const uploadEnabled = options.assets.imageHandlingMode === "download-and-upload"
     const source = this.blog.parseSource(this.request.sourceInput)
@@ -236,6 +238,7 @@ export class BlogExportWorkflow {
               posts: scan.posts,
               categories: scan.categories,
               options,
+              profile: this.request.profile,
               uploadEnabled,
               abortSignal: this.abortSignal,
               ...(this.postContentCache ? { postContentCache: this.postContentCache } : {}),
@@ -261,6 +264,14 @@ export class BlogExportWorkflow {
       progressState,
       totalPosts: filteredPosts.length,
     })
+
+    for (const supportFile of outputAdapter.createSupportFiles(manifest)) {
+      throwIfAborted(this.abortSignal)
+      const supportFilePath = path.join(outputDir, supportFile.relativePath)
+
+      await ensureDir(path.dirname(supportFilePath))
+      await writeFile(supportFilePath, supportFile.content, "utf8")
+    }
 
     if (this.writeManifestFile) {
       throwIfAborted(this.abortSignal)

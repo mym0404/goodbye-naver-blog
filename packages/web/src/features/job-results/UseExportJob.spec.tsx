@@ -157,6 +157,7 @@ describe("useExportJob", () => {
       blogKey: "naver",
       sourceInput: "mym0404",
       outputDir: testOutputDir,
+      profile: "gfm",
       options: defaultExportOptions(),
       scanResult,
     })
@@ -223,6 +224,7 @@ describe("useExportJob", () => {
       blogKey: "naver",
       sourceInput: "blog",
       outputDir: "/tmp/out",
+      profile: "gfm",
       options: uploadFlowOptions,
       scanResult: null,
       uploadProvider: {

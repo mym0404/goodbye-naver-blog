@@ -30,6 +30,7 @@
 
 - Local e2e must use mocked API responses and deterministic local assets instead of real blog or upload provider network calls.
 - Local e2e should prove browser workflow, payload shape, resume state, upload progress, rendered result state, and error handling at the UI/API boundary.
+- Output-adapter e2e must include at least one deterministic full export workflow case per adapter and assert the written document layout plus required adapter support files.
 - Local e2e must own its server and state with isolated temp paths for settings, scan cache, post HTML cache, output, and route state.
 - Local e2e should use test-owned servers that bind with `listen(0)` so parallel workers do not fight over a fixed port.
 - Do not share persistent output folders or process-global mutable state across local e2e tests.

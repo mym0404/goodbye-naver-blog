@@ -10,26 +10,30 @@ const getDefaultTemplate = (definition: BlockTemplateDefinition) => definition.p
 export const getEffectiveBlockTemplate = ({
   definition,
   template,
+  defaultTemplate,
 }: {
   definition: BlockTemplateDefinition
   template?: string
-}) => template || getDefaultTemplate(definition)
+  defaultTemplate?: string
+}) => template ?? defaultTemplate ?? getDefaultTemplate(definition)
 
 export const BlockTemplateCard = ({
   definition,
   template,
+  defaultTemplate,
   themePreference,
   readOnly = false,
   onTemplateChange,
 }: {
   definition: BlockTemplateDefinition
   template?: string
+  defaultTemplate?: string
   themePreference: ThemePreference
   readOnly?: boolean
   onTemplateChange?: (template: string) => void
 }) => {
   const controlId = toBlockTemplateControlId(definition.key)
-  const effectiveTemplate = getEffectiveBlockTemplate({ definition, template })
+  const effectiveTemplate = getEffectiveBlockTemplate({ definition, template, defaultTemplate })
 
   return (
     <TemplateEditorCard

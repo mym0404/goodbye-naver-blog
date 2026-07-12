@@ -1,6 +1,7 @@
 import { useCallback } from "react"
 
 import type { ScanCacheMap, ScanResult } from "@exitpress/domain/blog/schema/BlogScan.js"
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type { ExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 import type { Dispatch, MutableRefObject, SetStateAction } from "react"
 
@@ -27,6 +28,7 @@ export const useAppResumeBootstrap = ({
   setOutputDir,
   setSourceIdOrUrl,
   setBlogKey,
+  setProfile,
   setCategorySearch,
   setSetupStep,
   setActiveJobFilter,
@@ -45,6 +47,7 @@ export const useAppResumeBootstrap = ({
   setOutputDir: Dispatch<SetStateAction<string>>
   setSourceIdOrUrl: Dispatch<SetStateAction<string>>
   setBlogKey: Dispatch<SetStateAction<string>>
+  setProfile: Dispatch<SetStateAction<ExportProfile>>
   setCategorySearch: Dispatch<SetStateAction<string>>
   setSetupStep: Dispatch<SetStateAction<SetupStep>>
   setActiveJobFilter: Dispatch<SetStateAction<JobFilter>>
@@ -80,6 +83,7 @@ export const useAppResumeBootstrap = ({
       setOutputDir(normalizeOutputDir(resumedJob.request.outputDir))
       setSourceIdOrUrl(resumedJob.request.sourceInput)
       setBlogKey(resumedJob.request.blogKey)
+      setProfile(resumedJob.request.profile)
       setCategorySearch("")
       setSetupStep("blog-input")
       setActiveJobFilter("all")
@@ -110,6 +114,7 @@ export const useAppResumeBootstrap = ({
       setActiveJobFilter,
       setSourceIdOrUrl,
       setBlogKey,
+      setProfile,
       setCategorySearch,
       setCategoryStatus,
       setDefaults,
@@ -144,6 +149,7 @@ export const useAppResumeBootstrap = ({
       )
       setSourceIdOrUrl(nextDefaults.resumedJob?.request.sourceInput ?? "")
       setBlogKey(nextDefaults.resumedJob?.request.blogKey ?? defaultBlogKey)
+      setProfile(nextDefaults.resumedJob?.request.profile ?? nextDefaults.profile)
       setCategorySearch("")
       setSetupStep("blog-input")
       setActiveJobFilter("all")
@@ -184,6 +190,7 @@ export const useAppResumeBootstrap = ({
       setActiveJobFilter,
       setSourceIdOrUrl,
       setBlogKey,
+      setProfile,
       setCategorySearch,
       setCategoryStatus,
       setDefaults,

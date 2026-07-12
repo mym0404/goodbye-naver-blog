@@ -1,5 +1,7 @@
 import type { ExportOptions } from "./schema/ExportOptions.js"
 
+import { allExportProfiles } from "../export-job/schema/ExportProfile.js"
+
 export const defaultExportOptions = (): ExportOptions => ({
   scope: {
     categoryIds: [],
@@ -45,7 +47,7 @@ export const defaultExportOptions = (): ExportOptions => ({
     },
   },
   blockOutputs: {
-    templates: {},
+    templates: Object.fromEntries(allExportProfiles.map((profile) => [profile, {}])),
   },
   assets: {
     imageHandlingMode: "download-and-upload",

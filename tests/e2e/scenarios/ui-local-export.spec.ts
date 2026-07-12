@@ -111,7 +111,7 @@ const waitForBlockTemplateSettingsSave = ({
       const body = request.postDataJSON() as {
         options?: ExportOptions
       }
-      const templates = body.options?.blockOutputs.templates ?? {}
+      const templates = body.options?.blockOutputs.templates.gfm ?? {}
 
       return typeof templates["naver-se4:image"] === "string"
     },
@@ -1278,7 +1278,7 @@ const runUiLocalExport = async ({ browser }: { browser: Browser }) => {
           providerFields?: Record<string, UploadProviderValue>
         }
       }
-      const templates = body.options?.blockOutputs.templates ?? {}
+      const templates = body.options?.blockOutputs.templates.gfm ?? {}
 
       if (
         body.blogKey !== "naver" ||
@@ -2317,11 +2317,11 @@ const runUiLocalExport = async ({ browser }: { browser: Browser }) => {
       throw new Error("result file tree did not expose uploaded asset URLs")
     }
 
-    if (typeof manifest.options.blockOutputs.templates["naver-se4:image"] !== "string") {
+    if (typeof manifest.options.blockOutputs.templates.gfm?.["naver-se4:image"] !== "string") {
       throw new Error("manifest did not preserve the naver-se4 image template")
     }
 
-    if (Object.hasOwn(manifest.options.blockOutputs.templates, "formula")) {
+    if (Object.hasOwn(manifest.options.blockOutputs.templates.gfm ?? {}, "formula")) {
       throw new Error("manifest included block-type-only template key")
     }
 

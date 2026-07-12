@@ -211,4 +211,11 @@ describe("createTistoryBlog", () => {
       "tistory:inline",
     ])
   })
+
+  it("exposes Fumadocs-safe image and table templates", () => {
+    const templates = createTistoryBlog().getOutputBlockTemplates?.("fumadocs")
+
+    expect(templates?.["tistory:image"]).toContain("unoptimized")
+    expect(templates?.["tistory:table"]).not.toContain("complex ? html")
+  })
 })

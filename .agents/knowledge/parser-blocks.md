@@ -10,7 +10,7 @@
 ## Ownership
 - Concrete blog parsers own editor dispatch, diagnostics, and parsed block output helpers.
 - Editor folders own block order, editor context, and editor-specific converters.
-- Parser blocks own their prop shape and Markdown template presets.
+- Parser blocks own their prop shape and source-neutral Markdown template presets. A concrete blog package may add sparse output-profile templates under its `profiles/` folder when a target needs different syntax.
 - Shared infrastructure may own editor dispatch, common schemas, asset resolution, and generic template evaluation only.
 - Shared parser contracts live in the owning domain `schema/` file; helpers live in the closest owning `util/` folder.
 - Do not add parser inventories to knowledge; code and tests are the source of truth.
@@ -37,11 +37,11 @@
 - Template definitions describe available Markdown output presets and interpolation props.
 - Template keys are stable contracts used by UI options, generated Storybook catalog, and renderer tests.
 - Output option behavior belongs to parser/editor tests, not shallow UI tests.
-- The first preset is the default and preserves every source meaning Markdown can express, including heading levels, inline/display math, list order and nesting, links, captions, and thumbnails.
+- The first preset is the GFM fallback and preserves every source meaning Markdown can express, including heading levels, inline/display math, list order and nesting, links, captions, and thumbnails. A selected output profile resolves its sparse target template before this fallback.
 - Additional presets exist only for distinct output intents. A preset that intentionally omits information names that scope in its label.
 - Preset labels describe the actual output shape. Do not use generic labels.
 - Every preset renders without errors or `undefined` when optional values are absent.
-- Raw HTML is reserved for structures such as complex tables whose meaning Markdown cannot preserve.
+- Raw HTML is reserved for GFM structures such as complex tables whose meaning Markdown cannot preserve. MDX profiles must serialize from normalized props and must not pass public source HTML through as JSX.
 - Empty templates are valid only for explicit `ignore`/`무시` or child-delegation presets.
 - Group media blocks expose arrays, such as `images[]`, and templates render the array into Markdown strings instead of printing the object directly.
 

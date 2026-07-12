@@ -1,9 +1,10 @@
 import type { ExportOptions } from "../../export-options/schema/ExportOptions.js"
 import type { UploadProviderFields } from "../../upload/schema/UploadProvider.js"
 
-export const allExportProfiles = ["gfm"] as const
-// Markdown output profile selected by export requests.
-export type ExportProfile = (typeof allExportProfiles)[number]
+import type { ExportProfile } from "./ExportProfile.js"
+
+export { allExportProfiles } from "./ExportProfile.js"
+export type { ExportProfile } from "./ExportProfile.js"
 
 export type ExportUploadProviderRequest = {
   providerKey: string

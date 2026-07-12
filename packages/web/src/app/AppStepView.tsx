@@ -3,6 +3,7 @@ import { Box, Button, Flash, ProgressBar, Text } from "@primer/react"
 import type { BlockScanJobState } from "@exitpress/domain/block-scan/schema/BlockScanJobState.js"
 import type { PostSummary, ScanResult } from "@exitpress/domain/blog/schema/BlogScan.js"
 import type { ExportJobState } from "@exitpress/domain/export-job/schema/ExportJobState.js"
+import type { ExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
 import type { ExportOptions } from "@exitpress/domain/export-options/schema/ExportOptions.js"
 import type { ThemePreference } from "@exitpress/domain/preferences/schema/ThemePreference.js"
 import type { UploadProviderCatalogResponse } from "@exitpress/domain/upload/schema/UploadProvider.js"
@@ -34,6 +35,7 @@ type AppStepViewProps = {
   sourceInput: string
   blogKey: string
   outputDir: string
+  profile: ExportProfile
   scanPending: boolean
   blockScanJob: BlockScanJobState | null
   blockScanError: string | null
@@ -60,6 +62,7 @@ type AppStepViewProps = {
   handleBlogKeyChange: (value: string) => void
   handleOutputDirChange: (value: string) => void
   handleOutputDirBlur: () => void
+  handleProfileChange: (value: ExportProfile) => void
   handleSelectAllCategories: () => void
   handleClearAllCategories: () => void
   handleCategoryToggle: (categoryId: number, checked: boolean) => void
@@ -86,6 +89,7 @@ export const AppStepView = ({
   sourceInput,
   blogKey,
   outputDir,
+  profile,
   scanPending,
   blockScanJob,
   blockScanError,
@@ -109,6 +113,7 @@ export const AppStepView = ({
   handleBlogKeyChange,
   handleOutputDirChange,
   handleOutputDirBlur,
+  handleProfileChange,
   handleSelectAllCategories,
   handleClearAllCategories,
   handleCategoryToggle,
@@ -148,6 +153,7 @@ export const AppStepView = ({
         blogKey={blogKey}
         sourceInput={sourceInput}
         outputDir={outputDir}
+        profile={profile}
         scanPending={scanPending}
         scanStatus={scanStatus}
         scanStatusTone={scanStatusTone}
@@ -155,6 +161,7 @@ export const AppStepView = ({
         onBlogKeyChange={handleBlogKeyChange}
         onOutputDirChange={handleOutputDirChange}
         onOutputDirBlur={handleOutputDirBlur}
+        onProfileChange={handleProfileChange}
       />
     )
   }
@@ -266,6 +273,7 @@ export const AppStepView = ({
           step="markdown"
           outputDir={outputDir}
           options={options}
+          profile={profile}
           themePreference={themePreference}
           optionDescriptions={defaults.optionDescriptions}
           blockTemplateDefinitions={visibleBlockTemplateDefinitions}
@@ -322,6 +330,7 @@ export const AppStepView = ({
       }
       outputDir={outputDir}
       options={options}
+      profile={profile}
       themePreference={themePreference}
       optionDescriptions={defaults.optionDescriptions}
       blockTemplateDefinitions={visibleBlockTemplateDefinitions}
