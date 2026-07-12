@@ -1,0 +1,4 @@
+interface:
+  display_name: "Parser Template Quality"
+  short_description: "Audit and fix parser prop and preset quality"
+  default_prompt: "Use $parser-template-quality to audit every parser block prop schema and Markdown preset, fix P0-P2 findings, and verify the full catalog."
