@@ -73,6 +73,9 @@ export const PrimerSelectActionMenu = <T extends string>({
         aria-invalid={ariaInvalid || undefined}
         {...(ariaDescribedBy ? { "aria-describedby": ariaDescribedBy } : {})}
         sx={{
+          "& [data-component='buttonContent']": {
+            justifyContent: "flex-start",
+          },
           justifyContent: "space-between",
           maxWidth,
           textAlign: "left",

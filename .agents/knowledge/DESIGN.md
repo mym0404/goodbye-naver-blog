@@ -38,7 +38,7 @@
 - Use `PageHeader.Actions` only at wide viewport widths where right-side actions can fit without wrapping.
 - Metadata such as 대상 글, 카테고리, 선택, and 상태 belongs in Primer `LabelGroup`.
 - Do not add repository-style under-navigation tabs unless the app has real peer page destinations that need them.
-- Full-page workflows should use a centered content region capped at `xlarge` width with Primer breakpoint padding.
+- App-level headers and primary content use the same centered region capped at Primer `medium` width (`768px`) with breakpoint padding. Full-width background bands may sit outside this region.
 - Split pages are only for real side navigation, filtering, overview, or list-detail flows.
 - Split-page left panes must be flush to the left edge, use their own scroll area for long lists, and sit beside the content region rather than inside a floating card.
 - Do not add side panes for decorative step progress or GitHub mimicry.
@@ -46,7 +46,7 @@
 - Avoid card-wrapped single controls. A lone input, choice menu, checkbox, radio, or small checkbox group should live in a plain field row or compact grid.
 - Use bordered panels only when the surface is a distinct work area, repeated result item, table/list container, preview, editor, dialog, or status panel.
 - Do not nest panels just to create spacing. Use grid gaps, section rhythm, or inline rows before adding another wrapper.
-- Prefer vertical form flow for settings. Multi-column forms are allowed only when the fields are short, independent, and naturally scanned together.
+- Keep every form in a single vertical column at all viewport widths. Do not place fields side by side to use extra desktop space.
 - Keep gaps compact. Use `gap: 2` for dense form rows, `gap: 3` for section groups, and larger spacing only for page-level separation.
 - Dividers are optional. Use them only when the user needs a boundary to understand a change in scope.
 
@@ -101,7 +101,7 @@
 - Label and input should read as one field; avoid large gaps between the label, control, and caption.
 - Do not place helper text between the label and the control.
 - Do not use placeholder text as the only label.
-- Prefer vertically stacked `FormControl` fields. Do not split forms into multiple columns just to reduce vertical height.
+- Stack all `FormControl` fields vertically. Wide viewports do not change a form into multiple columns.
 - Order fields by importance and keep related fields adjacent so keyboard input flows predictably.
 - Size inputs to match expected value length, or let them fill a constrained parent when values vary widely.
 - Group closely related settings by section heading, vertical rhythm, and proximity first; use borders or dividers only when the group needs a clear boundary.

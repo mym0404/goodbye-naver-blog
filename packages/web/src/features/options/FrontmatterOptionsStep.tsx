@@ -180,10 +180,8 @@ export const FrontmatterOptionsStep = ({
                 <Box
                   data-frontmatter-alias-row="true"
                   sx={{
-                    alignItems: "center",
                     display: "grid",
                     gap: 2,
-                    gridTemplateColumns: ["1fr", "7rem minmax(0, 1fr)"],
                   }}
                 >
                   <Box

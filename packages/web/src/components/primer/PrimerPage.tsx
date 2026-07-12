@@ -2,6 +2,8 @@ import { Box } from "@primer/react"
 
 import type { ReactNode } from "react"
 
+export const primerPageMaxWidth = "768px"
+
 export const PrimerPanel = ({ children }: { children: ReactNode }) => (
   <Box
     sx={{

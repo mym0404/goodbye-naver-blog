@@ -7,6 +7,7 @@ import type { ReactNode } from "react"
 import type { StorybookStory } from "./schema/Storybook.js"
 
 import { PrimerAppProvider } from "../../app/PrimerAppProvider.js"
+import { primerPageMaxWidth } from "../../components/primer/PrimerPage.js"
 import { PrimerSelectActionMenu } from "../../components/primer/PrimerSelectActionMenu.js"
 import { createAppHref, shouldShowStorybookBackLink } from "../../lib/AppRoutes.js"
 import { useThemePreference } from "../common/hooks/UseThemePreference.js"
@@ -524,7 +525,7 @@ export const StorybookPage = () => {
           <Box
             sx={{
               width: "100%",
-              maxWidth: "1280px",
+              maxWidth: primerPageMaxWidth,
               mx: "auto",
               px: [3, 4],
             }}
@@ -574,7 +575,7 @@ export const StorybookPage = () => {
               sx={{
                 display: "grid",
                 gap: 3,
-                maxWidth: "1280px",
+                maxWidth: primerPageMaxWidth,
                 mx: "auto",
               }}
             >

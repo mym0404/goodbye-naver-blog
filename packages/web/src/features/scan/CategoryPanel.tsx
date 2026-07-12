@@ -76,8 +76,6 @@ export const CategoryPanel = ({
         sx={{
           display: "grid",
           gap: 3,
-          gridTemplateColumns: ["1fr", null, null, "repeat(3, minmax(0, 1fr))"],
-          alignItems: "start",
         }}
       >
         <FormControl id="scope-categoryMode" disabled={!scanResult}>
