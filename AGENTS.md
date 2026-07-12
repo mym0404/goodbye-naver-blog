@@ -34,6 +34,7 @@
 ## Architecture
 
 - Main runtime starts in the server package and serves the web UI plus HTTP APIs.
+- Core identity is `blogKey`, `sourceId`, `postId`, and `sourceInput`; concrete platform details stay in the owning `blog-*` package.
 - Shared cross-package contracts live in owning folders under `schema/`.
 - Shared utilities live in owning folders under `util/`; a single exported utility uses the function name as the file name.
 - Dependency direction is `web -> domain`, `server -> domain, engine, blog-*`, `engine -> domain`, and `blog-* -> domain, engine`.
@@ -61,29 +62,26 @@
 - `mise exec -- pnpm check:test`: Vitest unit, integration, fixture, and blog checks.
 - `mise exec -- pnpm check:coverage`: Vitest unit, integration, fixture, and blog checks with coverage thresholds.
 - `mise exec -- pnpm build:ui && mise exec -- pnpm check:playwright`: Playwright local and live e2e checks against the built web UI.
+- `check:playwright` uses live services and its upload scenario creates remote state when credentials are available.
 - `mise exec -- pnpm check:unused`: dead-code and unused export baseline; run after deleting, moving, or renaming code.
 - `mise exec -- pnpm check:fmt`, `check:lint`, `check:type`, `check:storybook`, `build:server`, and `build:ui`: focused static/build/catalog checks.
 - Full validation details and blind spots live in `.agents/knowledge/verification.md`.
 
 ## Knowledge Router
 
-- `.agents/knowledge/architecture.md`
-- `.agents/knowledge/code-style.md`
-- `.agents/knowledge/domain.md`
-- `.agents/knowledge/parser-architecture.md`
-- `.agents/knowledge/parser-blocks.md`
-- `.agents/knowledge/upload.md`
-- `.agents/knowledge/test-management.md`
-- `.agents/knowledge/verification.md`
-- `.agents/knowledge/DESIGN.md`
-- `.agents/knowledge/browser-verification.md`
-- `.agents/knowledge/fixtures.md`
-- `.agents/knowledge/post-evidence.md`
-- `.agents/knowledge/single-post-verification.md`
+- Runtime ownership, domain concepts, dependency boundaries: `.agents/knowledge/architecture.md`
+- TypeScript, utilities, comments, tests, documentation: `.agents/knowledge/code-style.md`
+- Parser routing, block contracts, props, presets, quality criteria: `.agents/knowledge/parser-blocks.md`
+- Upload, resume, manifest, and URL rewrite behavior: `.agents/knowledge/upload.md`
+- Test case shape, local/live e2e boundaries, runtime cost: `.agents/knowledge/test-management.md`
+- Commands, CI, verification layers, manual browser checks: `.agents/knowledge/verification.md`
+- UI layout, Primer component use, forms, responsive behavior: `.agents/knowledge/DESIGN.md`
+- Live sample fixture contracts and cache behavior: `.agents/knowledge/fixtures.md`
+- Single-post inspection, source capture, and Markdown evidence: `.agents/knowledge/post-evidence.md`
 
 ## Knowledge System
 
-- Root `AGENTS.md` is the only router.
+- Root `AGENTS.md` is the primary knowledge store and the only router.
 - Evergreen repo-local knowledge lives under `.agents/knowledge/*`.
 - Update this file and the relevant knowledge documents in the same change whenever structure, runtime entrypoints, validation commands, ownership boundaries, or documented behavior change.
 - Task-local scope, temporary criteria, one-off preferences, and examples are not durable repository knowledge unless the user explicitly makes them general or code changes make them current truth.

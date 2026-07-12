@@ -17,6 +17,22 @@
 - Export workflow writes Markdown/assets, updates job progress, persists resume data, and runs automatic upload/rewrite phases when `download-and-upload` is selected.
 - Web reads bootstrap/defaults, drives scan/options/upload-provider-test/export actions through HTTP APIs, and displays progress from polled job state.
 
+## Domain Concepts
+
+- `blogKey` selects the concrete blog implementation.
+- `sourceInput` is user input; a concrete blog resolves it to stable `sourceId` and source metadata.
+- `postId` identifies one post within a source.
+- A scan result contains source metadata, categories, and post summaries.
+- An export selection combines category selection, date range, and search text.
+- Parsed blocks carry a stable block key, props, template definitions, and asset metadata.
+- Export options control paths, assets, Markdown templates, frontmatter, upload, and naming.
+- Export output includes Markdown, assets, manifest state, resumable state, and optional upload rewrite results.
+- Markdown paths are stable and path-safe; frontmatter includes only enabled fields under configured aliases.
+- Asset records distinguish local relative paths from remote URLs.
+- Manifest state must be sufficient to restore export, upload, and result screens.
+- Web state mirrors server bootstrap, scan cache, export options, job state, upload provider catalog, and theme preference.
+- Persisted UI settings exclude transient job-only fields; resume state comes from manifest or local state rather than browser-only assumptions.
+
 ## Boundaries
 
 - Web runtime may import domain contracts and pure helpers only.
@@ -28,6 +44,7 @@
 - `blog-*` packages may depend on domain and engine, but must not define blog-neutral base types or contracts.
 - Blog-specific fetchers, parsers, URL helpers, and workflows must stay inside the owning concrete blog package.
 - Package and feature contracts live in the owning folder under `schema/`; cross-package contracts live in domain schema when shared across packages.
+- Runtime constants that back literal unions use const assertion values with derived types.
 - Shared utilities live under the owning package/folder `util/`.
 - Avoid barrel files and compatibility re-export files; import the current owner path directly.
 
@@ -41,5 +58,6 @@
 
 - Boundary changes require architecture and code-style knowledge updates.
 - Parser routing or block output contract changes require parser knowledge updates.
-- Export, upload, resume, or manifest behavior changes require domain/upload/verification knowledge updates.
+- Shared identity or contract changes require architecture knowledge updates.
+- Export, upload, resume, or manifest behavior changes require architecture, upload, and verification knowledge updates.
 - UI system or visual behavior changes require design knowledge updates.

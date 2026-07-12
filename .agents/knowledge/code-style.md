@@ -23,11 +23,10 @@
 - A file with one exported utility is named after that function.
 - Multiple exported utilities can share one file only when they belong to one clear concept.
 - Do not create `*Utils.ts` files.
-- Before adding or refactoring generic string/object/array helpers, check whether `@mj-studio/js-util` already has a matching public helper.
 
 ## Comments
-- Add short English comments to major exported types, exported functions, and non-obvious internal helpers.
-- Explain the guarantee or boundary, not the obvious syntax.
+- Add an English comment only when it explains a non-obvious guarantee or boundary.
+- Do not comment obvious syntax or restate the identifier.
 - Do not quote user prompts or task history in code comments.
 
 ## Tests

@@ -46,16 +46,27 @@
 
 ## Blind Spots
 
-- Network upload creates remote state and depends on credentials.
+- `check:playwright` includes live network cases; the upload case creates remote state when credentials are available.
 - CI network e2e depends on upload secrets and live external services.
 - Coverage does not replace behavior-specific parser, export, server, or browser e2e checks.
+
+## Manual Browser Checks
+
+- Use targeted browser validation for visible flow, layout, controls, or feedback changes after the affected automated checks pass.
+- Do not reuse a user's development server. Start an isolated server with non-default `PORT`, separate `EXITPRESS_SETTINGS_PATH`, and separate `EXITPRESS_SCAN_CACHE_PATH` under repo-local `tmp/`.
+- Confirm requested controls, progress, result state, and errors against API or manifest state.
+- Confirm export reaches the expected `completed`, `failed`, `upload-completed`, or `upload-failed` state.
+- Check desktop and mobile viewports for overflow, clipping, and readable contrast.
+- For upload flows, verify provider setup appears before export, upload progress appears after export starts, and restored state does not resubmit credentials.
+- For Storybook, confirm `Input HTML`, `Source Capture`, and `Markdown` describe the same block and bundled capture assets resolve.
+- Record the URL, viewport, inputs, final job status, and visible failure details when a manual result is used as evidence.
 
 ## Task Loops
 
 - Use focused commands while iterating only when the same class of check would otherwise be repeated frequently; run the affected verification commands before finishing.
 - Do not run duplicated checks in sequence when a later command already includes the earlier one, such as `check:test` immediately before `check:coverage`.
 - Documentation-only knowledge edits do not need browser e2e; verify routed paths, command existence, and changed Markdown content.
-- Moving or deleting files requires `check:type` and `check:unused`.
+- Moving or deleting source, test, or script files requires `check:type` and `check:unused`.
 - Parser changes require `check:test`.
 - Export, manifest, upload, resume, UI state, server API, routing, static asset serving, or job-state changes require `build:ui` followed by `check:playwright`.
 - Upload e2e changes must keep both local and live upload checks aligned with the current export-triggered upload flow.

@@ -34,11 +34,10 @@
 - Page headers show the page title, responsive actions, and compact metadata only.
 - Do not put page descriptions in `PageHeader.Description` for this app.
 - Do not show wizard step progress in the page header.
-- Use `PageHeader.LeadingAction` for narrow and regular viewport overflow/menu access.
-- Use `PageHeader.Actions` only at wide viewport widths where right-side actions can fit without wrapping.
+- Use `PageHeader.Actions` for right-aligned actions. Show a menu button there on narrow and regular viewports, and expand it into direct actions only when they fit without wrapping.
 - Metadata such as 대상 글, 카테고리, 선택, and 상태 belongs in Primer `LabelGroup`.
 - Do not add repository-style under-navigation tabs unless the app has real peer page destinations that need them.
-- App-level headers and primary content use the same centered region capped at Primer `medium` width (`768px`) with breakpoint padding. Full-width background bands may sit outside this region.
+- App-level headers span the viewport with breakpoint padding and no max-width. Primary content stays centered at Primer `medium` width (`768px`).
 - Split pages are only for real side navigation, filtering, overview, or list-detail flows.
 - Split-page left panes must be flush to the left edge, use their own scroll area for long lists, and sit beside the content region rather than inside a floating card.
 - Do not add side panes for decorative step progress or GitHub mimicry.

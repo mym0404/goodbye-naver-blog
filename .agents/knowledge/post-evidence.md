@@ -1,94 +1,50 @@
 # Post Evidence
 
 ## Purpose
-- Post evidence compares a public blog source and this repo's Markdown conversion in README-style Markdown sections.
-- Use it for ingest reports, PR descriptions, parser coverage evidence, and README source assets.
+- Post evidence compares a public blog source with this repo's Markdown conversion.
+- Use it for parser investigation, ingest reports, PR descriptions, and README examples.
 - Evidence artifacts are harness/report output, not exported blog output.
 
-## CLI
-```bash
-bun scripts/post-evidence/capture-post-evidence.ts \
-  --blogKey naver \
-  --sourceInput <sourceInput> \
-  --postId <postId> \
-  --target post \
-  --metadata "SE4 quote conversion"
-```
+## Entrypoints
+- `scripts/single-post/export-single-post.ts` exports or inspects one public post; `scripts/single-post/SinglePostArgs.ts` defines its current CLI surface.
+- `scripts/post-evidence/capture-post-evidence.ts` captures source screenshots and rendered Markdown. Run it with `--help` for current options.
+- The evidence CLI accepts one inline case or a JSON case file for multiple captures.
 
-```bash
-bun scripts/post-evidence/capture-post-evidence.ts \
-  --blogKey naver \
-  --sourceInput <sourceInput> \
-  --postId <postId> \
-  --target inspect-path \
-  --inspectPath 0 \
-  --metadata "SE4 quote block"
-```
+## Single-Post Workflow
+- Open the public post and note its editor family, visible block types, and unusual structure.
+- Use single-post `--inspect` when a parser failure only names an unsupported editor node. Inspect reports the DOM path, tag, class, editor module type, text, and HTML snippet without writing export output.
+- Export into `tmp/manual-audit/<postId>/`, then compare the source, Markdown, and structured report.
+- Classify the result as `as-expected`, `mismatch`, `error`, or `not-checked`.
+- Capture post evidence when the comparison needs a reusable source image and Markdown section.
 
-```bash
-bun scripts/post-evidence/capture-post-evidence.ts \
-  --case tmp/harness/post-evidence/cases.json \
-  --metadataCachePath tmp/harness/post-evidence/metadata-cache.json \
-  --outputDir tmp/harness/post-evidence/run
-```
+## Capture Targets And Options
+- `post` captures the full source body and renders full Markdown with frontmatter.
+- `inspect-path` captures one node selected by the single-post inspect path and renders its parsed block without frontmatter.
+- `--optionsPath` uses the same export option shape as single-post export.
+- Defaults keep remote asset references, disable image and thumbnail downloads and compression, and omit `exportedAt`.
+- Do not download source images unless an explicit options file requires it.
 
-## Targets
-- `--target post` captures the full source post body and renders the full converted Markdown with frontmatter.
-- `--target inspect-path` captures the node selected by a single-post inspect path and renders only the corresponding parsed block fragment.
-- Inspect-path Markdown omits frontmatter and does not include post-level thumbnail frontmatter behavior.
-- Use `bun scripts/single-post/export-single-post.ts --inspect` when a parser failure report does not already provide the inspect path.
+## Output And Storage
+- Each run writes `evidence.md`, `report.json`, and source capture images.
+- Temporary output defaults under `tmp/harness/post-evidence/`; `--assetProfile tmp` keeps assets with the run.
+- `--assetProfile readme` stores durable README assets under `.agents/knowledge/reference/assets/readme`.
+- `--assetProfile figure` stores durable report assets under `.agents/knowledge/reference/assets/figure`.
+- Persistent profile links use repo-root-relative paths; temporary links are relative to `evidence.md`.
+- Treat any section error or nonzero `report.json.errorCount` as incomplete evidence.
 
-## Export Options
-- `--optionsPath` accepts the same JSON option shape used by single-post export helpers.
-- Evidence Markdown generation honors export options, including block output options, Markdown link style, asset handling, and frontmatter selection.
-- Default evidence options use remote asset references, disable image downloads, disable thumbnail downloads, disable compression, and omit `exportedAt`.
-- Evidence capture should not download source image files unless an explicit options file intentionally changes asset behavior.
-
-## Output
-- The CLI writes `evidence.md`, `report.json`, and screenshot assets.
-- The default output root is `tmp/harness/post-evidence/<blogKey>-<sourceId>-<postId>-<timestamp>`.
-- `--assetProfile tmp` writes assets under the output directory and is for local evidence output.
-- `--assetProfile readme` writes assets under `.agents/knowledge/reference/assets/readme` so README fragments can reference stable repo-local assets.
-- `--assetProfile figure` writes assets under `.agents/knowledge/reference/assets/figure` so PR/report figures can be committed separately from README assets.
-- Persistent asset profiles write image links as repo-root-relative `.agents/...` paths rather than `tmp`-relative paths.
-- `report.json` keeps per-section source URL, screenshot paths, Markdown text, and section errors.
-- Any section error means the evidence document is incomplete until the capture or rendering issue is fixed or explicitly reported.
-
-## Section Shape
-- `evidence.md` renders one `###` section per evidence case.
-- Keep each section in this order: metadata heading, source link, source capture image, Markdown code fence.
-- Source links use the label `원문 보기`.
-- Source capture images render with `width="300"` so PR and report sections keep a readable image size.
-- Markdown is rendered in a fenced `markdown` code block and preserves real line breaks.
-
-## README Examples
-- README examples use the same `###` section shape per block type.
-- Reuse post evidence screenshot assets and Markdown snippets for README examples.
-- Keep each README example in this order: block type heading, source link, source capture image, Markdown code fence.
-
-## Metadata
-- Treat metadata as a short human note.
-- Prefer notes like parser block behavior, failure family, or conversion scenario.
-- Do not fill it with routine state such as source identity, post id, title, or status unless that value is the useful note for the section.
-
-## Capture Behavior
-- Source screenshots use the concrete blog capture adapter for the selected `blogKey`.
-- Full-post source capture targets the concrete blog's main post body node.
-- Inspect-path source capture resolves the same editor-specific path reported by single-post inspect.
-- Capture hides unrelated fixed and sticky mobile UI before screenshotting the selected node, so the mobile blog header does not cover the body block.
-- Source screenshots capture the selected HTML node, not only the current viewport; long nodes may produce tall images.
+## Evidence Shape
+- Render one `###` section per case in this order: short metadata heading, `원문 보기` source link, source capture image, fenced `markdown` output.
+- Keep metadata focused on the parser behavior, failure family, or conversion scenario.
+- Full-post capture targets the concrete blog's main body; inspect capture resolves the same editor path reported by single-post inspect.
+- Hide unrelated fixed or sticky mobile UI and capture the selected node rather than only the viewport.
 
 ## Ingest Reports
-- `.agents/skills/ingest-blog/scripts/collect-blog-errors.ts` uses post evidence helpers when writing ingest reports.
-- Post evidence helpers stay under `scripts/post-evidence` because both the manual evidence CLI and ingest reports use them.
-- Completed ingest outputs may be reused; when a reusable manifest exists, rerun only failed posts unless `--forceFull` is requested.
-- Ingest reports include `report.md`, `report.json`, `evidence.md`, and committed figure images under `.agents/knowledge/reference/assets/figure`.
-- Ingest evidence Markdown omits source-post links, and committed figure asset filenames stay anonymous.
-- Focused parser fixes represented in a report should include the changed parser block or extension, the representative fixture, related knowledge updates, verification results, and unresolved focused failures with reasons.
-- PR bodies may include the focused report summary and evidence sections only after the user explicitly asks for PR creation or invokes the skill with that intent.
+- Ingest uses the shared helpers under `scripts/post-evidence` and writes `report.md`, `report.json`, `evidence.md`, and durable figure assets.
+- Reuse a completed ingest manifest and rerun only failed posts unless a full rerun is explicitly requested.
+- Focused parser-fix reports include the changed block, representative fixture, knowledge changes, verification, and unresolved failures.
+- Add report summaries or evidence to a PR only when the user explicitly requests PR creation.
 
 ## Verification
-- Run `bun scripts/post-evidence/capture-post-evidence.ts --help` after changing the CLI surface.
-- Run at least one full-post local check and one inspect-path local check after changing capture behavior.
-- Check `report.json.errorCount` before using generated evidence.
-- Use `identify <asset>.png` or a visual image check when screenshot framing or target node capture behavior changes.
+- Run the evidence CLI `--help` after changing its command surface.
+- After capture changes, run one full-post case and one inspect-path case, then check `report.json.errorCount`.
+- Visually inspect an asset when screenshot target selection or framing changes.
