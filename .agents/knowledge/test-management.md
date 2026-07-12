@@ -1,5 +1,13 @@
 # Test Management
 
+## SMURF Tradeoffs
+
+- Evaluate test-suite changes across Speed, Maintainability, Utilization, Reliability, and Fidelity.
+- Prefer focused Vitest coverage when it can catch the same defect with less runtime and setup than browser e2e.
+- Add local browser e2e for user-visible integration boundaries that need real DOM, navigation, responsive layout, or API wiring.
+- Add live e2e only when external-service fidelity provides evidence that deterministic local tests cannot provide.
+- Improve one SMURF attribute without needlessly reducing the others; test count by itself is not a quality target.
+
 ## Test Case Shape
 
 - Each meaningful behavior must be represented by its own `test` or `it` case.
