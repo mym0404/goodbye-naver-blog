@@ -35,6 +35,7 @@ export class AssetStore {
   readonly outputDir: string
   readonly downloader: AssetDownloader
   readonly options: Pick<ExportOptions, "assets" | "structure">
+  readonly assetRootSegments: string[]
   readonly cache = new Map<string, string>()
   readonly sourceUrlCache = new Map<string, string>()
   readonly inFlightSourceUrlCache = new Map<string, Promise<string>>()
@@ -45,18 +46,21 @@ export class AssetStore {
     outputDir,
     downloader,
     options,
+    assetRootSegments,
     compressImage,
     formatReference,
   }: {
     outputDir: string
     downloader: AssetDownloader
     options: Pick<ExportOptions, "assets" | "structure">
+    assetRootSegments?: string[]
     compressImage?: AssetCompressor
     formatReference?: (relativeAssetPath: string) => string
   }) {
     this.outputDir = outputDir
     this.downloader = downloader
     this.options = options
+    this.assetRootSegments = assetRootSegments ?? ["public"]
     this.compressImage = compressImage ?? compressWithSharp
     this.formatReference = formatReference ?? ((relativeAssetPath) => relativeAssetPath)
   }
@@ -166,7 +170,11 @@ export class AssetStore {
 
       const extension =
         extensionFromContentType(binary.contentType) ?? extensionFromUrl(normalizedSourceUrl)
-      const absolutePath = path.join(this.outputDir, "public", `${contentHash}${extension}`)
+      const absolutePath = path.join(
+        this.outputDir,
+        ...this.assetRootSegments,
+        `${contentHash}${extension}`,
+      )
 
       await ensureDir(path.dirname(absolutePath))
 

@@ -7,6 +7,20 @@ import { PrimerSelectActionMenu } from "../../components/primer/PrimerSelectActi
 const allScanStatusTones = ["default", "error"] as const
 export type ScanStatusTone = (typeof allScanStatusTones)[number]
 
+const outputProfileOptions: { value: ExportProfile; label: string }[] = [
+  { value: "gfm", label: "Markdown (GFM)" },
+  { value: "fumadocs", label: "Fumadocs (MDX)" },
+  { value: "docusaurus", label: "Docusaurus (MDX)" },
+  { value: "nextra", label: "Nextra (MDX)" },
+]
+
+const outputProfileCaptions: Record<ExportProfile, string> = {
+  gfm: "일반 Markdown 파일을 만듭니다.",
+  fumadocs: "content/docs와 public에 복사할 수 있는 묶음을 만듭니다.",
+  docusaurus: "docs와 static에 복사할 수 있는 묶음을 만듭니다.",
+  nextra: "content와 public에 복사할 수 있는 묶음을 만듭니다.",
+}
+
 export const BlogInputPanel = ({
   blogs,
   blogKey,
@@ -78,18 +92,11 @@ export const BlogInputPanel = ({
       <PrimerSelectActionMenu
         id="outputProfile"
         value={profile}
-        options={[
-          { value: "gfm", label: "Markdown (GFM)" },
-          { value: "fumadocs", label: "Fumadocs (MDX)" },
-        ]}
+        options={outputProfileOptions}
         disabled={scanPending}
         onValueChange={(value) => onProfileChange(value as ExportProfile)}
       />
-      <FormControl.Caption>
-        {profile === "fumadocs"
-          ? "content/docs와 public에 바로 복사할 수 있는 묶음을 만듭니다."
-          : "일반 Markdown 파일을 만듭니다."}
-      </FormControl.Caption>
+      <FormControl.Caption>{outputProfileCaptions[profile]}</FormControl.Caption>
     </FormControl>
     <Flash
       id="scan-status"

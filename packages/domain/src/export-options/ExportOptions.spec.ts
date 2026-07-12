@@ -33,7 +33,12 @@ describe("export options", () => {
     expect(options.assets.includeImageCaptions).toBe(false)
     expect(options.links.sameBlogPostMode).toBe("keep-source")
     expect(options.links.sameBlogPostCustomUrlTemplate).toBe("")
-    expect(options.blockOutputs.templates).toEqual({ gfm: {}, fumadocs: {} })
+    expect(options.blockOutputs.templates).toEqual({
+      gfm: {},
+      fumadocs: {},
+      docusaurus: {},
+      nextra: {},
+    })
     expect(options.structure.groupByCategory).toBe(true)
     expect(options.structure.slugStyle).toBe("snake")
     expect(options.structure.slugWhitespace).toBe("underscore")
@@ -61,6 +66,8 @@ describe("export options", () => {
       fumadocs: {
         "blog:image": "{{ `![${alt}](${url})` }}",
       },
+      docusaurus: {},
+      nextra: {},
     })
   })
 

@@ -218,4 +218,18 @@ describe("createTistoryBlog", () => {
     expect(templates?.["tistory:image"]).toContain("unoptimized")
     expect(templates?.["tistory:table"]).not.toContain("complex ? html")
   })
+
+  it("exposes Docusaurus admonition and inline TOC templates", () => {
+    const templates = createTistoryBlog().getOutputBlockTemplates?.("docusaurus")
+
+    expect(templates?.["tistory:quote"]).toContain(":::note")
+    expect(templates?.["tistory:tableOfContents"]).toBe("<TOCInline toc={toc} />")
+  })
+
+  it("exposes Nextra component and image templates", () => {
+    const templates = createTistoryBlog().getOutputBlockTemplates?.("nextra")
+
+    expect(templates?.["tistory:quote"]).toContain("<Callout>")
+    expect(templates?.["tistory:image"]).toContain("<img")
+  })
 })

@@ -73,6 +73,33 @@ describe("AssetStore", () => {
     })
   })
 
+  it("writes assets under the selected adapter root", async () => {
+    const store = new AssetStore({
+      outputDir: testOutputDir,
+      downloader: {
+        downloadBinary: vi.fn(),
+        fetchBinary: vi.fn(async () => ({
+          bytes: Buffer.from("docusaurus-image"),
+          contentType: "image/png",
+        })),
+      },
+      options: defaultExportOptions(),
+      assetRootSegments: ["static"],
+      formatReference: (relativePath) => `/${relativePath.split("/").at(-1)}`,
+    })
+
+    const asset = await store.saveAsset({
+      kind: "image",
+      sourceUrl: "https://example.com/docusaurus.png",
+      markdownFilePath: `${testOutputDir}/docs/test/index.mdx`,
+    })
+    const expectedHash = createHash("sha256").update("docusaurus-image").digest("hex")
+
+    expect(asset.reference).toBe(`/${expectedHash}.png`)
+    expect(asset.relativePath).toBe(`../../static/${expectedHash}.png`)
+    expect(asset.uploadCandidate?.localPath).toBe(`static/${expectedHash}.png`)
+  })
+
   it("reuses one public asset for different posts when the binary bytes match", async () => {
     const fetchBinary = vi
       .fn()

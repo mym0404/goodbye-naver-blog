@@ -1,4 +1,4 @@
-export const allExportProfiles = ["gfm", "fumadocs"] as const
+export const allExportProfiles = ["gfm", "fumadocs", "docusaurus", "nextra"] as const
 
 // Document output profile selected by export requests.
 export type ExportProfile = (typeof allExportProfiles)[number]

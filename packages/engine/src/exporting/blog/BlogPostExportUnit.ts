@@ -152,6 +152,7 @@ export const exportBlogPostUnit = async ({
     outputDir,
     downloader: createBlogAssetDownloader(blog),
     options,
+    assetRootSegments: adapter.assetRootSegments,
     formatReference: adapter.formatAssetReference,
   })
   const content = await blog.loadPostContent({

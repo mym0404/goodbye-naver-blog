@@ -10,6 +10,7 @@ export type OutputSupportFile = {
 export type OutputAdapter = {
   profile: ExportProfile
   contentRootSegments: string[]
+  assetRootSegments: string[]
   documentFileName: string
   formatPathSegment: (segment: string) => string
   prepareBlockProps: (props: Record<string, TemplateValue>) => Record<string, TemplateValue>

@@ -185,6 +185,8 @@ describe("http server settings persist", () => {
         fumadocs: {
           "naver-se4:file": "{{ `[${fileName}${fileExtension}](${fileUrl})` }}",
         },
+        docusaurus: {},
+        nextra: {},
       })
     } finally {
       await rm(rootDir, { recursive: true, force: true })

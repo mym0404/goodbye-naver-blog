@@ -29,6 +29,20 @@ describe("createNaverBlog", () => {
     expect(templates?.["naver-se4:formula"]).toContain("latex")
   })
 
+  it("exposes Docusaurus admonition and table templates", () => {
+    const templates = createNaverBlog().getOutputBlockTemplates?.("docusaurus")
+
+    expect(templates?.["naver-se4:quote"]).toContain(":::note")
+    expect(templates?.["naver-se4:table"]).not.toContain("complex ? html")
+  })
+
+  it("exposes Nextra component and image templates", () => {
+    const templates = createNaverBlog().getOutputBlockTemplates?.("nextra")
+
+    expect(templates?.["naver-se4:quote"]).toContain("<Callout>")
+    expect(templates?.["naver-se4:image"]).toContain("<img")
+  })
+
   it("resolves a Naver post URL identity", () => {
     const blog = createNaverBlog()
 

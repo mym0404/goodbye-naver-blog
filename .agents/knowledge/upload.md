@@ -21,7 +21,7 @@
 - Domain schema files define shared job/upload/manifest contracts.
 - Engine owns asset records, upload candidate dedupe, upload phase execution, and Markdown rewrite.
 - Output adapters format only the document reference. Upload candidates keep output-root-relative local paths so upload and rewrite remain profile-neutral.
-- Fumadocs local assets live under output-root `public/` and render as public-root URLs. Fumadocs remote image templates use `unoptimized` so a copied bundle does not require Next image-domain configuration.
+- Fumadocs and Nextra local assets live under output-root `public/`; Docusaurus local assets live under `static/`. MDX adapters render local assets as public-root URLs. Fumadocs remote image templates use `unoptimized`, and Nextra remote image templates use raw `img` elements, so copied bundles do not require Next image-domain configuration.
 - Server owns runtime upload provider catalog, provider test upload, export request validation, and automatic upload orchestration.
 - Web owns provider setup form state, field rules, test upload action, export payload assembly, and progress display.
 

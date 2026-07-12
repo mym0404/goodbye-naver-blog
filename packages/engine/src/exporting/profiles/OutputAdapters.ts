@@ -22,6 +22,7 @@ const passthroughProps = (props: Record<string, TemplateValue>) => props
 const gfmAdapter: OutputAdapter = {
   profile: "gfm",
   contentRootSegments: [],
+  assetRootSegments: ["public"],
   documentFileName: "index.md",
   formatPathSegment: (segment) => segment,
   prepareBlockProps: passthroughProps,
@@ -69,7 +70,7 @@ const prepareMdxProps = (props: Record<string, TemplateValue>) =>
     Object.entries(props).map(([key, value]) => [key, prepareMdxValue({ value, key })]),
   )
 
-const optionalComponentModules = [
+const fumadocsComponentModules = [
   {
     names: ["Accordion", "Accordions"],
     source: "fumadocs-ui/components/accordion",
@@ -104,15 +105,18 @@ const optionalComponentModules = [
   },
 ] as const
 
-const getOptionalComponentImports = (body: string) =>
-  optionalComponentModules.flatMap(({ names, source }) => {
+const getOptionalComponentImports = (
+  body: string,
+  modules: readonly { names: readonly string[]; source: string }[],
+) =>
+  modules.flatMap(({ names, source }) => {
     const usedNames = names.filter((name) => new RegExp(`<${name}(?:\\s|/|>)`).test(body))
 
     return usedNames.length > 0 ? [`import { ${usedNames.join(", ")} } from '${source}';`] : []
   })
 
 const renderFumadocsDocument: OutputAdapter["renderDocument"] = ({ frontmatter, body }) => {
-  const imports = getOptionalComponentImports(body)
+  const imports = getOptionalComponentImports(body, fumadocsComponentModules)
   const sections = [frontmatter ? `---\n${frontmatter}---` : "", imports.join("\n"), body].filter(
     Boolean,
   )
@@ -132,13 +136,20 @@ const createMetaNode = (title: string): MetaNode => ({
   pages: [],
 })
 
-const addPostToMetaTree = ({ root, post }: { root: MetaNode; post: PostManifestEntry }) => {
+const addPostToMetaTree = ({
+  root,
+  post,
+  contentRootLength,
+}: {
+  root: MetaNode
+  post: PostManifestEntry
+  contentRootLength: number
+}) => {
   if (!post.outputPath) {
     return
   }
 
   const segments = post.outputPath.split("/")
-  const contentRootLength = 2
   const documentDirectories = segments.slice(contentRootLength, -1)
   const postDirectory = documentDirectories.pop()
 
@@ -202,7 +213,7 @@ const createFumadocsSupportFiles = (manifest: ExportManifest) => {
 
   manifest.posts
     .filter((post) => post.status === "success")
-    .forEach((post) => addPostToMetaTree({ root, post }))
+    .forEach((post) => addPostToMetaTree({ root, post, contentRootLength: 2 }))
 
   return renderMetaFiles({ node: root, relativeDirectory: "content/docs" })
 }
@@ -210,6 +221,7 @@ const createFumadocsSupportFiles = (manifest: ExportManifest) => {
 const fumadocsAdapter: OutputAdapter = {
   profile: "fumadocs",
   contentRootSegments: ["content", "docs"],
+  assetRootSegments: ["public"],
   documentFileName: "index.mdx",
   formatPathSegment: (segment) =>
     encodeURIComponent(segment).replaceAll("~", "%7E").replaceAll("%", "~"),
@@ -219,9 +231,153 @@ const fumadocsAdapter: OutputAdapter = {
   createSupportFiles: createFumadocsSupportFiles,
 }
 
+const formatMdxPathSegment = (segment: string) =>
+  encodeURIComponent(segment)
+    .replace(/[!'()*~]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`)
+    .replaceAll("%", "~")
+
+const formatRootAssetReference = (relativeAssetPath: string) =>
+  `/${path.posix.basename(relativeAssetPath)}`
+
+const renderDocusaurusDocument: OutputAdapter["renderDocument"] = ({ frontmatter, body }) => {
+  const imports = body.includes("<TOCInline") ? ["import TOCInline from '@theme/TOCInline';"] : []
+  const sections = [frontmatter ? `---\n${frontmatter}---` : "", imports.join("\n"), body].filter(
+    Boolean,
+  )
+
+  return `${sections.join("\n\n")}\n`
+}
+
+const renderDocusaurusCategoryFiles = ({
+  node,
+  relativeDirectory,
+}: {
+  node: MetaNode
+  relativeDirectory: string
+}): OutputSupportFile[] =>
+  [...node.directories.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .flatMap(([name, child]) => {
+      const directory = path.posix.join(relativeDirectory, name)
+
+      return [
+        {
+          relativePath: path.posix.join(directory, "_category_.json"),
+          content: `${JSON.stringify({ label: child.title }, null, 2)}\n`,
+        },
+        ...renderDocusaurusCategoryFiles({ node: child, relativeDirectory: directory }),
+      ]
+    })
+
+const createDocusaurusSupportFiles = (manifest: ExportManifest) => {
+  const root = createMetaNode(manifest.sourceId)
+
+  manifest.posts
+    .filter((post) => post.status === "success")
+    .forEach((post) => addPostToMetaTree({ root, post, contentRootLength: 1 }))
+
+  return renderDocusaurusCategoryFiles({ node: root, relativeDirectory: "docs" })
+}
+
+const docusaurusAdapter: OutputAdapter = {
+  profile: "docusaurus",
+  contentRootSegments: ["docs"],
+  assetRootSegments: ["static"],
+  documentFileName: "index.mdx",
+  formatPathSegment: formatMdxPathSegment,
+  prepareBlockProps: prepareMdxProps,
+  formatAssetReference: formatRootAssetReference,
+  renderDocument: renderDocusaurusDocument,
+  createSupportFiles: createDocusaurusSupportFiles,
+}
+
+const nextraComponentModules = [
+  {
+    names: ["Callout"],
+    source: "nextra/components",
+  },
+] as const
+
+const renderNextraDocument: OutputAdapter["renderDocument"] = ({ frontmatter, body }) => {
+  const metadata = `asIndexPage: true\n${
+    frontmatter
+      ?.split("\n")
+      .filter((line) => !line.startsWith("asIndexPage:"))
+      .join("\n") ?? ""
+  }`
+  const imports = getOptionalComponentImports(body, nextraComponentModules)
+
+  return `---\n${metadata}---\n\n${imports.length > 0 ? `${imports.join("\n")}\n\n` : ""}${body}\n`
+}
+
+const renderNextraMetaFiles = ({
+  node,
+  relativeDirectory,
+  includeIndex = false,
+}: {
+  node: MetaNode
+  relativeDirectory: string
+  includeIndex?: boolean
+}): OutputSupportFile[] => {
+  const directoryEntries = [...node.directories.entries()].sort(([left], [right]) =>
+    left.localeCompare(right),
+  )
+  const entries = [
+    ...(includeIndex ? [["index", node.title] as const] : []),
+    ...directoryEntries.map(([name, child]) => [name, child.title] as const),
+    ...node.pages
+      .sort((left, right) => left.name.localeCompare(right.name))
+      .map(({ name, title }) => [name, title] as const),
+  ]
+  const current = {
+    relativePath: path.posix.join(relativeDirectory, "_meta.js"),
+    content: `export default ${JSON.stringify(Object.fromEntries(entries), null, 2)}\n`,
+  }
+
+  return [
+    current,
+    ...directoryEntries.flatMap(([name, child]) =>
+      renderNextraMetaFiles({
+        node: child,
+        relativeDirectory: path.posix.join(relativeDirectory, name),
+      }),
+    ),
+  ]
+}
+
+const createNextraSupportFiles = (manifest: ExportManifest) => {
+  const root = createMetaNode(manifest.sourceId)
+
+  manifest.posts
+    .filter((post) => post.status === "success")
+    .forEach((post) => addPostToMetaTree({ root, post, contentRootLength: 1 }))
+
+  return [
+    {
+      relativePath: "content/index.mdx",
+      content: `---\ntitle: ${JSON.stringify(manifest.sourceId)}\n---\n\n# ${escapeMdxString(manifest.sourceId)}\n`,
+    },
+    ...renderNextraMetaFiles({ node: root, relativeDirectory: "content", includeIndex: true }),
+  ]
+}
+
+const nextraAdapter: OutputAdapter = {
+  profile: "nextra",
+  contentRootSegments: ["content"],
+  assetRootSegments: ["public"],
+  documentFileName: "index.mdx",
+  formatPathSegment: formatMdxPathSegment,
+  prepareBlockProps: prepareMdxProps,
+  formatAssetReference: formatRootAssetReference,
+  renderDocument: renderNextraDocument,
+  createSupportFiles: createNextraSupportFiles,
+}
+
 const adapters: Record<ExportProfile, OutputAdapter> = {
   gfm: gfmAdapter,
   fumadocs: fumadocsAdapter,
+  docusaurus: docusaurusAdapter,
+  nextra: nextraAdapter,
 }
 
 export const getOutputAdapter = (profile: ExportProfile) => adapters[profile]

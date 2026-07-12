@@ -70,7 +70,7 @@ describe("BlogInputPanel", () => {
     expect(onBlogKeyChange).toHaveBeenCalledWith("tistory")
   })
 
-  it("selects the Fumadocs output profile", async () => {
+  it("lists and selects MDX output profiles", async () => {
     const user = userEvent.setup()
     const onProfileChange = vi.fn()
 
@@ -95,8 +95,10 @@ describe("BlogInputPanel", () => {
     )
 
     await user.click(screen.getByRole("button", { name: "출력 형식" }))
-    await user.click(screen.getByRole("menuitemradio", { name: "Fumadocs (MDX)" }))
+    expect(screen.getByRole("menuitemradio", { name: "Fumadocs (MDX)" })).toBeInTheDocument()
+    expect(screen.getByRole("menuitemradio", { name: "Docusaurus (MDX)" })).toBeInTheDocument()
+    await user.click(screen.getByRole("menuitemradio", { name: "Nextra (MDX)" }))
 
-    expect(onProfileChange).toHaveBeenCalledWith("fumadocs")
+    expect(onProfileChange).toHaveBeenCalledWith("nextra")
   })
 })

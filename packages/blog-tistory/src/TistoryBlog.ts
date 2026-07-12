@@ -8,7 +8,9 @@ import {
   getTistoryBlockTemplateDefinitions,
   parseTistoryPostHtml,
 } from "./parsing/TistoryPostParser.js"
+import { tistoryDocusaurusTemplates } from "./profiles/TistoryDocusaurusTemplates.js"
 import { tistoryFumadocsTemplates } from "./profiles/TistoryFumadocsTemplates.js"
+import { tistoryNextraTemplates } from "./profiles/TistoryNextraTemplates.js"
 
 const blogKey = "tistory"
 const uncategorized = "Uncategorized"
@@ -306,7 +308,18 @@ export const createTistoryBlog = ({
     return parseTistoryPostHtml({ html: content.html, tags: content.tags, options })
   },
   getBlockTemplateDefinitions: getTistoryBlockTemplateDefinitions,
-  getOutputBlockTemplates: (profile) => (profile === "fumadocs" ? tistoryFumadocsTemplates : {}),
+  getOutputBlockTemplates: (profile) => {
+    switch (profile) {
+      case "fumadocs":
+        return tistoryFumadocsTemplates
+      case "docusaurus":
+        return tistoryDocusaurusTemplates
+      case "nextra":
+        return tistoryNextraTemplates
+      case "gfm":
+        return {}
+    }
+  },
   resolvePostLinkIdentity: (value) => {
     try {
       const url = new URL(value)

@@ -8,6 +8,40 @@ import {
 
 import { getOutputAdapter } from "./OutputAdapters.js"
 
+const createSuccessfulManifest = ({
+  profile,
+  outputPath,
+}: {
+  profile: "fumadocs" | "docusaurus" | "nextra"
+  outputPath: string
+}) => {
+  const manifest = createInitialManifest({
+    resumeManifest: null,
+    blogKey: "naver",
+    sourceId: "sample",
+    profile,
+    options: defaultExportOptions(),
+    categories: [],
+    totalPosts: 1,
+    uploadEnabled: false,
+  })
+  manifest.posts.push({
+    blogKey: "naver",
+    sourceId: "sample",
+    postId: "1",
+    title: "First post",
+    source: "https://example.com/1",
+    category: { id: 1, name: "Guides", path: ["Guides"] },
+    status: "success",
+    outputPath,
+    assetPaths: [],
+    upload: createPostUploadSummary([]),
+    error: null,
+  })
+
+  return manifest
+}
+
 describe("output adapters", () => {
   it("keeps GFM documents unchanged", () => {
     const adapter = getOutputAdapter("gfm")
@@ -41,6 +75,15 @@ describe("output adapters", () => {
       "~EA~B2~80~EC~A6~9D_~EB~AC~B8~EC~84~9C",
     )
     expect(getOutputAdapter("fumadocs").formatPathSegment("~EA")).toBe("~7EEA")
+    expect(getOutputAdapter("docusaurus").formatPathSegment("검증_문서")).toBe(
+      "~EA~B2~80~EC~A6~9D_~EB~AC~B8~EC~84~9C",
+    )
+    expect(getOutputAdapter("nextra").formatPathSegment("검증_문서")).toBe(
+      "~EA~B2~80~EC~A6~9D_~EB~AC~B8~EC~84~9C",
+    )
+    expect(getOutputAdapter("docusaurus").formatPathSegment("문서(test)")).toBe(
+      "~EB~AC~B8~EC~84~9C~28test~29",
+    )
   })
 
   it("escapes source MDX controls before component detection", () => {
@@ -57,29 +100,9 @@ describe("output adapters", () => {
   })
 
   it("creates deterministic metadata for successful pages", () => {
-    const options = defaultExportOptions()
-    const manifest = createInitialManifest({
-      resumeManifest: null,
-      blogKey: "naver",
-      sourceId: "sample",
+    const manifest = createSuccessfulManifest({
       profile: "fumadocs",
-      options,
-      categories: [],
-      totalPosts: 1,
-      uploadEnabled: false,
-    })
-    manifest.posts.push({
-      blogKey: "naver",
-      sourceId: "sample",
-      postId: "1",
-      title: "First post",
-      source: "https://example.com/1",
-      category: { id: 1, name: "Guides", path: ["Guides"] },
-      status: "success",
       outputPath: "content/docs/guides/first-post/index.mdx",
-      assetPaths: [],
-      upload: createPostUploadSummary([]),
-      error: null,
     })
 
     expect(getOutputAdapter("fumadocs").createSupportFiles(manifest)).toEqual([
@@ -90,6 +113,58 @@ describe("output adapters", () => {
       {
         relativePath: "content/docs/guides/meta.json",
         content: '{\n  "title": "Guides",\n  "pages": [\n    "first-post"\n  ]\n}\n',
+      },
+    ])
+  })
+
+  it("renders Docusaurus documents and category metadata", () => {
+    const adapter = getOutputAdapter("docusaurus")
+    const document = adapter.renderDocument({
+      frontmatter: "title: Test\n",
+      body: "<TOCInline toc={toc} />\n\n:::note[Quote]\nText\n:::",
+    })
+    const manifest = createSuccessfulManifest({
+      profile: "docusaurus",
+      outputPath: "docs/guides/first-post/index.mdx",
+    })
+
+    expect(document).toContain("import TOCInline from '@theme/TOCInline';")
+    expect(document).toContain("<TOCInline toc={toc} />")
+    expect(adapter.assetRootSegments).toEqual(["static"])
+    expect(adapter.createSupportFiles(manifest)).toEqual([
+      {
+        relativePath: "docs/guides/_category_.json",
+        content: '{\n  "label": "Guides"\n}\n',
+      },
+    ])
+  })
+
+  it("renders Nextra documents and navigation metadata", () => {
+    const adapter = getOutputAdapter("nextra")
+    const document = adapter.renderDocument({
+      frontmatter: "title: Test\nasIndexPage: Wrong\n",
+      body: "<Callout>Text</Callout>",
+    })
+    const manifest = createSuccessfulManifest({
+      profile: "nextra",
+      outputPath: "content/guides/first-post/index.mdx",
+    })
+
+    expect(document).toContain("asIndexPage: true")
+    expect(document.match(/^asIndexPage:/gm)).toHaveLength(1)
+    expect(document).toContain("import { Callout } from 'nextra/components';")
+    expect(adapter.createSupportFiles(manifest)).toEqual([
+      {
+        relativePath: "content/index.mdx",
+        content: '---\ntitle: "sample"\n---\n\n# sample\n',
+      },
+      {
+        relativePath: "content/_meta.js",
+        content: 'export default {\n  "index": "sample",\n  "guides": "Guides"\n}\n',
+      },
+      {
+        relativePath: "content/guides/_meta.js",
+        content: 'export default {\n  "first-post": "First post"\n}\n',
       },
     ])
   })

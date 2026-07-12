@@ -30,7 +30,10 @@
 - `mise exec -- pnpm check:playwright`: Playwright local and live browser/network e2e suite against the current built web UI.
 - `mise exec -- pnpm check:playwright:ui`: Playwright UI mode for the same local and live e2e suite.
 - `mise exec -- pnpm exec playwright test tests/e2e/scenarios/output-adapters.spec.ts`: deterministic full export workflow e2e for every output adapter.
-- Fumadocs adapter integration: create an official app under repo-local `tmp/`, copy only the exported `content/docs` and `public` folders into it, run the generated app's `pnpm build`, start production mode, and open a generated `/docs/...` route. Check optional component interaction, image responses, browser errors, and console output.
+- Fumadocs adapter integration: create the current official app under repo-local `tmp/`, copy exported `content/docs` and `public`, build and start production mode, then open a generated `/docs/...` route.
+- Docusaurus adapter integration: create the current official classic app under repo-local `tmp/`, copy exported `docs` and `static`, build and serve production output, then open the generated `/docs/...` route.
+- Nextra adapter integration: create the current official Docs Theme App Router setup under repo-local `tmp/`, copy exported `content` and `public`, build and start production mode, then open the generated content route.
+- Each MDX integration check covers target components or directives, navigation support files, image responses, browser errors, and console output.
 - `mise exec -- pnpm check:unused`: unused source/test/script diagnostics.
 
 ## Focused Commands
@@ -71,6 +74,6 @@
 - Moving or deleting source, test, or script files requires `check:type` and `check:unused`.
 - Parser changes require `check:test`.
 - Export, manifest, upload, resume, UI state, server API, routing, static asset serving, or job-state changes require `build:ui` followed by `check:playwright`.
-- Output-adapter changes also require the adapter e2e spec plus one real parsed post to compile in the current official Fumadocs starter. A lightweight Markdown preview does not prove MDX imports, Fumadocs components, public assets, or production routing.
+- Output-adapter changes require the adapter e2e spec plus one real parsed post to compile and render in the current official app for every affected MDX target. A lightweight Markdown preview does not prove MDX imports, target components, navigation support files, static assets, or production routing.
 - Upload e2e changes must keep both local and live upload checks aligned with the current export-triggered upload flow.
 - Live fetch/upload changes require `build:ui` followed by `check:playwright`.

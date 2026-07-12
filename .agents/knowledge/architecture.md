@@ -26,10 +26,10 @@
 - An export selection combines category selection, date range, and search text.
 - Parsed blocks carry a stable block key, props, template definitions, and asset metadata.
 - Export options control paths, assets, profile-scoped block templates, frontmatter, upload, and naming.
-- `gfm` keeps the existing category/post `index.md` layout. `fumadocs` writes a portable bundle under `content/docs` and `public`, with `index.mdx` documents and hierarchical `meta.json` files; it does not scaffold or overwrite a Fumadocs app.
-- A new export may recreate only a missing directory, an empty directory, or an existing Exitpress output root with a valid `manifest.json`. Never point export directly at a Fumadocs application root; copy the generated `content/docs` and `public` folders instead.
+- `gfm` keeps the category/post `index.md` layout. `fumadocs` writes `content/docs`, hierarchical `meta.json`, and `public`; `docusaurus` writes `docs`, category `_category_.json`, and `static`; `nextra` writes `content`, hierarchical `_meta.js`, and `public`. MDX adapters do not scaffold or overwrite target applications.
+- A new export may recreate only a missing directory, an empty directory, or an existing Exitpress output root with a valid `manifest.json`. Never point export directly at a target application root; copy only the generated adapter directories into the application.
 - Output adapters own document roots, extensions, path-segment compatibility, asset references, final document assembly, conditional imports, and support-file contents. Concrete blog packages own sparse target templates for their own block keys.
-- Document paths are stable and path-safe; Fumadocs encodes non-ASCII path segments to URL-safe ASCII while keeping visible titles and category metadata unchanged. Frontmatter includes only enabled fields under configured aliases.
+- Document paths are stable and path-safe; MDX adapters encode non-ASCII path segments to URL-safe ASCII while keeping visible titles and category metadata unchanged. Frontmatter includes only enabled fields under configured aliases, plus target-required metadata such as Nextra `asIndexPage`.
 - Asset records distinguish local relative paths from remote URLs.
 - Manifest state must be sufficient to restore export, upload, and result screens.
 - Web state mirrors server bootstrap, scan cache, export options, job state, upload provider catalog, and theme preference.

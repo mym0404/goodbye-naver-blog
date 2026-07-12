@@ -96,3 +96,74 @@ test("fumadocs output adapter exports an MDX content bundle", async () => {
     await cleanup()
   }
 })
+
+test("docusaurus output adapter exports an MDX docs bundle", async () => {
+  const mockBlog = createMarkdownMockBlog()
+  const blog: Blog = {
+    ...mockBlog,
+    getOutputBlockTemplates: (profile) =>
+      profile === "docusaurus"
+        ? { "mock:paragraph": "<TOCInline toc={toc} />\n\n:::note[원문 인용]\n{{ text }}\n:::" }
+        : {},
+  }
+  const { manifest, outputDir, cleanup } = await runExport({ profile: "docusaurus", blog })
+
+  try {
+    const post = manifest.posts[0]
+
+    expect(manifest.profile).toBe("docusaurus")
+    expect(manifest.successCount).toBe(1)
+    expect(post.outputPath).toMatch(/^docs\/.+\/index\.mdx$/)
+
+    const mdx = await readFile(path.join(outputDir, post.outputPath ?? ""), "utf8")
+    const category = JSON.parse(
+      await readFile(path.join(outputDir, "docs/mock_category/_category_.json"), "utf8"),
+    )
+    const manifestFile = JSON.parse(await readFile(path.join(outputDir, "manifest.json"), "utf8"))
+
+    expect(mdx).toContain("import TOCInline from '@theme/TOCInline';")
+    expect(mdx).toContain(":::note[원문 인용]\nHello from markdown blog\n:::")
+    expect(category).toEqual({ label: "Mock Category" })
+    expect(manifestFile.profile).toBe("docusaurus")
+  } finally {
+    await cleanup()
+  }
+})
+
+test("nextra output adapter exports an MDX content bundle", async () => {
+  const mockBlog = createMarkdownMockBlog()
+  const blog: Blog = {
+    ...mockBlog,
+    getOutputBlockTemplates: (profile) =>
+      profile === "nextra" ? { "mock:paragraph": "<Callout>{{ text }}</Callout>" } : {},
+  }
+  const { manifest, outputDir, cleanup } = await runExport({ profile: "nextra", blog })
+
+  try {
+    const post = manifest.posts[0]
+
+    expect(manifest.profile).toBe("nextra")
+    expect(manifest.successCount).toBe(1)
+    expect(post.outputPath).toMatch(/^content\/.+\/index\.mdx$/)
+
+    const mdx = await readFile(path.join(outputDir, post.outputPath ?? ""), "utf8")
+    const index = await readFile(path.join(outputDir, "content/index.mdx"), "utf8")
+    const rootMeta = await readFile(path.join(outputDir, "content/_meta.js"), "utf8")
+    const categoryMeta = await readFile(
+      path.join(outputDir, "content/mock_category/_meta.js"),
+      "utf8",
+    )
+    const manifestFile = JSON.parse(await readFile(path.join(outputDir, "manifest.json"), "utf8"))
+
+    expect(mdx).toContain("asIndexPage: true")
+    expect(mdx).toContain("import { Callout } from 'nextra/components';")
+    expect(mdx).toContain("<Callout>Hello from markdown blog</Callout>")
+    expect(index).toContain("# mock-blog")
+    expect(rootMeta).toContain('"index": "mock-blog"')
+    expect(rootMeta).toContain('"mock_category": "Mock Category"')
+    expect(categoryMeta).toContain('"2026-06-10-mock_markdown_post": "Mock markdown post"')
+    expect(manifestFile.profile).toBe("nextra")
+  } finally {
+    await cleanup()
+  }
+})
