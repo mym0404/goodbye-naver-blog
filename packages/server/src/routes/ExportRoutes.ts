@@ -3,6 +3,9 @@ import { readdir } from "node:fs/promises"
 import { getScanCacheKey } from "@exitpress/domain/blog/schema/BlogScan.js"
 import { JOB_STATUSES } from "@exitpress/domain/export-job/ExportJobState.js"
 import { isExportProfile } from "@exitpress/domain/export-job/schema/ExportProfile.js"
+import { filterPostsByScope } from "@exitpress/domain/export-scope/ExportScope.js"
+import { assertUniquePostOutputPaths } from "@exitpress/engine/exporting/paths/ExportPaths.js"
+import { getOutputAdapter } from "@exitpress/engine/exporting/profiles/OutputAdapters.js"
 import { recreateDir, resolveRepoPath } from "@exitpress/engine/infra/node/FilePaths.js"
 import { toErrorMessage } from "@exitpress/engine/shared/error/util/toErrorMessage.js"
 
@@ -313,6 +316,20 @@ export const handleExportRoutes =
       const runnerRequest = uploadProvider ? { ...exportRequest, uploadProvider } : exportRequest
 
       try {
+        if (payload.scanResult?.posts) {
+          assertUniquePostOutputPaths({
+            outputDir: resolveRepoPath(exportRequest.outputDir),
+            posts: filterPostsByScope({
+              posts: payload.scanResult.posts,
+              categories: payload.scanResult.categories,
+              options,
+            }),
+            categories: payload.scanResult.categories,
+            options,
+            adapter: getOutputAdapter(profile),
+          })
+        }
+
         await assertOutputDirectoryCanBeRecreated(exportRequest.outputDir)
       } catch (error) {
         sendJson({ response, statusCode: 409, body: { error: toErrorMessage(error) } })

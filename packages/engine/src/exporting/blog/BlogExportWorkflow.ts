@@ -24,7 +24,7 @@ import {
   createExportProgressState,
   createInitialManifest,
 } from "../manifest/ExportManifestProgress.js"
-import { getCategoryForPost } from "../paths/ExportPaths.js"
+import { assertUniquePostOutputPaths, getCategoryForPost } from "../paths/ExportPaths.js"
 import { createFailedPostResult } from "../post/PostExportResult.js"
 import { getOutputAdapter } from "../profiles/OutputAdapters.js"
 import {
@@ -163,6 +163,14 @@ export class BlogExportWorkflow {
       options,
     })
     const postById = new Map(scan.posts.map((post) => [post.postId, post]))
+
+    assertUniquePostOutputPaths({
+      outputDir,
+      posts: filteredPosts,
+      categories,
+      options,
+      adapter: outputAdapter,
+    })
 
     await ensureDir(outputDir)
     throwIfAborted(this.abortSignal)

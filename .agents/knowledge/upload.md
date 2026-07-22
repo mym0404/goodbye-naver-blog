@@ -13,6 +13,7 @@
 
 ## Resume Flow
 - Manifest and local state are the source of truth for resumable jobs.
+- When an export request includes scanned posts, the server rejects selected posts that resolve to the same document path before recreating an existing Exitpress output root. The engine repeats the check before writing so direct workflow callers cannot create an ambiguous manifest.
 - Bootstrap can restore a running, upload-ready, uploading, failed-upload, or completed result state without requiring provider credentials.
 - Resume summaries must contain enough information for the web UI to show the right step and dialog.
 - Resumed upload-ready, uploading, or failed-upload jobs show existing progress state and do not start upload requests by themselves.

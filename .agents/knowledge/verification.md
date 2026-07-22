@@ -45,6 +45,7 @@
 
 - Typecheck proves moved imports, shared contracts, and cross-package type compatibility.
 - Vitest proves pure logic, parser block conversion, renderer, server, hook, fixture, blog, and generated catalog behavior.
+- Export collision verification must cover both server preflight before output-root recreation and the engine guard before concurrent post writes.
 - Storybook check proves generated catalog matches current parser/renderer output.
 - Playwright proves browser workflow behavior with mocked APIs and live e2e behavior, including resume, provider setup, test upload, automatic upload progress, uploaded result links, and no manual upload POST.
 - Live upload checks read `.env` locally and CI secrets in GitHub Actions.
